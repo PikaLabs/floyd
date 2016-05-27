@@ -1,0 +1,84 @@
+package command;
+
+import "raft/raft.proto";
+
+message Command {
+  enum Type {
+		Read = 0;
+		ReadAll = 1;
+		DirtyWrite = 2;
+		Write = 3;
+    TryLock = 4;
+    UnLock = 5;
+    DeleteUser = 6;
+		RaftVote = 7;
+		RaftAppendEntries = 8;
+		SynRaftStage = 9;
+	}
+  required Type type = 1;
+  message Kv {
+    required bytes key = 1;
+    optional bytes value = 2;
+  }
+  message RaftStage {
+    required int32 term = 1;
+    required int32 commitIndex = 2;
+    optional bytes ip = 3;
+    optional int32 port = 4;
+  }
+
+  optional Kv kv = 2;
+  optional floyd.raft.RequestVote rqv = 3;
+	optional floyd.raft.AppendEntriesRequest aerq = 4;
+
+  message User {
+    required bytes ip = 1;
+    required int32 port = 2;
+  }
+
+  optional User user = 5;
+  optional RaftStage raftstage = 6;
+}
+
+message CommandRes {
+  enum Type {
+		Read = 0;
+		ReadAll = 1;
+		Write = 2;
+    TryLock = 3;
+    UnLock = 4;
+    DeleteUser = 5;
+		RaftVote = 6;
+		RaftAppendEntries = 7;
+		SynRaftStage = 8;
+	}
+  required Type type = 1;
+
+  message Kv {
+    required bytes key = 1;
+    required bytes value = 2;
+  }
+  message KvRet {
+	  required bool status = 1;
+	  optional bytes value = 2;
+  }
+  message KvAllRet {
+	  required bool status = 1;
+	  repeated Kv kvall= 2;
+  }
+
+  message RaftStageRes {
+    required int32 term = 1;
+    required int32 commitIndex = 2;
+    optional bytes ip = 3;
+    optional int32 port = 4;
+  }
+
+  optional KvRet kvr = 2;
+  optional KvAllRet kvallr = 3;
+  optional floyd.raft.ResponseVote rsv = 4;
+	optional floyd.raft.AppendEntriesResponse aers = 5;
+  optional RaftStageRes raftstage = 6;
+}
+
+

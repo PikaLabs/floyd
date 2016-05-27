@@ -1,0 +1,8 @@
+package floyd.raft.log;
+
+message MetaData {
+	required uint64 current_term = 1;
+	required bytes voted_for_ip = 2;
+	required int32 voted_for_port = 3;
+}
+
