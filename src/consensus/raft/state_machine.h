@@ -40,6 +40,11 @@ public:
 	bool WaitForReadResponse(uint64_t log_index, std::string& key,std::string& value);
 	bool WaitForReadAllResponse(uint64_t log_index,KVMap& kvmap);
 	bool WaitForWriteResponse(uint64_t log_index);
+
+	uint64_t last_apply_index() {
+    return last_apply_index_;
+  };
+
   floyd::Status WaitForTryLockResponse(uint64_t log_index);
   floyd::Status WaitForUnLockResponse(uint64_t log_index);
   floyd::Status WaitForDeleteUserResponse(uint64_t log_index);

@@ -1,7 +1,6 @@
 #ifndef __FLOYD_H__
 #define __FLOYD_H__
 
-#include "logger.h"
 #include "floyd_define.h"
 #include "floyd_util.h"
 #include "floyd_mutex.h"

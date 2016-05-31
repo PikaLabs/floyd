@@ -248,7 +248,7 @@ std::pair<RaftConsensus::Result, uint64_t> RaftConsensus::WaitForCommitIndex(
     struct timeval now;
     struct timespec timeout_at;
     gettimeofday(&now, NULL);
-    timeout_at.tv_sec = now.tv_sec + 1;
+    timeout_at.tv_sec = now.tv_sec + 10;
     timeout_at.tv_nsec = now.tv_usec * 1000;
     while (true) {
       if (commit_index_ >= index) {
@@ -311,7 +311,12 @@ void RaftConsensus::AdvanceCommitIndex() {
   if (state_ != State::LEADER) return;
 
   uint64_t new_commit_index = QuorumMin(&PeerThread::GetLastAgreeIndex);
-  if (commit_index_ >= new_commit_index) return;
+  if (commit_index_ >= new_commit_index) {
+    if (commit_index_ > sm_->last_apply_index()) {
+      state_changed_.SignalAll();
+    }
+    return;
+  }
   if (log_->GetEntry(new_commit_index).term() != current_term_) return;
   commit_index_ = new_commit_index;
   LOG_DEBUG("AdvanceCommitIndex: commit_index_ = %d", commit_index_);

@@ -110,7 +110,8 @@ int FloydWorkerConn::DealMessage() {
       command_res_.set_type(command::CommandRes::TryLock);
 
       command::CommandRes_KvRet* kvr = new command::CommandRes_KvRet();
-      if (!ret.ok() && !ret.IsTimeOut()) {
+//      if (!ret.ok() && !ret.IsTimeOut()) {
+      if (!ret.ok()) {
         // printf ("TryLock error as leader:%s\n", ret.ToString().c_str());
         kvr->set_status(false);
       } else {

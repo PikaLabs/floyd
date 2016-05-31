@@ -8,11 +8,11 @@ static inline char *timenow();
 
 #define _FILE strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__
 
-#define DEBUG 0x04
-#define INFO 0x03
-#define WARNING 0x02
-#define ERROR 0x01
-#define NONE 0x00
+#define LEVEL_DEBUG 0x04
+#define LEVEL_INFO 0x03
+#define LEVEL_WARNING 0x02
+#define LEVEL_ERROR 0x01
+#define LEVEL_NONE 0x00
 
 #ifndef LOG_LEVEL
 #define LOG_LEVEL NONE
@@ -30,35 +30,35 @@ static inline char *timenow();
 #define WARN_TAG "[WARN]"
 #define ERROR_TAG "[ERROR]"
 
-#if LOG_LEVEL >= DEBUG
+#if LOG_LEVEL >= LEVEL_DEBUG
 #define LOG_DEBUG(message, args...) \
   PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(DEBUG_TAG), ##args)
 #else
 #define LOG_DEBUG(message, args...)
 #endif
 
-#if LOG_LEVEL >= INFO
+#if LOG_LEVEL >= LEVEL_INFO
 #define LOG_INFO(message, args...) \
   PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(INFO_TAG), ##args)
 #else
 #define LOG_INFO(message, args...)
 #endif
 
-#if LOG_LEVEL >= WARNING
+#if LOG_LEVEL >= LEVEL_WARNING
 #define LOG_WARN(message, args...) \
   PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(WARN_TAG), ##args)
 #else
 #define LOG_WARN(message, args...)
 #endif
 
-#if LOG_LEVEL >= ERROR
+#if LOG_LEVEL >= LEVEL_ERROR
 #define LOG_ERROR(message, args...) \
   PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(ERROR_TAG), ##args)
 #else
 #define LOG_ERROR(message, args...)
 #endif
 
-#if LOG_LEVEL >= NONE
+#if LOG_LEVEL >= LEVEL_NONE
 #define LOG_IF_ERROR(condition, message, args...) \
   if (condition)                                  \
   PRINTFUNCTION(LOG_FMT message NEWLINE, LOG_ARGS(ERROR_TAG), ##args)
