@@ -1,6 +1,6 @@
 CXX = g++
 ifeq ($(__PERF), 1)
-	CXXFLAGS = -O0 -g -pg -pipe -fPIC -DLOG_LEVEL=DEBUG -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -D_GNU_SOURCE -std=c++11 -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls
+	CXXFLAGS = -O0 -g -pg -pipe -fPIC -DLOG_LEVEL=LEVEL_DEBUG -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -D_GNU_SOURCE -std=c++11 -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls
 else
 	CXXFLAGS = -O0 -g -pipe -fPIC -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls
 	# CXXFLAGS = -Wall -W -DDEBUG -g -O0 -D__XDEBUG__ -D__STDC_FORMAT_MACROS -fPIC -std=c++11 -gdwarf-2
@@ -85,7 +85,7 @@ $(TOBJS): %.o : %.cc
 clean: 
 	make clean -C example
 	make clean -C test
-	make clean -C third/pink/
+	#make clean -C third/pink/
 	rm -rf $(SRC_DIR)/*.o
 	rm -rf $(SRC_DIR)/consensus/raft/*.o
 	rm -rf $(OUTPUT)/*
