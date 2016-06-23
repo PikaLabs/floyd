@@ -13,7 +13,7 @@ namespace client {
 struct Option;
 class Server;
 class Cluster;
-class BadaPbCli;
+class FloydPbCli;
 
 enum ClientError {
   kOk = 0,
@@ -63,7 +63,8 @@ class Cluster {
  public:
   Cluster(const Option& option);
 
-  Status Put(const std::string& key, const std::string& value);
+  Status Write(const std::string& key, const std::string& value);
+  Status Read(const std::string& key, std::string* value);
 
  private:
   void Init();
@@ -72,18 +73,17 @@ class Cluster {
 
   //pink::PbCli pb_cli_;
 
-  // Bada use
-  BadaPbCli *pb_cli_;
+  FloydPbCli *pb_cli_;
 };
 
-
-class BadaPbCli : public pink::PbCli {
+class FloydPbCli : public pink::PbCli {
  public:
-  int32_t opcode_;
-
+  void set_opcode(int opcode) {
+    opcode_ = opcode;
+  }
  private:
   virtual void BuildWbuf();
-
+  int32_t opcode_;
 };
 
 } // namespace client

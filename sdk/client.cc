@@ -4,7 +4,7 @@
 #include <getopt.h>
 #include <algorithm>
 #include "logger.h"
-#include "bada_sdk.pb.h"
+#include "client.pb.h"
 
 namespace floyd {
 namespace client {
@@ -90,7 +90,7 @@ void Option::ParseFromArgs(int argc, char *argv[]) {
 ////// Cluster //////
 Cluster::Cluster(const Option& option)
   : option_(option),
-  pb_cli_(new BadaPbCli) {
+  pb_cli_(new FloydPbCli) {
   Init();
 }
 
@@ -106,36 +106,60 @@ void Cluster::Init() {
   }
 }
 
-Status Cluster::Put(const std::string& key, const std::string& value) {
-  // TEST use bada SDKSet
-  SdkSet* sdk_set = new SdkSet;
+Status Cluster::Write(const std::string& key, const std::string& value) {
 
-  pb_cli_->opcode_ = 513;
-  sdk_set->set_opcode(513);
-  sdk_set->set_table("table");
-  sdk_set->set_key(key.data(), key.size());
-  sdk_set->set_value(value.data(), value.size());
-  sdk_set->set_writesrc(0);
+  Write_Request request;
 
-  pink::Status result = pb_cli_->Send(sdk_set);
+  request.set_key(key);
+  request.set_value(value);
+
+  pb_cli_->set_opcode(OPCODE::WRITE);
+
+  pink::Status result = pb_cli_->Send(&request);
   if (!result.ok()) {
     LOG_ERROR("Send error: %s", result.ToString().c_str());
     return Status::IOError("Send failed, " + result.ToString());
   }
 
-  SdkSetRet sdk_set_ret;
-  result = pb_cli_->Recv(&sdk_set_ret);
+  Write_Response response;
+  result = pb_cli_->Recv(&response);
   if (!result.ok()) {
     LOG_ERROR("Recv error: %s", result.ToString().c_str());
     return Status::IOError("Recv failed, " + result.ToString());
   }
 
-  LOG_INFO("Put OK, opcode is %d, status is %d\n", sdk_set_ret.opcode(), sdk_set_ret.status());
+  LOG_INFO("Write OK, status is %d, msg is %s\n", response.status(), response.msg().c_str());
   return Status::OK();
 }
 
-////// BadaPbCli //////
-void BadaPbCli::BuildWbuf() {
+Status Cluster::Read(const std::string& key, std::string* value) {
+
+  Read_Request request;
+  request.set_key(key);
+
+  pb_cli_->set_opcode(OPCODE::READ);
+
+  pink::Status result = pb_cli_->Send(&request);
+  if (!result.ok()) {
+    LOG_ERROR("Send error: %s", result.ToString().c_str());
+    return Status::IOError("Send failed, " + result.ToString());
+  }
+
+  Read_Response response;
+  result = pb_cli_->Recv(&response);
+  if (!result.ok()) {
+    LOG_ERROR("Recv error: %s", result.ToString().c_str());
+    return Status::IOError("Recv failed, " + result.ToString());
+  }
+
+  *value = response.value();
+
+  LOG_INFO("Read OK, status is %d, value is %s\n", response.status(), response.value().c_str());
+  return Status::OK();
+}
+
+////// FloydPbCli //////
+void FloydPbCli::BuildWbuf() {
   uint32_t len;
   wbuf_len_ = msg_->ByteSize();
   len = htonl(wbuf_len_ + 4);
@@ -143,9 +167,9 @@ void BadaPbCli::BuildWbuf() {
   len = htonl(opcode_);
   memcpy(wbuf_ + 4, &len, sizeof(uint32_t));
   msg_->SerializeToArray(wbuf_ + COMMAND_HEADER_LENGTH + 4, wbuf_len_);
-  wbuf_len_ += COMMAND_HEADER_LENGTH + 8;
+  wbuf_len_ += 8;
 
-  printf ("wbuf_[0-4]  bytesize=%d len=%d\n", wbuf_len_, len);
+  //printf ("wbuf_[0-4]  bytesize=%d len=%d\n", wbuf_len_, len);
 }
 
 } // namespace client

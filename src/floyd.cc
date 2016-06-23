@@ -15,10 +15,10 @@ Floyd::Floyd(const Options& options) : options_(options) {
   //@todo: When exists data
   if (options_.storage_type == "leveldb")
     db = new LeveldbBackend(options_.data_path);
-  floydmeta_ = new FloydMetaThread(options_.local_port);
+  floydmeta_ = new FloydMetaThread(options_.local_port + 100);
   // heartbeat_ = new FloydHeartBeatThread(options_.local_ip,
   // options_.local_port);
-  floydworker_ = new FloydWorkerThread(options_.local_port + 100);
+  floydworker_ = new FloydWorkerThread(options_.local_port + 200);
   raft_con = new raft::RaftConsensus(options);
 }
 

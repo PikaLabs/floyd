@@ -19,16 +19,25 @@ int main(int argc, char* argv[]) {
 
   floyd::client::Cluster cluster(option);
 
-  printf ("\n=====Test Put==========\n");
+  printf ("\n=====Test Write==========\n");
 
   std::string key = "test_key";
   std::string value = "test_value";
   
-  floyd::Status result = cluster.Put(key, value);
+  floyd::Status result = cluster.Write(key, value);
   if (result.ok()) {
-    printf ("Put ok\n");
+    printf ("Write ok\n");
   } else {
-    printf ("Put failed, %s\n", result.ToString().c_str());
+    printf ("Write failed, %s\n", result.ToString().c_str());
+  }
+
+  printf ("\n=====Test Read==========\n");
+
+  result = cluster.Read(key, &value);
+  if (result.ok()) {
+    printf ("read ok, value is %s\n", value.c_str());
+  } else {
+    printf ("Read failed, %s\n", result.ToString().c_str());
   }
 
   cout << "success" << endl;
