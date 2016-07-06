@@ -11,26 +11,16 @@ SRC_DIR = ./
 THIRD_PATH = ../third
 #OUTPUT = ./output
 
-LIB_PATH = -L../output/lib/ \
-		   -L../third/leveldb/ \
-			 -L../third/slash/output/lib/\
-			 -L../third/pink/output/lib/
+LIB_PATH = -L../third/pink/output/lib/
 
 
-LIBS = -lfloyd \
-			 -lpink \
-			 -lslash \
-			 -lleveldb \
+LIBS = -lpink \
 			 -lprotobuf \
 			 -lpthread
 
-INCLUDE_PATH = -I../output/include/ \
-			   -I../third/leveldb/include \
-			   -I../third/slash/output/include/ \
-			   -I../third/pink/output/include/
+INCLUDE_PATH = -I../third/pink/output/include/
 
-LIBRARY = libfloyd.a
-.PHONY: all clean version
+.PHONY: all clean
 
 
 BASE_BOJS := $(wildcard $(SRC_DIR)/*.cc)

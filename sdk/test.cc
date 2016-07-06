@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 
-#include "client.h"
+#include "floyd_client.h"
 
 using namespace std;
 
@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
   std::string key = "test_key";
   std::string value = "test_value";
   
-  floyd::Status result = cluster.Write(key, value);
+  pink::Status result = cluster.Write(key, value);
   if (result.ok()) {
     printf ("Write ok\n");
   } else {

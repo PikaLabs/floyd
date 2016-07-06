@@ -1,11 +1,13 @@
-#ifndef __FLOYD_CLIENT_H__
-#define __FLOYD_CLIENT_H__
+#ifndef FLOYD_CLIENT_H
+#define FLOYD_CLIENT_H
 
 #include <string>
 #include <vector>
 
 #include "pb_cli.h"
 #include "status.h"
+
+using pink::Status;
 
 namespace floyd {
 namespace client {
@@ -63,8 +65,8 @@ class Cluster {
  public:
   Cluster(const Option& option);
 
-  Status Write(const std::string& key, const std::string& value);
-  Status Read(const std::string& key, std::string* value);
+  pink::Status Write(const std::string& key, const std::string& value);
+  pink::Status Read(const std::string& key, std::string* value);
 
  private:
   void Init();

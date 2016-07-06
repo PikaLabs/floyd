@@ -1,10 +1,12 @@
-#include "client.h"
+#include "floyd_client.h"
 
 #include <unistd.h>
 #include <getopt.h>
 #include <algorithm>
 #include "logger.h"
 #include "client.pb.h"
+
+#include "pink_define.h"
 
 namespace floyd {
 namespace client {
