@@ -1,6 +1,6 @@
 #ifndef __FLOYD_SERVER_H__
 #define __FLOYD_SERVER_H__
-#include <xdebug.h>
+#include "logger.h"
 #include "pb_conn.h"
 #include "pb_cli.h"
 #include "holy_thread.h"

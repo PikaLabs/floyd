@@ -8,7 +8,7 @@ FloydServer::FloydServerConn::FloydServerConn(int fd, std::string &ip_port,
 
 FloydServer::FloydServerConn::~FloydServerConn() {}
 pink::Status FloydServer::FloydServerConn::BuildObuf() {
-  log_info("begin buildobuf");
+  LOG_INFO("begin buildobuf");
   uint32_t u;
   wbuf_len_ = res_->ByteSize();
   u = htonl(wbuf_len_ + 4);
@@ -19,22 +19,24 @@ pink::Status FloydServer::FloydServerConn::BuildObuf() {
   if (res_) delete res_;
   wbuf_len_ = wbuf_len_ + 8;
 
+  LOG_INFO("Response, opcode: %d, wbuf_pos_: %d, wbuf_len_: %d", ret_opcode_, wbuf_pos_, wbuf_len_); 
+
   // printf ("buildobuf ret_opcode_(%d)\n", ret_opcode_);
   return pink::Status::OK();
 }
 int FloydServer::FloydServerConn::DealMessage() {
-  log_info("deal message now");
+  LOG_INFO("deal message now");
   set_is_reply(true);
   uint32_t buf;
   memcpy((char *)(&buf), rbuf_ + 4, sizeof(uint32_t));
   uint32_t msg_code = ntohl(buf);
-  log_info("get msg code:%d", msg_code);
+  LOG_INFO("get msg code:%d", msg_code);
   // printf ("get msg code:%d\n", msg_code);
 
   switch (msg_code) {
     //@TODO decode by config file
     case 513: {  // sdk_set
-      log_info("receive set request:%d", msg_code);
+      LOG_INFO("receive set request:%d", msg_code);
       // printf ("receive set request:%d\n", msg_code);
       SdkSet command;
       command.ParseFromArray(rbuf_ + 8, header_len_ - 4);
@@ -42,10 +44,10 @@ int FloydServer::FloydServerConn::DealMessage() {
       std::string value = command.value();
       floyd::Status ret = server_thread_->server_->floyd_->Write(key, value);
       if (ret.ok()) {
-        log_info("key:%s value:%s set!", key.c_str(), value.c_str());
+        LOG_INFO("key:%s value:%s set!", key.c_str(), value.c_str());
         // printf ("key:%s value:%s set!\n",key.c_str(),value.c_str());
       } else {
-        log_info("write error");
+        LOG_INFO("write error: %s", ret.ToString().c_str());
         // printf ("write error\n");
       }
       //@TODO encode by config file
@@ -58,17 +60,17 @@ int FloydServer::FloydServerConn::DealMessage() {
       break;
     }
     case 518: {  // sdk_get
-      log_info("receive get request:%d", msg_code);
+      LOG_INFO("receive get request:%d", msg_code);
       SdkGet command;
       command.ParseFromArray(rbuf_ + 8, header_len_ - 4);
       std::string key = command.key();
-      log_info("try to get key:%s ", key.c_str());
+      LOG_INFO("try to get key:%s ", key.c_str());
       std::string value;
       floyd::Status ret = server_thread_->server_->floyd_->Read(key, value);
       if (ret.ok()) {
-        log_info("key:%s value:%s get!", key.c_str(), value.c_str());
+        LOG_INFO("key:%s value:%s get!", key.c_str(), value.c_str());
       } else {
-        log_info("write error");
+        LOG_INFO("read error %s", ret.ToString().c_str());
       }
       //@TODO encode by config file
       ret_opcode_ = 519;
@@ -79,10 +81,10 @@ int FloydServer::FloydServerConn::DealMessage() {
       break;
     }
     case 526: {  // sdk_getifall
-      log_info("receive get all request:%d", msg_code);
+      LOG_INFO("receive get all request:%d", msg_code);
       SdkMGet command;
       command.ParseFromArray(rbuf_ + 8, header_len_ - 4);
-      log_info("try to get all keys ");
+      LOG_INFO("try to get all keys ");
       KVMap kvMap;
       floyd::Status ret = server_thread_->server_->floyd_->ReadAll(kvMap);
       ret_opcode_ = 527;
@@ -98,18 +100,18 @@ int FloydServer::FloydServerConn::DealMessage() {
           *(ret_msg->add_rets()) = kv;
         }
       } else {
-        log_info("get all keys error");
+        LOG_INFO("get all keys error");
       }
       res_ = ret_msg;
       break;
     }
 
     case 522: {  // Cas used for TryLock
-      log_info("receive TryLock request:%d", msg_code);
+      LOG_INFO("receive TryLock request:%d", msg_code);
       SdkCas command;
       command.ParseFromArray(rbuf_ + 8, header_len_ - 4);
       std::string key = command.key();
-      log_info("try to TryLock key:%s ", key.c_str());
+      LOG_INFO("try to TryLock key:%s ", key.c_str());
 
       //@TODO encode by config file
       ret_opcode_ = 523;
@@ -118,10 +120,10 @@ int FloydServer::FloydServerConn::DealMessage() {
 
       floyd::Status ret = server_thread_->server_->floyd_->TryLock(key);
       if (ret.ok()) {
-        log_info("TryLock(%s) ok", key.c_str());
+        LOG_INFO("TryLock(%s) ok", key.c_str());
         ret_msg->set_status(true);
       } else {
-        log_info("TryLock(%s) failed, %s ", key.c_str(),
+        LOG_INFO("TryLock(%s) failed, %s ", key.c_str(),
                  ret.ToString().c_str());
         // printf ("FloydServer::TryLock(%s) failed, %s ", key.c_str(),
         // ret.ToString().c_str());
@@ -134,11 +136,11 @@ int FloydServer::FloydServerConn::DealMessage() {
     }
 
     case 520: {  // GetV used for UnLock
-      log_info("receive UnLock request:%d", msg_code);
+      LOG_INFO("receive UnLock request:%d", msg_code);
       SdkGetV command;
       command.ParseFromArray(rbuf_ + 8, header_len_ - 4);
       std::string key = command.key();
-      log_info("try to UnLock key:%s ", key.c_str());
+      LOG_INFO("try to UnLock key:%s ", key.c_str());
 
       //@TODO encode by config file
       ret_opcode_ = 521;
@@ -148,11 +150,11 @@ int FloydServer::FloydServerConn::DealMessage() {
 
       floyd::Status ret = server_thread_->server_->floyd_->UnLock(key);
       if (ret.ok()) {
-        log_info("UnLock(%s) ok", key.c_str());
+        LOG_INFO("UnLock(%s) ok", key.c_str());
         // printf ("UnLock(%s) ok\n\n", key.c_str());
         ret_msg->set_value("Unlock ok");
       } else {
-        log_info("UnLock(%s) failed, %s ", key.c_str(), ret.ToString().c_str());
+        LOG_INFO("UnLock(%s) failed, %s ", key.c_str(), ret.ToString().c_str());
         // printf ("FloydServer::UnLock(%s) failed, %s\n\n", key.c_str(),
         // ret.ToString().c_str());
         ret_msg->set_value("Unlock failed");
@@ -168,7 +170,7 @@ int FloydServer::FloydServerConn::DealMessage() {
   }
 
   /*
-  log_info("parse data message");
+  LOG_INFO("parse data message");
         command_.ParseFromArray(rbuf_ + 4, header_len_);
   set_is_reply(true);
   command_res_.set_type(command::CommandRes::Write);
@@ -182,7 +184,7 @@ int FloydServer::FloydServerConn::DealMessage() {
 FloydServer::FloydServerThread::FloydServerThread(int port, FloydServer *server)
     : HolyThread<FloydServerConn>(port) {
   server_ = server;
-  log_info("floyd node listen on port:%d", port);
+  LOG_INFO("floyd node listen on port:%d", port);
 }
 
 FloydServer::FloydServerThread::~FloydServerThread() {}
@@ -199,7 +201,7 @@ FloydServer::~FloydServer() {}
 
 floyd::Status FloydServer::Start() {
 
-  log_info("try to start floyd");
+  LOG_INFO("try to start floyd");
   floyd_ = new floyd::Floyd(floyd_option_);
   floyd::Status ret = floyd_->Start();
   server_thread_->StartThread();

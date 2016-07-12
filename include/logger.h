@@ -1,7 +1,7 @@
 #ifndef __LOGGER_H__
 #define __LOGGER_H__
-
-#include <time.h>
+#include <stdio.h>
+#include <sys/time.h>
 #include <string.h>
 
 static inline char *timenow();
