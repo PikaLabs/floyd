@@ -60,6 +60,19 @@ int FloydWorkerConn::DealMessage() {
       command_res_.set_allocated_kvr(kvr);
       break;
     }
+    case command::Command::Delete: {
+      set_is_reply(true);
+      Status ret = Floyd::raft_con->HandleDeleteCommand(command_);
+      command_res_.set_type(command::CommandRes::Delete);
+      command::CommandRes_KvRet* kvr = new command::CommandRes_KvRet();
+      if (!ret.ok())
+        kvr->set_status(false);
+      else
+        kvr->set_status(true);
+      // printf ("Write end key(%s) v(%s) ret(%s)\n", kvr->key
+      command_res_.set_allocated_kvr(kvr);
+      break;
+    }
     case command::Command::Read: {
       set_is_reply(true);
       std::string value;

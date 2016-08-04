@@ -31,6 +31,7 @@ public:
 	void AddNewPeer(NodeInfo* ni);
 
 	floyd::Status HandleWriteCommand(command::Command& cmd);
+	floyd::Status HandleDeleteCommand(command::Command& cmd);
   floyd::Status HandleReadCommand(command::Command& cmd,std::string& value);
   floyd::Status HandleReadAllCommand(command::Command& cmd,KVMap& kvMap);
   floyd::Status HandleTryLockCommand(command::Command& cmd);

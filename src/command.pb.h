@@ -55,11 +55,12 @@ enum Command_Type {
   Command_Type_DeleteUser = 6,
   Command_Type_RaftVote = 7,
   Command_Type_RaftAppendEntries = 8,
-  Command_Type_SynRaftStage = 9
+  Command_Type_SynRaftStage = 9,
+  Command_Type_Delete = 10
 };
 bool Command_Type_IsValid(int value);
 const Command_Type Command_Type_Type_MIN = Command_Type_Read;
-const Command_Type Command_Type_Type_MAX = Command_Type_SynRaftStage;
+const Command_Type Command_Type_Type_MAX = Command_Type_Delete;
 const int Command_Type_Type_ARRAYSIZE = Command_Type_Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* Command_Type_descriptor();
@@ -81,11 +82,12 @@ enum CommandRes_Type {
   CommandRes_Type_DeleteUser = 5,
   CommandRes_Type_RaftVote = 6,
   CommandRes_Type_RaftAppendEntries = 7,
-  CommandRes_Type_SynRaftStage = 8
+  CommandRes_Type_SynRaftStage = 8,
+  CommandRes_Type_Delete = 9
 };
 bool CommandRes_Type_IsValid(int value);
 const CommandRes_Type CommandRes_Type_Type_MIN = CommandRes_Type_Read;
-const CommandRes_Type CommandRes_Type_Type_MAX = CommandRes_Type_SynRaftStage;
+const CommandRes_Type CommandRes_Type_Type_MAX = CommandRes_Type_Delete;
 const int CommandRes_Type_Type_ARRAYSIZE = CommandRes_Type_Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CommandRes_Type_descriptor();
@@ -483,6 +485,7 @@ class Command : public ::google::protobuf::Message {
   static const Type RaftVote = Command_Type_RaftVote;
   static const Type RaftAppendEntries = Command_Type_RaftAppendEntries;
   static const Type SynRaftStage = Command_Type_SynRaftStage;
+  static const Type Delete = Command_Type_Delete;
   static inline bool Type_IsValid(int value) {
     return Command_Type_IsValid(value);
   }
@@ -1072,6 +1075,7 @@ class CommandRes : public ::google::protobuf::Message {
   static const Type RaftVote = CommandRes_Type_RaftVote;
   static const Type RaftAppendEntries = CommandRes_Type_RaftAppendEntries;
   static const Type SynRaftStage = CommandRes_Type_SynRaftStage;
+  static const Type Delete = CommandRes_Type_Delete;
   static inline bool Type_IsValid(int value) {
     return CommandRes_Type_IsValid(value);
   }

@@ -24,6 +24,10 @@ static std::string CmdType(command::Command& cmd) {
       ret = "Write";
       break;
     }
+    case command::Command::Delete: {
+      ret = "Delete";
+      break;
+    }
     case command::Command::TryLock: {
       ret = "TryLock";
       break;
@@ -92,6 +96,7 @@ command::Command BuildReadCommand(const std::string& key) {
   cmd.set_allocated_kv(kv);
   return cmd;
 }
+
 command::Command BuildWriteCommand(const std::string& key,
                                    const std::string& value) {
   command::Command cmd;
@@ -102,6 +107,16 @@ command::Command BuildWriteCommand(const std::string& key,
   cmd.set_allocated_kv(kv);
   return cmd;
 }
+
+command::Command BuildDeleteCommand(const std::string& key) {
+  command::Command cmd;
+  cmd.set_type(command::Command::Delete);
+  command::Command_Kv* kv = new command::Command_Kv();
+  kv->set_key(key);
+  cmd.set_allocated_kv(kv);
+  return cmd;
+}
+
 command::Command BuildReadAllCommand() {
   command::Command cmd;
   cmd.set_type(command::Command::ReadAll);

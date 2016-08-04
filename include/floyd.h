@@ -44,6 +44,7 @@ class Floyd {
   Status UnLock(const std::string& key);
   Status Stop();
   Status Erase();
+  Status Delete(const std::string& key);
 
   // return true if leader has been elected
   bool GetLeader(std::string& ip, int& port);

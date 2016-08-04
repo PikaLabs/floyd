@@ -126,6 +126,12 @@ bool StateMachine::ApplyThread::Apply(StateMachine::Entry& entry) {
       else
         return true;
     }
+    case command::Command::Delete: {
+      command::Command_Kv kv = cmd.kv();
+      std::string key = kv.key();
+      floyd::Status ret = floyd::Floyd::db->Delete(key);
+      return ret.ok();
+    }
     case command::Command::Read: { return true; }
 
     case command::Command::ReadAll: { return true; }

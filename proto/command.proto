@@ -14,6 +14,7 @@ message Command {
 		RaftVote = 7;
 		RaftAppendEntries = 8;
 		SynRaftStage = 9;
+    Delete = 10;
 	}
   required Type type = 1;
   message Kv {
@@ -51,6 +52,7 @@ message CommandRes {
 		RaftVote = 6;
 		RaftAppendEntries = 7;
 		SynRaftStage = 8;
+    Delete = 9;
 	}
   required Type type = 1;
 

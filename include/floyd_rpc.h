@@ -8,5 +8,6 @@ command::Command BuildWriteCommand(const std::string& key,
                                    const std::string& value);
 command::Command BuildReadAllCommand();
 command::Command BuildReadCommand(const std::string& key);
+command::Command BuildDeleteCommand(const std::string& key);
 }
 #endif

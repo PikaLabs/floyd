@@ -439,6 +439,10 @@ floyd::Status RaftConsensus::HandleWriteCommand(command::Command& cmd) {
   return floyd::Status::OK();
 }
 
+floyd::Status RaftConsensus::HandleDeleteCommand(command::Command& cmd) {
+  return HandleWriteCommand(cmd);
+}
+
 floyd::Status RaftConsensus::HandleReadCommand(command::Command& cmd,
                                                std::string& value) {
   LOG_DEBUG("MainThread::HandleReadCommand start");

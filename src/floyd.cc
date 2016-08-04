@@ -70,6 +70,26 @@ NodeInfo* Floyd::GetLeaderInfo() {
   }
 }
 
+Status Floyd::Delete(const std::string& key) {
+  NodeInfo* leaderInfo = GetLeaderInfo();
+  if (leaderInfo == NULL) {
+    return Status::NotFound("no leader node!");
+  }
+
+  // Construct PB package
+  command::Command cmd = BuildDeleteCommand(key);
+  // Local node is leader?
+  if (IsLeader()) {
+    return raft_con->HandleDeleteCommand(cmd);
+  }
+  command::CommandRes cmd_res;
+  Rpc(leaderInfo, cmd, cmd_res);
+  if (cmd_res.kvr().status())
+    return Status::OK();
+  else
+    return Status::Corruption("delete error!");
+}
+
 Status Floyd::Write(const std::string& key, const std::string& value) {
   NodeInfo* leaderInfo = GetLeaderInfo();
   if (leaderInfo == NULL) {

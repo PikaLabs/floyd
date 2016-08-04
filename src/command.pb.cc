@@ -22,197 +22,200 @@ namespace {
 
 const ::google::protobuf::Descriptor* Command_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
-    Command_reflection_ = NULL;
+  Command_reflection_ = NULL;
 const ::google::protobuf::Descriptor* Command_Kv_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
-    Command_Kv_reflection_ = NULL;
+  Command_Kv_reflection_ = NULL;
 const ::google::protobuf::Descriptor* Command_RaftStage_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
-    Command_RaftStage_reflection_ = NULL;
+  Command_RaftStage_reflection_ = NULL;
 const ::google::protobuf::Descriptor* Command_User_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
-    Command_User_reflection_ = NULL;
+  Command_User_reflection_ = NULL;
 const ::google::protobuf::EnumDescriptor* Command_Type_descriptor_ = NULL;
 const ::google::protobuf::Descriptor* CommandRes_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
-    CommandRes_reflection_ = NULL;
+  CommandRes_reflection_ = NULL;
 const ::google::protobuf::Descriptor* CommandRes_Kv_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
-    CommandRes_Kv_reflection_ = NULL;
+  CommandRes_Kv_reflection_ = NULL;
 const ::google::protobuf::Descriptor* CommandRes_KvRet_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
-    CommandRes_KvRet_reflection_ = NULL;
+  CommandRes_KvRet_reflection_ = NULL;
 const ::google::protobuf::Descriptor* CommandRes_KvAllRet_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
-    CommandRes_KvAllRet_reflection_ = NULL;
-const ::google::protobuf::Descriptor* CommandRes_RaftStageRes_descriptor_ =
-    NULL;
+  CommandRes_KvAllRet_reflection_ = NULL;
+const ::google::protobuf::Descriptor* CommandRes_RaftStageRes_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
-    CommandRes_RaftStageRes_reflection_ = NULL;
+  CommandRes_RaftStageRes_reflection_ = NULL;
 const ::google::protobuf::EnumDescriptor* CommandRes_Type_descriptor_ = NULL;
 
 }  // namespace
 
+
 void protobuf_AssignDesc_command_2eproto() {
   protobuf_AddDesc_command_2eproto();
   const ::google::protobuf::FileDescriptor* file =
-      ::google::protobuf::DescriptorPool::generated_pool()->FindFileByName(
-          "command.proto");
+    ::google::protobuf::DescriptorPool::generated_pool()->FindFileByName(
+      "command.proto");
   GOOGLE_CHECK(file != NULL);
   Command_descriptor_ = file->message_type(0);
   static const int Command_offsets_[6] = {
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command, type_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command, kv_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command, rqv_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command, aerq_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command, user_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command, raftstage_), };
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command, type_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command, kv_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command, rqv_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command, aerq_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command, user_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command, raftstage_),
+  };
   Command_reflection_ =
-      new ::google::protobuf::internal::GeneratedMessageReflection(
-          Command_descriptor_, Command::default_instance_, Command_offsets_,
-          GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command,
-                                                         _has_bits_[0]),
-          GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command,
-                                                         _unknown_fields_),
-          -1, ::google::protobuf::DescriptorPool::generated_pool(),
-          ::google::protobuf::MessageFactory::generated_factory(),
-          sizeof(Command));
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      Command_descriptor_,
+      Command::default_instance_,
+      Command_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(Command));
   Command_Kv_descriptor_ = Command_descriptor_->nested_type(0);
   static const int Command_Kv_offsets_[2] = {
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_Kv, key_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_Kv, value_), };
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_Kv, key_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_Kv, value_),
+  };
   Command_Kv_reflection_ =
-      new ::google::protobuf::internal::GeneratedMessageReflection(
-          Command_Kv_descriptor_, Command_Kv::default_instance_,
-          Command_Kv_offsets_, GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(
-                                   Command_Kv, _has_bits_[0]),
-          GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_Kv,
-                                                         _unknown_fields_),
-          -1, ::google::protobuf::DescriptorPool::generated_pool(),
-          ::google::protobuf::MessageFactory::generated_factory(),
-          sizeof(Command_Kv));
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      Command_Kv_descriptor_,
+      Command_Kv::default_instance_,
+      Command_Kv_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_Kv, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_Kv, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(Command_Kv));
   Command_RaftStage_descriptor_ = Command_descriptor_->nested_type(1);
   static const int Command_RaftStage_offsets_[4] = {
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage, term_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage,
-                                                     commitindex_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage, ip_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage,
-                                                     port_), };
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage, term_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage, commitindex_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage, ip_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage, port_),
+  };
   Command_RaftStage_reflection_ =
-      new ::google::protobuf::internal::GeneratedMessageReflection(
-          Command_RaftStage_descriptor_, Command_RaftStage::default_instance_,
-          Command_RaftStage_offsets_,
-          GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage,
-                                                         _has_bits_[0]),
-          GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage,
-                                                         _unknown_fields_),
-          -1, ::google::protobuf::DescriptorPool::generated_pool(),
-          ::google::protobuf::MessageFactory::generated_factory(),
-          sizeof(Command_RaftStage));
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      Command_RaftStage_descriptor_,
+      Command_RaftStage::default_instance_,
+      Command_RaftStage_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(Command_RaftStage));
   Command_User_descriptor_ = Command_descriptor_->nested_type(2);
   static const int Command_User_offsets_[2] = {
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_User, ip_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_User, port_), };
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_User, ip_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_User, port_),
+  };
   Command_User_reflection_ =
-      new ::google::protobuf::internal::GeneratedMessageReflection(
-          Command_User_descriptor_, Command_User::default_instance_,
-          Command_User_offsets_, GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(
-                                     Command_User, _has_bits_[0]),
-          GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_User,
-                                                         _unknown_fields_),
-          -1, ::google::protobuf::DescriptorPool::generated_pool(),
-          ::google::protobuf::MessageFactory::generated_factory(),
-          sizeof(Command_User));
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      Command_User_descriptor_,
+      Command_User::default_instance_,
+      Command_User_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_User, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_User, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(Command_User));
   Command_Type_descriptor_ = Command_descriptor_->enum_type(0);
   CommandRes_descriptor_ = file->message_type(1);
   static const int CommandRes_offsets_[6] = {
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes, type_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes, kvr_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes, kvallr_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes, rsv_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes, aers_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes, raftstage_), };
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes, type_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes, kvr_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes, kvallr_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes, rsv_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes, aers_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes, raftstage_),
+  };
   CommandRes_reflection_ =
-      new ::google::protobuf::internal::GeneratedMessageReflection(
-          CommandRes_descriptor_, CommandRes::default_instance_,
-          CommandRes_offsets_, GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(
-                                   CommandRes, _has_bits_[0]),
-          GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes,
-                                                         _unknown_fields_),
-          -1, ::google::protobuf::DescriptorPool::generated_pool(),
-          ::google::protobuf::MessageFactory::generated_factory(),
-          sizeof(CommandRes));
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      CommandRes_descriptor_,
+      CommandRes::default_instance_,
+      CommandRes_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(CommandRes));
   CommandRes_Kv_descriptor_ = CommandRes_descriptor_->nested_type(0);
   static const int CommandRes_Kv_offsets_[2] = {
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_Kv, key_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_Kv, value_), };
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_Kv, key_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_Kv, value_),
+  };
   CommandRes_Kv_reflection_ =
-      new ::google::protobuf::internal::GeneratedMessageReflection(
-          CommandRes_Kv_descriptor_, CommandRes_Kv::default_instance_,
-          CommandRes_Kv_offsets_,
-          GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_Kv,
-                                                         _has_bits_[0]),
-          GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_Kv,
-                                                         _unknown_fields_),
-          -1, ::google::protobuf::DescriptorPool::generated_pool(),
-          ::google::protobuf::MessageFactory::generated_factory(),
-          sizeof(CommandRes_Kv));
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      CommandRes_Kv_descriptor_,
+      CommandRes_Kv::default_instance_,
+      CommandRes_Kv_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_Kv, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_Kv, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(CommandRes_Kv));
   CommandRes_KvRet_descriptor_ = CommandRes_descriptor_->nested_type(1);
   static const int CommandRes_KvRet_offsets_[2] = {
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvRet, status_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvRet,
-                                                     value_), };
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvRet, status_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvRet, value_),
+  };
   CommandRes_KvRet_reflection_ =
-      new ::google::protobuf::internal::GeneratedMessageReflection(
-          CommandRes_KvRet_descriptor_, CommandRes_KvRet::default_instance_,
-          CommandRes_KvRet_offsets_,
-          GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvRet,
-                                                         _has_bits_[0]),
-          GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvRet,
-                                                         _unknown_fields_),
-          -1, ::google::protobuf::DescriptorPool::generated_pool(),
-          ::google::protobuf::MessageFactory::generated_factory(),
-          sizeof(CommandRes_KvRet));
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      CommandRes_KvRet_descriptor_,
+      CommandRes_KvRet::default_instance_,
+      CommandRes_KvRet_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvRet, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvRet, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(CommandRes_KvRet));
   CommandRes_KvAllRet_descriptor_ = CommandRes_descriptor_->nested_type(2);
   static const int CommandRes_KvAllRet_offsets_[2] = {
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvAllRet,
-                                                     status_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvAllRet,
-                                                     kvall_), };
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvAllRet, status_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvAllRet, kvall_),
+  };
   CommandRes_KvAllRet_reflection_ =
-      new ::google::protobuf::internal::GeneratedMessageReflection(
-          CommandRes_KvAllRet_descriptor_,
-          CommandRes_KvAllRet::default_instance_, CommandRes_KvAllRet_offsets_,
-          GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvAllRet,
-                                                         _has_bits_[0]),
-          GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvAllRet,
-                                                         _unknown_fields_),
-          -1, ::google::protobuf::DescriptorPool::generated_pool(),
-          ::google::protobuf::MessageFactory::generated_factory(),
-          sizeof(CommandRes_KvAllRet));
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      CommandRes_KvAllRet_descriptor_,
+      CommandRes_KvAllRet::default_instance_,
+      CommandRes_KvAllRet_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvAllRet, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_KvAllRet, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(CommandRes_KvAllRet));
   CommandRes_RaftStageRes_descriptor_ = CommandRes_descriptor_->nested_type(3);
   static const int CommandRes_RaftStageRes_offsets_[4] = {
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes,
-                                                     term_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes,
-                                                     commitindex_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes,
-                                                     ip_),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes,
-                                                     port_), };
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, term_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, commitindex_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, ip_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, port_),
+  };
   CommandRes_RaftStageRes_reflection_ =
-      new ::google::protobuf::internal::GeneratedMessageReflection(
-          CommandRes_RaftStageRes_descriptor_,
-          CommandRes_RaftStageRes::default_instance_,
-          CommandRes_RaftStageRes_offsets_,
-          GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(
-              CommandRes_RaftStageRes, _has_bits_[0]),
-          GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(
-              CommandRes_RaftStageRes, _unknown_fields_),
-          -1, ::google::protobuf::DescriptorPool::generated_pool(),
-          ::google::protobuf::MessageFactory::generated_factory(),
-          sizeof(CommandRes_RaftStageRes));
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      CommandRes_RaftStageRes_descriptor_,
+      CommandRes_RaftStageRes::default_instance_,
+      CommandRes_RaftStageRes_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(CommandRes_RaftStageRes));
   CommandRes_Type_descriptor_ = CommandRes_descriptor_->enum_type(0);
 }
 
@@ -221,31 +224,29 @@ namespace {
 GOOGLE_PROTOBUF_DECLARE_ONCE(protobuf_AssignDescriptors_once_);
 inline void protobuf_AssignDescriptorsOnce() {
   ::google::protobuf::GoogleOnceInit(&protobuf_AssignDescriptors_once_,
-                                     &protobuf_AssignDesc_command_2eproto);
+                 &protobuf_AssignDesc_command_2eproto);
 }
 
 void protobuf_RegisterTypes(const ::std::string&) {
   protobuf_AssignDescriptorsOnce();
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      Command_descriptor_, &Command::default_instance());
+    Command_descriptor_, &Command::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      Command_Kv_descriptor_, &Command_Kv::default_instance());
+    Command_Kv_descriptor_, &Command_Kv::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      Command_RaftStage_descriptor_, &Command_RaftStage::default_instance());
+    Command_RaftStage_descriptor_, &Command_RaftStage::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      Command_User_descriptor_, &Command_User::default_instance());
+    Command_User_descriptor_, &Command_User::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      CommandRes_descriptor_, &CommandRes::default_instance());
+    CommandRes_descriptor_, &CommandRes::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      CommandRes_Kv_descriptor_, &CommandRes_Kv::default_instance());
+    CommandRes_Kv_descriptor_, &CommandRes_Kv::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      CommandRes_KvRet_descriptor_, &CommandRes_KvRet::default_instance());
+    CommandRes_KvRet_descriptor_, &CommandRes_KvRet::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      CommandRes_KvAllRet_descriptor_,
-      &CommandRes_KvAllRet::default_instance());
+    CommandRes_KvAllRet_descriptor_, &CommandRes_KvAllRet::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-      CommandRes_RaftStageRes_descriptor_,
-      &CommandRes_RaftStageRes::default_instance());
+    CommandRes_RaftStageRes_descriptor_, &CommandRes_RaftStageRes::default_instance());
 }
 
 }  // namespace
@@ -279,56 +280,40 @@ void protobuf_AddDesc_command_2eproto() {
 
   ::floyd::raft::protobuf_AddDesc_raft_2fraft_2eproto();
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      "\n\rcommand.proto\022\007command\032\017raft/raft.prot"
-      "o\"\242\004\n\007Command\022#\n\004type\030\001 "
-      "\002(\0162\025.command.Co"
-      "mmand.Type\022\037\n\002kv\030\002 \001(\0132\023.command.Command"
-      ".Kv\022$\n\003rqv\030\003 \001(\0132\027.floyd.raft.RequestVot"
-      "e\022.\n\004aerq\030\004 \001(\0132 .floyd.raft.AppendEntri"
-      "esRequest\022#\n\004user\030\005 \001(\0132\025.command.Comman"
-      "d.User\022-\n\traftstage\030\006 \001(\0132\032.command.Comm"
-      "and.RaftStage\032 \n\002Kv\022\013\n\003key\030\001 "
-      "\002(\014\022\r\n\005valu"
-      "e\030\002 \001(\014\032H\n\tRaftStage\022\014\n\004term\030\001 "
-      "\002(\005\022\023\n\013co"
-      "mmitIndex\030\002 \002(\005\022\n\n\002ip\030\003 "
-      "\001(\014\022\014\n\004port\030\004 \001("
-      "\005\032 \n\004User\022\n\n\002ip\030\001 "
-      "\002(\014\022\014\n\004port\030\002 \002(\005\"\230\001\n\004"
-      "Type\022\010\n\004Read\020\000\022\013\n\007ReadAll\020\001\022\016\n\nD"
-      "irtyWrit"
-      "e\020\002\022\t\n\005Write\020\003\022\013\n\007TryLock\020\004\022\n\n"
-      "\006UnLock\020\005\022"
-      "\016\n\nDeleteUser\020\006\022\014\n\010RaftVote\020\007\022\025\n\021Ra"
-      "ftApp"
-      "endEntries\020\010\022\020\n\014SynRaftStage\020\t\"\374\004\n\nComma"
-      "ndRes\022&\n\004type\030\001 \002(\0162\030.command.CommandRes"
-      ".Type\022&\n\003kvr\030\002 \001(\0132\031.command.CommandRes."
-      "KvRet\022,\n\006kvallr\030\003 \001(\0132\034.command.CommandR"
-      "es.KvAllRet\022%\n\003rsv\030\004 \001(\0132\030.floyd.raft.Re"
-      "sponseVote\022/\n\004aers\030\005 \001(\0132!.floyd.raft.Ap"
-      "pendEntriesResponse\0223\n\traftstage\030\006 \001(\0132 "
-      ".command.CommandRes.RaftStageRes\032 \n\002Kv\022\013"
-      "\n\003key\030\001 \002(\014\022\r\n\005value\030\002 "
-      "\002(\014\032&\n\005KvRet\022\016\n\006s"
-      "tatus\030\001 \002(\010\022\r\n\005value\030\002 "
-      "\001(\014\032A\n\010KvAllRet\022\016"
-      "\n\006status\030\001 \002(\010\022%\n\005kvall\030\002 "
-      "\003(\0132\026.command."
-      "CommandRes.Kv\032K\n\014RaftStageRes\022\014\n\004term\030\001 "
-      "\002(\005\022\023\n\013commitIndex\030\002 "
-      "\002(\005\022\n\n\002ip\030\003 \001(\014\022\014\n\004"
-      "port\030\004 "
-      "\001("
-      "\005\"\210\001\n\004Type\022\010\n\004Read\020\000\022\013\n\007ReadAll"
-      "\020\001\022\t\n\005Write\020\002\022\013\n\007TryLock\020\003\022\n\n"
-      "\006UnLock\020\004\022\016"
-      "\n\nDeleteUser\020\005\022\014\n\010RaftVote\020\006\022\025\n\021RaftAp"
-      "pe"
-      "ndEntries\020\007\022\020\n\014SynRaftStage\020\010",
-      1229);
+    "\n\rcommand.proto\022\007command\032\017raft/raft.prot"
+    "o\"\256\004\n\007Command\022#\n\004type\030\001 \002(\0162\025.command.Co"
+    "mmand.Type\022\037\n\002kv\030\002 \001(\0132\023.command.Command"
+    ".Kv\022$\n\003rqv\030\003 \001(\0132\027.floyd.raft.RequestVot"
+    "e\022.\n\004aerq\030\004 \001(\0132 .floyd.raft.AppendEntri"
+    "esRequest\022#\n\004user\030\005 \001(\0132\025.command.Comman"
+    "d.User\022-\n\traftstage\030\006 \001(\0132\032.command.Comm"
+    "and.RaftStage\032 \n\002Kv\022\013\n\003key\030\001 \002(\014\022\r\n\005valu"
+    "e\030\002 \001(\014\032H\n\tRaftStage\022\014\n\004term\030\001 \002(\005\022\023\n\013co"
+    "mmitIndex\030\002 \002(\005\022\n\n\002ip\030\003 \001(\014\022\014\n\004port\030\004 \001("
+    "\005\032 \n\004User\022\n\n\002ip\030\001 \002(\014\022\014\n\004port\030\002 \002(\005\"\244\001\n\004"
+    "Type\022\010\n\004Read\020\000\022\013\n\007ReadAll\020\001\022\016\n\nDirtyWrit"
+    "e\020\002\022\t\n\005Write\020\003\022\013\n\007TryLock\020\004\022\n\n\006UnLock\020\005\022"
+    "\016\n\nDeleteUser\020\006\022\014\n\010RaftVote\020\007\022\025\n\021RaftApp"
+    "endEntries\020\010\022\020\n\014SynRaftStage\020\t\022\n\n\006Delete"
+    "\020\n\"\210\005\n\nCommandRes\022&\n\004type\030\001 \002(\0162\030.comman"
+    "d.CommandRes.Type\022&\n\003kvr\030\002 \001(\0132\031.command"
+    ".CommandRes.KvRet\022,\n\006kvallr\030\003 \001(\0132\034.comm"
+    "and.CommandRes.KvAllRet\022%\n\003rsv\030\004 \001(\0132\030.f"
+    "loyd.raft.ResponseVote\022/\n\004aers\030\005 \001(\0132!.f"
+    "loyd.raft.AppendEntriesResponse\0223\n\trafts"
+    "tage\030\006 \001(\0132 .command.CommandRes.RaftStag"
+    "eRes\032 \n\002Kv\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 \002(\014\032&"
+    "\n\005KvRet\022\016\n\006status\030\001 \002(\010\022\r\n\005value\030\002 \001(\014\032A"
+    "\n\010KvAllRet\022\016\n\006status\030\001 \002(\010\022%\n\005kvall\030\002 \003("
+    "\0132\026.command.CommandRes.Kv\032K\n\014RaftStageRe"
+    "s\022\014\n\004term\030\001 \002(\005\022\023\n\013commitIndex\030\002 \002(\005\022\n\n\002"
+    "ip\030\003 \001(\014\022\014\n\004port\030\004 \001(\005\"\224\001\n\004Type\022\010\n\004Read\020"
+    "\000\022\013\n\007ReadAll\020\001\022\t\n\005Write\020\002\022\013\n\007TryLock\020\003\022\n"
+    "\n\006UnLock\020\004\022\016\n\nDeleteUser\020\005\022\014\n\010RaftVote\020\006"
+    "\022\025\n\021RaftAppendEntries\020\007\022\020\n\014SynRaftStage\020"
+    "\010\022\n\n\006Delete\020\t", 1253);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
-      "command.proto", &protobuf_RegisterTypes);
+    "command.proto", &protobuf_RegisterTypes);
   Command::default_instance_ = new Command();
   Command_Kv::default_instance_ = new Command_Kv();
   Command_RaftStage::default_instance_ = new Command_RaftStage();
@@ -347,8 +332,7 @@ void protobuf_AddDesc_command_2eproto() {
   CommandRes_KvRet::default_instance_->InitAsDefaultInstance();
   CommandRes_KvAllRet::default_instance_->InitAsDefaultInstance();
   CommandRes_RaftStageRes::default_instance_->InitAsDefaultInstance();
-  ::google::protobuf::internal::OnShutdown(
-      &protobuf_ShutdownFile_command_2eproto);
+  ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_command_2eproto);
 }
 
 // Force AddDescriptors() to be called at static initialization time.
@@ -365,7 +349,7 @@ const ::google::protobuf::EnumDescriptor* Command_Type_descriptor() {
   return Command_Type_descriptor_;
 }
 bool Command_Type_IsValid(int value) {
-  switch (value) {
+  switch(value) {
     case 0:
     case 1:
     case 2:
@@ -376,6 +360,7 @@ bool Command_Type_IsValid(int value) {
     case 7:
     case 8:
     case 9:
+    case 10:
       return true;
     default:
       return false;
@@ -393,6 +378,7 @@ const Command_Type Command::DeleteUser;
 const Command_Type Command::RaftVote;
 const Command_Type Command::RaftAppendEntries;
 const Command_Type Command::SynRaftStage;
+const Command_Type Command::Delete;
 const Command_Type Command::Type_MIN;
 const Command_Type Command::Type_MAX;
 const int Command::Type_ARRAYSIZE;
@@ -402,25 +388,30 @@ const int Command_Kv::kKeyFieldNumber;
 const int Command_Kv::kValueFieldNumber;
 #endif  // !_MSC_VER
 
-Command_Kv::Command_Kv() : ::google::protobuf::Message() { SharedCtor(); }
+Command_Kv::Command_Kv()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
 
-void Command_Kv::InitAsDefaultInstance() {}
+void Command_Kv::InitAsDefaultInstance() {
+}
 
-Command_Kv::Command_Kv(const Command_Kv& from) : ::google::protobuf::Message() {
+Command_Kv::Command_Kv(const Command_Kv& from)
+  : ::google::protobuf::Message() {
   SharedCtor();
   MergeFrom(from);
 }
 
 void Command_Kv::SharedCtor() {
   _cached_size_ = 0;
-  key_ =
-      const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  value_ =
-      const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  value_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
-Command_Kv::~Command_Kv() { SharedDtor(); }
+Command_Kv::~Command_Kv() {
+  SharedDtor();
+}
 
 void Command_Kv::SharedDtor() {
   if (key_ != &::google::protobuf::internal::kEmptyString) {
@@ -450,7 +441,9 @@ const Command_Kv& Command_Kv::default_instance() {
 
 Command_Kv* Command_Kv::default_instance_ = NULL;
 
-Command_Kv* Command_Kv::New() const { return new Command_Kv; }
+Command_Kv* Command_Kv::New() const {
+  return new Command_Kv;
+}
 
 void Command_Kv::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
@@ -471,19 +464,16 @@ void Command_Kv::Clear() {
 
 bool Command_Kv::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) \
-  if (!(EXPRESSION)) return false
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
-    switch (
-        ::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
       // required bytes key = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-              input, this->mutable_key()));
+                input, this->mutable_key()));
         } else {
           goto handle_uninterpreted;
         }
@@ -494,11 +484,10 @@ bool Command_Kv::MergePartialFromCodedStream(
       // optional bytes value = 2;
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_value:
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_value:
           DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-              input, this->mutable_value()));
+                input, this->mutable_value()));
         } else {
           goto handle_uninterpreted;
         }
@@ -513,7 +502,7 @@ bool Command_Kv::MergePartialFromCodedStream(
           return true;
         }
         DO_(::google::protobuf::internal::WireFormat::SkipField(
-            input, tag, mutable_unknown_fields()));
+              input, tag, mutable_unknown_fields()));
         break;
       }
     }
@@ -526,14 +515,14 @@ void Command_Kv::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // required bytes key = 1;
   if (has_key()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(1, this->key(),
-                                                             output);
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      1, this->key(), output);
   }
 
   // optional bytes value = 2;
   if (has_value()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(2, this->value(),
-                                                             output);
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      2, this->value(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -546,20 +535,21 @@ void Command_Kv::SerializeWithCachedSizes(
     ::google::protobuf::uint8* target) const {
   // required bytes key = 1;
   if (has_key()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
         1, this->key(), target);
   }
 
   // optional bytes value = 2;
   if (has_value()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
         2, this->value(), target);
   }
 
   if (!unknown_fields().empty()) {
-    target =
-        ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-            unknown_fields(), target);
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
   }
   return target;
 }
@@ -570,20 +560,23 @@ int Command_Kv::ByteSize() const {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     // required bytes key = 1;
     if (has_key()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::BytesSize(
-                            this->key());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->key());
     }
 
     // optional bytes value = 2;
     if (has_value()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::BytesSize(
-                            this->value());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->value());
     }
+
   }
   if (!unknown_fields().empty()) {
     total_size +=
-        ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-            unknown_fields());
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
   }
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = total_size;
@@ -594,8 +587,8 @@ int Command_Kv::ByteSize() const {
 void Command_Kv::MergeFrom(const ::google::protobuf::Message& from) {
   GOOGLE_CHECK_NE(&from, this);
   const Command_Kv* source =
-      ::google::protobuf::internal::dynamic_cast_if_available<
-          const Command_Kv*>(&from);
+    ::google::protobuf::internal::dynamic_cast_if_available<const Command_Kv*>(
+      &from);
   if (source == NULL) {
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
   } else {
@@ -652,6 +645,7 @@ void Command_Kv::Swap(Command_Kv* other) {
   return metadata;
 }
 
+
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
@@ -661,14 +655,16 @@ const int Command_RaftStage::kIpFieldNumber;
 const int Command_RaftStage::kPortFieldNumber;
 #endif  // !_MSC_VER
 
-Command_RaftStage::Command_RaftStage() : ::google::protobuf::Message() {
+Command_RaftStage::Command_RaftStage()
+  : ::google::protobuf::Message() {
   SharedCtor();
 }
 
-void Command_RaftStage::InitAsDefaultInstance() {}
+void Command_RaftStage::InitAsDefaultInstance() {
+}
 
 Command_RaftStage::Command_RaftStage(const Command_RaftStage& from)
-    : ::google::protobuf::Message() {
+  : ::google::protobuf::Message() {
   SharedCtor();
   MergeFrom(from);
 }
@@ -677,13 +673,14 @@ void Command_RaftStage::SharedCtor() {
   _cached_size_ = 0;
   term_ = 0;
   commitindex_ = 0;
-  ip_ =
-      const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  ip_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   port_ = 0;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
-Command_RaftStage::~Command_RaftStage() { SharedDtor(); }
+Command_RaftStage::~Command_RaftStage() {
+  SharedDtor();
+}
 
 void Command_RaftStage::SharedDtor() {
   if (ip_ != &::google::protobuf::internal::kEmptyString) {
@@ -731,20 +728,17 @@ void Command_RaftStage::Clear() {
 
 bool Command_RaftStage::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) \
-  if (!(EXPRESSION)) return false
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
-    switch (
-        ::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
       // required int32 term = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-              ::google::protobuf::int32,
-              ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-              input, &term_)));
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &term_)));
           set_has_term();
         } else {
           goto handle_uninterpreted;
@@ -757,11 +751,10 @@ bool Command_RaftStage::MergePartialFromCodedStream(
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-        parse_commitIndex:
+         parse_commitIndex:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-              ::google::protobuf::int32,
-              ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-              input, &commitindex_)));
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &commitindex_)));
           set_has_commitindex();
         } else {
           goto handle_uninterpreted;
@@ -773,11 +766,10 @@ bool Command_RaftStage::MergePartialFromCodedStream(
       // optional bytes ip = 3;
       case 3: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_ip:
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_ip:
           DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-              input, this->mutable_ip()));
+                input, this->mutable_ip()));
         } else {
           goto handle_uninterpreted;
         }
@@ -789,11 +781,10 @@ bool Command_RaftStage::MergePartialFromCodedStream(
       case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-        parse_port:
+         parse_port:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-              ::google::protobuf::int32,
-              ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-              input, &port_)));
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &port_)));
           set_has_port();
         } else {
           goto handle_uninterpreted;
@@ -809,7 +800,7 @@ bool Command_RaftStage::MergePartialFromCodedStream(
           return true;
         }
         DO_(::google::protobuf::internal::WireFormat::SkipField(
-            input, tag, mutable_unknown_fields()));
+              input, tag, mutable_unknown_fields()));
         break;
       }
     }
@@ -822,26 +813,23 @@ void Command_RaftStage::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // required int32 term = 1;
   if (has_term()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->term(),
-                                                             output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->term(), output);
   }
 
   // required int32 commitIndex = 2;
   if (has_commitindex()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(
-        2, this->commitindex(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->commitindex(), output);
   }
 
   // optional bytes ip = 3;
   if (has_ip()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(3, this->ip(),
-                                                             output);
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      3, this->ip(), output);
   }
 
   // optional int32 port = 4;
   if (has_port()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->port(),
-                                                             output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->port(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -854,32 +842,29 @@ void Command_RaftStage::SerializeWithCachedSizes(
     ::google::protobuf::uint8* target) const {
   // required int32 term = 1;
   if (has_term()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(
-        1, this->term(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->term(), target);
   }
 
   // required int32 commitIndex = 2;
   if (has_commitindex()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(
-        2, this->commitindex(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->commitindex(), target);
   }
 
   // optional bytes ip = 3;
   if (has_ip()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
         3, this->ip(), target);
   }
 
   // optional int32 port = 4;
   if (has_port()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(
-        4, this->port(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(4, this->port(), target);
   }
 
   if (!unknown_fields().empty()) {
-    target =
-        ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-            unknown_fields(), target);
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
   }
   return target;
 }
@@ -890,32 +875,37 @@ int Command_RaftStage::ByteSize() const {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     // required int32 term = 1;
     if (has_term()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::Int32Size(
-                            this->term());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->term());
     }
 
     // required int32 commitIndex = 2;
     if (has_commitindex()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::Int32Size(
-                            this->commitindex());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->commitindex());
     }
 
     // optional bytes ip = 3;
     if (has_ip()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::BytesSize(
-                            this->ip());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->ip());
     }
 
     // optional int32 port = 4;
     if (has_port()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::Int32Size(
-                            this->port());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->port());
     }
+
   }
   if (!unknown_fields().empty()) {
     total_size +=
-        ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-            unknown_fields());
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
   }
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = total_size;
@@ -926,8 +916,8 @@ int Command_RaftStage::ByteSize() const {
 void Command_RaftStage::MergeFrom(const ::google::protobuf::Message& from) {
   GOOGLE_CHECK_NE(&from, this);
   const Command_RaftStage* source =
-      ::google::protobuf::internal::dynamic_cast_if_available<
-          const Command_RaftStage*>(&from);
+    ::google::protobuf::internal::dynamic_cast_if_available<const Command_RaftStage*>(
+      &from);
   if (source == NULL) {
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
   } else {
@@ -992,6 +982,7 @@ void Command_RaftStage::Swap(Command_RaftStage* other) {
   return metadata;
 }
 
+
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
@@ -999,25 +990,30 @@ const int Command_User::kIpFieldNumber;
 const int Command_User::kPortFieldNumber;
 #endif  // !_MSC_VER
 
-Command_User::Command_User() : ::google::protobuf::Message() { SharedCtor(); }
+Command_User::Command_User()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
 
-void Command_User::InitAsDefaultInstance() {}
+void Command_User::InitAsDefaultInstance() {
+}
 
 Command_User::Command_User(const Command_User& from)
-    : ::google::protobuf::Message() {
+  : ::google::protobuf::Message() {
   SharedCtor();
   MergeFrom(from);
 }
 
 void Command_User::SharedCtor() {
   _cached_size_ = 0;
-  ip_ =
-      const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  ip_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   port_ = 0;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
-Command_User::~Command_User() { SharedDtor(); }
+Command_User::~Command_User() {
+  SharedDtor();
+}
 
 void Command_User::SharedDtor() {
   if (ip_ != &::google::protobuf::internal::kEmptyString) {
@@ -1044,7 +1040,9 @@ const Command_User& Command_User::default_instance() {
 
 Command_User* Command_User::default_instance_ = NULL;
 
-Command_User* Command_User::New() const { return new Command_User; }
+Command_User* Command_User::New() const {
+  return new Command_User;
+}
 
 void Command_User::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
@@ -1061,19 +1059,16 @@ void Command_User::Clear() {
 
 bool Command_User::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) \
-  if (!(EXPRESSION)) return false
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
-    switch (
-        ::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
       // required bytes ip = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-              input, this->mutable_ip()));
+                input, this->mutable_ip()));
         } else {
           goto handle_uninterpreted;
         }
@@ -1085,11 +1080,10 @@ bool Command_User::MergePartialFromCodedStream(
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-        parse_port:
+         parse_port:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-              ::google::protobuf::int32,
-              ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-              input, &port_)));
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &port_)));
           set_has_port();
         } else {
           goto handle_uninterpreted;
@@ -1105,7 +1099,7 @@ bool Command_User::MergePartialFromCodedStream(
           return true;
         }
         DO_(::google::protobuf::internal::WireFormat::SkipField(
-            input, tag, mutable_unknown_fields()));
+              input, tag, mutable_unknown_fields()));
         break;
       }
     }
@@ -1118,14 +1112,13 @@ void Command_User::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // required bytes ip = 1;
   if (has_ip()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(1, this->ip(),
-                                                             output);
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      1, this->ip(), output);
   }
 
   // required int32 port = 2;
   if (has_port()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->port(),
-                                                             output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->port(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -1138,20 +1131,19 @@ void Command_User::SerializeWithCachedSizes(
     ::google::protobuf::uint8* target) const {
   // required bytes ip = 1;
   if (has_ip()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
         1, this->ip(), target);
   }
 
   // required int32 port = 2;
   if (has_port()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(
-        2, this->port(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->port(), target);
   }
 
   if (!unknown_fields().empty()) {
-    target =
-        ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-            unknown_fields(), target);
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
   }
   return target;
 }
@@ -1162,20 +1154,23 @@ int Command_User::ByteSize() const {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     // required bytes ip = 1;
     if (has_ip()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::BytesSize(
-                            this->ip());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->ip());
     }
 
     // required int32 port = 2;
     if (has_port()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::Int32Size(
-                            this->port());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->port());
     }
+
   }
   if (!unknown_fields().empty()) {
     total_size +=
-        ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-            unknown_fields());
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
   }
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = total_size;
@@ -1186,8 +1181,8 @@ int Command_User::ByteSize() const {
 void Command_User::MergeFrom(const ::google::protobuf::Message& from) {
   GOOGLE_CHECK_NE(&from, this);
   const Command_User* source =
-      ::google::protobuf::internal::dynamic_cast_if_available<
-          const Command_User*>(&from);
+    ::google::protobuf::internal::dynamic_cast_if_available<const Command_User*>(
+      &from);
   if (source == NULL) {
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
   } else {
@@ -1244,6 +1239,7 @@ void Command_User::Swap(Command_User* other) {
   return metadata;
 }
 
+
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
@@ -1255,22 +1251,21 @@ const int Command::kUserFieldNumber;
 const int Command::kRaftstageFieldNumber;
 #endif  // !_MSC_VER
 
-Command::Command() : ::google::protobuf::Message() { SharedCtor(); }
-
-void Command::InitAsDefaultInstance() {
-  kv_ = const_cast< ::command::Command_Kv*>(
-      &::command::Command_Kv::default_instance());
-  rqv_ = const_cast< ::floyd::raft::RequestVote*>(
-      &::floyd::raft::RequestVote::default_instance());
-  aerq_ = const_cast< ::floyd::raft::AppendEntriesRequest*>(
-      &::floyd::raft::AppendEntriesRequest::default_instance());
-  user_ = const_cast< ::command::Command_User*>(
-      &::command::Command_User::default_instance());
-  raftstage_ = const_cast< ::command::Command_RaftStage*>(
-      &::command::Command_RaftStage::default_instance());
+Command::Command()
+  : ::google::protobuf::Message() {
+  SharedCtor();
 }
 
-Command::Command(const Command& from) : ::google::protobuf::Message() {
+void Command::InitAsDefaultInstance() {
+  kv_ = const_cast< ::command::Command_Kv*>(&::command::Command_Kv::default_instance());
+  rqv_ = const_cast< ::floyd::raft::RequestVote*>(&::floyd::raft::RequestVote::default_instance());
+  aerq_ = const_cast< ::floyd::raft::AppendEntriesRequest*>(&::floyd::raft::AppendEntriesRequest::default_instance());
+  user_ = const_cast< ::command::Command_User*>(&::command::Command_User::default_instance());
+  raftstage_ = const_cast< ::command::Command_RaftStage*>(&::command::Command_RaftStage::default_instance());
+}
+
+Command::Command(const Command& from)
+  : ::google::protobuf::Message() {
   SharedCtor();
   MergeFrom(from);
 }
@@ -1286,7 +1281,9 @@ void Command::SharedCtor() {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
-Command::~Command() { SharedDtor(); }
+Command::~Command() {
+  SharedDtor();
+}
 
 void Command::SharedDtor() {
   if (this != default_instance_) {
@@ -1315,7 +1312,9 @@ const Command& Command::default_instance() {
 
 Command* Command::default_instance_ = NULL;
 
-Command* Command::New() const { return new Command; }
+Command* Command::New() const {
+  return new Command;
+}
 
 void Command::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
@@ -1342,22 +1341,20 @@ void Command::Clear() {
 
 bool Command::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) \
-  if (!(EXPRESSION)) return false
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
-    switch (
-        ::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
       // required .command.Command.Type type = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
           int value;
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-              int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-              input, &value)));
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
           if (::command::Command_Type_IsValid(value)) {
-            set_type(static_cast< ::command::Command_Type>(value));
+            set_type(static_cast< ::command::Command_Type >(value));
           } else {
             mutable_unknown_fields()->AddVarint(1, value);
           }
@@ -1371,11 +1368,10 @@ bool Command::MergePartialFromCodedStream(
       // optional .command.Command.Kv kv = 2;
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_kv:
-          DO_(::google::protobuf::internal::WireFormatLite::
-                  ReadMessageNoVirtual(input, mutable_kv()));
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_kv:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_kv()));
         } else {
           goto handle_uninterpreted;
         }
@@ -1386,11 +1382,10 @@ bool Command::MergePartialFromCodedStream(
       // optional .floyd.raft.RequestVote rqv = 3;
       case 3: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_rqv:
-          DO_(::google::protobuf::internal::WireFormatLite::
-                  ReadMessageNoVirtual(input, mutable_rqv()));
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_rqv:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_rqv()));
         } else {
           goto handle_uninterpreted;
         }
@@ -1401,11 +1396,10 @@ bool Command::MergePartialFromCodedStream(
       // optional .floyd.raft.AppendEntriesRequest aerq = 4;
       case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_aerq:
-          DO_(::google::protobuf::internal::WireFormatLite::
-                  ReadMessageNoVirtual(input, mutable_aerq()));
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_aerq:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_aerq()));
         } else {
           goto handle_uninterpreted;
         }
@@ -1416,11 +1410,10 @@ bool Command::MergePartialFromCodedStream(
       // optional .command.Command.User user = 5;
       case 5: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_user:
-          DO_(::google::protobuf::internal::WireFormatLite::
-                  ReadMessageNoVirtual(input, mutable_user()));
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_user:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_user()));
         } else {
           goto handle_uninterpreted;
         }
@@ -1431,11 +1424,10 @@ bool Command::MergePartialFromCodedStream(
       // optional .command.Command.RaftStage raftstage = 6;
       case 6: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_raftstage:
-          DO_(::google::protobuf::internal::WireFormatLite::
-                  ReadMessageNoVirtual(input, mutable_raftstage()));
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_raftstage:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_raftstage()));
         } else {
           goto handle_uninterpreted;
         }
@@ -1450,7 +1442,7 @@ bool Command::MergePartialFromCodedStream(
           return true;
         }
         DO_(::google::protobuf::internal::WireFormat::SkipField(
-            input, tag, mutable_unknown_fields()));
+              input, tag, mutable_unknown_fields()));
         break;
       }
     }
@@ -1463,38 +1455,38 @@ void Command::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // required .command.Command.Type type = 1;
   if (has_type()) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(1, this->type(),
-                                                            output);
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      1, this->type(), output);
   }
 
   // optional .command.Command.Kv kv = 2;
   if (has_kv()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-        2, this->kv(), output);
+      2, this->kv(), output);
   }
 
   // optional .floyd.raft.RequestVote rqv = 3;
   if (has_rqv()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-        3, this->rqv(), output);
+      3, this->rqv(), output);
   }
 
   // optional .floyd.raft.AppendEntriesRequest aerq = 4;
   if (has_aerq()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-        4, this->aerq(), output);
+      4, this->aerq(), output);
   }
 
   // optional .command.Command.User user = 5;
   if (has_user()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-        5, this->user(), output);
+      5, this->user(), output);
   }
 
   // optional .command.Command.RaftStage raftstage = 6;
   if (has_raftstage()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-        6, this->raftstage(), output);
+      6, this->raftstage(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -1508,43 +1500,47 @@ void Command::SerializeWithCachedSizes(
   // required .command.Command.Type type = 1;
   if (has_type()) {
     target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-        1, this->type(), target);
+      1, this->type(), target);
   }
 
   // optional .command.Command.Kv kv = 2;
   if (has_kv()) {
     target = ::google::protobuf::internal::WireFormatLite::
-        WriteMessageNoVirtualToArray(2, this->kv(), target);
+      WriteMessageNoVirtualToArray(
+        2, this->kv(), target);
   }
 
   // optional .floyd.raft.RequestVote rqv = 3;
   if (has_rqv()) {
     target = ::google::protobuf::internal::WireFormatLite::
-        WriteMessageNoVirtualToArray(3, this->rqv(), target);
+      WriteMessageNoVirtualToArray(
+        3, this->rqv(), target);
   }
 
   // optional .floyd.raft.AppendEntriesRequest aerq = 4;
   if (has_aerq()) {
     target = ::google::protobuf::internal::WireFormatLite::
-        WriteMessageNoVirtualToArray(4, this->aerq(), target);
+      WriteMessageNoVirtualToArray(
+        4, this->aerq(), target);
   }
 
   // optional .command.Command.User user = 5;
   if (has_user()) {
     target = ::google::protobuf::internal::WireFormatLite::
-        WriteMessageNoVirtualToArray(5, this->user(), target);
+      WriteMessageNoVirtualToArray(
+        5, this->user(), target);
   }
 
   // optional .command.Command.RaftStage raftstage = 6;
   if (has_raftstage()) {
     target = ::google::protobuf::internal::WireFormatLite::
-        WriteMessageNoVirtualToArray(6, this->raftstage(), target);
+      WriteMessageNoVirtualToArray(
+        6, this->raftstage(), target);
   }
 
   if (!unknown_fields().empty()) {
-    target =
-        ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-            unknown_fields(), target);
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
   }
   return target;
 }
@@ -1555,54 +1551,50 @@ int Command::ByteSize() const {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     // required .command.Command.Type type = 1;
     if (has_type()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::EnumSize(
-                            this->type());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
     }
 
     // optional .command.Command.Kv kv = 2;
     if (has_kv()) {
-      total_size +=
-          1 +
-          ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-              this->kv());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->kv());
     }
 
     // optional .floyd.raft.RequestVote rqv = 3;
     if (has_rqv()) {
-      total_size +=
-          1 +
-          ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-              this->rqv());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->rqv());
     }
 
     // optional .floyd.raft.AppendEntriesRequest aerq = 4;
     if (has_aerq()) {
-      total_size +=
-          1 +
-          ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-              this->aerq());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->aerq());
     }
 
     // optional .command.Command.User user = 5;
     if (has_user()) {
-      total_size +=
-          1 +
-          ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-              this->user());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->user());
     }
 
     // optional .command.Command.RaftStage raftstage = 6;
     if (has_raftstage()) {
-      total_size +=
-          1 +
-          ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-              this->raftstage());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->raftstage());
     }
+
   }
   if (!unknown_fields().empty()) {
     total_size +=
-        ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-            unknown_fields());
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
   }
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = total_size;
@@ -1613,8 +1605,8 @@ int Command::ByteSize() const {
 void Command::MergeFrom(const ::google::protobuf::Message& from) {
   GOOGLE_CHECK_NE(&from, this);
   const Command* source =
-      ::google::protobuf::internal::dynamic_cast_if_available<const Command*>(
-          &from);
+    ::google::protobuf::internal::dynamic_cast_if_available<const Command*>(
+      &from);
   if (source == NULL) {
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
   } else {
@@ -1635,15 +1627,13 @@ void Command::MergeFrom(const Command& from) {
       mutable_rqv()->::floyd::raft::RequestVote::MergeFrom(from.rqv());
     }
     if (from.has_aerq()) {
-      mutable_aerq()->::floyd::raft::AppendEntriesRequest::MergeFrom(
-          from.aerq());
+      mutable_aerq()->::floyd::raft::AppendEntriesRequest::MergeFrom(from.aerq());
     }
     if (from.has_user()) {
       mutable_user()->::command::Command_User::MergeFrom(from.user());
     }
     if (from.has_raftstage()) {
-      mutable_raftstage()->::command::Command_RaftStage::MergeFrom(
-          from.raftstage());
+      mutable_raftstage()->::command::Command_RaftStage::MergeFrom(from.raftstage());
     }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
@@ -1704,6 +1694,7 @@ void Command::Swap(Command* other) {
   return metadata;
 }
 
+
 // ===================================================================
 
 const ::google::protobuf::EnumDescriptor* CommandRes_Type_descriptor() {
@@ -1711,7 +1702,7 @@ const ::google::protobuf::EnumDescriptor* CommandRes_Type_descriptor() {
   return CommandRes_Type_descriptor_;
 }
 bool CommandRes_Type_IsValid(int value) {
-  switch (value) {
+  switch(value) {
     case 0:
     case 1:
     case 2:
@@ -1721,6 +1712,7 @@ bool CommandRes_Type_IsValid(int value) {
     case 6:
     case 7:
     case 8:
+    case 9:
       return true;
     default:
       return false;
@@ -1737,6 +1729,7 @@ const CommandRes_Type CommandRes::DeleteUser;
 const CommandRes_Type CommandRes::RaftVote;
 const CommandRes_Type CommandRes::RaftAppendEntries;
 const CommandRes_Type CommandRes::SynRaftStage;
+const CommandRes_Type CommandRes::Delete;
 const CommandRes_Type CommandRes::Type_MIN;
 const CommandRes_Type CommandRes::Type_MAX;
 const int CommandRes::Type_ARRAYSIZE;
@@ -1746,26 +1739,30 @@ const int CommandRes_Kv::kKeyFieldNumber;
 const int CommandRes_Kv::kValueFieldNumber;
 #endif  // !_MSC_VER
 
-CommandRes_Kv::CommandRes_Kv() : ::google::protobuf::Message() { SharedCtor(); }
+CommandRes_Kv::CommandRes_Kv()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
 
-void CommandRes_Kv::InitAsDefaultInstance() {}
+void CommandRes_Kv::InitAsDefaultInstance() {
+}
 
 CommandRes_Kv::CommandRes_Kv(const CommandRes_Kv& from)
-    : ::google::protobuf::Message() {
+  : ::google::protobuf::Message() {
   SharedCtor();
   MergeFrom(from);
 }
 
 void CommandRes_Kv::SharedCtor() {
   _cached_size_ = 0;
-  key_ =
-      const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  value_ =
-      const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  value_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
-CommandRes_Kv::~CommandRes_Kv() { SharedDtor(); }
+CommandRes_Kv::~CommandRes_Kv() {
+  SharedDtor();
+}
 
 void CommandRes_Kv::SharedDtor() {
   if (key_ != &::google::protobuf::internal::kEmptyString) {
@@ -1795,7 +1792,9 @@ const CommandRes_Kv& CommandRes_Kv::default_instance() {
 
 CommandRes_Kv* CommandRes_Kv::default_instance_ = NULL;
 
-CommandRes_Kv* CommandRes_Kv::New() const { return new CommandRes_Kv; }
+CommandRes_Kv* CommandRes_Kv::New() const {
+  return new CommandRes_Kv;
+}
 
 void CommandRes_Kv::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
@@ -1816,19 +1815,16 @@ void CommandRes_Kv::Clear() {
 
 bool CommandRes_Kv::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) \
-  if (!(EXPRESSION)) return false
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
-    switch (
-        ::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
       // required bytes key = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-              input, this->mutable_key()));
+                input, this->mutable_key()));
         } else {
           goto handle_uninterpreted;
         }
@@ -1839,11 +1835,10 @@ bool CommandRes_Kv::MergePartialFromCodedStream(
       // required bytes value = 2;
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_value:
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_value:
           DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-              input, this->mutable_value()));
+                input, this->mutable_value()));
         } else {
           goto handle_uninterpreted;
         }
@@ -1858,7 +1853,7 @@ bool CommandRes_Kv::MergePartialFromCodedStream(
           return true;
         }
         DO_(::google::protobuf::internal::WireFormat::SkipField(
-            input, tag, mutable_unknown_fields()));
+              input, tag, mutable_unknown_fields()));
         break;
       }
     }
@@ -1871,14 +1866,14 @@ void CommandRes_Kv::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // required bytes key = 1;
   if (has_key()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(1, this->key(),
-                                                             output);
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      1, this->key(), output);
   }
 
   // required bytes value = 2;
   if (has_value()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(2, this->value(),
-                                                             output);
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      2, this->value(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -1891,20 +1886,21 @@ void CommandRes_Kv::SerializeWithCachedSizes(
     ::google::protobuf::uint8* target) const {
   // required bytes key = 1;
   if (has_key()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
         1, this->key(), target);
   }
 
   // required bytes value = 2;
   if (has_value()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
         2, this->value(), target);
   }
 
   if (!unknown_fields().empty()) {
-    target =
-        ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-            unknown_fields(), target);
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
   }
   return target;
 }
@@ -1915,20 +1911,23 @@ int CommandRes_Kv::ByteSize() const {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     // required bytes key = 1;
     if (has_key()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::BytesSize(
-                            this->key());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->key());
     }
 
     // required bytes value = 2;
     if (has_value()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::BytesSize(
-                            this->value());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->value());
     }
+
   }
   if (!unknown_fields().empty()) {
     total_size +=
-        ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-            unknown_fields());
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
   }
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = total_size;
@@ -1939,8 +1938,8 @@ int CommandRes_Kv::ByteSize() const {
 void CommandRes_Kv::MergeFrom(const ::google::protobuf::Message& from) {
   GOOGLE_CHECK_NE(&from, this);
   const CommandRes_Kv* source =
-      ::google::protobuf::internal::dynamic_cast_if_available<
-          const CommandRes_Kv*>(&from);
+    ::google::protobuf::internal::dynamic_cast_if_available<const CommandRes_Kv*>(
+      &from);
   if (source == NULL) {
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
   } else {
@@ -1997,6 +1996,7 @@ void CommandRes_Kv::Swap(CommandRes_Kv* other) {
   return metadata;
 }
 
+
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
@@ -2004,14 +2004,16 @@ const int CommandRes_KvRet::kStatusFieldNumber;
 const int CommandRes_KvRet::kValueFieldNumber;
 #endif  // !_MSC_VER
 
-CommandRes_KvRet::CommandRes_KvRet() : ::google::protobuf::Message() {
+CommandRes_KvRet::CommandRes_KvRet()
+  : ::google::protobuf::Message() {
   SharedCtor();
 }
 
-void CommandRes_KvRet::InitAsDefaultInstance() {}
+void CommandRes_KvRet::InitAsDefaultInstance() {
+}
 
 CommandRes_KvRet::CommandRes_KvRet(const CommandRes_KvRet& from)
-    : ::google::protobuf::Message() {
+  : ::google::protobuf::Message() {
   SharedCtor();
   MergeFrom(from);
 }
@@ -2019,12 +2021,13 @@ CommandRes_KvRet::CommandRes_KvRet(const CommandRes_KvRet& from)
 void CommandRes_KvRet::SharedCtor() {
   _cached_size_ = 0;
   status_ = false;
-  value_ =
-      const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  value_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
-CommandRes_KvRet::~CommandRes_KvRet() { SharedDtor(); }
+CommandRes_KvRet::~CommandRes_KvRet() {
+  SharedDtor();
+}
 
 void CommandRes_KvRet::SharedDtor() {
   if (value_ != &::google::protobuf::internal::kEmptyString) {
@@ -2051,7 +2054,9 @@ const CommandRes_KvRet& CommandRes_KvRet::default_instance() {
 
 CommandRes_KvRet* CommandRes_KvRet::default_instance_ = NULL;
 
-CommandRes_KvRet* CommandRes_KvRet::New() const { return new CommandRes_KvRet; }
+CommandRes_KvRet* CommandRes_KvRet::New() const {
+  return new CommandRes_KvRet;
+}
 
 void CommandRes_KvRet::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
@@ -2068,19 +2073,17 @@ void CommandRes_KvRet::Clear() {
 
 bool CommandRes_KvRet::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) \
-  if (!(EXPRESSION)) return false
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
-    switch (
-        ::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
       // required bool status = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-              bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-              input, &status_)));
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &status_)));
           set_has_status();
         } else {
           goto handle_uninterpreted;
@@ -2092,11 +2095,10 @@ bool CommandRes_KvRet::MergePartialFromCodedStream(
       // optional bytes value = 2;
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_value:
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_value:
           DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-              input, this->mutable_value()));
+                input, this->mutable_value()));
         } else {
           goto handle_uninterpreted;
         }
@@ -2111,7 +2113,7 @@ bool CommandRes_KvRet::MergePartialFromCodedStream(
           return true;
         }
         DO_(::google::protobuf::internal::WireFormat::SkipField(
-            input, tag, mutable_unknown_fields()));
+              input, tag, mutable_unknown_fields()));
         break;
       }
     }
@@ -2124,14 +2126,13 @@ void CommandRes_KvRet::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // required bool status = 1;
   if (has_status()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->status(),
-                                                            output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->status(), output);
   }
 
   // optional bytes value = 2;
   if (has_value()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(2, this->value(),
-                                                             output);
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      2, this->value(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -2144,20 +2145,19 @@ void CommandRes_KvRet::SerializeWithCachedSizes(
     ::google::protobuf::uint8* target) const {
   // required bool status = 1;
   if (has_status()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(
-        1, this->status(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(1, this->status(), target);
   }
 
   // optional bytes value = 2;
   if (has_value()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
         2, this->value(), target);
   }
 
   if (!unknown_fields().empty()) {
-    target =
-        ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-            unknown_fields(), target);
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
   }
   return target;
 }
@@ -2173,14 +2173,16 @@ int CommandRes_KvRet::ByteSize() const {
 
     // optional bytes value = 2;
     if (has_value()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::BytesSize(
-                            this->value());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->value());
     }
+
   }
   if (!unknown_fields().empty()) {
     total_size +=
-        ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-            unknown_fields());
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
   }
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = total_size;
@@ -2191,8 +2193,8 @@ int CommandRes_KvRet::ByteSize() const {
 void CommandRes_KvRet::MergeFrom(const ::google::protobuf::Message& from) {
   GOOGLE_CHECK_NE(&from, this);
   const CommandRes_KvRet* source =
-      ::google::protobuf::internal::dynamic_cast_if_available<
-          const CommandRes_KvRet*>(&from);
+    ::google::protobuf::internal::dynamic_cast_if_available<const CommandRes_KvRet*>(
+      &from);
   if (source == NULL) {
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
   } else {
@@ -2249,6 +2251,7 @@ void CommandRes_KvRet::Swap(CommandRes_KvRet* other) {
   return metadata;
 }
 
+
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
@@ -2256,14 +2259,16 @@ const int CommandRes_KvAllRet::kStatusFieldNumber;
 const int CommandRes_KvAllRet::kKvallFieldNumber;
 #endif  // !_MSC_VER
 
-CommandRes_KvAllRet::CommandRes_KvAllRet() : ::google::protobuf::Message() {
+CommandRes_KvAllRet::CommandRes_KvAllRet()
+  : ::google::protobuf::Message() {
   SharedCtor();
 }
 
-void CommandRes_KvAllRet::InitAsDefaultInstance() {}
+void CommandRes_KvAllRet::InitAsDefaultInstance() {
+}
 
 CommandRes_KvAllRet::CommandRes_KvAllRet(const CommandRes_KvAllRet& from)
-    : ::google::protobuf::Message() {
+  : ::google::protobuf::Message() {
   SharedCtor();
   MergeFrom(from);
 }
@@ -2274,7 +2279,9 @@ void CommandRes_KvAllRet::SharedCtor() {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
-CommandRes_KvAllRet::~CommandRes_KvAllRet() { SharedDtor(); }
+CommandRes_KvAllRet::~CommandRes_KvAllRet() {
+  SharedDtor();
+}
 
 void CommandRes_KvAllRet::SharedDtor() {
   if (this != default_instance_) {
@@ -2313,19 +2320,17 @@ void CommandRes_KvAllRet::Clear() {
 
 bool CommandRes_KvAllRet::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) \
-  if (!(EXPRESSION)) return false
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
-    switch (
-        ::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
       // required bool status = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-              bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-              input, &status_)));
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &status_)));
           set_has_status();
         } else {
           goto handle_uninterpreted;
@@ -2337,11 +2342,10 @@ bool CommandRes_KvAllRet::MergePartialFromCodedStream(
       // repeated .command.CommandRes.Kv kvall = 2;
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_kvall:
-          DO_(::google::protobuf::internal::WireFormatLite::
-                  ReadMessageNoVirtual(input, add_kvall()));
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_kvall:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_kvall()));
         } else {
           goto handle_uninterpreted;
         }
@@ -2357,7 +2361,7 @@ bool CommandRes_KvAllRet::MergePartialFromCodedStream(
           return true;
         }
         DO_(::google::protobuf::internal::WireFormat::SkipField(
-            input, tag, mutable_unknown_fields()));
+              input, tag, mutable_unknown_fields()));
         break;
       }
     }
@@ -2370,14 +2374,13 @@ void CommandRes_KvAllRet::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // required bool status = 1;
   if (has_status()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->status(),
-                                                            output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->status(), output);
   }
 
   // repeated .command.CommandRes.Kv kvall = 2;
   for (int i = 0; i < this->kvall_size(); i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-        2, this->kvall(i), output);
+      2, this->kvall(i), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -2390,20 +2393,19 @@ void CommandRes_KvAllRet::SerializeWithCachedSizes(
     ::google::protobuf::uint8* target) const {
   // required bool status = 1;
   if (has_status()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(
-        1, this->status(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(1, this->status(), target);
   }
 
   // repeated .command.CommandRes.Kv kvall = 2;
   for (int i = 0; i < this->kvall_size(); i++) {
     target = ::google::protobuf::internal::WireFormatLite::
-        WriteMessageNoVirtualToArray(2, this->kvall(i), target);
+      WriteMessageNoVirtualToArray(
+        2, this->kvall(i), target);
   }
 
   if (!unknown_fields().empty()) {
-    target =
-        ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-            unknown_fields(), target);
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
   }
   return target;
 }
@@ -2416,19 +2418,20 @@ int CommandRes_KvAllRet::ByteSize() const {
     if (has_status()) {
       total_size += 1 + 1;
     }
+
   }
   // repeated .command.CommandRes.Kv kvall = 2;
   total_size += 1 * this->kvall_size();
   for (int i = 0; i < this->kvall_size(); i++) {
     total_size +=
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-            this->kvall(i));
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->kvall(i));
   }
 
   if (!unknown_fields().empty()) {
     total_size +=
-        ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-            unknown_fields());
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
   }
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = total_size;
@@ -2439,8 +2442,8 @@ int CommandRes_KvAllRet::ByteSize() const {
 void CommandRes_KvAllRet::MergeFrom(const ::google::protobuf::Message& from) {
   GOOGLE_CHECK_NE(&from, this);
   const CommandRes_KvAllRet* source =
-      ::google::protobuf::internal::dynamic_cast_if_available<
-          const CommandRes_KvAllRet*>(&from);
+    ::google::protobuf::internal::dynamic_cast_if_available<const CommandRes_KvAllRet*>(
+      &from);
   if (source == NULL) {
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
   } else {
@@ -2498,6 +2501,7 @@ void CommandRes_KvAllRet::Swap(CommandRes_KvAllRet* other) {
   return metadata;
 }
 
+
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
@@ -2508,15 +2512,15 @@ const int CommandRes_RaftStageRes::kPortFieldNumber;
 #endif  // !_MSC_VER
 
 CommandRes_RaftStageRes::CommandRes_RaftStageRes()
-    : ::google::protobuf::Message() {
+  : ::google::protobuf::Message() {
   SharedCtor();
 }
 
-void CommandRes_RaftStageRes::InitAsDefaultInstance() {}
+void CommandRes_RaftStageRes::InitAsDefaultInstance() {
+}
 
-CommandRes_RaftStageRes::CommandRes_RaftStageRes(
-    const CommandRes_RaftStageRes& from)
-    : ::google::protobuf::Message() {
+CommandRes_RaftStageRes::CommandRes_RaftStageRes(const CommandRes_RaftStageRes& from)
+  : ::google::protobuf::Message() {
   SharedCtor();
   MergeFrom(from);
 }
@@ -2525,13 +2529,14 @@ void CommandRes_RaftStageRes::SharedCtor() {
   _cached_size_ = 0;
   term_ = 0;
   commitindex_ = 0;
-  ip_ =
-      const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  ip_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   port_ = 0;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
-CommandRes_RaftStageRes::~CommandRes_RaftStageRes() { SharedDtor(); }
+CommandRes_RaftStageRes::~CommandRes_RaftStageRes() {
+  SharedDtor();
+}
 
 void CommandRes_RaftStageRes::SharedDtor() {
   if (ip_ != &::google::protobuf::internal::kEmptyString) {
@@ -2579,20 +2584,17 @@ void CommandRes_RaftStageRes::Clear() {
 
 bool CommandRes_RaftStageRes::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) \
-  if (!(EXPRESSION)) return false
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
-    switch (
-        ::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
       // required int32 term = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-              ::google::protobuf::int32,
-              ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-              input, &term_)));
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &term_)));
           set_has_term();
         } else {
           goto handle_uninterpreted;
@@ -2605,11 +2607,10 @@ bool CommandRes_RaftStageRes::MergePartialFromCodedStream(
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-        parse_commitIndex:
+         parse_commitIndex:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-              ::google::protobuf::int32,
-              ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-              input, &commitindex_)));
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &commitindex_)));
           set_has_commitindex();
         } else {
           goto handle_uninterpreted;
@@ -2621,11 +2622,10 @@ bool CommandRes_RaftStageRes::MergePartialFromCodedStream(
       // optional bytes ip = 3;
       case 3: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_ip:
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_ip:
           DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-              input, this->mutable_ip()));
+                input, this->mutable_ip()));
         } else {
           goto handle_uninterpreted;
         }
@@ -2637,11 +2637,10 @@ bool CommandRes_RaftStageRes::MergePartialFromCodedStream(
       case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-        parse_port:
+         parse_port:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-              ::google::protobuf::int32,
-              ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-              input, &port_)));
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &port_)));
           set_has_port();
         } else {
           goto handle_uninterpreted;
@@ -2657,7 +2656,7 @@ bool CommandRes_RaftStageRes::MergePartialFromCodedStream(
           return true;
         }
         DO_(::google::protobuf::internal::WireFormat::SkipField(
-            input, tag, mutable_unknown_fields()));
+              input, tag, mutable_unknown_fields()));
         break;
       }
     }
@@ -2670,26 +2669,23 @@ void CommandRes_RaftStageRes::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // required int32 term = 1;
   if (has_term()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->term(),
-                                                             output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->term(), output);
   }
 
   // required int32 commitIndex = 2;
   if (has_commitindex()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(
-        2, this->commitindex(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->commitindex(), output);
   }
 
   // optional bytes ip = 3;
   if (has_ip()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(3, this->ip(),
-                                                             output);
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      3, this->ip(), output);
   }
 
   // optional int32 port = 4;
   if (has_port()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->port(),
-                                                             output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->port(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -2698,37 +2694,33 @@ void CommandRes_RaftStageRes::SerializeWithCachedSizes(
   }
 }
 
-::google::protobuf::uint8*
-CommandRes_RaftStageRes::SerializeWithCachedSizesToArray(
+::google::protobuf::uint8* CommandRes_RaftStageRes::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
   // required int32 term = 1;
   if (has_term()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(
-        1, this->term(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->term(), target);
   }
 
   // required int32 commitIndex = 2;
   if (has_commitindex()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(
-        2, this->commitindex(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->commitindex(), target);
   }
 
   // optional bytes ip = 3;
   if (has_ip()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
         3, this->ip(), target);
   }
 
   // optional int32 port = 4;
   if (has_port()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(
-        4, this->port(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(4, this->port(), target);
   }
 
   if (!unknown_fields().empty()) {
-    target =
-        ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-            unknown_fields(), target);
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
   }
   return target;
 }
@@ -2739,32 +2731,37 @@ int CommandRes_RaftStageRes::ByteSize() const {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     // required int32 term = 1;
     if (has_term()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::Int32Size(
-                            this->term());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->term());
     }
 
     // required int32 commitIndex = 2;
     if (has_commitindex()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::Int32Size(
-                            this->commitindex());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->commitindex());
     }
 
     // optional bytes ip = 3;
     if (has_ip()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::BytesSize(
-                            this->ip());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->ip());
     }
 
     // optional int32 port = 4;
     if (has_port()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::Int32Size(
-                            this->port());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->port());
     }
+
   }
   if (!unknown_fields().empty()) {
     total_size +=
-        ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-            unknown_fields());
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
   }
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = total_size;
@@ -2772,12 +2769,11 @@ int CommandRes_RaftStageRes::ByteSize() const {
   return total_size;
 }
 
-void CommandRes_RaftStageRes::MergeFrom(
-    const ::google::protobuf::Message& from) {
+void CommandRes_RaftStageRes::MergeFrom(const ::google::protobuf::Message& from) {
   GOOGLE_CHECK_NE(&from, this);
   const CommandRes_RaftStageRes* source =
-      ::google::protobuf::internal::dynamic_cast_if_available<
-          const CommandRes_RaftStageRes*>(&from);
+    ::google::protobuf::internal::dynamic_cast_if_available<const CommandRes_RaftStageRes*>(
+      &from);
   if (source == NULL) {
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
   } else {
@@ -2804,8 +2800,7 @@ void CommandRes_RaftStageRes::MergeFrom(const CommandRes_RaftStageRes& from) {
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
 
-void CommandRes_RaftStageRes::CopyFrom(
-    const ::google::protobuf::Message& from) {
+void CommandRes_RaftStageRes::CopyFrom(const ::google::protobuf::Message& from) {
   if (&from == this) return;
   Clear();
   MergeFrom(from);
@@ -2843,6 +2838,7 @@ void CommandRes_RaftStageRes::Swap(CommandRes_RaftStageRes* other) {
   return metadata;
 }
 
+
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
@@ -2854,22 +2850,21 @@ const int CommandRes::kAersFieldNumber;
 const int CommandRes::kRaftstageFieldNumber;
 #endif  // !_MSC_VER
 
-CommandRes::CommandRes() : ::google::protobuf::Message() { SharedCtor(); }
-
-void CommandRes::InitAsDefaultInstance() {
-  kvr_ = const_cast< ::command::CommandRes_KvRet*>(
-      &::command::CommandRes_KvRet::default_instance());
-  kvallr_ = const_cast< ::command::CommandRes_KvAllRet*>(
-      &::command::CommandRes_KvAllRet::default_instance());
-  rsv_ = const_cast< ::floyd::raft::ResponseVote*>(
-      &::floyd::raft::ResponseVote::default_instance());
-  aers_ = const_cast< ::floyd::raft::AppendEntriesResponse*>(
-      &::floyd::raft::AppendEntriesResponse::default_instance());
-  raftstage_ = const_cast< ::command::CommandRes_RaftStageRes*>(
-      &::command::CommandRes_RaftStageRes::default_instance());
+CommandRes::CommandRes()
+  : ::google::protobuf::Message() {
+  SharedCtor();
 }
 
-CommandRes::CommandRes(const CommandRes& from) : ::google::protobuf::Message() {
+void CommandRes::InitAsDefaultInstance() {
+  kvr_ = const_cast< ::command::CommandRes_KvRet*>(&::command::CommandRes_KvRet::default_instance());
+  kvallr_ = const_cast< ::command::CommandRes_KvAllRet*>(&::command::CommandRes_KvAllRet::default_instance());
+  rsv_ = const_cast< ::floyd::raft::ResponseVote*>(&::floyd::raft::ResponseVote::default_instance());
+  aers_ = const_cast< ::floyd::raft::AppendEntriesResponse*>(&::floyd::raft::AppendEntriesResponse::default_instance());
+  raftstage_ = const_cast< ::command::CommandRes_RaftStageRes*>(&::command::CommandRes_RaftStageRes::default_instance());
+}
+
+CommandRes::CommandRes(const CommandRes& from)
+  : ::google::protobuf::Message() {
   SharedCtor();
   MergeFrom(from);
 }
@@ -2885,7 +2880,9 @@ void CommandRes::SharedCtor() {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
-CommandRes::~CommandRes() { SharedDtor(); }
+CommandRes::~CommandRes() {
+  SharedDtor();
+}
 
 void CommandRes::SharedDtor() {
   if (this != default_instance_) {
@@ -2914,7 +2911,9 @@ const CommandRes& CommandRes::default_instance() {
 
 CommandRes* CommandRes::default_instance_ = NULL;
 
-CommandRes* CommandRes::New() const { return new CommandRes; }
+CommandRes* CommandRes::New() const {
+  return new CommandRes;
+}
 
 void CommandRes::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
@@ -2932,8 +2931,7 @@ void CommandRes::Clear() {
       if (aers_ != NULL) aers_->::floyd::raft::AppendEntriesResponse::Clear();
     }
     if (has_raftstage()) {
-      if (raftstage_ != NULL)
-        raftstage_->::command::CommandRes_RaftStageRes::Clear();
+      if (raftstage_ != NULL) raftstage_->::command::CommandRes_RaftStageRes::Clear();
     }
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -2942,22 +2940,20 @@ void CommandRes::Clear() {
 
 bool CommandRes::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) \
-  if (!(EXPRESSION)) return false
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
-    switch (
-        ::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
       // required .command.CommandRes.Type type = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
           int value;
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-              int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-              input, &value)));
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
           if (::command::CommandRes_Type_IsValid(value)) {
-            set_type(static_cast< ::command::CommandRes_Type>(value));
+            set_type(static_cast< ::command::CommandRes_Type >(value));
           } else {
             mutable_unknown_fields()->AddVarint(1, value);
           }
@@ -2971,11 +2967,10 @@ bool CommandRes::MergePartialFromCodedStream(
       // optional .command.CommandRes.KvRet kvr = 2;
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_kvr:
-          DO_(::google::protobuf::internal::WireFormatLite::
-                  ReadMessageNoVirtual(input, mutable_kvr()));
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_kvr:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_kvr()));
         } else {
           goto handle_uninterpreted;
         }
@@ -2986,11 +2981,10 @@ bool CommandRes::MergePartialFromCodedStream(
       // optional .command.CommandRes.KvAllRet kvallr = 3;
       case 3: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_kvallr:
-          DO_(::google::protobuf::internal::WireFormatLite::
-                  ReadMessageNoVirtual(input, mutable_kvallr()));
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_kvallr:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_kvallr()));
         } else {
           goto handle_uninterpreted;
         }
@@ -3001,11 +2995,10 @@ bool CommandRes::MergePartialFromCodedStream(
       // optional .floyd.raft.ResponseVote rsv = 4;
       case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_rsv:
-          DO_(::google::protobuf::internal::WireFormatLite::
-                  ReadMessageNoVirtual(input, mutable_rsv()));
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_rsv:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_rsv()));
         } else {
           goto handle_uninterpreted;
         }
@@ -3016,11 +3009,10 @@ bool CommandRes::MergePartialFromCodedStream(
       // optional .floyd.raft.AppendEntriesResponse aers = 5;
       case 5: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_aers:
-          DO_(::google::protobuf::internal::WireFormatLite::
-                  ReadMessageNoVirtual(input, mutable_aers()));
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_aers:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_aers()));
         } else {
           goto handle_uninterpreted;
         }
@@ -3031,11 +3023,10 @@ bool CommandRes::MergePartialFromCodedStream(
       // optional .command.CommandRes.RaftStageRes raftstage = 6;
       case 6: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::
-                WIRETYPE_LENGTH_DELIMITED) {
-        parse_raftstage:
-          DO_(::google::protobuf::internal::WireFormatLite::
-                  ReadMessageNoVirtual(input, mutable_raftstage()));
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_raftstage:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_raftstage()));
         } else {
           goto handle_uninterpreted;
         }
@@ -3050,7 +3041,7 @@ bool CommandRes::MergePartialFromCodedStream(
           return true;
         }
         DO_(::google::protobuf::internal::WireFormat::SkipField(
-            input, tag, mutable_unknown_fields()));
+              input, tag, mutable_unknown_fields()));
         break;
       }
     }
@@ -3063,38 +3054,38 @@ void CommandRes::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
   // required .command.CommandRes.Type type = 1;
   if (has_type()) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(1, this->type(),
-                                                            output);
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      1, this->type(), output);
   }
 
   // optional .command.CommandRes.KvRet kvr = 2;
   if (has_kvr()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-        2, this->kvr(), output);
+      2, this->kvr(), output);
   }
 
   // optional .command.CommandRes.KvAllRet kvallr = 3;
   if (has_kvallr()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-        3, this->kvallr(), output);
+      3, this->kvallr(), output);
   }
 
   // optional .floyd.raft.ResponseVote rsv = 4;
   if (has_rsv()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-        4, this->rsv(), output);
+      4, this->rsv(), output);
   }
 
   // optional .floyd.raft.AppendEntriesResponse aers = 5;
   if (has_aers()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-        5, this->aers(), output);
+      5, this->aers(), output);
   }
 
   // optional .command.CommandRes.RaftStageRes raftstage = 6;
   if (has_raftstage()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-        6, this->raftstage(), output);
+      6, this->raftstage(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -3108,43 +3099,47 @@ void CommandRes::SerializeWithCachedSizes(
   // required .command.CommandRes.Type type = 1;
   if (has_type()) {
     target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-        1, this->type(), target);
+      1, this->type(), target);
   }
 
   // optional .command.CommandRes.KvRet kvr = 2;
   if (has_kvr()) {
     target = ::google::protobuf::internal::WireFormatLite::
-        WriteMessageNoVirtualToArray(2, this->kvr(), target);
+      WriteMessageNoVirtualToArray(
+        2, this->kvr(), target);
   }
 
   // optional .command.CommandRes.KvAllRet kvallr = 3;
   if (has_kvallr()) {
     target = ::google::protobuf::internal::WireFormatLite::
-        WriteMessageNoVirtualToArray(3, this->kvallr(), target);
+      WriteMessageNoVirtualToArray(
+        3, this->kvallr(), target);
   }
 
   // optional .floyd.raft.ResponseVote rsv = 4;
   if (has_rsv()) {
     target = ::google::protobuf::internal::WireFormatLite::
-        WriteMessageNoVirtualToArray(4, this->rsv(), target);
+      WriteMessageNoVirtualToArray(
+        4, this->rsv(), target);
   }
 
   // optional .floyd.raft.AppendEntriesResponse aers = 5;
   if (has_aers()) {
     target = ::google::protobuf::internal::WireFormatLite::
-        WriteMessageNoVirtualToArray(5, this->aers(), target);
+      WriteMessageNoVirtualToArray(
+        5, this->aers(), target);
   }
 
   // optional .command.CommandRes.RaftStageRes raftstage = 6;
   if (has_raftstage()) {
     target = ::google::protobuf::internal::WireFormatLite::
-        WriteMessageNoVirtualToArray(6, this->raftstage(), target);
+      WriteMessageNoVirtualToArray(
+        6, this->raftstage(), target);
   }
 
   if (!unknown_fields().empty()) {
-    target =
-        ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-            unknown_fields(), target);
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
   }
   return target;
 }
@@ -3155,54 +3150,50 @@ int CommandRes::ByteSize() const {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     // required .command.CommandRes.Type type = 1;
     if (has_type()) {
-      total_size += 1 + ::google::protobuf::internal::WireFormatLite::EnumSize(
-                            this->type());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
     }
 
     // optional .command.CommandRes.KvRet kvr = 2;
     if (has_kvr()) {
-      total_size +=
-          1 +
-          ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-              this->kvr());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->kvr());
     }
 
     // optional .command.CommandRes.KvAllRet kvallr = 3;
     if (has_kvallr()) {
-      total_size +=
-          1 +
-          ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-              this->kvallr());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->kvallr());
     }
 
     // optional .floyd.raft.ResponseVote rsv = 4;
     if (has_rsv()) {
-      total_size +=
-          1 +
-          ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-              this->rsv());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->rsv());
     }
 
     // optional .floyd.raft.AppendEntriesResponse aers = 5;
     if (has_aers()) {
-      total_size +=
-          1 +
-          ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-              this->aers());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->aers());
     }
 
     // optional .command.CommandRes.RaftStageRes raftstage = 6;
     if (has_raftstage()) {
-      total_size +=
-          1 +
-          ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-              this->raftstage());
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->raftstage());
     }
+
   }
   if (!unknown_fields().empty()) {
     total_size +=
-        ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-            unknown_fields());
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
   }
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = total_size;
@@ -3213,8 +3204,8 @@ int CommandRes::ByteSize() const {
 void CommandRes::MergeFrom(const ::google::protobuf::Message& from) {
   GOOGLE_CHECK_NE(&from, this);
   const CommandRes* source =
-      ::google::protobuf::internal::dynamic_cast_if_available<
-          const CommandRes*>(&from);
+    ::google::protobuf::internal::dynamic_cast_if_available<const CommandRes*>(
+      &from);
   if (source == NULL) {
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
   } else {
@@ -3232,19 +3223,16 @@ void CommandRes::MergeFrom(const CommandRes& from) {
       mutable_kvr()->::command::CommandRes_KvRet::MergeFrom(from.kvr());
     }
     if (from.has_kvallr()) {
-      mutable_kvallr()->::command::CommandRes_KvAllRet::MergeFrom(
-          from.kvallr());
+      mutable_kvallr()->::command::CommandRes_KvAllRet::MergeFrom(from.kvallr());
     }
     if (from.has_rsv()) {
       mutable_rsv()->::floyd::raft::ResponseVote::MergeFrom(from.rsv());
     }
     if (from.has_aers()) {
-      mutable_aers()->::floyd::raft::AppendEntriesResponse::MergeFrom(
-          from.aers());
+      mutable_aers()->::floyd::raft::AppendEntriesResponse::MergeFrom(from.aers());
     }
     if (from.has_raftstage()) {
-      mutable_raftstage()->::command::CommandRes_RaftStageRes::MergeFrom(
-          from.raftstage());
+      mutable_raftstage()->::command::CommandRes_RaftStageRes::MergeFrom(from.raftstage());
     }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
@@ -3304,6 +3292,7 @@ void CommandRes::Swap(CommandRes* other) {
   metadata.reflection = CommandRes_reflection_;
   return metadata;
 }
+
 
 // @@protoc_insertion_point(namespace_scope)
 
