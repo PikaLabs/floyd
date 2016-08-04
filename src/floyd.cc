@@ -35,6 +35,16 @@ bool Floyd::IsLeader() {
   return false;
 }
 
+bool Floyd::GetLeader(std::string& ip, int& port) {
+  std::pair<std::string, int> leader_node = raft_con->GetLeaderNode();
+  if (leader_node.first == "" || leader_node.second == 0) {
+    return false;
+  }
+  ip = leader_node.first;
+  port = leader_node.second - 100;
+  return true;
+}
+
 NodeInfo* Floyd::GetLeaderInfo() {
   std::pair<std::string, int> leader_node = raft_con->GetLeaderNode();
   if (leader_node.first == "" || leader_node.second == 0) {

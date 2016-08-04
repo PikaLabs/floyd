@@ -45,6 +45,9 @@ class Floyd {
   Status Stop();
   Status Erase();
 
+  // return true if leader has been elected
+  bool GetLeader(std::string& ip, int& port);
+
  private:
   const Options options_;
   // FloydLiveThread
@@ -53,10 +56,10 @@ class Floyd {
   FloydWorkerThread* floydworker_;
   // HeartbeatThread
   FloydHeartBeatThread* heartbeat_;
+  bool IsLeader();
 
   // Status UpHoldWorkerCliConn(NodeInfo *ni);
   NodeInfo* GetLeaderInfo();
-  bool IsLeader();
   Status AddNodeFromMetaRes(meta::MetaRes* meta_res,
                             std::vector<NodeInfo*>* nis);
   Status FetchRemoteMap(const std::string& ip, const int port,
