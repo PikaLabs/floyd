@@ -15,10 +15,10 @@ Floyd::Floyd(const Options& options) : options_(options) {
   //@todo: When exists data
   if (options_.storage_type == "leveldb")
     db = new LeveldbBackend(options_.data_path);
-  floydmeta_ = new FloydMetaThread(options_.local_port + 100);
+  floydmeta_ = new FloydMetaThread(options_.local_port);
   // heartbeat_ = new FloydHeartBeatThread(options_.local_ip,
   // options_.local_port);
-  floydworker_ = new FloydWorkerThread(options_.local_port + 200);
+  floydworker_ = new FloydWorkerThread(options_.local_port + 100);
   raft_con = new raft::RaftConsensus(options);
 }
 
@@ -41,7 +41,7 @@ bool Floyd::GetLeader(std::string& ip, int& port) {
     return false;
   }
   ip = leader_node.first;
-  port = leader_node.second - 100;
+  port = leader_node.second;
   return true;
 }
 
