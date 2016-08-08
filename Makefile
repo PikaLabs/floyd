@@ -42,7 +42,7 @@ OBJS = $(patsubst %.cc,%.o,$(BASE_OBJS))
 
 LIBSLASH = $(THIRD_PATH)/slash/output/lib/libslash.a
 LIBPINK = $(THIRD_PATH)/pink/output/lib/libpink.a
-LIBLEVELDB = $(THIRD_PATH)/leveldb/libleveldb.a
+LIBLEVELDB = $(THIRD_PATH)/leveldb/out-static/libleveldb.a
 $(LIBRARY):  $(LIBPINK) 
 all: $(LIBRARY)
 	@echo "Success, go, go, go..."
@@ -72,6 +72,8 @@ $(LIBRARY): $(LIBSLASH) $(LIBPINK) $(OBJS) $(LIBLEVELDB)
 	mv $@ $(OUTPUT)/lib/
 	make -C example __PERF=$(__PERF)
 	make -C test __PERF=$(__PERF)
+	cp -r $(THIRD_PATH)/leveldb/include/leveldb $(OUTPUT)/include/
+	cp $(LIBLEVELDB) $(OUTPUT)/lib/
 
 $(OBJECT): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) -Wl,-Bdynamic $(LIBS)
