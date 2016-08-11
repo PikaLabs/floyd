@@ -64,6 +64,8 @@ Status::Status(leveldb::Status& leveldb_status) {
   } else if (status_slice.starts_with(Slice("End file:"))) {
     code = kEndFile;
     status_slice.remove_prefix(sizeof("End file:"));
+  } else {
+    code = kCorruption;
   }
   init_by_code(code, status_slice, Slice(""));
 }
@@ -96,6 +98,8 @@ Status::Status(pink::Status& pink_status) {
   } else if (status_slice.starts_with(Slice("End file:"))) {
     code = kEndFile;
     status_slice.remove_prefix(sizeof("End file:"));
+  } else {
+    code = kCorruption;
   }
   init_by_code(code, status_slice, Slice(""));
 }

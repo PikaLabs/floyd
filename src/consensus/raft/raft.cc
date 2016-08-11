@@ -1,3 +1,4 @@
+#include <google/protobuf/text_format.h>
 #include "status.h"
 #include "raft.h"
 #include "floyd.h"
@@ -827,7 +828,7 @@ void* RaftConsensus::PeerThread::ThreadMain() {
               {
                 // MutexLock l(&Floyd::nodes_mutex);
                 if (ni_->ns == NodeStatus::kUp) {
-                  ni_->ns = NodeStatus::kDown;
+                  //ni_->ns = NodeStatus::kDown;
                   should_delete_user = true;
                 }
               }
@@ -876,6 +877,10 @@ bool RaftConsensus::PeerThread::RequestVote() {
   cmd.set_allocated_rqv(rqv);
 
   // printf ("request vote to %s,%d\n",ni_->ip.c_str(),ni_->port);
+  if (ni_->ns == kDown) {
+    return false;
+  }
+
   ret = ni_->dcc->SendMessage(&cmd);
   if (!ret.ok()) {
     return false;
@@ -959,13 +964,17 @@ bool RaftConsensus::PeerThread::AppendEntries() {
       std::min(raft_con_->commit_index_, prev_log_index + num_entries));
   cmd.set_allocated_aerq(aerq);
 
+  if (ni_->ns != kUp) {
+    return false;
+  }
+
   floyd::Status ret = ni_->dcc->SendMessage(&cmd);
   if (!ret.ok()) {
     gettimeofday(&now, NULL);
     next_heartbeat_time_.tv_sec = now.tv_sec + raft_con_->period_.tv_sec;
     next_heartbeat_time_.tv_nsec =
         now.tv_usec * 1000 + raft_con_->period_.tv_nsec;
-    ni_->UpHoldWorkerCliConn(true);
+    //ni_->UpHoldWorkerCliConn(true);
     return false;
   }
 
@@ -978,7 +987,10 @@ bool RaftConsensus::PeerThread::AppendEntries() {
         now.tv_usec * 1000 + raft_con_->period_.tv_nsec;
     return false;
   }
-
+  std::string text_format;
+  google::protobuf::TextFormat::PrintToString(cmd_res, &text_format);
+  LOG_DEBUG("Receive result message : %s", text_format.c_str());
+  
   if (cmd_res.aers().term() > raft_con_->current_term_) {
     raft_con_->StepDown(cmd_res.aers().term());
   } else {

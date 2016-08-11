@@ -25,6 +25,7 @@ Status FloydWorkerCliConn::GetResMessage(google::protobuf::Message* cmd_res) {
 
 Status FloydWorkerCliConn::SendMessage(google::protobuf::Message* cmd) {
   pink::Status ret = Send(cmd);
+ // LOG_DEBUG("FloydWorkerCliConn Send to ip:  %s, port : %d, res: %s", local_ip_.c_str(), local_port_, ret.ToString().c_str());
   Status s = static_cast<Status>(ret);
   return s;
 }
