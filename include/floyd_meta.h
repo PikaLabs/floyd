@@ -18,7 +18,6 @@ struct NodeInfo {
   std::string ip;
   int port;
   time_t last_ping;
-  NodeStatus ns;
   FloydMetaCliConn* mcc;
   FloydWorkerCliConn* dcc;
 

@@ -9,7 +9,6 @@ NodeInfo::NodeInfo(const std::string& ip, const int port) {
   this->ip = ip;
   this->port = port;
   this->last_ping = time(NULL);
-  this->ns = kDown;
   this->mcc = NULL;
   this->dcc = NULL;
 }
@@ -20,19 +19,14 @@ bool NodeInfo::operator==(NodeInfo& node) {
 }
 
 Status NodeInfo::UpHoldWorkerCliConn(bool create_new_connect) {
-  Status ret;
-  if (create_new_connect || dcc == NULL) {
+  Status ret = Status::OK();
+  if (create_new_connect || dcc == NULL || !dcc->Available()) {
     if (dcc != NULL) {
-      if (ns == kUp) {
-        dcc->Close();
-        ns = kDown;
-      }
+      dcc->Close();
       delete dcc;
     }
     dcc = new FloydWorkerCliConn(ip, port);
     ret = dcc->Connect();
-    ns = ret.ok() ? kUp : kDown;
-    //LOG_DEBUG("reconnect to %s:%d, result:%s", ip.c_str(), port, ret.ToString().c_str());
   }
   return ret;
 }
@@ -83,11 +77,8 @@ int FloydMetaConn::DealMessage() {
       }
       if (iter == Floyd::nodes_info.end()) {
         NodeInfo* ni = new NodeInfo(node.ip(), node.port());
-        if (ni->ns == kDown) {
-          ni->dcc = new FloydWorkerCliConn(ni->ip, ni->port);
-          Status ret = ni->dcc->Connect();
-          ni->ns = ret.ok() ? kUp : kDown;
-        }
+        ni->dcc = new FloydWorkerCliConn(ni->ip, ni->port);
+        ni->dcc->Connect();
         Floyd::nodes_info.push_back(ni);
         Floyd::raft_con->AddNewPeer(ni);
         LOG_DEBUG("MetaThread::DealMessage: find a new node: %s:%d",

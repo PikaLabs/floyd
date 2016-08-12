@@ -24,7 +24,7 @@ RaftConsensus::RaftConsensus(const floyd::Options& options)
       voteable_(false),
       vote_target_term_(std::numeric_limits<int>::max()),
       vote_target_index_(std::numeric_limits<int>::max()),
-      period_((struct timespec) {0, 200000000}),
+      period_((struct timespec) {1, 0}),
       state_changed_(&mutex_),
       log_(),
       log_sync_queued_(false),
@@ -787,11 +787,13 @@ void* RaftConsensus::PeerThread::ThreadMain() {
 
     switch (raft_con_->state_) {
       case RaftConsensus::State::FOLLOWER:
+        LOG_DEBUG("floyd be follower");
         when.tv_sec = std::numeric_limits<time_t>::max();
         when.tv_nsec = 0;
         break;
 
       case RaftConsensus::State::CANDIDATE:
+        LOG_DEBUG("floyd be candidate");
         if (!vote_done_) {
           if (!RequestVote()) {
             ni_->UpHoldWorkerCliConn(true);
@@ -804,6 +806,7 @@ void* RaftConsensus::PeerThread::ThreadMain() {
 
       case RaftConsensus::State::LEADER:
         bool heartbeat_timeout = false;
+        LOG_DEBUG("floyd be leader");
         // printf ("PeerThread node(%s:%d) heart(%ld.%09ld) now(%ld.%09ld)\n",
         // ni_->ip.c_str(), ni_->port, next_heartbeat_time_.tv_sec,
         // next_heartbeat_time_.tv_nsec, now.tv_sec, now.tv_usec * 1000);
@@ -819,34 +822,38 @@ void* RaftConsensus::PeerThread::ThreadMain() {
         if (GetLastAgreeIndex() < raft_con_->log_->GetLastLogIndex() ||
             heartbeat_timeout) {
           if (!AppendEntries()) {
-            // printf ("PeerThread node(%s:%d) AppendEntries failed\n",
-            // ni_->ip.c_str(), ni_->port);
-            if (heartbeat_timeout) {
-              // printf ("PeerThread node(%s:%d) AppendEntries failed caz
-              // heartbeat_timeout\n", ni_->ip.c_str(), ni_->port);
-              bool should_delete_user = false;
-              {
-                // MutexLock l(&Floyd::nodes_mutex);
-                if (ni_->ns == NodeStatus::kUp) {
-                  //ni_->ns = NodeStatus::kDown;
-                  should_delete_user = true;
-                }
-              }
+            //// printf ("PeerThread node(%s:%d) AppendEntries failed\n",
+            //// ni_->ip.c_str(), ni_->port);
+            //if (heartbeat_timeout) {
+            //  // printf ("PeerThread node(%s:%d) AppendEntries failed caz
+            //  // heartbeat_timeout\n", ni_->ip.c_str(), ni_->port);
+            //  bool should_delete_user = false;
+            //  {
+            //    // MutexLock l(&Floyd::nodes_mutex);
+            //    if (ni_->ns == NodeStatus::kUp) {
+            //      //ni_->ns = NodeStatus::kDown;
+            //      should_delete_user = true;
+            //    }
+            //  }
 
-              if (should_delete_user) {
-                // printf ("PeerThread node(%s:%d) AppendEntries failed caz
-                // timeout\n", ni_->ip.c_str(), ni_->port);
-                RaftConsensus::DeleteUserArg* arg =
-                    new RaftConsensus::DeleteUserArg(raft_con_, ni_->ip,
-                                                     ni_->port);
-                raft_con_->bg_thread_.StartIfNeed();
-                raft_con_->bg_thread_.Schedule(&HandleDeleteUserWrapper,
-                                               static_cast<void*>(arg));
-              }
-            }
+            //  if (should_delete_user) {
+            //    // printf ("PeerThread node(%s:%d) AppendEntries failed caz
+            //    // timeout\n", ni_->ip.c_str(), ni_->port);
+            //    RaftConsensus::DeleteUserArg* arg =
+            //        new RaftConsensus::DeleteUserArg(raft_con_, ni_->ip,
+            //                                         ni_->port);
+            //    raft_con_->bg_thread_.StartIfNeed();
+            //    raft_con_->bg_thread_.Schedule(&HandleDeleteUserWrapper,
+            //                                   static_cast<void*>(arg));
+            //  }
+            //}
 
             ni_->UpHoldWorkerCliConn(true);
           }
+          gettimeofday(&now, NULL);
+          next_heartbeat_time_.tv_sec = now.tv_sec + raft_con_->period_.tv_sec;
+          next_heartbeat_time_.tv_nsec =
+            now.tv_usec * 1000 + raft_con_->period_.tv_nsec;
         }
         when = next_heartbeat_time_;
         break;
@@ -877,7 +884,7 @@ bool RaftConsensus::PeerThread::RequestVote() {
   cmd.set_allocated_rqv(rqv);
 
   // printf ("request vote to %s,%d\n",ni_->ip.c_str(),ni_->port);
-  if (ni_->ns == kDown) {
+  if (!ni_->dcc->Available()) {
     return false;
   }
 
@@ -964,32 +971,26 @@ bool RaftConsensus::PeerThread::AppendEntries() {
       std::min(raft_con_->commit_index_, prev_log_index + num_entries));
   cmd.set_allocated_aerq(aerq);
 
-  if (ni_->ns != kUp) {
+  if (!ni_->dcc->Available()) {
     return false;
   }
 
   floyd::Status ret = ni_->dcc->SendMessage(&cmd);
   if (!ret.ok()) {
-    gettimeofday(&now, NULL);
-    next_heartbeat_time_.tv_sec = now.tv_sec + raft_con_->period_.tv_sec;
-    next_heartbeat_time_.tv_nsec =
-        now.tv_usec * 1000 + raft_con_->period_.tv_nsec;
     //ni_->UpHoldWorkerCliConn(true);
     return false;
   }
+  std::string text_format;
+  google::protobuf::TextFormat::PrintToString(cmd, &text_format);
+  LOG_DEBUG("Send to %s:%d, message : %s", (ni_->ip).c_str(), ni_->port, text_format.c_str());
 
   command::CommandRes cmd_res;
   ret = ni_->dcc->GetResMessage(&cmd_res);
   if (!ret.ok()) {
-    gettimeofday(&now, NULL);
-    next_heartbeat_time_.tv_sec = now.tv_sec + raft_con_->period_.tv_sec;
-    next_heartbeat_time_.tv_nsec =
-        now.tv_usec * 1000 + raft_con_->period_.tv_nsec;
     return false;
   }
-  std::string text_format;
   google::protobuf::TextFormat::PrintToString(cmd_res, &text_format);
-  LOG_DEBUG("Receive result message : %s", text_format.c_str());
+  LOG_DEBUG("Receive from %s:%d, result message : %s", (ni_->ip).c_str(), ni_->port, text_format.c_str());
   
   if (cmd_res.aers().term() > raft_con_->current_term_) {
     raft_con_->StepDown(cmd_res.aers().term());
@@ -1002,11 +1003,6 @@ bool RaftConsensus::PeerThread::AppendEntries() {
       if (next_index_ > 1) --next_index_;
     }
   }
-  gettimeofday(&now, NULL);
-  next_heartbeat_time_.tv_sec = now.tv_sec + raft_con_->period_.tv_sec;
-  next_heartbeat_time_.tv_nsec =
-      now.tv_usec * 1000 + raft_con_->period_.tv_nsec;
-
   return true;
 }
 /***************************************************************/

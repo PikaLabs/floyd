@@ -254,6 +254,7 @@ Status Floyd::TryLock(const std::string& key) {
     if (!ret.ok()) {
       LOG_WARN("MainThread::TryLock as Follower, redirect:SendMeassge fail: %s",
                ret.ToString().c_str());
+      (*it)->dcc->Close();
       delete (*it)->dcc;
       (*it)->dcc = NULL;
       return ret;
@@ -266,6 +267,7 @@ Status Floyd::TryLock(const std::string& key) {
       LOG_WARN(
           "MainThread::TryLock as Follower, redirect:GetResMessage fail: %s",
           ret.ToString().c_str());
+      (*it)->dcc->Close();
       delete (*it)->dcc;
       (*it)->dcc = NULL;
       return ret;
@@ -332,6 +334,7 @@ Status Floyd::UnLock(const std::string& key) {
 
     ret = (*it)->dcc->SendMessage(&cmd);
     if (!ret.ok()) {
+      (*it)->dcc->Close();
       delete (*it)->dcc;
       (*it)->dcc = NULL;
       return ret;
@@ -341,6 +344,7 @@ Status Floyd::UnLock(const std::string& key) {
     ret = (*it)->dcc->GetResMessage(&cmd_res);
     if (!ret.ok()) {
       // printf ("get reply error:%s\n", ret.ToString().c_str());
+      (*it)->dcc->Close();
       delete (*it)->dcc;
       (*it)->dcc = NULL;
       return ret;
@@ -355,15 +359,6 @@ Status Floyd::UnLock(const std::string& key) {
     return Status::NotFound("no leader node!");
   }
 }
-
-//  Status Floyd::UpHoldWorkerCliConn(NodeInfo *ni){
-//    Status ret = Status::OK();
-//    if (!(ni->dcc)) {
-//      ni->dcc = new FloydWorkerCliConn(ni->ip, ni->port);
-//      ret = ni->dcc->Connect();
-//    }
-//    return ret;
-//  }
 
 Status Floyd::AddNodeFromMetaRes(meta::MetaRes* meta_res,
                                  std::vector<NodeInfo*>* nis) {
@@ -403,6 +398,7 @@ Status Floyd::FetchRemoteMap(const std::string& ip, const int port,
     // send request
     ret = ni->mcc->SendMessage(&meta);
     if (!ret.ok()) {
+      ni->mcc->Close();
       delete ni->mcc;
       ni->mcc = NULL;
       return ret;
@@ -411,6 +407,7 @@ Status Floyd::FetchRemoteMap(const std::string& ip, const int port,
     meta::MetaRes meta_res;
     ret = ni->mcc->GetResMessage(&meta_res);
     if (!ret.ok()) {
+      ni->mcc->Close();
       delete ni->mcc;
       ni->mcc = NULL;
       return ret;
@@ -561,6 +558,7 @@ Status Floyd::Stop() {
   std::vector<NodeInfo*>::iterator iter = nodes_info.begin();
   for (; iter != nodes_info.end(); ++iter) {
     if ((*iter)->mcc != NULL) {
+      (*iter)->mcc->Close();
       delete (*iter)->mcc;
       (*iter)->mcc = NULL;
     }

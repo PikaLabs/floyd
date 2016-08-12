@@ -68,6 +68,7 @@ Status Rpc(NodeInfo* ni, command::Command& cmd, command::CommandRes& cmd_res) {
   if (!ret.ok()) {
     LOG_WARN("MainThread::%s as Follower, redirect:SendMeassge fail: %s",
              ret.ToString().c_str());
+    ni->dcc->Close();
     delete ni->dcc;
     ni->dcc = NULL;
     return ret;
@@ -81,6 +82,7 @@ Status Rpc(NodeInfo* ni, command::Command& cmd, command::CommandRes& cmd_res) {
   if (!ret.ok()) {
     LOG_WARN("MainThread::%s as Follower, redirect:GetResMessage fail: %s",
              ret.ToString().c_str());
+    ni->dcc->Close();
     delete ni->dcc;
     ni->dcc = NULL;
     return ret;

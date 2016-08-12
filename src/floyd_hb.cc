@@ -35,8 +35,8 @@ void FloydHeartBeatThread::HeartBeat() {
   for (; iter != Floyd::nodes_info.end(); ++iter) {
     if ((*iter)->ip != ip_ || (*iter)->port != port_) {
       if (time(NULL) - (*iter)->last_ping > 30) {
-        (*iter)->ns = kDown;
         if ((*iter)->mcc) {
+          (*iter)->mcc->Close();
           delete (*iter)->mcc;
           (*iter)->mcc = NULL;
         }
@@ -58,6 +58,7 @@ void FloydHeartBeatThread::HeartBeat() {
       node->set_port(port_);
       ret = (*iter)->mcc->SendMessage(&meta);
       if (!ret.ok()) {
+        (*iter)->mcc->Close();
         delete (*iter)->mcc;
         (*iter)->mcc = NULL;
       }
