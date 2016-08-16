@@ -29,8 +29,8 @@ void CondVar::Wait() {
   PthreadCall("wait", pthread_cond_wait(&cv_, &mu_->mu_));
 }
 
-void CondVar::WaitUntil(struct timespec ts) {
-  pthread_cond_timedwait(&cv_, &mu_->mu_, &ts);
+int CondVar::WaitUntil(struct timespec ts) {
+  return pthread_cond_timedwait(&cv_, &mu_->mu_, &ts);
 }
 
 void CondVar::Signal() { PthreadCall("signal", pthread_cond_signal(&cv_)); }

@@ -28,7 +28,7 @@ class CondVar {
   explicit CondVar(Mutex *mu);
   ~CondVar();
   void Wait();
-  void WaitUntil(struct timespec ts);
+  int WaitUntil(struct timespec ts);
   void Signal();
   void SignalAll();
 

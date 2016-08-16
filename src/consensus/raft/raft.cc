@@ -24,7 +24,7 @@ RaftConsensus::RaftConsensus(const floyd::Options& options)
       voteable_(false),
       vote_target_term_(std::numeric_limits<int>::max()),
       vote_target_index_(std::numeric_limits<int>::max()),
-      period_((struct timespec) {1, 0}),
+      period_((struct timespec) {0, 200000000}),
       state_changed_(&mutex_),
       log_(),
       log_sync_queued_(false),
@@ -376,7 +376,9 @@ void RaftConsensus::BecomeLeader() {
   state_changed_.SignalAll();
 }
 
-void RaftConsensus::InterruptAll() { state_changed_.SignalAll(); }
+void RaftConsensus::InterruptAll() { 
+  state_changed_.SignalAll();
+}
 
 uint64_t RaftConsensus::QuorumMin(const GetValue& getvalue) {
   if (peers_.empty()) return last_synced_index_;
@@ -783,20 +785,21 @@ void* RaftConsensus::PeerThread::ThreadMain() {
 
   MutexLock l(&raft_con_->mutex_);
   while (!raft_con_->exiting_) {
-    gettimeofday(&now, NULL);
 
     switch (raft_con_->state_) {
       case RaftConsensus::State::FOLLOWER:
-        LOG_DEBUG("floyd be follower");
+        //LOG_DEBUG("floyd be follower, %s:%d", (ni_->ip).c_str(), ni_->port);
         when.tv_sec = std::numeric_limits<time_t>::max();
         when.tv_nsec = 0;
         break;
 
       case RaftConsensus::State::CANDIDATE:
-        LOG_DEBUG("floyd be candidate");
+        //LOG_DEBUG("floyd be candidate, %s:%d", (ni_->ip).c_str(), ni_->port);
         if (!vote_done_) {
           if (!RequestVote()) {
             ni_->UpHoldWorkerCliConn(true);
+          } else {
+            continue;
           }
         } else {
           when.tv_sec = std::numeric_limits<time_t>::max();
@@ -805,19 +808,15 @@ void* RaftConsensus::PeerThread::ThreadMain() {
         break;
 
       case RaftConsensus::State::LEADER:
-        bool heartbeat_timeout = false;
-        LOG_DEBUG("floyd be leader");
-        // printf ("PeerThread node(%s:%d) heart(%ld.%09ld) now(%ld.%09ld)\n",
-        // ni_->ip.c_str(), ni_->port, next_heartbeat_time_.tv_sec,
-        // next_heartbeat_time_.tv_nsec, now.tv_sec, now.tv_usec * 1000);
+        //LOG_DEBUG("floyd be leader, %s:%d", (ni_->ip).c_str(), ni_->port);
 
+        bool heartbeat_timeout = false;
+        gettimeofday(&now, NULL);
         if (next_heartbeat_time_.tv_sec < now.tv_sec ||
             (next_heartbeat_time_.tv_sec == now.tv_sec &&
              next_heartbeat_time_.tv_nsec < now.tv_usec * 1000)) {
           heartbeat_timeout = true;
         }
-        // printf (" heartbeat_timeout %s\n", heartbeat_timeout ? "true" :
-        // "false");
 
         if (GetLastAgreeIndex() < raft_con_->log_->GetLastLogIndex() ||
             heartbeat_timeout) {
@@ -852,14 +851,18 @@ void* RaftConsensus::PeerThread::ThreadMain() {
           }
           gettimeofday(&now, NULL);
           next_heartbeat_time_.tv_sec = now.tv_sec + raft_con_->period_.tv_sec;
-          next_heartbeat_time_.tv_nsec =
-            now.tv_usec * 1000 + raft_con_->period_.tv_nsec;
+          next_heartbeat_time_.tv_nsec = now.tv_usec * 1000 + raft_con_->period_.tv_nsec;
+          next_heartbeat_time_.tv_sec += next_heartbeat_time_.tv_nsec / 1000000000L;
+          next_heartbeat_time_.tv_nsec = next_heartbeat_time_.tv_nsec % 1000000000L;
         }
         when = next_heartbeat_time_;
         break;
     }
 
-    raft_con_->state_changed_.WaitUntil(when);
+    int ret = raft_con_->state_changed_.WaitUntil(when);
+    if (ret != 0 && ret != ETIMEDOUT) {
+      LOG_DEBUG("WaitUntil failed! error: %d, %s", ret, strerror(ret) );
+    }
   }
 
   return NULL;
@@ -883,7 +886,6 @@ bool RaftConsensus::PeerThread::RequestVote() {
   rqv->set_last_log_index(raft_con_->log_->GetLastLogIndex());
   cmd.set_allocated_rqv(rqv);
 
-  // printf ("request vote to %s,%d\n",ni_->ip.c_str(),ni_->port);
   if (!ni_->dcc->Available()) {
     return false;
   }
@@ -893,24 +895,30 @@ bool RaftConsensus::PeerThread::RequestVote() {
     return false;
   }
 
+  //std::string text_format;
+  //google::protobuf::TextFormat::PrintToString(cmd, &text_format);
+  //LOG_DEBUG("Send vote message to  %s:%d, result message : %s", (ni_->ip).c_str(), ni_->port, text_format.c_str());
+
   command::CommandRes cmd_res;
   ret = ni_->dcc->GetResMessage(&cmd_res);
   if (!ret.ok()) {
     return false;
   }
+  //google::protobuf::TextFormat::PrintToString(cmd_res, &text_format);
+  //LOG_DEBUG("Get vote message to  %s:%d, result message : %s", (ni_->ip).c_str(), ni_->port, text_format.c_str());
 
   if (cmd_res.rsv().term() > raft_con_->current_term_) {
     raft_con_->StepDown(cmd_res.rsv().term());
   } else {
     vote_done_ = true;
-    raft_con_->state_changed_.SignalAll();
+    //raft_con_->state_changed_.SignalAll();
 
     if (cmd_res.rsv().granted()) {
       have_vote_ = true;
       if (raft_con_->QuorumAll(&PeerThread::HaveVote))
         raft_con_->BecomeLeader();
     } else {
-      //@todo: printf denied information
+      LOG_DEBUG("Vote request denied by %s:%d", (ni_->ip).c_str(), ni_->port);
     }
   }
 
@@ -980,17 +988,17 @@ bool RaftConsensus::PeerThread::AppendEntries() {
     //ni_->UpHoldWorkerCliConn(true);
     return false;
   }
-  std::string text_format;
-  google::protobuf::TextFormat::PrintToString(cmd, &text_format);
-  LOG_DEBUG("Send to %s:%d, message : %s", (ni_->ip).c_str(), ni_->port, text_format.c_str());
+  //std::string text_format;
+  //google::protobuf::TextFormat::PrintToString(cmd, &text_format);
+  //LOG_DEBUG("Send to %s:%d, message : %s", (ni_->ip).c_str(), ni_->port, text_format.c_str());
 
   command::CommandRes cmd_res;
   ret = ni_->dcc->GetResMessage(&cmd_res);
   if (!ret.ok()) {
     return false;
   }
-  google::protobuf::TextFormat::PrintToString(cmd_res, &text_format);
-  LOG_DEBUG("Receive from %s:%d, result message : %s", (ni_->ip).c_str(), ni_->port, text_format.c_str());
+  //google::protobuf::TextFormat::PrintToString(cmd_res, &text_format);
+  //LOG_DEBUG("Receive from %s:%d, result message : %s", (ni_->ip).c_str(), ni_->port, text_format.c_str());
   
   if (cmd_res.aers().term() > raft_con_->current_term_) {
     raft_con_->StepDown(cmd_res.aers().term());
