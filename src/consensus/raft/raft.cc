@@ -704,8 +704,9 @@ void* RaftConsensus::LeaderDiskThread::ThreadMain() {
       std::unique_ptr<Log::Sync> sync = raft_con_->log_->TakeSync();
       raft_con_->log_sync_queued_ = false;
       {
-        MutexUnLock ul(&raft_con_->mutex_);
+        raft_con_->mutex_.Unlock();
         sync->Wait();
+        raft_con_->mutex_.Lock();
       }
 
       raft_con_->last_synced_index_ = sync->last_index;

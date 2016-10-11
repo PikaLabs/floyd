@@ -23,7 +23,10 @@ Floyd::Floyd(const Options& options) : options_(options) {
 }
 
 Floyd::~Floyd() {
-  // TODO: delete the threads
+  delete floydmeta_;
+  delete floydworker_;
+  delete raft_con;
+  delete db;
 }
 
 bool Floyd::IsLeader() {

@@ -49,18 +49,6 @@ class MutexLock {
   void operator=(const MutexLock &);
 };
 
-class MutexUnLock {
- public:
-  explicit MutexUnLock(Mutex *mu) : mu_(mu) { this->mu_->Unlock(); }
-  ~MutexUnLock() { this->mu_->Lock(); }
-
- private:
-  Mutex *const mu_;
-  // No copying allowed
-  MutexUnLock(const MutexUnLock &);
-  void operator=(const MutexUnLock &);
-};
-
 typedef pthread_once_t OnceType;
 extern void InitOnce(OnceType *once, void (*initializer)());
 
