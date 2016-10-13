@@ -46,7 +46,6 @@ public:
 
 	void SyncComplete(std::unique_ptr<Sync> sync) {
 		sync->completed = true;
-		std::move(sync);
 	}
 
 	floyd::raft::log::MetaData metadata;

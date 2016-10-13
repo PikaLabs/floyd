@@ -54,6 +54,7 @@ RaftConsensus::~RaftConsensus() {
   if (log_sync_queued_) {
     std::unique_ptr<Log::Sync> sync = log_->TakeSync();
     sync->Wait();
+    log_->SyncComplete(std::move(sync));
   }
 }
 
@@ -425,6 +426,7 @@ void RaftConsensus::StepDown(uint64_t new_term) {
   if (log_sync_queued_) {
     std::unique_ptr<Log::Sync> sync = log_->TakeSync();
     sync->Wait();
+    log_->SyncComplete(std::move(sync));
     log_sync_queued_ = false;
   }
 }
@@ -711,6 +713,7 @@ void* RaftConsensus::LeaderDiskThread::ThreadMain() {
 
       raft_con_->last_synced_index_ = sync->last_index;
       raft_con_->AdvanceCommitIndex();
+      raft_con_->log_->SyncComplete(std::move(sync));
       continue;
     }
     //@TODO right? all conds should be protected by mutex
