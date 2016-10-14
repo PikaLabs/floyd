@@ -34,6 +34,7 @@ public:
 	 */
 	virtual std::pair<uint64_t, uint64_t> Append(
 			std::vector<Entry*>& entries) = 0;
+  virtual void SplitIfNeeded() {};
 	virtual void UpdateMetadata() = 0;
 	virtual std::unique_ptr<Sync> TakeSync() = 0;
 	

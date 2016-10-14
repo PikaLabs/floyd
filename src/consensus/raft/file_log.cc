@@ -2,12 +2,15 @@
 #include <dirent.h>
 #include "floyd_util.h"
 #include "file_log.h"
+#include "slash_mutex.h"
+
+#include <iostream>
 
 namespace floyd {
 namespace raft {
 
 const std::string kManifest = "manifest";
-const std::string kLog = "log";
+const std::string kLog = "floyd.log";
 
 static std::string MakeFileName(const std::string &name, uint64_t number,
                                 const char *suffix) {
@@ -61,6 +64,7 @@ FileLog::FileLog(const std::string &path)
   //}
 
   Log::metadata = manifest_->metadata_.raft_metadata();
+//  std::cout << "file_log init, log_num: " << manifest_->log_number_ << std::endl;
 }
 
 FileLog::~FileLog() {
@@ -177,6 +181,8 @@ int FileLog::RecoverFromFile(const std::string &file,
     return -1;
   }
 
+//  std::cout << "Open log: " << file << " entry_start: " << table_->header_->entry_start << " entry_end: " << table_->header_->entry_end << std::endl;
+
   // stale table
   if (table_->header_->entry_start > entry_end ||
       table_->header_->entry_end < entry_start) {
@@ -192,6 +198,7 @@ int FileLog::RecoverFromFile(const std::string &file,
   std::vector<Log::Entry *> es;
 
   for (; iter->Valid(); iter->Next()) {
+//    std::cout << "Got id: " << iter->msg.entry_id << std::endl << std::flush;
     if (iter->msg.entry_id < entry_start || iter->msg.entry_id > entry_end)
       continue;
 
@@ -240,6 +247,29 @@ std::pair<uint64_t, uint64_t> FileLog::Append(std::vector<Entry *> &entries) {
   //	current_sync_->fds.push_back({fd, true});
   // current_sync_->last_index = range.second;
   return range;
+}
+
+void FileLog::SplitIfNeeded() {
+
+  if (table_->header_->filesize > 1024 * 1024) {
+    
+    uint64_t next  = table_->header_->entry_end+1;
+
+    delete table_;
+    table_ = NULL;
+
+    std::string filename = LogFileName(path_, ++manifest_->log_number_);
+    if (!Table::Open(filename, &table_)) {
+      fprintf(stderr, "[WARN] (%s:%d) open %s failed\n", __FILE__, __LINE__,
+              filename.c_str());
+    }
+
+    table_->header_->entry_start = next;
+    table_->header_->entry_end = next;
+
+    current_sync_ = std::unique_ptr<Sync>(new Sync(0, manifest_, table_));
+  }
+
 }
 
 void FileLog::TruncateSuffix(uint64_t last_index) {
@@ -300,6 +330,8 @@ int Table::AppendEntry(uint64_t index, Log::Entry &entry) {
   } else {
     byte_size = Serialize(index, length, entry, &result, scratch);
   }
+
+//  std::cout << "AppendEntry, id: " << index << std::endl << std::flush;
 
   Status s = file_->Write(header_->filesize, result);
   if (!s.ok()) {
@@ -374,6 +406,7 @@ bool Manifest::Save() {
   memcpy(scratch + offset, &length_, sizeof(kOffsetLength));
   offset += kOffsetLength;
 
+//  std::cout << "current_term: " << metadata_.raft_metadata().current_term() << " entry_start: " << metadata_.entries_start() << " entry_end: " << metadata_.entries_end() << std::endl << std::flush;
   if (!metadata_.SerializeToArray(scratch + offset, length_)) {
     return false;
   }
@@ -417,9 +450,9 @@ FileLog::Sync::Sync(uint64_t lastindex, Manifest *mn, Table *tb)
 
 void FileLog::Sync::Wait() {
   // TODO sync
-  if (manifest != NULL) {
-    manifest->Save();
-  }
+//  if (manifest != NULL) {
+//    manifest->Save();
+//  }
   if (table != NULL) {
     table->Sync();
   }
@@ -483,7 +516,7 @@ bool Table::ReadHeader(slash::RandomRWFile *file, Header *h) {
   const char *p = result.data();
   memcpy((char *)(&(h->entry_start)), p, sizeof(uint64_t));
   memcpy((char *)(&(h->entry_end)), p + sizeof(uint64_t), sizeof(uint64_t));
-  memcpy((char *)(&(h->filesize)), p + 2 * sizeof(uint64_t), sizeof(uint32_t));
+  memcpy((char *)(&(h->filesize)), p + 2 * sizeof(uint64_t), sizeof(uint64_t));
   return true;
 }
 
@@ -544,6 +577,8 @@ int Table::ReadMessage(int offset, Message *msg, bool from_end) {
 
 bool Table::Sync() {
   Slice result((char *)header_, sizeof(Header));
+
+//  std::cout << "header size: " << result.size() << " start: " << header_->entry_start << " end: " << header_->entry_end << " filesize: " << header_->filesize << std::endl << std::flush;
 
   Status s = file_->Write(0, result);
   if (!s.ok()) {

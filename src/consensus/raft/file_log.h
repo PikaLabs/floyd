@@ -36,6 +36,7 @@ class FileLog : public Log {
   explicit FileLog(const std::string& path);
   ~FileLog();
   std::pair<uint64_t, uint64_t> Append(std::vector<Entry*>& entries);
+  void SplitIfNeeded();
   std::unique_ptr<Log::Sync> TakeSync();
   void TruncatePrefix(uint64_t first_index) { first_index = 0; assert(false); }
   void TruncateSuffix(uint64_t last_index);
@@ -73,7 +74,7 @@ class FileLog : public Log {
 
 
 const size_t kIdLength = sizeof(uint64_t);
-const size_t kOffsetLength = sizeof(uint32_t);
+const size_t kOffsetLength = sizeof(uint64_t);
 const size_t kTableHeaderLength = 2 * kIdLength + kOffsetLength;
 
 //
@@ -126,7 +127,7 @@ class Table {
   struct Header {
     uint64_t entry_start;
     uint64_t entry_end;
-    uint32_t filesize;
+    uint64_t filesize;
 
     Header() : entry_start(1), entry_end(0), filesize(kTableHeaderLength) {}
   };
@@ -251,7 +252,7 @@ private:
   Table *table_;
   slash::RandomRWFile *file_;
   //Table::Header* header_;
-  uint32_t offset_;
+  uint64_t offset_;
   bool valid_;
 
   // No copying allowed

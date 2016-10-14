@@ -198,6 +198,8 @@ void RaftConsensus::Append(std::vector<Log::Entry*>& entries) {
     log_->SyncComplete(std::move(sync));
   }
 
+  log_->SplitIfNeeded();
+
   state_changed_.SignalAll();
 }
 
