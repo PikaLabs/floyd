@@ -27,7 +27,8 @@ LIBS = -lfloyd \
 INCLUDE_PATH = -I../output/include/ \
 			   -I../third/leveldb/include \
 			   -I../third/slash/output/include/ \
-			   -I../third/pink/output/include/
+			   -I../third/pink/output/include/ \
+			   -I../third/pink/output/
 
 LIBRARY = libfloyd.a
 .PHONY: all clean version

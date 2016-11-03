@@ -15,7 +15,8 @@ OUTPUT = ./output
 INCLUDE_PATH = -I../include/ \
                      -I../src/ \
 			   -I$(THIRD_PATH)/leveldb/include/ \
-			   -I$(THIRD_PATH)/pink/output/include/
+			   -I$(THIRD_PATH)/pink/output/include/ \
+			   -I$(THIRD_PATH)/pink/output
 
 LIB_PATH = -L../ \
 		   -L../output/lib/ \

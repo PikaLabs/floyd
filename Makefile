@@ -17,7 +17,8 @@ INCLUDE_PATH = -I./include/ \
 			   -I./src/consensus/raft/ \
 			   -I$(THIRD_PATH)/leveldb/include/ \
 			   -I$(THIRD_PATH)/slash/output/include/ \
-			   -I$(THIRD_PATH)/pink/output/include/
+			   -I$(THIRD_PATH)/pink/output/include/ \
+			   -I$(THIRD_PATH)/pink/output/
 
 LIB_PATH = -L./ \
 		   -L$(THIRD_PATH)/slash/output/lib/ \
