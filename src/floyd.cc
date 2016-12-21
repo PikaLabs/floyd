@@ -53,6 +53,7 @@ void Floyd::GetAllNodes(std::vector<std::string> &nodes) {
   for (auto it = nodes_info.begin(); it != nodes_info.end(); it++) {
     nodes.push_back((*it)->ip + ":" + std::to_string((*it)->port));
   } 
+  nodes_mutex.Unlock();
 }
 
 NodeInfo* Floyd::GetLeaderInfo() {
