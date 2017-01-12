@@ -48,6 +48,14 @@ bool Floyd::GetLeader(std::string& ip, int& port) {
   return true;
 }
 
+void Floyd::GetAllNodes(std::vector<std::string> &nodes) {
+  nodes_mutex.Lock();
+  for (auto it = nodes_info.begin(); it != nodes_info.end(); it++) {
+    nodes.push_back((*it)->ip + ":" + std::to_string((*it)->port));
+  } 
+  nodes_mutex.Unlock();
+}
+
 NodeInfo* Floyd::GetLeaderInfo() {
   std::pair<std::string, int> leader_node = raft_con->GetLeaderNode();
   if (leader_node.first == "" || leader_node.second == 0) {

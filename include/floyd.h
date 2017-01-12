@@ -48,6 +48,7 @@ class Floyd {
 
   // return true if leader has been elected
   bool GetLeader(std::string& ip, int& port);
+  void GetAllNodes(std::vector<std::string> &nodes);
 
  private:
   const Options options_;
