@@ -1,5 +1,5 @@
 #include <google/protobuf/text_format.h>
-#include "status.h"
+#include "include/slash_status.h"
 #include "raft.h"
 #include "floyd.h"
 #include "log.h"
@@ -892,11 +892,7 @@ bool RaftConsensus::PeerThread::RequestVote() {
   rqv->set_last_log_index(raft_con_->log_->GetLastLogIndex());
   cmd.set_allocated_rqv(rqv);
 
-  if (!ni_->dcc->Available()) {
-    return false;
-  }
-
-  ret = ni_->dcc->SendMessage(&cmd);
+  ret = ni_->dcc->Send(&cmd);
   if (!ret.ok()) {
     return false;
   }
@@ -906,7 +902,7 @@ bool RaftConsensus::PeerThread::RequestVote() {
   //LOG_DEBUG("Send vote message to  %s:%d, result message : %s", (ni_->ip).c_str(), ni_->port, text_format.c_str());
 
   command::CommandRes cmd_res;
-  ret = ni_->dcc->GetResMessage(&cmd_res);
+  ret = ni_->dcc->Recv(&cmd_res);
   if (!ret.ok()) {
     return false;
   }
@@ -985,11 +981,7 @@ bool RaftConsensus::PeerThread::AppendEntries() {
       std::min(raft_con_->commit_index_, prev_log_index + num_entries));
   cmd.set_allocated_aerq(aerq);
 
-  if (!ni_->dcc->Available()) {
-    return false;
-  }
-
-  floyd::Status ret = ni_->dcc->SendMessage(&cmd);
+  floyd::Status ret = ni_->dcc->Send(&cmd);
   if (!ret.ok()) {
     //ni_->UpHoldWorkerCliConn(true);
     return false;
@@ -999,7 +991,7 @@ bool RaftConsensus::PeerThread::AppendEntries() {
   //LOG_DEBUG("Send to %s:%d, message : %s", (ni_->ip).c_str(), ni_->port, text_format.c_str());
 
   command::CommandRes cmd_res;
-  ret = ni_->dcc->GetResMessage(&cmd_res);
+  ret = ni_->dcc->Recv(&cmd_res);
   if (!ret.ok()) {
     return false;
   }

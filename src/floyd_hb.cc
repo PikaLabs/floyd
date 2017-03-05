@@ -44,8 +44,8 @@ void FloydHeartBeatThread::HeartBeat() {
       }
 
       if (!((*iter)->mcc)) {
-        (*iter)->mcc = new FloydMetaCliConn(ip_, port_);
-        ret = (*iter)->mcc->Connect();
+        (*iter)->mcc = pink::NewPbCli();
+        ret = (*iter)->mcc->Connect(ip_, port_);
         if (!ret.ok()) {
           delete (*iter)->mcc;
           (*iter)->mcc = NULL;
@@ -56,7 +56,7 @@ void FloydHeartBeatThread::HeartBeat() {
       meta::Meta_Node* node = meta.add_nodes();
       node->set_ip(ip_);
       node->set_port(port_);
-      ret = (*iter)->mcc->SendMessage(&meta);
+      ret = (*iter)->mcc->Send(&meta);
       if (!ret.ok()) {
         (*iter)->mcc->Close();
         delete (*iter)->mcc;

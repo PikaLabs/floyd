@@ -3,23 +3,23 @@
 
 #include "holy_thread.h"
 #include "pb_conn.h"
-#include "pb_cli.h"
+#include "pink_cli.h"
 #include "meta.pb.h"
 #include "floyd_define.h"
 #include "floyd_util.h"
 #include "floyd_worker.h"
-#include "status.h"
+#include "include/slash_status.h"
 #include "slice.h"
 namespace floyd {
+using slash::Status;
 class NodeInfo;
-class FloydMetaCliConn;
 typedef std::pair<std::string, int> NodeAddr;
 struct NodeInfo {
   std::string ip;
   int port;
   time_t last_ping;
-  FloydMetaCliConn* mcc;
-  FloydWorkerCliConn* dcc;
+  pink::PinkCli* mcc;
+  pink::PinkCli* dcc;
 
   NodeInfo(const std::string& ip, const int port);
 
@@ -27,24 +27,10 @@ struct NodeInfo {
   bool operator==(NodeInfo& node_y);
 };
 
-class FloydMetaCliConn : public pink::PbCli {
- public:
-  FloydMetaCliConn(const std::string& ip, const int port);
-  virtual ~FloydMetaCliConn();
-  virtual Status Connect();
-  virtual Status GetResMessage(meta::MetaRes* meta_res);
-  virtual Status SendMessage(meta::Meta* meta);
-  Status GetNodeInfo(std::vector<NodeInfo*>* nis);
-
- private:
-  std::string local_ip_;
-  int local_port_;
-};
-
 class FloydMetaConn : public pink::PbConn {
  public:
-  FloydMetaConn(int fd, std::string& ip_port);
-  FloydMetaConn(int fd, std::string& ip_port, pink::Thread* thread);
+  FloydMetaConn(int fd, const std::string& ip_port);
+  FloydMetaConn(int fd, const std::string& ip_port, pink::Thread* thread);
   virtual ~FloydMetaConn();
 
   virtual int DealMessage();

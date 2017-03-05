@@ -8,12 +8,20 @@ Status LeveldbBackend::Open() {
   leveldb::Options options;
   options.create_if_missing = true;
   leveldb::Status result = leveldb::DB::Open(options, dbPath, &db);
-  return static_cast<Status>(result);
+  if (result.ok()) {
+    return Status::OK();
+  } else {
+    return Status::Corruption(result.ToString());
+  }
 }
 
 Status LeveldbBackend::Get(const std::string& key, std::string& value) {
   leveldb::Status result = db->Get(leveldb::ReadOptions(), key, &value);
-  return static_cast<Status>(result);
+  if (result.ok()) {
+    return Status::OK();
+  } else {
+    return Status::Corruption(result.ToString());
+  }
 }
 
 Status LeveldbBackend::GetAll(std::map<std::string, std::string>& kvMap) {
@@ -36,12 +44,20 @@ Status LeveldbBackend::GetAll(std::map<std::string, std::string>& kvMap) {
 
 Status LeveldbBackend::Set(const std::string& key, const std::string& value) {
   leveldb::Status result = db->Put(leveldb::WriteOptions(), key, value);
-  return static_cast<Status>(result);
+  if (result.ok()) {
+    return Status::OK();
+  } else {
+    return Status::Corruption(result.ToString());
+  }
 }
 
 Status LeveldbBackend::Delete(const std::string& key) {
   leveldb::Status result = db->Delete(leveldb::WriteOptions(), key);
-  return static_cast<Status>(result);
+  if (result.ok()) {
+    return Status::OK();
+  } else {
+    return Status::Corruption(result.ToString());
+  }
 }
 
 int LeveldbBackend::LockIsAvailable(std::string& user, std::string& key) {
@@ -91,7 +107,11 @@ Status LeveldbBackend::LockKey(const std::string& user,
   batch.Put(user_data, "");
 
   leveldb::Status result = db->Write(leveldb::WriteOptions(), &batch);
-  return static_cast<Status>(result);
+  if (result.ok()) {
+    return Status::OK();
+  } else {
+    return Status::Corruption(result.ToString());
+  }
 }
 
 Status LeveldbBackend::UnLockKey(const std::string& user,
@@ -127,7 +147,11 @@ Status LeveldbBackend::UnLockKey(const std::string& user,
   //  // non exist key
   //}
 
-  return static_cast<Status>(result);
+  if (result.ok()) {
+    return Status::OK();
+  } else {
+    return Status::Corruption(result.ToString());
+  }
 }
 
 Status LeveldbBackend::DeleteUserLocks(const std::string& user) {
@@ -150,7 +174,11 @@ Status LeveldbBackend::DeleteUserLocks(const std::string& user) {
   }
 
   leveldb::Status result = db->Write(leveldb::WriteOptions(), &batch);
-  return static_cast<Status>(result);
+  if (result.ok()) {
+    return Status::OK();
+  } else {
+    return Status::Corruption(result.ToString());
+  }
 }
 
 }  // namespace floyd

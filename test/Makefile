@@ -15,17 +15,21 @@ OUTPUT = ./output
 INCLUDE_PATH = -I../include/ \
                      -I../src/ \
 			   -I$(THIRD_PATH)/leveldb/include/ \
-			   -I$(THIRD_PATH)/pink/output/include/ \
-			   -I$(THIRD_PATH)/pink/output
+			   -I$(THIRD_PATH)/slash/include/ \
+			   -I$(THIRD_PATH)/slash/ \
+			   -I$(THIRD_PATH)/pink/include/ \
+			   -I$(THIRD_PATH)/pink/
 
 LIB_PATH = -L../ \
 		   -L../output/lib/ \
 		   -L$(THIRD_PATH)/pink/output/lib/  \
+		   -L$(THIRD_PATH)/slash/output/lib/  \
 		   -L$(THIRD_PATH)/leveldb/
 
 LIBS = -lpthread \
 	   -lprotobuf \
 	   -lpink \
+	   -lslash \
 	   -lfloyd \
 	   -lleveldb
 

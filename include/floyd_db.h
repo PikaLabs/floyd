@@ -3,13 +3,15 @@
 
 #include <iostream>
 #include <string>
+#include <map>
 
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 
-#include "status.h"
+#include "include/slash_status.h"
 
 namespace floyd {
+using slash::Status;
 
 class DbBackend {
  public:

@@ -1,3 +1,4 @@
+#include "slash_status.h"
 #include "floyd_mutex.h"
 #include "floyd_worker.h"
 #include "floyd.h"
@@ -5,32 +6,9 @@
 #include "logger.h"
 
 namespace floyd {
+using slash::Status;
 
-FloydWorkerCliConn::FloydWorkerCliConn(const std::string& ip, const int port)
-    : local_ip_(ip), local_port_(port + 100) {}
-
-FloydWorkerCliConn::~FloydWorkerCliConn() {}
-
-Status FloydWorkerCliConn::Connect() {
-  pink::Status ret = PbCli::Connect(local_ip_, local_port_);
-  Status s = static_cast<Status>(ret);
-  return s;
-}
-
-Status FloydWorkerCliConn::GetResMessage(google::protobuf::Message* cmd_res) {
-  pink::Status ret = Recv(cmd_res);
-  Status s = static_cast<Status>(ret);
-  if (!s.ok()) return s;
-}
-
-Status FloydWorkerCliConn::SendMessage(google::protobuf::Message* cmd) {
-  pink::Status ret = Send(cmd);
- // LOG_DEBUG("FloydWorkerCliConn Send to ip:  %s, port : %d, res: %s", local_ip_.c_str(), local_port_, ret.ToString().c_str());
-  Status s = static_cast<Status>(ret);
-  return s;
-}
-
-FloydWorkerConn::FloydWorkerConn(int fd, std::string& ip_port,
+FloydWorkerConn::FloydWorkerConn(int fd, const std::string& ip_port,
                                  pink::Thread* thread)
     : PbConn(fd, ip_port) {}
 
@@ -125,7 +103,7 @@ int FloydWorkerConn::DealMessage() {
       command_res_.set_type(command::CommandRes::TryLock);
 
       command::CommandRes_KvRet* kvr = new command::CommandRes_KvRet();
-//      if (!ret.ok() && !ret.IsTimeOut()) {
+//      if (!ret.ok() && !ret.IsTimeout()) {
       if (!ret.ok()) {
         // printf ("TryLock error as leader:%s\n", ret.ToString().c_str());
         kvr->set_status(false);
@@ -148,7 +126,7 @@ int FloydWorkerConn::DealMessage() {
       command_res_.set_type(command::CommandRes::UnLock);
 
       command::CommandRes_KvRet* kvr = new command::CommandRes_KvRet();
-      if (!ret.ok() && !ret.IsTimeOut()) {
+      if (!ret.ok() && !ret.IsTimeout()) {
         // printf ("UnLock error as leader:%s\n", ret.ToString().c_str());
         kvr->set_status(false);
       } else {

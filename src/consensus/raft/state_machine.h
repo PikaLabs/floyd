@@ -3,7 +3,7 @@
 
 #include <unordered_map>
 #include "log.h"
-#include "status.h"
+#include "include/slash_status.h"
 #include "floyd_mutex.h"
 #include "floyd_define.h"
 
@@ -12,6 +12,7 @@
 namespace floyd {
 namespace raft {
 
+using slash::Status;
 class RaftConsensus;
 
 class StateMachine {
@@ -21,11 +22,11 @@ public:
 		Log::Entry log_entry;
 	};
   struct ApplyResult {
-    floyd::Status status_;
+    Status status_;
     std::string value_;
 
     ApplyResult() {}
-    ApplyResult(floyd::Status status, std::string value){
+    ApplyResult(Status status, std::string value){
       status_ = status;
       value_ = value;
     }
@@ -45,9 +46,9 @@ public:
     return last_apply_index_;
   };
 
-  floyd::Status WaitForTryLockResponse(uint64_t log_index);
-  floyd::Status WaitForUnLockResponse(uint64_t log_index);
-  floyd::Status WaitForDeleteUserResponse(uint64_t log_index);
+  Status WaitForTryLockResponse(uint64_t log_index);
+  Status WaitForUnLockResponse(uint64_t log_index);
+  Status WaitForDeleteUserResponse(uint64_t log_index);
 
   void Exit();
 
@@ -68,7 +69,7 @@ private:
 	ApplyThread* apply_;
 
   //int LockIsAvailable(std::string &key, std::string &user);
-  //floyd::Status DBLock(std::string &key, std::string &user);
+  //Status DBLock(std::string &key, std::string &user);
 
 	RaftConsensus* raft_con_;
 	mutable Mutex mutex_;

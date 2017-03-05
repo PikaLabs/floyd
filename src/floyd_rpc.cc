@@ -1,4 +1,4 @@
-#include "status.h"
+#include "include/slash_status.h"
 #include "floyd.h"
 #include "meta.pb.h"
 #include "command.pb.h"
@@ -64,7 +64,7 @@ Status Rpc(NodeInfo* ni, command::Command& cmd, command::CommandRes& cmd_res) {
   Status ret = ni->UpHoldWorkerCliConn();
   if (!ret.ok()) return ret;
 
-  ret = ni->dcc->SendMessage(&cmd);
+  ret = ni->dcc->Send(&cmd);
   if (!ret.ok()) {
     LOG_WARN("MainThread::%s as Follower, redirect:SendMeassge fail: %s",
              ret.ToString().c_str());
@@ -76,11 +76,11 @@ Status Rpc(NodeInfo* ni, command::Command& cmd, command::CommandRes& cmd_res) {
   LOG_DEBUG("MainThread::%s as Follower, redirect:SendMeassge success",
             CmdType(cmd).c_str());
 
-  ret = ni->dcc->GetResMessage(&cmd_res);
-  LOG_DEBUG("MainThread::%s as Follower, redirect:GetResMessage success",
+  ret = ni->dcc->Recv(&cmd_res);
+  LOG_DEBUG("MainThread::%s as Follower, redirect:Recv success",
             CmdType(cmd).c_str());
   if (!ret.ok()) {
-    LOG_WARN("MainThread::%s as Follower, redirect:GetResMessage fail: %s",
+    LOG_WARN("MainThread::%s as Follower, redirect:Recv fail: %s",
              ret.ToString().c_str());
     ni->dcc->Close();
     delete ni->dcc;

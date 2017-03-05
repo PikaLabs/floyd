@@ -2,16 +2,14 @@
 #include"floyd_db.cc"
 #include<iostream>
 #include<sstream>
-#include"status.h"
-#include"status.cc"
+#include"include/slash_status.h"
 #include"floyd_mutex.cc"
 using namespace std;
+using slash::Status;
 int main(){
   
     floyd::Status s ;
     s = floyd::Status::NotFound("1","2");
-    cout<<s.ToString()<<endl;
-    s = floyd::Status::NetworkError("1","2");
     cout<<s.ToString()<<endl;
     s = floyd::Status::IOError("1","2");
     cout<<s.ToString()<<endl;

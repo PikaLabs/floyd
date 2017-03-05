@@ -2,7 +2,6 @@
 #define __FLOYD_SERVER_H__
 #include "logger.h"
 #include "pb_conn.h"
-#include "pb_cli.h"
 #include "holy_thread.h"
 #include "floyd.h"
 #include "bada_sdk.pb.h"
@@ -24,7 +23,7 @@ class FloydServer {
   class FloydServerThread;
   class FloydServerConn : public pink::PbConn {
    public:
-    FloydServerConn(int fd, std::string& ip_port, pink::Thread* thread);
+    FloydServerConn(int fd, const std::string& ip_port, pink::Thread* thread);
     virtual ~FloydServerConn();
     virtual pink::Status BuildObuf();
     virtual int DealMessage();

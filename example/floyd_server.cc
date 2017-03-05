@@ -1,6 +1,6 @@
 #include "floyd_server.h"
 
-FloydServer::FloydServerConn::FloydServerConn(int fd, std::string &ip_port,
+FloydServer::FloydServerConn::FloydServerConn(int fd, const std::string &ip_port,
                                               pink::Thread *thread)
     : PbConn(fd, ip_port) {
   server_thread_ = reinterpret_cast<FloydServerThread *>(thread);

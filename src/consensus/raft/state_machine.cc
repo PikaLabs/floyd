@@ -152,7 +152,7 @@ bool StateMachine::ApplyThread::Apply(StateMachine::Entry& entry) {
           result.status_ = ret;
         }
       } else if (lock_is_available == 0) {
-        result.status_ = floyd::Status::TimeOut("already locked");
+        result.status_ = floyd::Status::Timeout("already locked");
       }
 
       // printf ("ApplyThread Lock after apply: index=%ld -->

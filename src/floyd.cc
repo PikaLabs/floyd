@@ -1,4 +1,4 @@
-#include "status.h"
+#include "include/slash_status.h"
 #include "floyd.h"
 #include "meta.pb.h"
 #include "command.pb.h"
@@ -202,7 +202,7 @@ Status Floyd::DirtyWrite(const std::string& key, const std::string& value) {
     s = (*local_nis_iter)->UpHoldWorkerCliConn();
     if (!s.ok()) continue;
 
-    (*local_nis_iter)->dcc->SendMessage(&cmd);
+    (*local_nis_iter)->dcc->Send(&cmd);
   }
   return s;
 }
@@ -261,7 +261,7 @@ Status Floyd::TryLock(const std::string& key) {
       return ret;
     }
 
-    ret = (*it)->dcc->SendMessage(&cmd);
+    ret = (*it)->dcc->Send(&cmd);
     if (!ret.ok()) {
       LOG_WARN("MainThread::TryLock as Follower, redirect:SendMeassge fail: %s",
                ret.ToString().c_str());
@@ -273,10 +273,10 @@ Status Floyd::TryLock(const std::string& key) {
     LOG_DEBUG("MainThread::TryLock as Follower, redirect:SendMeassge success");
 
     command::CommandRes cmd_res;
-    ret = (*it)->dcc->GetResMessage(&cmd_res);
+    ret = (*it)->dcc->Recv(&cmd_res);
     if (!ret.ok()) {
       LOG_WARN(
-          "MainThread::TryLock as Follower, redirect:GetResMessage fail: %s",
+          "MainThread::TryLock as Follower, redirect:Recv fail: %s",
           ret.ToString().c_str());
       (*it)->dcc->Close();
       delete (*it)->dcc;
@@ -284,7 +284,7 @@ Status Floyd::TryLock(const std::string& key) {
       return ret;
     }
     LOG_DEBUG(
-        "MainThread::TryLock as Follower, redirect:GetResMessage success");
+        "MainThread::TryLock as Follower, redirect:Recv success");
 
     if (cmd_res.kvr().status()) {
       return Status::OK();
@@ -343,7 +343,7 @@ Status Floyd::UnLock(const std::string& key) {
       return ret;
     }
 
-    ret = (*it)->dcc->SendMessage(&cmd);
+    ret = (*it)->dcc->Send(&cmd);
     if (!ret.ok()) {
       (*it)->dcc->Close();
       delete (*it)->dcc;
@@ -352,7 +352,7 @@ Status Floyd::UnLock(const std::string& key) {
     }
 
     command::CommandRes cmd_res;
-    ret = (*it)->dcc->GetResMessage(&cmd_res);
+    ret = (*it)->dcc->Recv(&cmd_res);
     if (!ret.ok()) {
       // printf ("get reply error:%s\n", ret.ToString().c_str());
       (*it)->dcc->Close();
@@ -394,9 +394,9 @@ Status Floyd::FetchRemoteMap(const std::string& ip, const int port,
                              std::vector<NodeInfo*>* nis) {
   Status ret;
   NodeInfo* ni = new NodeInfo(ip, port);
-  ni->mcc = new FloydMetaCliConn(ip, port);
+  ni->mcc = pink::NewPbCli();
   // todo change status
-  ret = ni->mcc->Connect();
+  ret = ni->mcc->Connect(ip, port);
   if (ret.ok()) {
     meta::Meta meta;
     meta.set_t(meta::Meta::NODE);
@@ -407,7 +407,7 @@ Status Floyd::FetchRemoteMap(const std::string& ip, const int port,
       node->set_port((*iter)->port);
     }
     // send request
-    ret = ni->mcc->SendMessage(&meta);
+    ret = ni->mcc->Send(&meta);
     if (!ret.ok()) {
       ni->mcc->Close();
       delete ni->mcc;
@@ -416,7 +416,7 @@ Status Floyd::FetchRemoteMap(const std::string& ip, const int port,
     }
 
     meta::MetaRes meta_res;
-    ret = ni->mcc->GetResMessage(&meta_res);
+    ret = ni->mcc->Recv(&meta_res);
     if (!ret.ok()) {
       ni->mcc->Close();
       delete ni->mcc;
@@ -492,10 +492,10 @@ Status Floyd::ChaseRaftLog(raft::RaftConsensus* raft_consensus) {
     Status ret = (*local_nis_iter)->UpHoldWorkerCliConn();
     if (!ret.ok()) continue;
 
-    (*local_nis_iter)->dcc->SendMessage(&cmd);
+    (*local_nis_iter)->dcc->Send(&cmd);
 
     command::CommandRes cmd_res;
-    ret = (*local_nis_iter)->dcc->GetResMessage(&cmd_res);
+    ret = (*local_nis_iter)->dcc->Recv(&cmd_res);
     max_commit_index =
         std::max(max_commit_index, cmd_res.raftstage().commitindex());
     max_term = std::max(max_term, cmd_res.raftstage().term());

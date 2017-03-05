@@ -20,44 +20,21 @@ bool NodeInfo::operator==(NodeInfo& node) {
 
 Status NodeInfo::UpHoldWorkerCliConn(bool create_new_connect) {
   Status ret = Status::OK();
-  if (create_new_connect || dcc == NULL || !dcc->Available()) {
+  if (create_new_connect || dcc == NULL) {
     if (dcc != NULL) {
       dcc->Close();
       delete dcc;
     }
-    dcc = new FloydWorkerCliConn(ip, port);
-    ret = dcc->Connect();
+    dcc = pink::NewPbCli();
+    ret = dcc->Connect(ip, port + 100);
   }
   return ret;
 }
 
-FloydMetaCliConn::FloydMetaCliConn(const std::string& ip, const int port)
-    : local_ip_(ip), local_port_(port) {}
-
-FloydMetaCliConn::~FloydMetaCliConn() {}
-
-Status FloydMetaCliConn::Connect() {
-  pink::Status ret = PbCli::Connect(local_ip_, local_port_);
-  Status s = static_cast<Status>(ret);
-  return s;
-}
-
-Status FloydMetaCliConn::GetResMessage(meta::MetaRes* meta_res) {
-  pink::Status ret = Recv(meta_res);
-  Status s = static_cast<Status>(ret);
-  return s;
-}
-
-Status FloydMetaCliConn::SendMessage(meta::Meta* meta) {
-  pink::Status ret = Send(meta);
-  Status s = static_cast<Status>(ret);
-  return s;
-}
-
-FloydMetaConn::FloydMetaConn(int fd, std::string& ip_port)
+FloydMetaConn::FloydMetaConn(int fd, const std::string& ip_port)
     : PbConn(fd, ip_port) {}
 
-FloydMetaConn::FloydMetaConn(int fd, std::string& ip_port, pink::Thread* thread)
+FloydMetaConn::FloydMetaConn(int fd, const std::string& ip_port, pink::Thread* thread)
     : PbConn(fd, ip_port) {}
 FloydMetaConn::~FloydMetaConn() {}
 
@@ -77,8 +54,8 @@ int FloydMetaConn::DealMessage() {
       }
       if (iter == Floyd::nodes_info.end()) {
         NodeInfo* ni = new NodeInfo(node.ip(), node.port());
-        ni->dcc = new FloydWorkerCliConn(ni->ip, ni->port);
-        ni->dcc->Connect();
+        ni->dcc = pink::NewPbCli();
+        ni->dcc->Connect(ni->ip, ni->port + 100);
         Floyd::nodes_info.push_back(ni);
         Floyd::raft_con->AddNewPeer(ni);
         LOG_DEBUG("MetaThread::DealMessage: find a new node: %s:%d",

@@ -13,6 +13,7 @@
 
 namespace floyd {
 
+using slash::Status;
 class Floyd {
  public:
   Floyd(const Options& options);
