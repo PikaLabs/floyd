@@ -1,6 +1,6 @@
-#include "slash_status.h"
-#include "floyd_mutex.h"
 #include "floyd_worker.h"
+#include "include/slash_status.h"
+#include "floyd_mutex.h"
 #include "floyd.h"
 #include "command.pb.h"
 #include "logger.h"

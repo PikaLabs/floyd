@@ -1,6 +1,6 @@
 #include "state_machine.h"
 
-#include "command.pb.h"
+#include "src/command.pb.h"
 #include "floyd.h"
 #include "floyd_util.h"
 #include "logger.h"

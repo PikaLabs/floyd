@@ -4,10 +4,10 @@
 #include <string>
 #include <vector>
 
-#include "pb_cli.h"
-#include "status.h"
+#include "include/pink_cli.h"
+#include "include/slash_status.h"
 
-using pink::Status;
+using slash::Status;
 
 namespace floyd {
 namespace client {
@@ -65,8 +65,8 @@ class Cluster {
  public:
   Cluster(const Option& option);
 
-  pink::Status Write(const std::string& key, const std::string& value);
-  pink::Status Read(const std::string& key, std::string* value);
+  Status Write(const std::string& key, const std::string& value);
+  Status Read(const std::string& key, std::string* value);
 
  private:
   void Init();
@@ -78,7 +78,7 @@ class Cluster {
   FloydPbCli *pb_cli_;
 };
 
-class FloydPbCli : public pink::PbCli {
+class FloydPbCli : public pink::PinkCli {
  public:
   void set_opcode(int opcode) {
     opcode_ = opcode;

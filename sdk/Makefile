@@ -18,7 +18,11 @@ LIBS = -lpink \
 			 -lprotobuf \
 			 -lpthread
 
-INCLUDE_PATH = -I../third/pink/output/include/
+INCLUDE_PATH = -I.. \
+							 -I../include \
+							 -I../third/leveldb \
+							 -I../third/slash \
+							 -I../third/pink/
 
 .PHONY: all clean
 

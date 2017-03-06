@@ -2,7 +2,7 @@
 // source: raft/filelog_meta.proto
 
 #define INTERNAL_SUPPRESS_PROTOBUF_FIELD_DEPRECATION
-#include "raft/filelog_meta.pb.h"
+#include "src/consensus/raft/filelog_meta.pb.h"
 
 #include <algorithm>
 

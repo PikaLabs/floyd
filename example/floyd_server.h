@@ -1,8 +1,8 @@
 #ifndef __FLOYD_SERVER_H__
 #define __FLOYD_SERVER_H__
 #include "logger.h"
-#include "pb_conn.h"
-#include "holy_thread.h"
+#include "include/pb_conn.h"
+#include "include/holy_thread.h"
 #include "floyd.h"
 #include "bada_sdk.pb.h"
 

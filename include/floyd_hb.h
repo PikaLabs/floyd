@@ -1,8 +1,8 @@
 #ifndef __FLOYD_HEARTBEAT_H__
 #define __FLOYD_HEARTBEAT_H__
 
-#include "pink_thread.h"
-#include "pb_conn.h"
+#include "include/pink_thread.h"
+#include "include/pb_conn.h"
 #include "floyd_define.h"
 #include "floyd_util.h"
 #include "floyd_mutex.h"

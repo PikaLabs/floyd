@@ -1,8 +1,8 @@
 #include "include/slash_status.h"
 #include "floyd.h"
-#include "meta.pb.h"
-#include "command.pb.h"
-#include "env.h"
+#include "src/meta.pb.h"
+#include "src/command.pb.h"
+#include "include/env.h"
 #include "logger.h"
 namespace floyd {
 

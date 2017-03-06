@@ -2,7 +2,7 @@
 #include <dirent.h>
 #include "floyd_util.h"
 #include "file_log.h"
-#include "slash_mutex.h"
+#include "include/slash_mutex.h"
 
 #include <iostream>
 

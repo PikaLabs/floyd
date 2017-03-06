@@ -24,7 +24,7 @@
 #include <google/protobuf/repeated_field.h>
 #include <google/protobuf/extension_set.h>
 #include <google/protobuf/unknown_field_set.h>
-#include "raft/log_meta.pb.h"
+#include "src/consensus/raft/log_meta.pb.h"
 // @@protoc_insertion_point(includes)
 
 namespace floyd {

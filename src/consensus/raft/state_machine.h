@@ -7,7 +7,7 @@
 #include "floyd_mutex.h"
 #include "floyd_define.h"
 
-#include "pink_thread.h"
+#include "include/pink_thread.h"
 
 namespace floyd {
 namespace raft {

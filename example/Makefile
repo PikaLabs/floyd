@@ -24,15 +24,11 @@ LIBS = -lfloyd \
 			 -lprotobuf \
 			 -lpthread
 
-INCLUDE_PATH = -I../include/ \
-			   -I../src/ \
-			   -I../src/consensus/ \
-			   -I../src/consensus/raft/ \
-			   -I../third/leveldb/include \
-			   -I../third/slash/include/ \
-			   -I../third/slash/ \
-			   -I../third/pink/include/ \
-			   -I../third/pink/
+INCLUDE_PATH = -I.. \
+							 -I../include \
+							 -I../third/leveldb \
+							 -I../third/slash \
+							 -I../third/pink/
 
 LIBRARY = libfloyd.a
 .PHONY: all clean version

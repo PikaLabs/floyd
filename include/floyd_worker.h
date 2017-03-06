@@ -1,10 +1,10 @@
 #ifndef __FLOYD_WORKER_H__
 #define __FLOYD_WORKER_H__
 
-#include "pb_conn.h"
-#include "pink_cli.h"
-#include "holy_thread.h"
-#include "command.pb.h"
+#include "include/pb_conn.h"
+#include "include/pink_cli.h"
+#include "include/holy_thread.h"
+#include "src/command.pb.h"
 #include "floyd_define.h"
 #include "floyd_util.h"
 #include "include/slash_status.h"

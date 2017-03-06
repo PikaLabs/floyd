@@ -1,10 +1,10 @@
 #ifndef __FLOYD_META_H__
 #define __FLOYD_META_H__
 
-#include "holy_thread.h"
-#include "pb_conn.h"
-#include "pink_cli.h"
-#include "meta.pb.h"
+#include "include/holy_thread.h"
+#include "include/pb_conn.h"
+#include "include/pink_cli.h"
+#include "src/meta.pb.h"
 #include "floyd_define.h"
 #include "floyd_util.h"
 #include "floyd_worker.h"

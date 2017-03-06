@@ -8,7 +8,7 @@
 #include "floyd_meta.h"
 #include "floyd_worker.h"
 #include "floyd_db.h"
-#include "raft/raft.h"
+#include "src/consensus/raft/raft.h"
 #include "floyd_rpc.h"
 
 namespace floyd {
