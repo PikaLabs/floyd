@@ -1,6 +1,6 @@
 #include <sys/types.h>
 #include <dirent.h>
-#include "floyd_util.h"
+#include "include/floyd_util.h"
 #include "simplefile_log.h"
 
 namespace floyd {

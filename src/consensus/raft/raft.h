@@ -3,9 +3,9 @@
 
 #include "include/bg_thread.h"
 #include "include/pink_thread.h"
-#include "floyd_util.h"
-#include "floyd_mutex.h"
-#include "floyd_meta.h"
+#include "include/floyd_util.h"
+#include "include/floyd_mutex.h"
+#include "include/floyd_meta.h"
 #include "src/command.pb.h"
 #include "log.h"
 #include "state_machine.h"

@@ -1,8 +1,8 @@
-#include "floyd_mutex.h"
-#include "floyd_meta.h"
-#include "floyd.h"
+#include "include/floyd_mutex.h"
+#include "include/floyd_meta.h"
+#include "include/floyd.h"
 #include "meta.pb.h"
-#include "logger.h"
+#include "include/logger.h"
 namespace floyd {
 
 NodeInfo::NodeInfo(const std::string& ip, const int port) {

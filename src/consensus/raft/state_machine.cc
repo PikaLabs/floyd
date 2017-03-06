@@ -1,9 +1,9 @@
 #include "state_machine.h"
 
 #include "src/command.pb.h"
-#include "floyd.h"
-#include "floyd_util.h"
-#include "logger.h"
+#include "include/floyd.h"
+#include "include/floyd_util.h"
+#include "include/logger.h"
 
 namespace floyd {
 namespace raft {

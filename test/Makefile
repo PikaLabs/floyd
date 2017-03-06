@@ -12,12 +12,9 @@ TEST_SRC_DIR = ../src
 THIRD_PATH = ../third
 OUTPUT = ./output
 
-INCLUDE_PATH = -I../include/ \
-                     -I../src/ \
-			   -I$(THIRD_PATH)/leveldb/include/ \
-			   -I$(THIRD_PATH)/slash/include/ \
+INCLUDE_PATH = -I../ \
+			   -I$(THIRD_PATH)/leveldb/ \
 			   -I$(THIRD_PATH)/slash/ \
-			   -I$(THIRD_PATH)/pink/include/ \
 			   -I$(THIRD_PATH)/pink/
 
 LIB_PATH = -L../ \

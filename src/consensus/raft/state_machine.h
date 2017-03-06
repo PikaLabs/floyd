@@ -4,8 +4,8 @@
 #include <unordered_map>
 #include "log.h"
 #include "include/slash_status.h"
-#include "floyd_mutex.h"
-#include "floyd_define.h"
+#include "include/floyd_mutex.h"
+#include "include/floyd_define.h"
 
 #include "include/pink_thread.h"
 

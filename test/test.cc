@@ -1,9 +1,7 @@
-#include"floyd_db.h"
-#include"floyd_db.cc"
+#include"include/floyd_db.h"
 #include<iostream>
 #include<sstream>
 #include"include/slash_status.h"
-#include"floyd_mutex.cc"
 using namespace std;
 using slash::Status;
 int main(){

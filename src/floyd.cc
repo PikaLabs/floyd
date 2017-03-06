@@ -1,9 +1,9 @@
 #include "include/slash_status.h"
-#include "floyd.h"
+#include "include/floyd.h"
 #include "src/meta.pb.h"
 #include "src/command.pb.h"
 #include "include/env.h"
-#include "logger.h"
+#include "include/logger.h"
 namespace floyd {
 
 Mutex Floyd::nodes_mutex;

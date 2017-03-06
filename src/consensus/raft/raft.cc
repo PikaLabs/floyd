@@ -1,13 +1,13 @@
 #include <google/protobuf/text_format.h>
 #include "include/slash_status.h"
 #include "raft.h"
-#include "floyd.h"
+#include "include/floyd.h"
 #include "log.h"
 #include "memory_log.h"
 #include "simplefile_log.h"
 #include "file_log.h"
-#include "floyd_define.h"
-#include "logger.h"
+#include "include/floyd_define.h"
+#include "include/logger.h"
 
 namespace floyd {
 namespace raft {

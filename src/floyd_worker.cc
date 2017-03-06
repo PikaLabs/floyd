@@ -1,9 +1,9 @@
-#include "floyd_worker.h"
+#include "include/floyd_worker.h"
 #include "include/slash_status.h"
-#include "floyd_mutex.h"
-#include "floyd.h"
+#include "include/floyd_mutex.h"
+#include "include/floyd.h"
 #include "command.pb.h"
-#include "logger.h"
+#include "include/logger.h"
 
 namespace floyd {
 using slash::Status;

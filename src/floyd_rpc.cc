@@ -1,8 +1,8 @@
 #include "include/slash_status.h"
-#include "floyd.h"
+#include "include/floyd.h"
 #include "meta.pb.h"
 #include "command.pb.h"
-#include "logger.h"
+#include "include/logger.h"
 
 namespace floyd {
 static std::string CmdType(command::Command& cmd) {

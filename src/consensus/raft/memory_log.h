@@ -1,7 +1,7 @@
 #ifndef __FLOYD_CONSENSUS_MEMORY_LOG_H__
 #define __FLOYD_CONSENSUS_MEMORY_LOG_H__
 
-#include "floyd_util.h"
+#include "include/floyd_util.h"
 #include "log.h"
 
 namespace floyd {

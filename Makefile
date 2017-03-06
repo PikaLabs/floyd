@@ -12,7 +12,6 @@ OUTPUT = ./output
 
 
 INCLUDE_PATH = -I.\
-							 -I./include/ \
 							 -I$(THIRD_PATH)/leveldb/ \
 							 -I$(THIRD_PATH)/slash/ \
 							 -I$(THIRD_PATH)/pink/
@@ -92,6 +91,6 @@ clean:
 	rm -rf $(OUTPUT)
 
 distclean: clean
-	make -C $(THIRD_PATH)/pink/ disclean
+	make -C $(THIRD_PATH)/pink/ distclean
 	make -C $(THIRD_PATH)/slash/ clean
 	make -C $(THIRD_PATH)/leveldb/ clean
