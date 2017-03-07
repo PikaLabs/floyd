@@ -63,8 +63,8 @@ void Option::Init(const std::vector<std::string>& server_list) {
 
 void Option::ParseFromArgs(int argc, char *argv[]) {
   if (argc < 2) {
-    LOG_ERROR("invalid arguments!");
-    abort();
+    printf ("Usage: ./client --server ip1:port1,ip2:port2\n");
+    exit(-1);
   }
 
   static struct option const long_options[] = {

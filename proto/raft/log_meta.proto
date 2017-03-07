@@ -6,3 +6,8 @@ message MetaData {
 	required int32 voted_for_port = 3;
 }
 
+message FileLogMetaData {
+	required MetaData raft_metadata = 1;
+	required uint64 entries_start = 2 [default = 1];
+	required uint64 entries_end = 3 [default = 0];
+}

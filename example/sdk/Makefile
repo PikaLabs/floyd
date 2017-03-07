@@ -8,17 +8,20 @@ endif
 
 OBJECT = floyd_client
 SRC_DIR = ./
-THIRD_PATH = ../third
+THIRD_PATH = ../../third
 #OUTPUT = ./output
 
-LIB_PATH = -L../third/pink/output/lib/
+LIB_PATH = -L$(THIRD_PATH)/pink/output/lib/
 
 
 LIBS = -lpink \
 			 -lprotobuf \
 			 -lpthread
 
-INCLUDE_PATH = -I../third/pink/output/include/
+INCLUDE_PATH = -I../../output/include/ \
+			   -I$(THIRD_PATH)/slash/output/include/ \
+			   -I$(THIRD_PATH)/pink/output/include/ \
+			   -I$(THIRD_PATH)/pink/output/
 
 .PHONY: all clean
 
@@ -32,8 +35,7 @@ all: $(OBJECT)
 	#rm -rf $(OUTPUT)
 	#mkdir -p $(OUTPUT)
 	#mkdir -p $(OUTPUT)/bin
-	#cp $(OBJECT) $(OUTPUT)/bin/
-	#rm -rf $(OBJECT)
+	#mv $(OBJECT) $(OUTPUT)/bin/
 	@echo "Success, go, go, go..."
 
 

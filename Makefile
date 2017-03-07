@@ -13,8 +13,7 @@ OUTPUT = ./output
 
 INCLUDE_PATH = -I./include/ \
 			   -I./src/ \
-			   -I./src/consensus/ \
-			   -I./src/consensus/raft/ \
+			   -I./src/raft/ \
 			   -I$(THIRD_PATH)/leveldb/include/ \
 			   -I$(THIRD_PATH)/slash/output/include/ \
 			   -I$(THIRD_PATH)/pink/output/include/ \
@@ -38,7 +37,7 @@ LIBRARY = libfloyd.a
 BASE_OBJS := $(wildcard $(SRC_DIR)/*.cc)
 BASE_OBJS += $(wildcard $(SRC_DIR)/*.c)
 BASE_OBJS += $(wildcard $(SRC_DIR)/*.cpp)
-BASE_OBJS += $(wildcard $(SRC_DIR)/consensus/raft/*.cc)
+BASE_OBJS += $(wildcard $(SRC_DIR)/raft/*.cc)
 OBJS = $(patsubst %.cc,%.o,$(BASE_OBJS))
 
 LIBSLASH = $(THIRD_PATH)/slash/output/lib/libslash.a
@@ -69,10 +68,10 @@ $(LIBRARY): $(LIBSLASH) $(LIBPINK) $(OBJS) $(LIBLEVELDB)
 	cp -r ./src/command.pb.h $(OUTPUT)/include
 	cp -r ./src/meta.pb.h $(OUTPUT)/include
 	mkdir $(OUTPUT)/include/raft
-	cp -r ./src/consensus/raft/*.h $(OUTPUT)/include/raft
+	cp -r ./src/raft/*.h $(OUTPUT)/include/raft
 	mv $@ $(OUTPUT)/lib/
-	make -C example __PERF=$(__PERF)
-	make -C test __PERF=$(__PERF)
+	#make -C sdk __PERF=$(__PERF)
+	#make -C server __PERF=$(__PERF)
 	cp -r $(THIRD_PATH)/leveldb/include/leveldb $(OUTPUT)/include/
 	cp $(LIBLEVELDB) $(OUTPUT)/lib/
 
@@ -86,10 +85,12 @@ $(TOBJS): %.o : %.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE_PATH) 
 
 clean: 
-	make clean -C example
-	make clean -C test
-	#make clean -C third/pink/
 	rm -rf $(SRC_DIR)/*.o
-	rm -rf $(SRC_DIR)/consensus/raft/*.o
+	rm -rf $(SRC_DIR)/raft/*.o
 	rm -rf $(OUTPUT)/*
 	rm -rf $(OUTPUT)
+
+distclean: clean
+	make clean -C example/sdk
+	make clean -C example/server
+

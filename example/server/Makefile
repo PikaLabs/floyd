@@ -1,34 +1,35 @@
 CXX = g++
 ifeq ($(__PERF), 1)
-	CXXFLAGS = -O0 -g -pg -pipe -fPIC -DLOG_LEVEL=LEVEL_DEBUG -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -D_GNU_SOURCE -std=c++11 -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls
+	CXXFLAGS = -O0 -g -pg -pipe -fPIC -D__XDEBUG__ -DLOG_LEVEL=LEVEL_DEBUG  -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -D_GNU_SOURCE -std=c++11 -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls
 else
-	CXXFLAGS = -O0 -g -pipe -fPIC -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls
+	CXXFLAGS = -O0 -g -pipe -fPIC -W -D__XDEBUG__ -DLOG_LEVEL=LEVEL_DEBUG -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls
 	# CXXFLAGS = -Wall -W -DDEBUG -g -O0 -D__XDEBUG__ -D__STDC_FORMAT_MACROS -fPIC -std=c++11 -gdwarf-2
 endif
 
 OBJECT = floyd_node
 SRC_DIR = ./
-THIRD_PATH = ../third
+THIRD_PATH = ../../third
 OUTPUT = ./output
 
-LIB_PATH = -L../output/lib/ \
-		   -L../third/leveldb/ \
-			 -L../third/slash/output/lib/\
-			 -L../third/pink/output/lib/
+LIB_PATH = -L../../output/lib/ \
+		   -L$(THIRD_PATH)/leveldb/ \
+			 -L$(THIRD_PATH)/slash/output/lib/\
+			 -L$(THIRD_PATH)/pink/output/lib/
 
 
 LIBS = -lfloyd \
 			 -lpink \
 			 -lslash \
 			 -lleveldb \
+			 -lsnappy \
 			 -lprotobuf \
 			 -lpthread
 
-INCLUDE_PATH = -I../output/include/ \
-			   -I../third/leveldb/include \
-			   -I../third/slash/output/include/ \
-			   -I../third/pink/output/include/ \
-			   -I../third/pink/output/
+INCLUDE_PATH = -I../../output/include/ \
+			   -I$(THIRD_PATH)/leveldb/include \
+			   -I$(THIRD_PATH)/slash/output/include/ \
+			   -I$(THIRD_PATH)/pink/output/include/ \
+			   -I$(THIRD_PATH)/pink/output/
 
 LIBRARY = libfloyd.a
 .PHONY: all clean version
@@ -54,8 +55,6 @@ floyd_node:  $(OBJS)
 
 $(OBJS): %.o : %.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE_PATH) 
-
-
 
 clean: 
 	rm -rf $(OUTPUT)

@@ -1,19 +1,25 @@
-#ifndef __FLOYD_META_H__
-#define __FLOYD_META_H__
+#ifndef FLOYD_META_H_
+#define FLOYD_META_H_
+
+#include "meta.pb.h"
+#include "floyd_define.h"
+#include "floyd_worker.h"
+#include "slice.h"
+
+#include "slash_status.h"
 
 #include "holy_thread.h"
 #include "pb_conn.h"
 #include "pb_cli.h"
-#include "meta.pb.h"
-#include "floyd_define.h"
-#include "floyd_util.h"
-#include "floyd_worker.h"
-#include "status.h"
-#include "slice.h"
+
+using slash::Status;
+
 namespace floyd {
+
 class NodeInfo;
 class FloydMetaCliConn;
 typedef std::pair<std::string, int> NodeAddr;
+
 struct NodeInfo {
   std::string ip;
   int port;
@@ -59,5 +65,6 @@ class FloydMetaThread : public pink::HolyThread<FloydMetaConn> {
   explicit FloydMetaThread(int port);
   virtual ~FloydMetaThread();
 };
-}
+
+} // namespace floyd
 #endif

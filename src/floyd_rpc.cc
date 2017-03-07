@@ -1,10 +1,12 @@
+#include "floyd_rpc.h"
+
 #include "status.h"
-#include "floyd.h"
 #include "meta.pb.h"
 #include "command.pb.h"
 #include "logger.h"
 
 namespace floyd {
+
 static std::string CmdType(command::Command& cmd) {
   std::string ret;
   switch (cmd.type()) {
@@ -67,7 +69,7 @@ Status Rpc(NodeInfo* ni, command::Command& cmd, command::CommandRes& cmd_res) {
   ret = ni->dcc->SendMessage(&cmd);
   if (!ret.ok()) {
     LOG_WARN("MainThread::%s as Follower, redirect:SendMeassge fail: %s",
-             ret.ToString().c_str());
+             CmdType(cmd).c_str(), ret.ToString().c_str());
     ni->dcc->Close();
     delete ni->dcc;
     ni->dcc = NULL;
@@ -81,7 +83,7 @@ Status Rpc(NodeInfo* ni, command::Command& cmd, command::CommandRes& cmd_res) {
             CmdType(cmd).c_str());
   if (!ret.ok()) {
     LOG_WARN("MainThread::%s as Follower, redirect:GetResMessage fail: %s",
-             ret.ToString().c_str());
+             CmdType(cmd).c_str(), ret.ToString().c_str());
     ni->dcc->Close();
     delete ni->dcc;
     ni->dcc = NULL;

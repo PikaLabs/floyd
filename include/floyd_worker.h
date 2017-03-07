@@ -1,14 +1,15 @@
-#ifndef __FLOYD_WORKER_H__
-#define __FLOYD_WORKER_H__
+#ifndef FLOYD_WORKER_H_
+#define FLOYD_WORKER_H_
+
+#include "command.pb.h"
+#include "floyd_define.h"
+#include "floyd_db.h"
+#include "status.h"
+#include "slice.h"
 
 #include "pb_conn.h"
 #include "pb_cli.h"
 #include "holy_thread.h"
-#include "command.pb.h"
-#include "floyd_define.h"
-#include "floyd_util.h"
-#include "status.h"
-#include "slice.h"
 
 namespace floyd {
 
