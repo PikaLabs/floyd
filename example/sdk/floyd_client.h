@@ -69,7 +69,7 @@ class Cluster {
   pink::Status Read(const std::string& key, std::string* value);
 
  private:
-  void Init();
+  bool Init();
 
   Option option_;
 

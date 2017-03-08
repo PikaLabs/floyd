@@ -96,7 +96,7 @@ Cluster::Cluster(const Option& option)
   Init();
 }
 
-void Cluster::Init() {
+bool Cluster::Init() {
   if (option_.servers.size() < 1) {
     LOG_ERROR("cluster has no server!");
     abort();
@@ -105,7 +105,9 @@ void Cluster::Init() {
   pink::Status result = pb_cli_->Connect(option_.servers[0].ip, option_.servers[0].port);
   if (!result.ok()) {
     LOG_ERROR("cluster connect error, %s", result.ToString().c_str());
+    return false;
   }
+  return true;
 }
 
 Status Cluster::Write(const std::string& key, const std::string& value) {
@@ -117,6 +119,11 @@ Status Cluster::Write(const std::string& key, const std::string& value) {
 
   pb_cli_->set_opcode(OPCODE::WRITE);
 
+  if (!pb_cli_->Available()) {
+    if (!Init()) {
+      return Status::IOError("init failed");
+    }
+  }
   pink::Status result = pb_cli_->Send(&request);
   if (!result.ok()) {
     LOG_ERROR("Send error: %s", result.ToString().c_str());
@@ -138,6 +145,12 @@ Status Cluster::Read(const std::string& key, std::string* value) {
 
   Read_Request request;
   request.set_key(key);
+
+  if (!pb_cli_->Available()) {
+    if (!Init()) {
+      return Status::IOError("init failed");
+    }
+  }
 
   pb_cli_->set_opcode(OPCODE::READ);
 
