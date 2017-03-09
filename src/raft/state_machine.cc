@@ -117,9 +117,11 @@ bool StateMachine::ApplyThread::Apply(StateMachine::Entry& entry) {
   command::Command cmd;
   cmd.ParseFromArray(data.c_str(), data.length());
 
+#if (LOG_LEVEL != LEVEL_NONE)
   std::string text_format;
   google::protobuf::TextFormat::PrintToString(cmd, &text_format);
   LOG_DEBUG("ApplyThread::Apply log_entry:\n%s", text_format.c_str());
+#endif
 
   switch (cmd.type()) {
     case command::Command::Write: {

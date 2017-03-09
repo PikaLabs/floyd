@@ -29,7 +29,7 @@ Floyd::Floyd(const Options& options)
 }
 
 Floyd::~Floyd() {
-  delete meta_thread_;
+  //delete meta_thread_;
   delete worker_thread_;
   delete raft_;
   delete db;

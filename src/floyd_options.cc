@@ -29,7 +29,7 @@ void Options::Dump() {
           "               local_port : %d\n"
           "                data_path : %s\n"
           "                 log_path : %s\n"
-          "         elect_timeout_ms : %d\n"
+          "         elect_timeout_ms : %ld\n"
           " append_entries_size_once : %ld\n",
             local_ip.c_str(),
             local_port,

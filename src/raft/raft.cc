@@ -924,17 +924,21 @@ bool RaftConsensus::PeerThread::RequestVote() {
     return false;
   }
 
+#if (LOG_LEVEL != LEVEL_NONE)
   std::string text_format;
   google::protobuf::TextFormat::PrintToString(cmd, &text_format);
   LOG_DEBUG("Send vote message to  %s:%d, result message : %s", (ni_->ip).c_str(), ni_->port, text_format.c_str());
+#endif
 
   command::CommandRes cmd_res;
   ret = ni_->dcc->GetResMessage(&cmd_res);
   if (!ret.ok()) {
     return false;
   }
+#if (LOG_LEVEL != LEVEL_NONE)
   google::protobuf::TextFormat::PrintToString(cmd_res, &text_format);
   LOG_DEBUG("Get vote message to  %s:%d, result message : %s", (ni_->ip).c_str(), ni_->port, text_format.c_str());
+#endif
 
   if (cmd_res.rsv().term() > raft_con_->current_term_) {
     raft_con_->StepDown(cmd_res.rsv().term());
@@ -1018,17 +1022,21 @@ bool RaftConsensus::PeerThread::AppendEntries() {
     //ni_->UpHoldWorkerCliConn(true);
     return false;
   }
+#if (LOG_LEVEL != LEVEL_NONE)
   std::string text_format;
   google::protobuf::TextFormat::PrintToString(cmd, &text_format);
   LOG_DEBUG("Send to %s:%d, message : %s", (ni_->ip).c_str(), ni_->port, text_format.c_str());
+#endif
 
   command::CommandRes cmd_res;
   ret = ni_->dcc->GetResMessage(&cmd_res);
   if (!ret.ok()) {
     return false;
   }
+#if (LOG_LEVEL != LEVEL_NONE)
   google::protobuf::TextFormat::PrintToString(cmd_res, &text_format);
   LOG_DEBUG("Receive from %s:%d, result message : %s", (ni_->ip).c_str(), ni_->port, text_format.c_str());
+#endif
   
   if (cmd_res.aers().term() > raft_con_->current_term_) {
     raft_con_->StepDown(cmd_res.aers().term());
