@@ -25,9 +25,14 @@ Status NodeInfo::UpHoldWorkerCliConn(bool create_new_connect) {
     if (dcc != NULL) {
       dcc->Close();
       delete dcc;
+      dcc = NULL;
     }
     dcc = new FloydWorkerCliConn(ip, port);
     ret = dcc->Connect();
+    if (ret.ok()) {
+      dcc->set_send_timeout(1000);
+      dcc->set_recv_timeout(1000);
+    }
   }
   return ret;
 }

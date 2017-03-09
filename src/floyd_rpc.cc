@@ -63,6 +63,8 @@ static std::string CmdType(command::Command& cmd) {
 Status Rpc(NodeInfo* ni, command::Command& cmd, command::CommandRes& cmd_res) {
   LOG_DEBUG("MainThread: %s as Follower, redirect %s:%d", CmdType(cmd).c_str(),
             ni->ip.c_str(), ni->port);
+
+  MutexLock l(&ni->dcc_mutex);
   Status ret = ni->UpHoldWorkerCliConn();
   if (!ret.ok()) return ret;
 

@@ -4,6 +4,7 @@
 #include "meta.pb.h"
 #include "floyd_define.h"
 #include "floyd_worker.h"
+#include "floyd_mutex.h"
 #include "slice.h"
 
 #include "slash_status.h"
@@ -26,6 +27,7 @@ struct NodeInfo {
   time_t last_ping;
   FloydMetaCliConn* mcc;
   FloydWorkerCliConn* dcc;
+  Mutex dcc_mutex;
 
   NodeInfo(const std::string& ip, const int port);
 
