@@ -3,17 +3,23 @@
 namespace floyd {
 
 slash::Status ParseStatus(leveldb::Status& status) {
-  if (!status.ok()) {
+  if (status.ok()) {
+    return slash::Status::OK();
+  } else if (status.IsNotFound()) {
+    return slash::Status::NotFound("");
+  } else {
     return slash::Status::Corruption(status.ToString());
   }
-  return slash::Status::OK();
 }
 
 slash::Status ParseStatus(pink::Status& status) {
-  if (!status.ok()) {
+  if (status.ok()) {
+    return slash::Status::OK();
+  } else if (status.IsNotFound()) {
+    return slash::Status::NotFound("");
+  } else {
     return slash::Status::Corruption(status.ToString());
   }
-  return slash::Status::OK();
 }
 
 //
