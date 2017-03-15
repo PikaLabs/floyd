@@ -91,8 +91,8 @@ clean:
 	rm -rf $(OUTPUT)
 
 distclean: clean
-	make distclean -C $(THIRD_PATH)/pink
-	make distclean -C $(THIRD_PATH)/slash
+	make clean -C $(THIRD_PATH)/pink
+	make clean -C $(THIRD_PATH)/slash
 	make clean -C example/sdk
 	make clean -C example/server
 
