@@ -46,6 +46,10 @@ class FloydWorkerThread : public pink::HolyThread<FloydWorkerConn> {
  public:
   explicit FloydWorkerThread(int port);
   virtual ~FloydWorkerThread();
+
+  // Only connection from other node should be accepted
+  virtual bool AccessHandle(std::string& ip_port);
+
 };
 }
 #endif

@@ -36,7 +36,9 @@ FloydWorkerConn::FloydWorkerConn(int fd, std::string& ip_port,
 FloydWorkerConn::~FloydWorkerConn() {}
 
 int FloydWorkerConn::DealMessage() {
-  command_.ParseFromArray(rbuf_ + 4, header_len_);
+  if (!command_.ParseFromArray(rbuf_ + 4, header_len_)) {
+    return -1;
+  }
   command_res_.Clear();
 
   switch (command_.type()) {
@@ -202,4 +204,16 @@ FloydWorkerThread::FloydWorkerThread(int port)
     : HolyThread<FloydWorkerConn>(port) {}
 
 FloydWorkerThread::~FloydWorkerThread() {}
+
+// Only connection from other node should be accepted
+bool FloydWorkerThread::AccessHandle(std::string& ip_port) {
+  MutexLock l(&Floyd::nodes_mutex);
+  for (auto it = Floyd::nodes_info.begin(); it != Floyd::nodes_info.end(); it++) {
+    if (ip_port.find((*it)->ip) != std::string::npos) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }
