@@ -26,5 +26,5 @@ done
 ###################
 FILE3="client"
 protoc -I=./ --cpp_out=./ ./$FILE3.proto
-cp $file.pb.h $file.pb.cc ../example/sdk
-mv $file.pb.h $file.pb.cc ../example/server
+mv $FILE3.pb.h $FILE3.pb.cc ../example/sdk
+#mv $FILE3.pb.h $FILE3.pb.cc ../example/server

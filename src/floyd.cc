@@ -461,8 +461,9 @@ Status Floyd::Start() {
   //TODO: anan check if threads start successfully
   // start heartbeat and meta thread
   //meta_thread_->StartThread();
-  if (worker_thread_->StartThread() != 0) {
-    LOG_ERROR("MainThread::Start: floyd worker thread failed to start");
+  int ret;
+  if ((ret = worker_thread_->StartThread()) != 0) {
+    LOG_ERROR("MainThread::Start: floyd worker thread failed to start, ret is %d", ret);
   }
   ChaseRaftLog(raft_);
 

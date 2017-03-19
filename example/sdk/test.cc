@@ -2,6 +2,8 @@
 #include <iostream>
 #include <string>
 
+#include <unistd.h>
+
 #include "floyd_client.h"
 
 using namespace std;
@@ -24,7 +26,15 @@ int main(int argc, char* argv[]) {
     char *end;
     cnt = strtol(argv[3], &end, 10);
   }
-  printf ("cnt=%d\n", cnt);
+  int start = 0;
+  if (argc == 5) {
+    char *end;
+    start = strtol(argv[3], &end, 10);
+    cnt = strtol(argv[4], &end, 10);
+  }
+  printf ("start=%d cnt=%d\n", start, cnt);
+  sleep(3);
+
   for (int i = 0; i < cnt; i++) {
     printf ("\n=====Test Write==========\n");
 
