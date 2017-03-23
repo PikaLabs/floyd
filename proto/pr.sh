@@ -1,13 +1,13 @@
 #!/bin/sh
 
 ###################
-# meta.proto
 # command.proto
 ###################
-FILE1="meta command"
+FILE1="command"
 for file in $FILE1 ; do
   protoc -I=./ --cpp_out=./ ./$file.proto
-  mv $file.pb.h $file.pb.cc ../src
+  mv $file.pb.h ../include/
+  mv $file.pb.cc ../src
 done
 
 #####################
@@ -26,5 +26,5 @@ done
 ###################
 FILE3="client"
 protoc -I=./ --cpp_out=./ ./$FILE3.proto
-mv $FILE3.pb.h $FILE3.pb.cc ../example/sdk
-#mv $FILE3.pb.h $FILE3.pb.cc ../example/server
+cp $FILE3.pb.h $FILE3.pb.cc ../example/sdk
+mv $FILE3.pb.h $FILE3.pb.cc ../example/server

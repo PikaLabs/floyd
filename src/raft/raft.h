@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "floyd_define.h"
 #include "floyd_options.h"
 #include "floyd_mutex.h"
 #include "floyd_meta.h"
@@ -49,11 +50,15 @@ class RaftConsensus {
   void HandleAppendEntries(command::Command& cmd, command::CommandRes* cmd_res);
   StateMachine::Entry GetNextCommitEntry(uint64_t index);
   StateMachine::Entry TryGetNextCommitEntry(uint64_t index);
-  std::pair<std::string, int> GetLeaderNode();
   void SetVoteCommitIndex(int target_index);
   void SetVoteTerm(int target_term);
+
+  std::pair<std::string, int> GetLeaderNode();
+  std::pair<std::string, int> GetVotedForNode();
   int GetCommitIndex();
   int GetCurrentTerm();
+
+  bool HandleGetServerStatus(command::CommandRes_RaftStageRes& res);
   void WakeUpAll();
   void Wait();
 
@@ -82,11 +87,11 @@ class RaftConsensus {
  private:
   Options options_;
 
-  enum class State {
-    FOLLOWER,
-    CANDIDATE,
-    LEADER,
-  };
+ // enum class State {
+ //   FOLLOWER,
+ //   CANDIDATE,
+ //   LEADER,
+ // };
   State state_;
 
   bool exiting_;

@@ -36,18 +36,23 @@ FloydServerConn::FloydServerConn(int fd, std::string &ip_port, pink::Thread *thr
 }
 
 int FloydServerConn::DealMessage() {
-  uint32_t buf;
-  memcpy((char *)(&buf), rbuf_ + 4, sizeof(uint32_t));
-  uint32_t msg_code = ntohl(buf);
-  LOG_INFO ("deal message msg_code:%d\n", msg_code);
+  if (!command_.ParseFromArray(rbuf_ + 4, header_len_)) {
+    LOG_DEBUG("WorkerConn::DealMessage ParseFromArray failed");
+    return -1;
+  }
+  command_res_.Clear();
+
+  LOG_INFO ("deal message msg_code:%d\n", command_.type());
 
   set_is_reply(true);
 
-  switch (msg_code) {
-    case client::OPCODE::WRITE: {
-      client::Write_Request request;
-      client::Write_Response* response = new client::Write_Response;
-      request.ParseFromArray(rbuf_ + 8, header_len_ - 4);
+  switch (command_.type()) {
+    case client::Type::WRITE: {
+      LOG_DEBUG("ServerConn::DealMessage Write");
+      client::Request_Write request = command_.write();
+
+      command_res_.set_type(client::Type::WRITE);
+      client::Response_Write* response = command_res_.mutable_write();
 
       Status result = server_thread_->server_->floyd_->Write(request.key(), request.value());
       if (!result.ok()) {
@@ -58,14 +63,15 @@ int FloydServerConn::DealMessage() {
         response->set_status(0);
         LOG_INFO ("write key(%s) ok!", request.key().c_str());
       }
-      res_ = response;
       break;
     }
 
-    case client::OPCODE::READ: {
-      client::Read_Request request;
-      client::Read_Response* response = new client::Read_Response;
-      request.ParseFromArray(rbuf_ + 8, header_len_ - 4);
+    case client::Type::READ: {
+      LOG_DEBUG("ServerConn::DealMessage READ");
+      client::Request_Read request = command_.read();
+
+      command_res_.set_type(client::Type::READ);
+      client::Response_Read* response = command_res_.mutable_read();
 
       std::string value;
       Status result = server_thread_->server_->floyd_->Read(request.key(), value);
@@ -77,15 +83,32 @@ int FloydServerConn::DealMessage() {
         response->set_value(value);
         LOG_INFO ("read key(%s) ok!", request.key().c_str());
       }
-      res_ = response;
+      break;
+    }
+
+    case client::Type::STATUS: {
+      LOG_DEBUG("ServerConn::DealMessage ServerStaus");
+      command_res_.set_type(client::Type::STATUS);
+      client::Response_ServerStatus* response = command_res_.mutable_server_status();
+
+      std::string value;
+      bool ret = server_thread_->server_->floyd_->GetServerStatus(value);
+      if (!ret) {
+        response->set_msg("failed to dump status");
+        LOG_ERROR("Status failed");
+      } else {
+        response->set_msg(value);
+        LOG_INFO ("Status ok!\n%s", value.c_str());
+      }
       break;
     }
 
     default:
-      LOG_INFO ("invalid msg_code %d\n", msg_code);
+      LOG_INFO ("invalid msg_code %d\n", command_.type());
       break;
   }
 
+  res_ = &command_res_;
   return 0;
 }
 

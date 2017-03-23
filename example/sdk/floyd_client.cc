@@ -3,10 +3,12 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <algorithm>
+
 #include "logger.h"
 #include "client.pb.h"
 
 #include "pink_define.h"
+#include "status.h"
 
 namespace floyd {
 namespace client {
@@ -92,7 +94,7 @@ void Option::ParseFromArgs(int argc, char *argv[]) {
 ////// Cluster //////
 Cluster::Cluster(const Option& option)
   : option_(option),
-  pb_cli_(new FloydPbCli) {
+  pb_cli_(new pink::PbCli) {
   Init();
 }
 
@@ -110,14 +112,13 @@ bool Cluster::Init() {
   return true;
 }
 
-Status Cluster::Write(const std::string& key, const std::string& value) {
+slash::Status Cluster::Write(const std::string& key, const std::string& value) {
+  Request request;
+  request.set_type(Type::WRITE);
 
-  Write_Request request;
-
-  request.set_key(key);
-  request.set_value(value);
-
-  pb_cli_->set_opcode(OPCODE::WRITE);
+  Request_Write* write_req = request.mutable_write();
+  write_req->set_key(key);
+  write_req->set_value(value);
 
   if (!pb_cli_->Available()) {
     if (!Init()) {
@@ -130,21 +131,23 @@ Status Cluster::Write(const std::string& key, const std::string& value) {
     return Status::IOError("Send failed, " + result.ToString());
   }
 
-  Write_Response response;
+  Response response;
   result = pb_cli_->Recv(&response);
   if (!result.ok()) {
     LOG_ERROR("Recv error: %s", result.ToString().c_str());
     return Status::IOError("Recv failed, " + result.ToString());
   }
 
-  LOG_INFO("Write OK, status is %d, msg is %s\n", response.status(), response.msg().c_str());
+  LOG_INFO("Write OK, status is %d, msg is %s\n", response.write().status(), response.write().msg().c_str());
   return Status::OK();
 }
 
-Status Cluster::Read(const std::string& key, std::string* value) {
+slash::Status Cluster::Read(const std::string& key, std::string* value) {
+  Request request;
+  request.set_type(Type::READ);
 
-  Read_Request request;
-  request.set_key(key);
+  Request_Read* read_req = request.mutable_read();
+  read_req->set_key(key);
 
   if (!pb_cli_->Available()) {
     if (!Init()) {
@@ -152,7 +155,35 @@ Status Cluster::Read(const std::string& key, std::string* value) {
     }
   }
 
-  pb_cli_->set_opcode(OPCODE::READ);
+  pink::Status result = pb_cli_->Send(&request);
+  if (!result.ok()) {
+    LOG_ERROR("Send error: %s", result.ToString().c_str());
+    return Status::IOError("Send failed, " + result.ToString());
+  }
+
+  Response response;
+  result = pb_cli_->Recv(&response);
+  if (!result.ok()) {
+    LOG_ERROR("Recv error: %s", result.ToString().c_str());
+    return Status::IOError("Recv failed, " + result.ToString());
+  }
+
+  *value = response.read().value();
+
+  LOG_INFO("Read OK, status is %d, value is %s\n", response.read().status(), response.read().value().c_str());
+  return Status::OK();
+}
+
+slash::Status Cluster::GetStatus(std::string* msg) {
+  Request request;
+  request.set_type(Type::STATUS);
+
+  if (!pb_cli_->Available()) {
+    if (!Init()) {
+      return Status::IOError("init failed");
+    }
+  }
+
 
   pink::Status result = pb_cli_->Send(&request);
   if (!result.ok()) {
@@ -160,31 +191,17 @@ Status Cluster::Read(const std::string& key, std::string* value) {
     return Status::IOError("Send failed, " + result.ToString());
   }
 
-  Read_Response response;
+  Response response;
   result = pb_cli_->Recv(&response);
   if (!result.ok()) {
     LOG_ERROR("Recv error: %s", result.ToString().c_str());
     return Status::IOError("Recv failed, " + result.ToString());
   }
 
-  *value = response.value();
+  *msg = response.server_status().msg();
 
-  LOG_INFO("Read OK, status is %d, value is %s\n", response.status(), response.value().c_str());
+  LOG_INFO("Status OK, msg:\n%s", response.server_status().msg().c_str());
   return Status::OK();
-}
-
-////// FloydPbCli //////
-void FloydPbCli::BuildWbuf() {
-  uint32_t len;
-  wbuf_len_ = msg_->ByteSize();
-  len = htonl(wbuf_len_ + 4);
-  memcpy(wbuf_, &len, sizeof(uint32_t));
-  len = htonl(opcode_);
-  memcpy(wbuf_ + 4, &len, sizeof(uint32_t));
-  msg_->SerializeToArray(wbuf_ + COMMAND_HEADER_LENGTH + 4, wbuf_len_);
-  wbuf_len_ += 8;
-
-  //printf ("wbuf_[0-4]  bytesize=%d len=%d\n", wbuf_len_, len);
 }
 
 } // namespace client

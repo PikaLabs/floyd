@@ -7,7 +7,6 @@
 #include "env.h"
 #include "logger.h"
 
-#include "meta.pb.h"
 #include "command.pb.h"
 
 #include "slash_string.h"
@@ -23,13 +22,11 @@ Floyd::Floyd(const Options& options)
   : options_(options) {
 
   db = new LeveldbBackend(options_.data_path);
-  //meta_thread_ = new FloydMetaThread(options_.local_port);
   worker_thread_ = new FloydWorkerThread(options_.local_port);
   raft_ = new raft::RaftConsensus(options_);
 }
 
 Floyd::~Floyd() {
-  //delete meta_thread_;
   delete worker_thread_;
   delete raft_;
   delete db;
@@ -377,59 +374,85 @@ Status Floyd::UnLock(const std::string& key) {
   }
 }
 
-Status Floyd::AddNodeFromMetaRes(meta::MetaRes* meta_res,
-                                 std::vector<NodeInfo*>* nis) {
-  MutexLock l(&Floyd::nodes_mutex);
-  for (int i = 0; i < meta_res->nodes_size(); i++) {
-    meta::MetaRes_Node node = meta_res->nodes(i);
-    std::vector<NodeInfo*>::iterator iter = Floyd::nodes_info.begin();
-    for (; iter != Floyd::nodes_info.end(); ++iter) {
-      if (node.ip() == (*iter)->ip && node.port() == (*iter)->port) break;
-    }
-    if (iter == Floyd::nodes_info.end()) {
-      NodeInfo* ni = new NodeInfo(node.ip(), node.port());
-      nis->push_back(ni);
-    }
-  }
-  return Status::OK();
-}
-
-
-
 Status Floyd::ChaseRaftLog(raft::RaftConsensus* raft_sensus) {
-  command::Command_RaftStage* raftStage = new command::Command_RaftStage();
-  raftStage->set_term(raft_sensus->GetCurrentTerm());
-  raftStage->set_commitindex(raft_sensus->GetCurrentTerm());
+  //command::Command_RaftStage* raftStage = new command::Command_RaftStage();
+  //raftStage->set_term(raft_sensus->GetCurrentTerm());
+  //raftStage->set_commit_index(raft_sensus->GetCurrentTerm());
 
-  command::Command cmd;
-  cmd.set_type(command::Command::SynRaftStage);
-  cmd.set_allocated_raftstage(raftStage);
+  //command::Command cmd;
+  //cmd.set_type(command::Command::SynRaftStage);
+  //cmd.set_allocated_raftstage(raftStage);
   
   // TODO anan ? not used
-  int max_commit_index = 0;
-  int max_term = 0;
+ // int max_commit_index = 0;
+ // int max_term = 0;
 
-  MutexLock l(&nodes_mutex);
-  std::vector<NodeInfo*>::iterator iter = nodes_info.begin();
-  for (; iter != nodes_info.end(); ++iter) {
-    if (((*iter)->ip == options_.local_ip) &&
-        ((*iter)->port == options_.local_port))
-      continue;
-    Status ret = (*iter)->UpHoldWorkerCliConn();
-    if (!ret.ok()) continue;
+ // MutexLock l(&nodes_mutex);
+ // std::vector<NodeInfo*>::iterator iter = nodes_info.begin();
+ // for (; iter != nodes_info.end(); ++iter) {
+ //   if (((*iter)->ip == options_.local_ip) &&
+ //       ((*iter)->port == options_.local_port))
+ //     continue;
+ //   Status ret = (*iter)->UpHoldWorkerCliConn();
+ //   if (!ret.ok()) continue;
 
-    (*iter)->dcc->SendMessage(&cmd);
+ //   (*iter)->dcc->SendMessage(&cmd);
 
-    command::CommandRes cmd_res;
-    ret = (*iter)->dcc->GetResMessage(&cmd_res);
-    max_commit_index =
-        std::max(max_commit_index, cmd_res.raftstage().commitindex());
-    max_term = std::max(max_term, cmd_res.raftstage().term());
-  }
+ //   command::CommandRes cmd_res;
+ //   ret = (*iter)->dcc->GetResMessage(&cmd_res);
+ //   max_commit_index =
+ //       std::max(max_commit_index, cmd_res.raftstage().commit_index());
+ //   max_term = std::max(max_term, cmd_res.raftstage().term());
+ // }
 
   raft_sensus->SetVoteCommitIndex(0);
   raft_sensus->SetVoteTerm(0);
   return Status::OK();
+}
+
+
+// Note: we simply use a big nodes lock
+bool Floyd::GetServerStatus(std::string& msg) {
+  LOG_DEBUG("GetServerStatus start");
+
+  command::CommandRes_RaftStageRes stage;
+  raft_->HandleGetServerStatus(stage);
+
+  char str[512];
+  snprintf (str, 512,
+            "      Node           | Role    |   Term    | CommitIdx |    Leader         |  VoteFor          | LastLogTerm | LastLogIdx | LastApplyIdx |\n" 
+            "%15s:%-6d %9s %10lu %10lu %15s:%-6d %15s:%-6d %10lu %10lu %10lu\n",
+            options_.local_ip.c_str(), options_.local_port,
+            stage.role().c_str(),
+            stage.term(), stage.commit_index(),
+            stage.leader_ip().c_str(), stage.leader_port(),
+            stage.voted_for_ip().c_str(), stage.voted_for_port(),
+            stage.last_log_term(), stage.last_log_index(), stage.last_apply_index());
+
+  msg.clear();
+  msg.append(str);
+
+  command::Command cmd;
+  cmd.set_type(command::Command::SynRaftStage);
+  command::CommandRes cmd_res;
+  MutexLock l(&nodes_mutex);
+  for (auto iter = nodes_info.begin(); iter != nodes_info.end(); iter++) {
+    Status s = Rpc(*iter, cmd, cmd_res);
+    if (s.ok()) {
+      command::CommandRes_RaftStageRes stage = cmd_res.raftstage();
+      snprintf (str, 512,
+                "%15s:%-6d %9s %10lu %10lu %15s:%-6d %15s:%-6d %10lu %10lu %10lu\n",
+                (*iter)->ip.c_str(), (*iter)->port,
+                stage.role().c_str(),
+                stage.term(), stage.commit_index(),
+                stage.leader_ip().c_str(), stage.leader_port(),
+                stage.voted_for_ip().c_str(), stage.voted_for_port(),
+                stage.last_log_term(), stage.last_log_index(), stage.last_apply_index());
+      msg.append(str);
+      LOG_DEBUG("GetServerStatus msg(%s)", str);
+    }
+  }
+  return true;
 }
 
 Status Floyd::Start() {
@@ -447,7 +470,6 @@ Status Floyd::Start() {
     //TODO(anan) wether to create and uphold
     //  remove node message
     //ni->UpHoldWorkerCliConn();
-    //ni->mcc = new FloydMetaCliConn(ip, port);
   }
 
   Status result = db->Open();
@@ -458,12 +480,10 @@ Status Floyd::Start() {
   // Init should before WorkerThread in case of null log_
   raft_->Init();
 
-  //TODO: anan check if threads start successfully
-  // start heartbeat and meta thread
-  //meta_thread_->StartThread();
   int ret;
   if ((ret = worker_thread_->StartThread()) != 0) {
     LOG_ERROR("MainThread::Start: floyd worker thread failed to start, ret is %d", ret);
+    return Status::Corruption("failed to start worker thread, return " + std::to_string(ret));
   }
   ChaseRaftLog(raft_);
 
@@ -472,21 +492,24 @@ Status Floyd::Start() {
 }
 
 Status Floyd::Stop() {
-  //delete meta_thread_;
-  // delete heartbeat_;
-  delete worker_thread_;
-  delete db;
-  delete raft_;
+  MutexLock l(&nodes_mutex);
   std::vector<NodeInfo*>::iterator iter = nodes_info.begin();
   for (; iter != nodes_info.end(); ++iter) {
-    if ((*iter)->mcc != NULL) {
-      (*iter)->mcc->Close();
-      delete (*iter)->mcc;
-      (*iter)->mcc = NULL;
+    if ((*iter)->dcc != NULL) {
+      delete (*iter)->dcc;
     }
     delete (*iter);
   }
   std::vector<NodeInfo*>().swap(nodes_info);
+
+  // in case dstor delete again
+  delete worker_thread_;
+  worker_thread_ = NULL;
+  delete db;
+  db = NULL;
+  delete raft_;
+  raft_ = NULL;
+
   return Status::OK();
 }
 

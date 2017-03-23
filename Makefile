@@ -65,8 +65,6 @@ $(LIBRARY): $(LIBSLASH) $(LIBPINK) $(OBJS) $(LIBLEVELDB)
 	rm -rf $@
 	ar -rcs $@ $(OBJS)
 	cp -r ./include $(OUTPUT)/
-	cp -r ./src/command.pb.h $(OUTPUT)/include
-	cp -r ./src/meta.pb.h $(OUTPUT)/include
 	mkdir $(OUTPUT)/include/raft
 	cp -r ./src/raft/*.h $(OUTPUT)/include/raft
 	mv $@ $(OUTPUT)/lib/

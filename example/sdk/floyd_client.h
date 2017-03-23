@@ -5,9 +5,8 @@
 #include <vector>
 
 #include "pb_cli.h"
-#include "status.h"
+#include "slash_status.h"
 
-using pink::Status;
 
 namespace floyd {
 namespace client {
@@ -15,7 +14,8 @@ namespace client {
 struct Option;
 class Server;
 class Cluster;
-class FloydPbCli;
+
+using slash::Status;
 
 enum ClientError {
   kOk = 0,
@@ -65,8 +65,9 @@ class Cluster {
  public:
   Cluster(const Option& option);
 
-  pink::Status Write(const std::string& key, const std::string& value);
-  pink::Status Read(const std::string& key, std::string* value);
+  Status Write(const std::string& key, const std::string& value);
+  Status Read(const std::string& key, std::string* value);
+  Status GetStatus(std::string *msg);
 
  private:
   bool Init();
@@ -75,17 +76,7 @@ class Cluster {
 
   //pink::PbCli pb_cli_;
 
-  FloydPbCli *pb_cli_;
-};
-
-class FloydPbCli : public pink::PbCli {
- public:
-  void set_opcode(int opcode) {
-    opcode_ = opcode;
-  }
- private:
-  virtual void BuildWbuf();
-  int32_t opcode_;
+  pink::PbCli *pb_cli_;
 };
 
 } // namespace client

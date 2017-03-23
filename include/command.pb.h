@@ -258,19 +258,19 @@ class Command_RaftStage : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required int32 term = 1;
+  // required int64 term = 1;
   inline bool has_term() const;
   inline void clear_term();
   static const int kTermFieldNumber = 1;
-  inline ::google::protobuf::int32 term() const;
-  inline void set_term(::google::protobuf::int32 value);
+  inline ::google::protobuf::int64 term() const;
+  inline void set_term(::google::protobuf::int64 value);
 
-  // required int32 commitIndex = 2;
-  inline bool has_commitindex() const;
-  inline void clear_commitindex();
+  // required int64 commit_index = 2;
+  inline bool has_commit_index() const;
+  inline void clear_commit_index();
   static const int kCommitIndexFieldNumber = 2;
-  inline ::google::protobuf::int32 commitindex() const;
-  inline void set_commitindex(::google::protobuf::int32 value);
+  inline ::google::protobuf::int64 commit_index() const;
+  inline void set_commit_index(::google::protobuf::int64 value);
 
   // optional bytes ip = 3;
   inline bool has_ip() const;
@@ -295,8 +295,8 @@ class Command_RaftStage : public ::google::protobuf::Message {
  private:
   inline void set_has_term();
   inline void clear_has_term();
-  inline void set_has_commitindex();
-  inline void clear_has_commitindex();
+  inline void set_has_commit_index();
+  inline void clear_has_commit_index();
   inline void set_has_ip();
   inline void clear_has_ip();
   inline void set_has_port();
@@ -304,8 +304,8 @@ class Command_RaftStage : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::int32 term_;
-  ::google::protobuf::int32 commitindex_;
+  ::google::protobuf::int64 term_;
+  ::google::protobuf::int64 commit_index_;
   ::std::string* ip_;
   ::google::protobuf::int32 port_;
 
@@ -945,59 +945,129 @@ class CommandRes_RaftStageRes : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required int32 term = 1;
+  // required uint64 term = 1;
   inline bool has_term() const;
   inline void clear_term();
   static const int kTermFieldNumber = 1;
-  inline ::google::protobuf::int32 term() const;
-  inline void set_term(::google::protobuf::int32 value);
+  inline ::google::protobuf::uint64 term() const;
+  inline void set_term(::google::protobuf::uint64 value);
 
-  // required int32 commitIndex = 2;
-  inline bool has_commitindex() const;
-  inline void clear_commitindex();
+  // required uint64 commit_index = 2;
+  inline bool has_commit_index() const;
+  inline void clear_commit_index();
   static const int kCommitIndexFieldNumber = 2;
-  inline ::google::protobuf::int32 commitindex() const;
-  inline void set_commitindex(::google::protobuf::int32 value);
+  inline ::google::protobuf::uint64 commit_index() const;
+  inline void set_commit_index(::google::protobuf::uint64 value);
 
-  // optional bytes ip = 3;
-  inline bool has_ip() const;
-  inline void clear_ip();
-  static const int kIpFieldNumber = 3;
-  inline const ::std::string& ip() const;
-  inline void set_ip(const ::std::string& value);
-  inline void set_ip(const char* value);
-  inline void set_ip(const void* value, size_t size);
-  inline ::std::string* mutable_ip();
-  inline ::std::string* release_ip();
-  inline void set_allocated_ip(::std::string* ip);
+  // required bytes role = 3;
+  inline bool has_role() const;
+  inline void clear_role();
+  static const int kRoleFieldNumber = 3;
+  inline const ::std::string& role() const;
+  inline void set_role(const ::std::string& value);
+  inline void set_role(const char* value);
+  inline void set_role(const void* value, size_t size);
+  inline ::std::string* mutable_role();
+  inline ::std::string* release_role();
+  inline void set_allocated_role(::std::string* role);
 
-  // optional int32 port = 4;
-  inline bool has_port() const;
-  inline void clear_port();
-  static const int kPortFieldNumber = 4;
-  inline ::google::protobuf::int32 port() const;
-  inline void set_port(::google::protobuf::int32 value);
+  // required bytes leader_ip = 4;
+  inline bool has_leader_ip() const;
+  inline void clear_leader_ip();
+  static const int kLeaderIpFieldNumber = 4;
+  inline const ::std::string& leader_ip() const;
+  inline void set_leader_ip(const ::std::string& value);
+  inline void set_leader_ip(const char* value);
+  inline void set_leader_ip(const void* value, size_t size);
+  inline ::std::string* mutable_leader_ip();
+  inline ::std::string* release_leader_ip();
+  inline void set_allocated_leader_ip(::std::string* leader_ip);
+
+  // required int32 leader_port = 5;
+  inline bool has_leader_port() const;
+  inline void clear_leader_port();
+  static const int kLeaderPortFieldNumber = 5;
+  inline ::google::protobuf::int32 leader_port() const;
+  inline void set_leader_port(::google::protobuf::int32 value);
+
+  // required bytes voted_for_ip = 6;
+  inline bool has_voted_for_ip() const;
+  inline void clear_voted_for_ip();
+  static const int kVotedForIpFieldNumber = 6;
+  inline const ::std::string& voted_for_ip() const;
+  inline void set_voted_for_ip(const ::std::string& value);
+  inline void set_voted_for_ip(const char* value);
+  inline void set_voted_for_ip(const void* value, size_t size);
+  inline ::std::string* mutable_voted_for_ip();
+  inline ::std::string* release_voted_for_ip();
+  inline void set_allocated_voted_for_ip(::std::string* voted_for_ip);
+
+  // required int32 voted_for_port = 7;
+  inline bool has_voted_for_port() const;
+  inline void clear_voted_for_port();
+  static const int kVotedForPortFieldNumber = 7;
+  inline ::google::protobuf::int32 voted_for_port() const;
+  inline void set_voted_for_port(::google::protobuf::int32 value);
+
+  // required uint64 last_log_term = 8;
+  inline bool has_last_log_term() const;
+  inline void clear_last_log_term();
+  static const int kLastLogTermFieldNumber = 8;
+  inline ::google::protobuf::uint64 last_log_term() const;
+  inline void set_last_log_term(::google::protobuf::uint64 value);
+
+  // required uint64 last_log_index = 9;
+  inline bool has_last_log_index() const;
+  inline void clear_last_log_index();
+  static const int kLastLogIndexFieldNumber = 9;
+  inline ::google::protobuf::uint64 last_log_index() const;
+  inline void set_last_log_index(::google::protobuf::uint64 value);
+
+  // required uint64 last_apply_index = 10;
+  inline bool has_last_apply_index() const;
+  inline void clear_last_apply_index();
+  static const int kLastApplyIndexFieldNumber = 10;
+  inline ::google::protobuf::uint64 last_apply_index() const;
+  inline void set_last_apply_index(::google::protobuf::uint64 value);
 
   // @@protoc_insertion_point(class_scope:command.CommandRes.RaftStageRes)
  private:
   inline void set_has_term();
   inline void clear_has_term();
-  inline void set_has_commitindex();
-  inline void clear_has_commitindex();
-  inline void set_has_ip();
-  inline void clear_has_ip();
-  inline void set_has_port();
-  inline void clear_has_port();
+  inline void set_has_commit_index();
+  inline void clear_has_commit_index();
+  inline void set_has_role();
+  inline void clear_has_role();
+  inline void set_has_leader_ip();
+  inline void clear_has_leader_ip();
+  inline void set_has_leader_port();
+  inline void clear_has_leader_port();
+  inline void set_has_voted_for_ip();
+  inline void clear_has_voted_for_ip();
+  inline void set_has_voted_for_port();
+  inline void clear_has_voted_for_port();
+  inline void set_has_last_log_term();
+  inline void clear_has_last_log_term();
+  inline void set_has_last_log_index();
+  inline void clear_has_last_log_index();
+  inline void set_has_last_apply_index();
+  inline void clear_has_last_apply_index();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::int32 term_;
-  ::google::protobuf::int32 commitindex_;
-  ::std::string* ip_;
-  ::google::protobuf::int32 port_;
+  ::google::protobuf::uint64 term_;
+  ::google::protobuf::uint64 commit_index_;
+  ::std::string* role_;
+  ::std::string* leader_ip_;
+  ::std::string* voted_for_ip_;
+  ::google::protobuf::int32 leader_port_;
+  ::google::protobuf::int32 voted_for_port_;
+  ::google::protobuf::uint64 last_log_term_;
+  ::google::protobuf::uint64 last_log_index_;
+  ::google::protobuf::uint64 last_apply_index_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(10 + 31) / 32];
 
   friend void  protobuf_AddDesc_command_2eproto();
   friend void protobuf_AssignDesc_command_2eproto();
@@ -1336,7 +1406,7 @@ inline void Command_Kv::set_allocated_value(::std::string* value) {
 
 // Command_RaftStage
 
-// required int32 term = 1;
+// required int64 term = 1;
 inline bool Command_RaftStage::has_term() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1347,37 +1417,37 @@ inline void Command_RaftStage::clear_has_term() {
   _has_bits_[0] &= ~0x00000001u;
 }
 inline void Command_RaftStage::clear_term() {
-  term_ = 0;
+  term_ = GOOGLE_LONGLONG(0);
   clear_has_term();
 }
-inline ::google::protobuf::int32 Command_RaftStage::term() const {
+inline ::google::protobuf::int64 Command_RaftStage::term() const {
   return term_;
 }
-inline void Command_RaftStage::set_term(::google::protobuf::int32 value) {
+inline void Command_RaftStage::set_term(::google::protobuf::int64 value) {
   set_has_term();
   term_ = value;
 }
 
-// required int32 commitIndex = 2;
-inline bool Command_RaftStage::has_commitindex() const {
+// required int64 commit_index = 2;
+inline bool Command_RaftStage::has_commit_index() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void Command_RaftStage::set_has_commitindex() {
+inline void Command_RaftStage::set_has_commit_index() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void Command_RaftStage::clear_has_commitindex() {
+inline void Command_RaftStage::clear_has_commit_index() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void Command_RaftStage::clear_commitindex() {
-  commitindex_ = 0;
-  clear_has_commitindex();
+inline void Command_RaftStage::clear_commit_index() {
+  commit_index_ = GOOGLE_LONGLONG(0);
+  clear_has_commit_index();
 }
-inline ::google::protobuf::int32 Command_RaftStage::commitindex() const {
-  return commitindex_;
+inline ::google::protobuf::int64 Command_RaftStage::commit_index() const {
+  return commit_index_;
 }
-inline void Command_RaftStage::set_commitindex(::google::protobuf::int32 value) {
-  set_has_commitindex();
-  commitindex_ = value;
+inline void Command_RaftStage::set_commit_index(::google::protobuf::int64 value) {
+  set_has_commit_index();
+  commit_index_ = value;
 }
 
 // optional bytes ip = 3;
@@ -2080,7 +2150,7 @@ CommandRes_KvAllRet::mutable_kvall() {
 
 // CommandRes_RaftStageRes
 
-// required int32 term = 1;
+// required uint64 term = 1;
 inline bool CommandRes_RaftStageRes::has_term() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -2091,129 +2161,357 @@ inline void CommandRes_RaftStageRes::clear_has_term() {
   _has_bits_[0] &= ~0x00000001u;
 }
 inline void CommandRes_RaftStageRes::clear_term() {
-  term_ = 0;
+  term_ = GOOGLE_ULONGLONG(0);
   clear_has_term();
 }
-inline ::google::protobuf::int32 CommandRes_RaftStageRes::term() const {
+inline ::google::protobuf::uint64 CommandRes_RaftStageRes::term() const {
   return term_;
 }
-inline void CommandRes_RaftStageRes::set_term(::google::protobuf::int32 value) {
+inline void CommandRes_RaftStageRes::set_term(::google::protobuf::uint64 value) {
   set_has_term();
   term_ = value;
 }
 
-// required int32 commitIndex = 2;
-inline bool CommandRes_RaftStageRes::has_commitindex() const {
+// required uint64 commit_index = 2;
+inline bool CommandRes_RaftStageRes::has_commit_index() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void CommandRes_RaftStageRes::set_has_commitindex() {
+inline void CommandRes_RaftStageRes::set_has_commit_index() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void CommandRes_RaftStageRes::clear_has_commitindex() {
+inline void CommandRes_RaftStageRes::clear_has_commit_index() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void CommandRes_RaftStageRes::clear_commitindex() {
-  commitindex_ = 0;
-  clear_has_commitindex();
+inline void CommandRes_RaftStageRes::clear_commit_index() {
+  commit_index_ = GOOGLE_ULONGLONG(0);
+  clear_has_commit_index();
 }
-inline ::google::protobuf::int32 CommandRes_RaftStageRes::commitindex() const {
-  return commitindex_;
+inline ::google::protobuf::uint64 CommandRes_RaftStageRes::commit_index() const {
+  return commit_index_;
 }
-inline void CommandRes_RaftStageRes::set_commitindex(::google::protobuf::int32 value) {
-  set_has_commitindex();
-  commitindex_ = value;
+inline void CommandRes_RaftStageRes::set_commit_index(::google::protobuf::uint64 value) {
+  set_has_commit_index();
+  commit_index_ = value;
 }
 
-// optional bytes ip = 3;
-inline bool CommandRes_RaftStageRes::has_ip() const {
+// required bytes role = 3;
+inline bool CommandRes_RaftStageRes::has_role() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void CommandRes_RaftStageRes::set_has_ip() {
+inline void CommandRes_RaftStageRes::set_has_role() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void CommandRes_RaftStageRes::clear_has_ip() {
+inline void CommandRes_RaftStageRes::clear_has_role() {
   _has_bits_[0] &= ~0x00000004u;
 }
-inline void CommandRes_RaftStageRes::clear_ip() {
-  if (ip_ != &::google::protobuf::internal::kEmptyString) {
-    ip_->clear();
+inline void CommandRes_RaftStageRes::clear_role() {
+  if (role_ != &::google::protobuf::internal::kEmptyString) {
+    role_->clear();
   }
-  clear_has_ip();
+  clear_has_role();
 }
-inline const ::std::string& CommandRes_RaftStageRes::ip() const {
-  return *ip_;
+inline const ::std::string& CommandRes_RaftStageRes::role() const {
+  return *role_;
 }
-inline void CommandRes_RaftStageRes::set_ip(const ::std::string& value) {
-  set_has_ip();
-  if (ip_ == &::google::protobuf::internal::kEmptyString) {
-    ip_ = new ::std::string;
+inline void CommandRes_RaftStageRes::set_role(const ::std::string& value) {
+  set_has_role();
+  if (role_ == &::google::protobuf::internal::kEmptyString) {
+    role_ = new ::std::string;
   }
-  ip_->assign(value);
+  role_->assign(value);
 }
-inline void CommandRes_RaftStageRes::set_ip(const char* value) {
-  set_has_ip();
-  if (ip_ == &::google::protobuf::internal::kEmptyString) {
-    ip_ = new ::std::string;
+inline void CommandRes_RaftStageRes::set_role(const char* value) {
+  set_has_role();
+  if (role_ == &::google::protobuf::internal::kEmptyString) {
+    role_ = new ::std::string;
   }
-  ip_->assign(value);
+  role_->assign(value);
 }
-inline void CommandRes_RaftStageRes::set_ip(const void* value, size_t size) {
-  set_has_ip();
-  if (ip_ == &::google::protobuf::internal::kEmptyString) {
-    ip_ = new ::std::string;
+inline void CommandRes_RaftStageRes::set_role(const void* value, size_t size) {
+  set_has_role();
+  if (role_ == &::google::protobuf::internal::kEmptyString) {
+    role_ = new ::std::string;
   }
-  ip_->assign(reinterpret_cast<const char*>(value), size);
+  role_->assign(reinterpret_cast<const char*>(value), size);
 }
-inline ::std::string* CommandRes_RaftStageRes::mutable_ip() {
-  set_has_ip();
-  if (ip_ == &::google::protobuf::internal::kEmptyString) {
-    ip_ = new ::std::string;
+inline ::std::string* CommandRes_RaftStageRes::mutable_role() {
+  set_has_role();
+  if (role_ == &::google::protobuf::internal::kEmptyString) {
+    role_ = new ::std::string;
   }
-  return ip_;
+  return role_;
 }
-inline ::std::string* CommandRes_RaftStageRes::release_ip() {
-  clear_has_ip();
-  if (ip_ == &::google::protobuf::internal::kEmptyString) {
+inline ::std::string* CommandRes_RaftStageRes::release_role() {
+  clear_has_role();
+  if (role_ == &::google::protobuf::internal::kEmptyString) {
     return NULL;
   } else {
-    ::std::string* temp = ip_;
-    ip_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    ::std::string* temp = role_;
+    role_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
     return temp;
   }
 }
-inline void CommandRes_RaftStageRes::set_allocated_ip(::std::string* ip) {
-  if (ip_ != &::google::protobuf::internal::kEmptyString) {
-    delete ip_;
+inline void CommandRes_RaftStageRes::set_allocated_role(::std::string* role) {
+  if (role_ != &::google::protobuf::internal::kEmptyString) {
+    delete role_;
   }
-  if (ip) {
-    set_has_ip();
-    ip_ = ip;
+  if (role) {
+    set_has_role();
+    role_ = role;
   } else {
-    clear_has_ip();
-    ip_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    clear_has_role();
+    role_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
 }
 
-// optional int32 port = 4;
-inline bool CommandRes_RaftStageRes::has_port() const {
+// required bytes leader_ip = 4;
+inline bool CommandRes_RaftStageRes::has_leader_ip() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void CommandRes_RaftStageRes::set_has_port() {
+inline void CommandRes_RaftStageRes::set_has_leader_ip() {
   _has_bits_[0] |= 0x00000008u;
 }
-inline void CommandRes_RaftStageRes::clear_has_port() {
+inline void CommandRes_RaftStageRes::clear_has_leader_ip() {
   _has_bits_[0] &= ~0x00000008u;
 }
-inline void CommandRes_RaftStageRes::clear_port() {
-  port_ = 0;
-  clear_has_port();
+inline void CommandRes_RaftStageRes::clear_leader_ip() {
+  if (leader_ip_ != &::google::protobuf::internal::kEmptyString) {
+    leader_ip_->clear();
+  }
+  clear_has_leader_ip();
 }
-inline ::google::protobuf::int32 CommandRes_RaftStageRes::port() const {
-  return port_;
+inline const ::std::string& CommandRes_RaftStageRes::leader_ip() const {
+  return *leader_ip_;
 }
-inline void CommandRes_RaftStageRes::set_port(::google::protobuf::int32 value) {
-  set_has_port();
-  port_ = value;
+inline void CommandRes_RaftStageRes::set_leader_ip(const ::std::string& value) {
+  set_has_leader_ip();
+  if (leader_ip_ == &::google::protobuf::internal::kEmptyString) {
+    leader_ip_ = new ::std::string;
+  }
+  leader_ip_->assign(value);
+}
+inline void CommandRes_RaftStageRes::set_leader_ip(const char* value) {
+  set_has_leader_ip();
+  if (leader_ip_ == &::google::protobuf::internal::kEmptyString) {
+    leader_ip_ = new ::std::string;
+  }
+  leader_ip_->assign(value);
+}
+inline void CommandRes_RaftStageRes::set_leader_ip(const void* value, size_t size) {
+  set_has_leader_ip();
+  if (leader_ip_ == &::google::protobuf::internal::kEmptyString) {
+    leader_ip_ = new ::std::string;
+  }
+  leader_ip_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* CommandRes_RaftStageRes::mutable_leader_ip() {
+  set_has_leader_ip();
+  if (leader_ip_ == &::google::protobuf::internal::kEmptyString) {
+    leader_ip_ = new ::std::string;
+  }
+  return leader_ip_;
+}
+inline ::std::string* CommandRes_RaftStageRes::release_leader_ip() {
+  clear_has_leader_ip();
+  if (leader_ip_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = leader_ip_;
+    leader_ip_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void CommandRes_RaftStageRes::set_allocated_leader_ip(::std::string* leader_ip) {
+  if (leader_ip_ != &::google::protobuf::internal::kEmptyString) {
+    delete leader_ip_;
+  }
+  if (leader_ip) {
+    set_has_leader_ip();
+    leader_ip_ = leader_ip;
+  } else {
+    clear_has_leader_ip();
+    leader_ip_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// required int32 leader_port = 5;
+inline bool CommandRes_RaftStageRes::has_leader_port() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void CommandRes_RaftStageRes::set_has_leader_port() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void CommandRes_RaftStageRes::clear_has_leader_port() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void CommandRes_RaftStageRes::clear_leader_port() {
+  leader_port_ = 0;
+  clear_has_leader_port();
+}
+inline ::google::protobuf::int32 CommandRes_RaftStageRes::leader_port() const {
+  return leader_port_;
+}
+inline void CommandRes_RaftStageRes::set_leader_port(::google::protobuf::int32 value) {
+  set_has_leader_port();
+  leader_port_ = value;
+}
+
+// required bytes voted_for_ip = 6;
+inline bool CommandRes_RaftStageRes::has_voted_for_ip() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void CommandRes_RaftStageRes::set_has_voted_for_ip() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void CommandRes_RaftStageRes::clear_has_voted_for_ip() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void CommandRes_RaftStageRes::clear_voted_for_ip() {
+  if (voted_for_ip_ != &::google::protobuf::internal::kEmptyString) {
+    voted_for_ip_->clear();
+  }
+  clear_has_voted_for_ip();
+}
+inline const ::std::string& CommandRes_RaftStageRes::voted_for_ip() const {
+  return *voted_for_ip_;
+}
+inline void CommandRes_RaftStageRes::set_voted_for_ip(const ::std::string& value) {
+  set_has_voted_for_ip();
+  if (voted_for_ip_ == &::google::protobuf::internal::kEmptyString) {
+    voted_for_ip_ = new ::std::string;
+  }
+  voted_for_ip_->assign(value);
+}
+inline void CommandRes_RaftStageRes::set_voted_for_ip(const char* value) {
+  set_has_voted_for_ip();
+  if (voted_for_ip_ == &::google::protobuf::internal::kEmptyString) {
+    voted_for_ip_ = new ::std::string;
+  }
+  voted_for_ip_->assign(value);
+}
+inline void CommandRes_RaftStageRes::set_voted_for_ip(const void* value, size_t size) {
+  set_has_voted_for_ip();
+  if (voted_for_ip_ == &::google::protobuf::internal::kEmptyString) {
+    voted_for_ip_ = new ::std::string;
+  }
+  voted_for_ip_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* CommandRes_RaftStageRes::mutable_voted_for_ip() {
+  set_has_voted_for_ip();
+  if (voted_for_ip_ == &::google::protobuf::internal::kEmptyString) {
+    voted_for_ip_ = new ::std::string;
+  }
+  return voted_for_ip_;
+}
+inline ::std::string* CommandRes_RaftStageRes::release_voted_for_ip() {
+  clear_has_voted_for_ip();
+  if (voted_for_ip_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = voted_for_ip_;
+    voted_for_ip_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void CommandRes_RaftStageRes::set_allocated_voted_for_ip(::std::string* voted_for_ip) {
+  if (voted_for_ip_ != &::google::protobuf::internal::kEmptyString) {
+    delete voted_for_ip_;
+  }
+  if (voted_for_ip) {
+    set_has_voted_for_ip();
+    voted_for_ip_ = voted_for_ip;
+  } else {
+    clear_has_voted_for_ip();
+    voted_for_ip_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// required int32 voted_for_port = 7;
+inline bool CommandRes_RaftStageRes::has_voted_for_port() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void CommandRes_RaftStageRes::set_has_voted_for_port() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void CommandRes_RaftStageRes::clear_has_voted_for_port() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void CommandRes_RaftStageRes::clear_voted_for_port() {
+  voted_for_port_ = 0;
+  clear_has_voted_for_port();
+}
+inline ::google::protobuf::int32 CommandRes_RaftStageRes::voted_for_port() const {
+  return voted_for_port_;
+}
+inline void CommandRes_RaftStageRes::set_voted_for_port(::google::protobuf::int32 value) {
+  set_has_voted_for_port();
+  voted_for_port_ = value;
+}
+
+// required uint64 last_log_term = 8;
+inline bool CommandRes_RaftStageRes::has_last_log_term() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void CommandRes_RaftStageRes::set_has_last_log_term() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void CommandRes_RaftStageRes::clear_has_last_log_term() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void CommandRes_RaftStageRes::clear_last_log_term() {
+  last_log_term_ = GOOGLE_ULONGLONG(0);
+  clear_has_last_log_term();
+}
+inline ::google::protobuf::uint64 CommandRes_RaftStageRes::last_log_term() const {
+  return last_log_term_;
+}
+inline void CommandRes_RaftStageRes::set_last_log_term(::google::protobuf::uint64 value) {
+  set_has_last_log_term();
+  last_log_term_ = value;
+}
+
+// required uint64 last_log_index = 9;
+inline bool CommandRes_RaftStageRes::has_last_log_index() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void CommandRes_RaftStageRes::set_has_last_log_index() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void CommandRes_RaftStageRes::clear_has_last_log_index() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void CommandRes_RaftStageRes::clear_last_log_index() {
+  last_log_index_ = GOOGLE_ULONGLONG(0);
+  clear_has_last_log_index();
+}
+inline ::google::protobuf::uint64 CommandRes_RaftStageRes::last_log_index() const {
+  return last_log_index_;
+}
+inline void CommandRes_RaftStageRes::set_last_log_index(::google::protobuf::uint64 value) {
+  set_has_last_log_index();
+  last_log_index_ = value;
+}
+
+// required uint64 last_apply_index = 10;
+inline bool CommandRes_RaftStageRes::has_last_apply_index() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void CommandRes_RaftStageRes::set_has_last_apply_index() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void CommandRes_RaftStageRes::clear_has_last_apply_index() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+inline void CommandRes_RaftStageRes::clear_last_apply_index() {
+  last_apply_index_ = GOOGLE_ULONGLONG(0);
+  clear_has_last_apply_index();
+}
+inline ::google::protobuf::uint64 CommandRes_RaftStageRes::last_apply_index() const {
+  return last_apply_index_;
+}
+inline void CommandRes_RaftStageRes::set_last_apply_index(::google::protobuf::uint64 value) {
+  set_has_last_apply_index();
+  last_apply_index_ = value;
 }
 
 // -------------------------------------------------------------------

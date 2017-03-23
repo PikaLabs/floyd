@@ -1,10 +1,13 @@
 #ifndef FLOYD_SERVER_H
 #define FLOYD_SERVER_H
 
+#include "client.pb.h"
+
+#include "floyd.h"
+
 #include "pb_conn.h"
 #include "pb_cli.h"
 #include "holy_thread.h"
-#include "floyd.h"
 
 namespace floyd {
 
@@ -39,8 +42,10 @@ class FloydServerConn : public pink::PbConn {
   //virtual pink::Status BuildObuf();
   virtual int DealMessage();
 
+ private:
   FloydServerThread* server_thread_;
-  //uint32_t ret_opcode_;
+  client::Request command_;
+  client::Response command_res_;
 };
 
 class FloydServerThread : public pink::HolyThread<FloydServerConn> {

@@ -3,6 +3,7 @@
 #include <string>
 
 #include <unistd.h>
+#include "slash_status.h"
 
 #include "floyd_client.h"
 
@@ -41,7 +42,7 @@ int main(int argc, char* argv[]) {
     std::string key = "test_key" + std::to_string(i);
     std::string value = "test_value" + std::to_string(i);
 
-    pink::Status result = cluster.Write(key, value);
+    slash::Status result = cluster.Write(key, value);
     if (result.ok()) {
       printf ("Write ok\n");
     } else {
@@ -49,12 +50,19 @@ int main(int argc, char* argv[]) {
     }
 
     printf ("\n=====Test Read==========\n");
-
     result = cluster.Read(key, &value);
     if (result.ok()) {
       printf ("read ok, value is %s\n", value.c_str());
     } else {
       printf ("Read failed, %s\n", result.ToString().c_str());
+    }
+
+    printf ("\n=====Test ServerStatus==========\n");
+    result = cluster.GetStatus(&value);
+    if (result.ok()) {
+      printf ("GetStatus ok, msg is\n%s", value.c_str());
+    } else {
+      printf ("GetStatus failed, %s\n", result.ToString().c_str());
     }
   }
 

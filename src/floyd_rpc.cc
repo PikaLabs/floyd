@@ -1,7 +1,6 @@
 #include "floyd_rpc.h"
 
 #include "status.h"
-#include "meta.pb.h"
 #include "command.pb.h"
 #include "logger.h"
 

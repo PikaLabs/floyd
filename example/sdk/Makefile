@@ -11,10 +11,12 @@ SRC_DIR = ./
 THIRD_PATH = ../../third
 #OUTPUT = ./output
 
-LIB_PATH = -L$(THIRD_PATH)/pink/output/lib/
+LIB_PATH = -L$(THIRD_PATH)/pink/output/lib/ \
+			 -L$(THIRD_PATH)/slash/output/lib/
 
 
 LIBS = -lpink \
+			 -lslash \
 			 -lprotobuf \
 			 -lpthread
 

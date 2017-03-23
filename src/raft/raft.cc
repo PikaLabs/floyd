@@ -5,7 +5,6 @@
 #include "log.h"
 #include "memory_log.h"
 #include "file_log.h"
-#include "floyd_define.h"
 
 #include "logger.h"
 //#include "status.h"
@@ -68,6 +67,17 @@ void RaftConsensus::SetVoteTerm(int target_term) {
   MutexLock l(&mutex_);
   vote_target_term_ = target_term;
 }
+
+std::pair<std::string, int> RaftConsensus::GetLeaderNode() {
+  MutexLock l(&mutex_);
+  return {leader_ip_, leader_port_};
+}
+
+//std::pair<std::string, int> RaftConsensus::GetVotedForNode() {
+//  MutexLock l(&mutex_);
+//  return {voted_for_ip_, voted_for_port_};
+//}
+
 int RaftConsensus::GetCommitIndex() {
   MutexLock l(&mutex_);
   return commit_index_;
@@ -75,6 +85,45 @@ int RaftConsensus::GetCommitIndex() {
 int RaftConsensus::GetCurrentTerm() {
   MutexLock l(&mutex_);
   return current_term_;
+}
+
+
+bool RaftConsensus::HandleGetServerStatus(command::CommandRes_RaftStageRes& res) {
+  std::string role_msg;
+  if (state_ == State::FOLLOWER) {
+    role_msg = "follower";
+  } else if (state_ == State::CANDIDATE) {
+    role_msg = "candidate";
+  } else if (state_ == State::LEADER) {
+    role_msg = "leader";
+  }
+
+  MutexLock l(&mutex_);
+  res.set_term(current_term_);   
+  res.set_commit_index(commit_index_);
+  res.set_role(role_msg);
+  if (leader_ip_.empty()) {
+    res.set_leader_ip("null");
+  } else {
+    res.set_leader_ip(leader_ip_);
+  }
+  res.set_leader_port(leader_port_);
+  if (voted_for_ip_.empty()) {
+    res.set_voted_for_ip("null");
+  } else {
+    res.set_voted_for_ip(voted_for_ip_);
+  }
+  res.set_voted_for_port(voted_for_port_);
+  
+  int64_t last_log_index = log_->GetLastLogIndex();
+  int64_t last_log_term = 0;
+  if (last_log_index > 0) {
+    last_log_term = log_->GetEntry(last_log_index).term();
+  }
+  res.set_last_log_term(last_log_term);
+  res.set_last_log_index(last_log_index);
+  res.set_last_apply_index(sm_->last_apply_index());
+  return true;
 }
 
 void RaftConsensus::Init() {
@@ -194,10 +243,6 @@ void RaftConsensus::AddNewPeer(NodeInfo* ni) {
   pt->StartThread();
 }
 
-std::pair<std::string, int> RaftConsensus::GetLeaderNode() {
-  MutexLock l(&mutex_);
-  return {leader_ip_, leader_port_};
-}
 
 std::pair<RaftConsensus::Result, uint64_t> RaftConsensus::Replicate(
     const command::Command& cmd) {
@@ -252,6 +297,14 @@ std::pair<RaftConsensus::Result, uint64_t> RaftConsensus::WaitForCommitIndex(
     }
   }
 }
+
+//bool RaftConsensus::GetLastLogRelated(int64_t &term, int64_t &index, int64_t &apply) {
+//  MutexLock l(&mutex_);
+//  index = log_->GetLastLogIndex();
+//  term = log_->GetEntry(index).term();
+//  apply = sm_->last_apply_index()
+//  return true;
+//}
 
 uint64_t RaftConsensus::GetLastLogTerm() {
   uint64_t last_log_index = log_->GetLastLogIndex();
@@ -701,7 +754,7 @@ RaftConsensus::LeaderDiskThread::~LeaderDiskThread() {}
 void* RaftConsensus::LeaderDiskThread::ThreadMain() {
   MutexLock l(&raft_con_->mutex_);
   while (!raft_con_->exiting_) {
-    if (raft_con_->state_ == RaftConsensus::State::LEADER &&
+    if (raft_con_->state_ == State::LEADER &&
         raft_con_->log_sync_queued_) {
       LOG_DEBUG(
           "LeaderDiskThread::ThreadMain: Waked up by MainThread::Replicate");
@@ -759,7 +812,7 @@ void RaftConsensus::ElectLeaderThread::StartNewElection() {
   if (!raft_con_->leader_ip_.empty()) {
     LOG_DEBUG("ElectLeaderThread::StartNewElection start new term %lu, prev leader is (%s:%d)",
               raft_con_->current_term_ + 1, raft_con_->leader_ip_.c_str(), raft_con_->leader_port_);
-  } else if (raft_con_->state_ == RaftConsensus::State::CANDIDATE) {
+  } else if (raft_con_->state_ == State::CANDIDATE) {
     LOG_DEBUG("ElectLeaderThread::StartNewElection start new term %lu, prev candidacy %lu timed out",
               raft_con_->current_term_ + 1, raft_con_->current_term_);
   } else {
@@ -768,7 +821,7 @@ void RaftConsensus::ElectLeaderThread::StartNewElection() {
   }
 
   ++raft_con_->current_term_;
-  raft_con_->state_ = RaftConsensus::State::CANDIDATE;
+  raft_con_->state_ = State::CANDIDATE;
   raft_con_->leader_ip_ = "";
   raft_con_->leader_port_ = 0;
   raft_con_->voted_for_ip_ = raft_con_->options_.local_ip;
@@ -812,13 +865,13 @@ void* RaftConsensus::PeerThread::ThreadMain() {
   while (!raft_con_->exiting_) {
 
     switch (raft_con_->state_) {
-      case RaftConsensus::State::FOLLOWER:
+      case State::FOLLOWER:
         LOG_DEBUG("PeerThread(%s:%d) I'm follower", (ni_->ip).c_str(), ni_->port);
         when.tv_sec = std::numeric_limits<time_t>::max();
         when.tv_nsec = 0;
         break;
 
-      case RaftConsensus::State::CANDIDATE:
+      case State::CANDIDATE:
         LOG_DEBUG("PeerThread(%s:%d) I'm candidate, vote_done_(%s)",
                   (ni_->ip).c_str(), ni_->port, vote_done_ ? "true" : "false");
         if (!vote_done_) {
@@ -833,7 +886,7 @@ void* RaftConsensus::PeerThread::ThreadMain() {
         }
         break;
 
-      case RaftConsensus::State::LEADER:
+      case State::LEADER:
         bool heartbeat_timeout = false;
         gettimeofday(&now, NULL);
         if (next_heartbeat_time_.tv_sec < now.tv_sec ||

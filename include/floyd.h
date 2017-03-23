@@ -12,7 +12,7 @@ namespace floyd {
 
 class LeveldbBackend;
 class NodeInfo;
-class FloydMetaThread;
+//class FloydMetaThread;
 class FloydWorkerThread;
 //class FloydHeartBeatThread;
 
@@ -45,24 +45,19 @@ class Floyd {
   // return true if leader has been elected
   bool GetLeader(std::string& ip, int& port);
   void GetAllNodes(std::vector<std::string> &nodes);
+  bool GetServerStatus(std::string& msg);
 
  private:
 
   const Options options_;
 
-  FloydMetaThread* meta_thread_;
+  //FloydMetaThread* meta_thread_;
   FloydWorkerThread* worker_thread_;
   //FloydHeartBeatThread* heartbeat_;
 
   bool IsLeader();
 
-  // Status UpHoldWorkerCliConn(NodeInfo *ni);
   NodeInfo* GetLeaderInfo();
-  Status AddNodeFromMetaRes(meta::MetaRes* meta_res,
-                            std::vector<NodeInfo*>* nis);
-  //Status FetchRemoteMap(const std::string& ip, const int port,
-  //                      std::vector<NodeInfo*>* nis);
-  //Status MergeRemoteMap(const std::string& ip, const int port);
 };
 
 } // namespace floyd

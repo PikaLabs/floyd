@@ -185,8 +185,7 @@ int FloydWorkerConn::DealMessage() {
       set_is_reply(true);
       command::CommandRes_RaftStageRes* rsr =
           new command::CommandRes_RaftStageRes();
-      rsr->set_commitindex(Floyd::raft_->GetCommitIndex());
-      rsr->set_term(Floyd::raft_->GetCurrentTerm());
+      Floyd::raft_->HandleGetServerStatus(*rsr);
       command_res_.set_type(command::CommandRes::SynRaftStage);
       command_res_.set_allocated_raftstage(rsr);
       break;
