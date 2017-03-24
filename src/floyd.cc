@@ -1,36 +1,39 @@
-#include "include/slash_status.h"
-#include "include/floyd.h"
-#include "src/meta.pb.h"
-#include "src/command.pb.h"
-#include "include/env.h"
-#include "include/logger.h"
+#include "floyd.h"
+
+#include "floyd_meta.h"
+#include "floyd_db.h"
+#include "floyd_rpc.h"
+#include "status.h"
+#include "env.h"
+#include "logger.h"
+
+#include "command.pb.h"
+
+#include "slash_string.h"
+
 namespace floyd {
 
 Mutex Floyd::nodes_mutex;
 std::vector<NodeInfo*> Floyd::nodes_info;
-DbBackend* Floyd::db;
-floyd::raft::RaftConsensus* Floyd::raft_con;
+LeveldbBackend* Floyd::db;
+raft::RaftConsensus* Floyd::raft_;
 
-Floyd::Floyd(const Options& options) : options_(options) {
-  //@todo: When exists data
-  if (options_.storage_type == "leveldb")
-    db = new LeveldbBackend(options_.data_path);
-  floydmeta_ = new FloydMetaThread(options_.local_port);
-  // heartbeat_ = new FloydHeartBeatThread(options_.local_ip,
-  // options_.local_port);
-  floydworker_ = new FloydWorkerThread(options_.local_port + 100);
-  raft_con = new raft::RaftConsensus(options);
+Floyd::Floyd(const Options& options)
+  : options_(options) {
+
+  db = new LeveldbBackend(options_.data_path);
+  worker_thread_ = new FloydWorkerThread(options_.local_port);
+  raft_ = new raft::RaftConsensus(options_);
 }
 
 Floyd::~Floyd() {
-  delete floydmeta_;
-  delete floydworker_;
-  delete raft_con;
+  delete worker_thread_;
+  delete raft_;
   delete db;
 }
 
 bool Floyd::IsLeader() {
-  std::pair<std::string, int> leader_node = raft_con->GetLeaderNode();
+  std::pair<std::string, int> leader_node = raft_->GetLeaderNode();
   if (leader_node.first == options_.local_ip &&
       leader_node.second == options_.local_port) {
     return true;
@@ -39,7 +42,7 @@ bool Floyd::IsLeader() {
 }
 
 bool Floyd::GetLeader(std::string& ip, int& port) {
-  std::pair<std::string, int> leader_node = raft_con->GetLeaderNode();
+  std::pair<std::string, int> leader_node = raft_->GetLeaderNode();
   if (leader_node.first == "" || leader_node.second == 0) {
     return false;
   }
@@ -57,7 +60,7 @@ void Floyd::GetAllNodes(std::vector<std::string> &nodes) {
 }
 
 NodeInfo* Floyd::GetLeaderInfo() {
-  std::pair<std::string, int> leader_node = raft_con->GetLeaderNode();
+  std::pair<std::string, int> leader_node = raft_->GetLeaderNode();
   if (leader_node.first == "" || leader_node.second == 0) {
     return NULL;
   }
@@ -91,7 +94,7 @@ Status Floyd::Delete(const std::string& key) {
   command::Command cmd = BuildDeleteCommand(key);
   // Local node is leader?
   if (IsLeader()) {
-    return raft_con->HandleDeleteCommand(cmd);
+    return raft_->HandleDeleteCommand(cmd);
   }
   command::CommandRes cmd_res;
   Rpc(leaderInfo, cmd, cmd_res);
@@ -111,7 +114,7 @@ Status Floyd::Write(const std::string& key, const std::string& value) {
   command::Command cmd = BuildWriteCommand(key, value);
   // Local node is leader?
   if (IsLeader()) {
-    return raft_con->HandleWriteCommand(cmd);
+    return raft_->HandleWriteCommand(cmd);
   }
   command::CommandRes cmd_res;
   Rpc(leaderInfo, cmd, cmd_res);
@@ -132,7 +135,7 @@ Status Floyd::Read(const std::string& key, std::string& value) {
   // Local node is leader?
   if (IsLeader()) {
     LOG_DEBUG("MainThread: Read as Leader");
-    return raft_con->HandleReadCommand(cmd, value);
+    return raft_->HandleReadCommand(cmd, value);
   }
 
   command::CommandRes cmd_res;
@@ -157,7 +160,7 @@ Status Floyd::ReadAll(std::map<std::string, std::string>& kvMap) {
 
   // Local node is leader?
   if (IsLeader()) {
-    return raft_con->HandleReadAllCommand(cmd, kvMap);
+    return raft_->HandleReadAllCommand(cmd, kvMap);
   }
 
   command::CommandRes cmd_res;
@@ -214,7 +217,7 @@ Status Floyd::TryLock(const std::string& key) {
   //   if (leaderInfo == NULL){
   //     return Status::NotFound("no leader node!");
   //   }
-  std::pair<std::string, int> leader_node = raft_con->GetLeaderNode();
+  std::pair<std::string, int> leader_node = raft_->GetLeaderNode();
   if (leader_node.first == "" || leader_node.second == 0) {
     return Status::NotFound("no leader node!");
   }
@@ -236,7 +239,7 @@ Status Floyd::TryLock(const std::string& key) {
       leader_node.second == options_.local_port) {
     // printf ("handle TryLock as leader\n");
     LOG_DEBUG("MainThread: TryLock as Leader");
-    return raft_con->HandleTryLockCommand(cmd);
+    return raft_->HandleTryLockCommand(cmd);
   }
 
   // Redirect
@@ -299,7 +302,7 @@ Status Floyd::TryLock(const std::string& key) {
 Status Floyd::UnLock(const std::string& key) {
   // printf ("\nFloyd::UnLock key:%s\n", key.c_str());
 
-  std::pair<std::string, int> leader_node = raft_con->GetLeaderNode();
+  std::pair<std::string, int> leader_node = raft_->GetLeaderNode();
   if (leader_node.first == "" || leader_node.second == 0) {
     return Status::NotFound("no leader node!");
   }
@@ -320,7 +323,7 @@ Status Floyd::UnLock(const std::string& key) {
   if (leader_node.first == options_.local_ip &&
       leader_node.second == options_.local_port) {
     // printf ("handle UnLock as leader\n");
-    return raft_con->HandleUnLockCommand(cmd);
+    return raft_->HandleUnLockCommand(cmd);
   }
 
   // Redirect
@@ -371,213 +374,145 @@ Status Floyd::UnLock(const std::string& key) {
   }
 }
 
-Status Floyd::AddNodeFromMetaRes(meta::MetaRes* meta_res,
-                                 std::vector<NodeInfo*>* nis) {
-  MutexLock l(&Floyd::nodes_mutex);
-  for (int i = 0; i < meta_res->nodes_size(); i++) {
-    meta::MetaRes_Node node = meta_res->nodes(i);
-    std::vector<NodeInfo*>::iterator iter = Floyd::nodes_info.begin();
-    for (; iter != Floyd::nodes_info.end(); ++iter) {
-      if (node.ip() == (*iter)->ip && node.port() == (*iter)->port) break;
-    }
-    if (iter == Floyd::nodes_info.end()) {
-      NodeInfo* ni = new NodeInfo(node.ip(), node.port());
-      nis->push_back(ni);
-    }
-  }
+Status Floyd::ChaseRaftLog(raft::RaftConsensus* raft_sensus) {
+  //command::Command_RaftStage* raftStage = new command::Command_RaftStage();
+  //raftStage->set_term(raft_sensus->GetCurrentTerm());
+  //raftStage->set_commit_index(raft_sensus->GetCurrentTerm());
+
+  //command::Command cmd;
+  //cmd.set_type(command::Command::SynRaftStage);
+  //cmd.set_allocated_raftstage(raftStage);
+  
+  // TODO anan ? not used
+ // int max_commit_index = 0;
+ // int max_term = 0;
+
+ // MutexLock l(&nodes_mutex);
+ // std::vector<NodeInfo*>::iterator iter = nodes_info.begin();
+ // for (; iter != nodes_info.end(); ++iter) {
+ //   if (((*iter)->ip == options_.local_ip) &&
+ //       ((*iter)->port == options_.local_port))
+ //     continue;
+ //   Status ret = (*iter)->UpHoldWorkerCliConn();
+ //   if (!ret.ok()) continue;
+
+ //   (*iter)->dcc->SendMessage(&cmd);
+
+ //   command::CommandRes cmd_res;
+ //   ret = (*iter)->dcc->GetResMessage(&cmd_res);
+ //   max_commit_index =
+ //       std::max(max_commit_index, cmd_res.raftstage().commit_index());
+ //   max_term = std::max(max_term, cmd_res.raftstage().term());
+ // }
+
+  raft_sensus->SetVoteCommitIndex(0);
+  raft_sensus->SetVoteTerm(0);
   return Status::OK();
 }
 
-/* fetch node map from a remote node
-*/
-Status Floyd::FetchRemoteMap(const std::string& ip, const int port,
-                             std::vector<NodeInfo*>* nis) {
-  Status ret;
-  NodeInfo* ni = new NodeInfo(ip, port);
-  ni->mcc = pink::NewPbCli();
-  // todo change status
-  ret = ni->mcc->Connect(ip, port);
-  if (ret.ok()) {
-    meta::Meta meta;
-    meta.set_t(meta::Meta::NODE);
-    std::vector<NodeInfo*>::iterator iter = Floyd::nodes_info.begin();
-    for (; iter != Floyd::nodes_info.end(); ++iter) {
-      meta::Meta_Node* node = meta.add_nodes();
-      node->set_ip((*iter)->ip);
-      node->set_port((*iter)->port);
-    }
-    // send request
-    ret = ni->mcc->Send(&meta);
-    if (!ret.ok()) {
-      ni->mcc->Close();
-      delete ni->mcc;
-      ni->mcc = NULL;
-      return ret;
-    }
 
-    meta::MetaRes meta_res;
-    ret = ni->mcc->Recv(&meta_res);
-    if (!ret.ok()) {
-      ni->mcc->Close();
-      delete ni->mcc;
-      ni->mcc = NULL;
-      return ret;
-    }
+// Note: we simply use a big nodes lock
+bool Floyd::GetServerStatus(std::string& msg) {
+  LOG_DEBUG("GetServerStatus start");
 
-    AddNodeFromMetaRes(&meta_res, nis);
-  }
+  command::CommandRes_RaftStageRes stage;
+  raft_->HandleGetServerStatus(stage);
 
-  if (!ret.ok()) {
-    return ret;
-  }
-  return Status::OK();
-}
+  char str[512];
+  snprintf (str, 512,
+            "      Node           | Role    |   Term    | CommitIdx |    Leader         |  VoteFor          | LastLogTerm | LastLogIdx | LastApplyIdx |\n" 
+            "%15s:%-6d %9s %10lu %10lu %15s:%-6d %15s:%-6d %10lu %10lu %10lu\n",
+            options_.local_ip.c_str(), options_.local_port,
+            stage.role().c_str(),
+            stage.term(), stage.commit_index(),
+            stage.leader_ip().c_str(), stage.leader_port(),
+            stage.voted_for_ip().c_str(), stage.voted_for_port(),
+            stage.last_log_term(), stage.last_log_index(), stage.last_apply_index());
 
-/* Merge cluster map from remote node recursively , in a depth-first-serach way
- *
- * 1. fetch remote node's map A
- * 2. find strange nodes from map A,add it to self
- * 3. merge their map too
- *
- */
-Status Floyd::MergeRemoteMap(const std::string& ip, const int port) {
-  Status ret = Status::OK();
-  std::vector<NodeInfo*> remote_nis;
-  ret = FetchRemoteMap(ip, port, &remote_nis);
-  if (!ret.ok()) {
-    return ret;
-  }
+  msg.clear();
+  msg.append(str);
 
-  std::vector<NodeInfo*>::iterator remote_nis_iter = remote_nis.begin();
-  for (; remote_nis_iter != remote_nis.end(); ++remote_nis_iter) {
-    bool isknown = false;
-    std::vector<NodeInfo*>::iterator local_nis_iter = nodes_info.begin();
-    for (; local_nis_iter != nodes_info.end(); ++local_nis_iter) {
-      if (**local_nis_iter == **remote_nis_iter) {
-        isknown = true;
-        break;
-      }
-    }
-    if (isknown) {
-      continue;
-    }
-    NodeInfo* ni =
-        new NodeInfo((*remote_nis_iter)->ip, (*remote_nis_iter)->port);
-    ni->UpHoldWorkerCliConn();
-    // UpHoldWorkerCliConn(ni);
-    nodes_info.push_back(ni);
-    LOG_DEBUG("MainThread::MergeRemoteMap: add new node %s:%d", ni->ip.c_str(),
-              ni->port);
-    if ((*remote_nis_iter)->ip != ip || (*remote_nis_iter)->port != port)
-      ret = MergeRemoteMap((*remote_nis_iter)->ip, (*remote_nis_iter)->port);
-  }
-  return Status::OK();
-}
-
-Status Floyd::ChaseRaftLog(raft::RaftConsensus* raft_consensus) {
-  MutexLock l(&nodes_mutex);
-  std::vector<NodeInfo*>::iterator local_nis_iter = nodes_info.begin();
   command::Command cmd;
-  command::Command_RaftStage* raftStage = new command::Command_RaftStage();
-  raftStage->set_term(raft_consensus->GetCurrentTerm());
-  raftStage->set_commitindex(raft_consensus->GetCurrentTerm());
   cmd.set_type(command::Command::SynRaftStage);
-  cmd.set_allocated_raftstage(raftStage);
-  int max_commit_index = 0;
-  int max_term = 0;
-  for (; local_nis_iter != nodes_info.end(); ++local_nis_iter) {
-    if (((*local_nis_iter)->ip == options_.local_ip) &&
-        ((*local_nis_iter)->port == options_.local_port))
-      continue;
-    Status ret = (*local_nis_iter)->UpHoldWorkerCliConn();
-    if (!ret.ok()) continue;
-
-    (*local_nis_iter)->dcc->Send(&cmd);
-
-    command::CommandRes cmd_res;
-    ret = (*local_nis_iter)->dcc->Recv(&cmd_res);
-    max_commit_index =
-        std::max(max_commit_index, cmd_res.raftstage().commitindex());
-    max_term = std::max(max_term, cmd_res.raftstage().term());
+  command::CommandRes cmd_res;
+  MutexLock l(&nodes_mutex);
+  for (auto iter = nodes_info.begin(); iter != nodes_info.end(); iter++) {
+    Status s = Rpc(*iter, cmd, cmd_res);
+    if (s.ok()) {
+      command::CommandRes_RaftStageRes stage = cmd_res.raftstage();
+      snprintf (str, 512,
+                "%15s:%-6d %9s %10lu %10lu %15s:%-6d %15s:%-6d %10lu %10lu %10lu\n",
+                (*iter)->ip.c_str(), (*iter)->port,
+                stage.role().c_str(),
+                stage.term(), stage.commit_index(),
+                stage.leader_ip().c_str(), stage.leader_port(),
+                stage.voted_for_ip().c_str(), stage.voted_for_port(),
+                stage.last_log_term(), stage.last_log_index(), stage.last_apply_index());
+      msg.append(str);
+      LOG_DEBUG("GetServerStatus msg(%s)", str);
+    }
   }
-
-  raft_consensus->SetVoteCommitIndex(0);
-  raft_consensus->SetVoteTerm(0);
-  return Status::OK();
+  return true;
 }
 
 Status Floyd::Start() {
   LOG_DEBUG("MainThread::Start: floyd starting...");
-  NodeInfo* ni = new NodeInfo(options_.local_ip, options_.local_port);
-  nodes_info.push_back(ni);
-  Status ret = Status::OK();
-  // join myself
-  if (options_.seed_ip != options_.local_ip ||
-      options_.seed_port != options_.local_port) {
-    ret = MergeRemoteMap(options_.seed_ip, options_.seed_port);
-    if (!ret.ok()) {
-      return ret;
-    }
+
+  slash::CreatePath(options_.log_path);
+  slash::CreatePath(options_.data_path);
+
+  std::string ip;
+  int port;
+  for (auto it = options_.members.begin(); it != options_.members.end(); it++) {
+    slash::ParseIpPortString(*it, ip, port);
+    nodes_info.push_back(new NodeInfo(ip, port));
+
+    //TODO(anan) wether to create and uphold
+    //  remove node message
+    //ni->UpHoldWorkerCliConn();
   }
 
-  // start heartbeat and meta thread
-  ret = db->Open();
-  if (!ret.ok()) {
-    return ret;
+  Status result = db->Open();
+  if (!result.ok()) {
+    return result;
   }
 
   // Init should before WorkerThread in case of null log_
-  raft_con->Init();
+  raft_->Init();
 
-  //@TODO check if threads start successfully
-  floydmeta_->StartThread();
-  // heartbeat_->StartThread();
-  floydworker_->StartThread();
-  ChaseRaftLog(raft_con);
+  int ret;
+  if ((ret = worker_thread_->StartThread()) != 0) {
+    LOG_ERROR("MainThread::Start: floyd worker thread failed to start, ret is %d", ret);
+    return Status::Corruption("failed to start worker thread, return " + std::to_string(ret));
+  }
+  ChaseRaftLog(raft_);
 
   LOG_DEBUG("MainThread::Start: floyd started");
   return Status::OK();
 }
 
-Status Floyd::SingleStart() {
-  LOG_DEBUG("MainThread::SingleStart: floyd starting...");
-  NodeInfo* ni = new NodeInfo(options_.local_ip, options_.local_port);
-  nodes_info.push_back(ni);
-  Status ret = Status::OK();
-  ret = db->Open();
-  if (!ret.ok()) {
-    return ret;
-  }
-
-  // Init should before WorkerThread in case of null log_
-  raft_con->InitAsLeader();
-
-  //@TODO check if threads start successfully
-  floydmeta_->StartThread();
-  // heartbeat_->StartThread();
-  floydworker_->StartThread();
-  LOG_DEBUG("MainThread::SingleStart: floyd started");
-  return Status::OK();
-}
-
 Status Floyd::Stop() {
-  delete floydmeta_;
-  // delete heartbeat_;
-  delete floydworker_;
-  delete db;
-  delete raft_con;
+  MutexLock l(&nodes_mutex);
   std::vector<NodeInfo*>::iterator iter = nodes_info.begin();
   for (; iter != nodes_info.end(); ++iter) {
-    if ((*iter)->mcc != NULL) {
-      (*iter)->mcc->Close();
-      delete (*iter)->mcc;
-      (*iter)->mcc = NULL;
+    if ((*iter)->dcc != NULL) {
+      delete (*iter)->dcc;
     }
     delete (*iter);
   }
   std::vector<NodeInfo*>().swap(nodes_info);
+
+  // in case dstor delete again
+  delete worker_thread_;
+  worker_thread_ = NULL;
+  delete db;
+  db = NULL;
+  delete raft_;
+  raft_ = NULL;
+
   return Status::OK();
 }
+
 Status Floyd::Erase() {
   Stop();
   std::string path = options_.data_path;

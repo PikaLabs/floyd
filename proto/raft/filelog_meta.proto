@@ -1,9 +1,0 @@
-package floyd.raft.filelog;
-
-import "raft/log_meta.proto";
-
-message MetaData {
-	required floyd.raft.log.MetaData raft_metadata = 1;
-	required uint64 entries_start = 2 [default = 1];
-	required uint64 entries_end = 3 [default = 0];
-}

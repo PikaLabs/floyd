@@ -1,10 +1,11 @@
-#include "include/slash_status.h"
-#include "include/floyd.h"
-#include "meta.pb.h"
+#include "floyd_rpc.h"
+
+#include "status.h"
 #include "command.pb.h"
 #include "include/logger.h"
 
 namespace floyd {
+
 static std::string CmdType(command::Command& cmd) {
   std::string ret;
   switch (cmd.type()) {
@@ -61,13 +62,15 @@ static std::string CmdType(command::Command& cmd) {
 Status Rpc(NodeInfo* ni, command::Command& cmd, command::CommandRes& cmd_res) {
   LOG_DEBUG("MainThread: %s as Follower, redirect %s:%d", CmdType(cmd).c_str(),
             ni->ip.c_str(), ni->port);
+
+  MutexLock l(&ni->dcc_mutex);
   Status ret = ni->UpHoldWorkerCliConn();
   if (!ret.ok()) return ret;
 
   ret = ni->dcc->Send(&cmd);
   if (!ret.ok()) {
     LOG_WARN("MainThread::%s as Follower, redirect:SendMeassge fail: %s",
-             ret.ToString().c_str());
+             CmdType(cmd).c_str(), ret.ToString().c_str());
     ni->dcc->Close();
     delete ni->dcc;
     ni->dcc = NULL;
@@ -80,8 +83,8 @@ Status Rpc(NodeInfo* ni, command::Command& cmd, command::CommandRes& cmd_res) {
   LOG_DEBUG("MainThread::%s as Follower, redirect:Recv success",
             CmdType(cmd).c_str());
   if (!ret.ok()) {
-    LOG_WARN("MainThread::%s as Follower, redirect:Recv fail: %s",
-             ret.ToString().c_str());
+    LOG_WARN("MainThread::%s as Follower, redirect:GetResMessage fail: %s",
+             CmdType(cmd).c_str(), ret.ToString().c_str());
     ni->dcc->Close();
     delete ni->dcc;
     ni->dcc = NULL;

@@ -1,14 +1,15 @@
-#ifndef __FLOYD_WORKER_H__
-#define __FLOYD_WORKER_H__
+#ifndef FLOYD_WORKER_H_
+#define FLOYD_WORKER_H_
 
-#include "include/pb_conn.h"
-#include "include/pink_cli.h"
-#include "include/holy_thread.h"
-#include "src/command.pb.h"
+#include "command.pb.h"
 #include "floyd_define.h"
-#include "floyd_util.h"
-#include "include/slash_status.h"
+#include "floyd_db.h"
+#include "status.h"
 #include "slice.h"
+
+#include "pb_conn.h"
+#include "pb_cli.h"
+#include "holy_thread.h"
 
 namespace floyd {
 using slash::Status;
@@ -31,6 +32,10 @@ class FloydWorkerThread : public pink::HolyThread<FloydWorkerConn> {
  public:
   explicit FloydWorkerThread(int port);
   virtual ~FloydWorkerThread();
+
+  // Only connection from other node should be accepted
+  virtual bool AccessHandle(std::string& ip_port);
+
 };
 }
 #endif

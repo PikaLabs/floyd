@@ -1,5 +1,5 @@
-#ifndef __FLOYD_DB_H__
-#define __FLOYD_DB_H__
+#ifndef FLOYD_DB_H_
+#define FLOYD_DB_H_
 
 #include <iostream>
 #include <string>
@@ -8,40 +8,17 @@
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 
-#include "include/slash_status.h"
+#include "slash_status.h"
 
-namespace floyd {
 using slash::Status;
 
-class DbBackend {
+namespace floyd {
+
+class LeveldbBackend {
  public:
-  DbBackend() {}
+  LeveldbBackend(std::string path) { path_ = path; }
 
-  virtual ~DbBackend() {}
-
-  virtual Status Open() = 0;
-
-  virtual Status Get(const std::string& key, std::string& value) = 0;
-  virtual Status GetAll(std::map<std::string, std::string>& kvMap) = 0;
-
-  virtual Status Set(const std::string& key, const std::string& value) = 0;
-
-  virtual Status Delete(const std::string& key) = 0;
-
-  virtual int LockIsAvailable(std::string& user, std::string& key) = 0;
-
-  virtual Status LockKey(const std::string& user, const std::string& key) = 0;
-
-  virtual Status UnLockKey(const std::string& user, const std::string& key) = 0;
-
-  virtual Status DeleteUserLocks(const std::string& user) = 0;
-};
-
-class LeveldbBackend : public DbBackend {
- public:
-  LeveldbBackend(std::string path) { dbPath = path; }
-
-  virtual ~LeveldbBackend() { delete db; }
+  ~LeveldbBackend() { delete db_; }
 
   Status Open();
 
@@ -53,17 +30,17 @@ class LeveldbBackend : public DbBackend {
 
   Status Delete(const std::string& key);
 
-  virtual int LockIsAvailable(std::string& user, std::string& key);
+  int LockIsAvailable(std::string& user, std::string& key);
 
-  virtual Status LockKey(const std::string& user, const std::string& key);
+  Status LockKey(const std::string& user, const std::string& key);
 
-  virtual Status UnLockKey(const std::string& user, const std::string& key);
+  Status UnLockKey(const std::string& user, const std::string& key);
 
-  virtual Status DeleteUserLocks(const std::string& user);
+  Status DeleteUserLocks(const std::string& user);
 
  private:
-  leveldb::DB* db;
-  std::string dbPath;
+  leveldb::DB* db_;
+  std::string path_;
 };
 
 }  // namespace floyd

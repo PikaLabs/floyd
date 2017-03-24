@@ -1,37 +1,45 @@
 package floyd.client;
 
-enum OPCODE {
+enum Type {
   WRITE = 1;
   READ = 2;
+  STATUS = 3;
 }
 
 // Write 
-message Write {
-  message Request {
+message Request {
+  required Type type = 1;
+
+  message Write {
     required bytes key = 1;
     required bytes value = 2;
     optional bytes uuid = 3;
   }
-  message Response {
+  optional Write write = 2;
+
+  message Read {
+    required bytes key = 1;
+  }
+  optional Read read = 3;
+}
+
+message Response {
+  required Type type = 1;
+
+  message Write {
     required int32 status = 1;
     optional bytes msg = 2;
   }
-}
+  optional Write write = 2;
 
-message GetResponse {
-    required bool hit = 1;
-    optional bytes value = 2;
-    required bool success = 4;
-    optional bool uuid_expired = 5;
-}
-
-// Read 
-message Read {
-  message Request {
-    required bytes key = 1;
-  }
-  message Response {
+  message Read {
     required int32 status = 1;
     optional bytes value = 2;
   }
+  optional Read read = 3;
+
+  message ServerStatus {
+    required bytes msg = 1;
+  }
+  optional ServerStatus server_status = 4;
 }

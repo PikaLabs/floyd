@@ -1,27 +1,33 @@
-#ifndef __LOGGER_H__
-#define __LOGGER_H__
+#ifndef LOGGER_H_
+#define LOGGER_H_
 #include <stdio.h>
 #include <sys/time.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/syscall.h>
+//#include <sys/types.h>
+//#include <unistd.h>
 
+#define gettid() syscall(SYS_gettid)
 static inline char *timenow();
+static inline pid_t pid();
 
 #define _FILE strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__
 
-#define LEVEL_DEBUG 0x04
-#define LEVEL_INFO 0x03
+#define LEVEL_DEBUG   0x04
+#define LEVEL_INFO    0x03
 #define LEVEL_WARNING 0x02
-#define LEVEL_ERROR 0x01
-#define LEVEL_NONE 0x00
+#define LEVEL_ERROR   0x01
+#define LEVEL_NONE    0x00
 
 #ifndef LOG_LEVEL
-#define LOG_LEVEL NONE
+#define LOG_LEVEL LEVEL_NONE
 #endif
 
 #define PRINTFUNCTION(format, ...) fprintf(stderr, format, __VA_ARGS__)
 
-#define LOG_FMT "%-7s %s %s:%d] "
-#define LOG_ARGS(LOG_TAG) LOG_TAG, timenow(), _FILE, __LINE__
+#define LOG_FMT "%-7s %s %5d %s:%d] "
+#define LOG_ARGS(LOG_TAG) LOG_TAG, timenow(), pid(), _FILE, __LINE__
 
 #define NEWLINE "\n"
 
@@ -74,6 +80,10 @@ static inline char *timenow() {
   snprintf(buffer, 64, "%ld.%06ld", tv.tv_sec, tv.tv_usec);
 
   return buffer;
+}
+
+static inline pid_t pid() {
+  return gettid();
 }
 
 #endif

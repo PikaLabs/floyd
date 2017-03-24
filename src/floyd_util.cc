@@ -2,17 +2,25 @@
 
 namespace floyd {
 
-Options::Options()
-    : seed_ip("127.0.0.1"),
-      seed_port(10086),
-      local_ip("127.0.0.1"),
-      local_port(10086),
-      storage_type("leveldb"),
-      data_path("/data/data"),
-      log_type("SimpleFileLog"),
-      log_path("/data/file"),
-      elect_timeout_ms(5000),
-      append_entries_size_once(10240) {}
+slash::Status ParseStatus(leveldb::Status& status) {
+  if (status.ok()) {
+    return slash::Status::OK();
+  } else if (status.IsNotFound()) {
+    return slash::Status::NotFound("");
+  } else {
+    return slash::Status::Corruption(status.ToString());
+  }
+}
+
+slash::Status ParseStatus(pink::Status& status) {
+  if (status.ok()) {
+    return slash::Status::OK();
+  } else if (status.IsNotFound()) {
+    return slash::Status::NotFound("");
+  } else {
+    return slash::Status::Corruption(status.ToString());
+  }
+}
 
 //
 // User Lock related

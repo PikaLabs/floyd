@@ -98,7 +98,7 @@ void protobuf_AssignDesc_command_2eproto() {
   Command_RaftStage_descriptor_ = Command_descriptor_->nested_type(1);
   static const int Command_RaftStage_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage, term_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage, commitindex_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage, commit_index_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage, ip_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Command_RaftStage, port_),
   };
@@ -199,11 +199,17 @@ void protobuf_AssignDesc_command_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(CommandRes_KvAllRet));
   CommandRes_RaftStageRes_descriptor_ = CommandRes_descriptor_->nested_type(3);
-  static const int CommandRes_RaftStageRes_offsets_[4] = {
+  static const int CommandRes_RaftStageRes_offsets_[10] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, term_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, commitindex_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, ip_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, port_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, commit_index_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, role_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, leader_ip_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, leader_port_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, voted_for_ip_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, voted_for_port_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, last_log_term_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, last_log_index_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CommandRes_RaftStageRes, last_apply_index_),
   };
   CommandRes_RaftStageRes_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -281,37 +287,41 @@ void protobuf_AddDesc_command_2eproto() {
   ::floyd::raft::protobuf_AddDesc_raft_2fraft_2eproto();
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
     "\n\rcommand.proto\022\007command\032\017raft/raft.prot"
-    "o\"\256\004\n\007Command\022#\n\004type\030\001 \002(\0162\025.command.Co"
+    "o\"\257\004\n\007Command\022#\n\004type\030\001 \002(\0162\025.command.Co"
     "mmand.Type\022\037\n\002kv\030\002 \001(\0132\023.command.Command"
     ".Kv\022$\n\003rqv\030\003 \001(\0132\027.floyd.raft.RequestVot"
     "e\022.\n\004aerq\030\004 \001(\0132 .floyd.raft.AppendEntri"
     "esRequest\022#\n\004user\030\005 \001(\0132\025.command.Comman"
     "d.User\022-\n\traftstage\030\006 \001(\0132\032.command.Comm"
     "and.RaftStage\032 \n\002Kv\022\013\n\003key\030\001 \002(\014\022\r\n\005valu"
-    "e\030\002 \001(\014\032H\n\tRaftStage\022\014\n\004term\030\001 \002(\005\022\023\n\013co"
-    "mmitIndex\030\002 \002(\005\022\n\n\002ip\030\003 \001(\014\022\014\n\004port\030\004 \001("
-    "\005\032 \n\004User\022\n\n\002ip\030\001 \002(\014\022\014\n\004port\030\002 \002(\005\"\244\001\n\004"
-    "Type\022\010\n\004Read\020\000\022\013\n\007ReadAll\020\001\022\016\n\nDirtyWrit"
-    "e\020\002\022\t\n\005Write\020\003\022\013\n\007TryLock\020\004\022\n\n\006UnLock\020\005\022"
-    "\016\n\nDeleteUser\020\006\022\014\n\010RaftVote\020\007\022\025\n\021RaftApp"
-    "endEntries\020\010\022\020\n\014SynRaftStage\020\t\022\n\n\006Delete"
-    "\020\n\"\210\005\n\nCommandRes\022&\n\004type\030\001 \002(\0162\030.comman"
-    "d.CommandRes.Type\022&\n\003kvr\030\002 \001(\0132\031.command"
-    ".CommandRes.KvRet\022,\n\006kvallr\030\003 \001(\0132\034.comm"
-    "and.CommandRes.KvAllRet\022%\n\003rsv\030\004 \001(\0132\030.f"
-    "loyd.raft.ResponseVote\022/\n\004aers\030\005 \001(\0132!.f"
-    "loyd.raft.AppendEntriesResponse\0223\n\trafts"
-    "tage\030\006 \001(\0132 .command.CommandRes.RaftStag"
-    "eRes\032 \n\002Kv\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 \002(\014\032&"
-    "\n\005KvRet\022\016\n\006status\030\001 \002(\010\022\r\n\005value\030\002 \001(\014\032A"
-    "\n\010KvAllRet\022\016\n\006status\030\001 \002(\010\022%\n\005kvall\030\002 \003("
-    "\0132\026.command.CommandRes.Kv\032K\n\014RaftStageRe"
-    "s\022\014\n\004term\030\001 \002(\005\022\023\n\013commitIndex\030\002 \002(\005\022\n\n\002"
-    "ip\030\003 \001(\014\022\014\n\004port\030\004 \001(\005\"\224\001\n\004Type\022\010\n\004Read\020"
-    "\000\022\013\n\007ReadAll\020\001\022\t\n\005Write\020\002\022\013\n\007TryLock\020\003\022\n"
-    "\n\006UnLock\020\004\022\016\n\nDeleteUser\020\005\022\014\n\010RaftVote\020\006"
-    "\022\025\n\021RaftAppendEntries\020\007\022\020\n\014SynRaftStage\020"
-    "\010\022\n\n\006Delete\020\t", 1253);
+    "e\030\002 \001(\014\032I\n\tRaftStage\022\014\n\004term\030\001 \002(\003\022\024\n\014co"
+    "mmit_index\030\002 \002(\003\022\n\n\002ip\030\003 \001(\014\022\014\n\004port\030\004 \001"
+    "(\005\032 \n\004User\022\n\n\002ip\030\001 \002(\014\022\014\n\004port\030\002 \002(\005\"\244\001\n"
+    "\004Type\022\010\n\004Read\020\000\022\013\n\007ReadAll\020\001\022\016\n\nDirtyWri"
+    "te\020\002\022\t\n\005Write\020\003\022\013\n\007TryLock\020\004\022\n\n\006UnLock\020\005"
+    "\022\016\n\nDeleteUser\020\006\022\014\n\010RaftVote\020\007\022\025\n\021RaftAp"
+    "pendEntries\020\010\022\020\n\014SynRaftStage\020\t\022\n\n\006Delet"
+    "e\020\n\"\235\006\n\nCommandRes\022&\n\004type\030\001 \002(\0162\030.comma"
+    "nd.CommandRes.Type\022&\n\003kvr\030\002 \001(\0132\031.comman"
+    "d.CommandRes.KvRet\022,\n\006kvallr\030\003 \001(\0132\034.com"
+    "mand.CommandRes.KvAllRet\022%\n\003rsv\030\004 \001(\0132\030."
+    "floyd.raft.ResponseVote\022/\n\004aers\030\005 \001(\0132!."
+    "floyd.raft.AppendEntriesResponse\0223\n\traft"
+    "stage\030\006 \001(\0132 .command.CommandRes.RaftSta"
+    "geRes\032 \n\002Kv\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 \002(\014\032"
+    "&\n\005KvRet\022\016\n\006status\030\001 \002(\010\022\r\n\005value\030\002 \001(\014\032"
+    "A\n\010KvAllRet\022\016\n\006status\030\001 \002(\010\022%\n\005kvall\030\002 \003"
+    "(\0132\026.command.CommandRes.Kv\032\337\001\n\014RaftStage"
+    "Res\022\014\n\004term\030\001 \002(\004\022\024\n\014commit_index\030\002 \002(\004\022"
+    "\014\n\004role\030\003 \002(\014\022\021\n\tleader_ip\030\004 \002(\014\022\023\n\013lead"
+    "er_port\030\005 \002(\005\022\024\n\014voted_for_ip\030\006 \002(\014\022\026\n\016v"
+    "oted_for_port\030\007 \002(\005\022\025\n\rlast_log_term\030\010 \002"
+    "(\004\022\026\n\016last_log_index\030\t \002(\004\022\030\n\020last_apply"
+    "_index\030\n \002(\004\"\224\001\n\004Type\022\010\n\004Read\020\000\022\013\n\007ReadA"
+    "ll\020\001\022\t\n\005Write\020\002\022\013\n\007TryLock\020\003\022\n\n\006UnLock\020\004"
+    "\022\016\n\nDeleteUser\020\005\022\014\n\010RaftVote\020\006\022\025\n\021RaftAp"
+    "pendEntries\020\007\022\020\n\014SynRaftStage\020\010\022\n\n\006Delet"
+    "e\020\t", 1403);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "command.proto", &protobuf_RegisterTypes);
   Command::default_instance_ = new Command();
@@ -671,8 +681,8 @@ Command_RaftStage::Command_RaftStage(const Command_RaftStage& from)
 
 void Command_RaftStage::SharedCtor() {
   _cached_size_ = 0;
-  term_ = 0;
-  commitindex_ = 0;
+  term_ = GOOGLE_LONGLONG(0);
+  commit_index_ = GOOGLE_LONGLONG(0);
   ip_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   port_ = 0;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -713,8 +723,8 @@ Command_RaftStage* Command_RaftStage::New() const {
 
 void Command_RaftStage::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    term_ = 0;
-    commitindex_ = 0;
+    term_ = GOOGLE_LONGLONG(0);
+    commit_index_ = GOOGLE_LONGLONG(0);
     if (has_ip()) {
       if (ip_ != &::google::protobuf::internal::kEmptyString) {
         ip_->clear();
@@ -732,30 +742,30 @@ bool Command_RaftStage::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required int32 term = 1;
+      // required int64 term = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
                  input, &term_)));
           set_has_term();
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(16)) goto parse_commitIndex;
+        if (input->ExpectTag(16)) goto parse_commit_index;
         break;
       }
 
-      // required int32 commitIndex = 2;
+      // required int64 commit_index = 2;
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_commitIndex:
+         parse_commit_index:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &commitindex_)));
-          set_has_commitindex();
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &commit_index_)));
+          set_has_commit_index();
         } else {
           goto handle_uninterpreted;
         }
@@ -811,14 +821,14 @@ bool Command_RaftStage::MergePartialFromCodedStream(
 
 void Command_RaftStage::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // required int32 term = 1;
+  // required int64 term = 1;
   if (has_term()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->term(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(1, this->term(), output);
   }
 
-  // required int32 commitIndex = 2;
-  if (has_commitindex()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->commitindex(), output);
+  // required int64 commit_index = 2;
+  if (has_commit_index()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(2, this->commit_index(), output);
   }
 
   // optional bytes ip = 3;
@@ -840,14 +850,14 @@ void Command_RaftStage::SerializeWithCachedSizes(
 
 ::google::protobuf::uint8* Command_RaftStage::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // required int32 term = 1;
+  // required int64 term = 1;
   if (has_term()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->term(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(1, this->term(), target);
   }
 
-  // required int32 commitIndex = 2;
-  if (has_commitindex()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->commitindex(), target);
+  // required int64 commit_index = 2;
+  if (has_commit_index()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(2, this->commit_index(), target);
   }
 
   // optional bytes ip = 3;
@@ -873,18 +883,18 @@ int Command_RaftStage::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required int32 term = 1;
+    // required int64 term = 1;
     if (has_term()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
+        ::google::protobuf::internal::WireFormatLite::Int64Size(
           this->term());
     }
 
-    // required int32 commitIndex = 2;
-    if (has_commitindex()) {
+    // required int64 commit_index = 2;
+    if (has_commit_index()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->commitindex());
+        ::google::protobuf::internal::WireFormatLite::Int64Size(
+          this->commit_index());
     }
 
     // optional bytes ip = 3;
@@ -931,8 +941,8 @@ void Command_RaftStage::MergeFrom(const Command_RaftStage& from) {
     if (from.has_term()) {
       set_term(from.term());
     }
-    if (from.has_commitindex()) {
-      set_commitindex(from.commitindex());
+    if (from.has_commit_index()) {
+      set_commit_index(from.commit_index());
     }
     if (from.has_ip()) {
       set_ip(from.ip());
@@ -965,7 +975,7 @@ bool Command_RaftStage::IsInitialized() const {
 void Command_RaftStage::Swap(Command_RaftStage* other) {
   if (other != this) {
     std::swap(term_, other->term_);
-    std::swap(commitindex_, other->commitindex_);
+    std::swap(commit_index_, other->commit_index_);
     std::swap(ip_, other->ip_);
     std::swap(port_, other->port_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
@@ -2507,8 +2517,14 @@ void CommandRes_KvAllRet::Swap(CommandRes_KvAllRet* other) {
 #ifndef _MSC_VER
 const int CommandRes_RaftStageRes::kTermFieldNumber;
 const int CommandRes_RaftStageRes::kCommitIndexFieldNumber;
-const int CommandRes_RaftStageRes::kIpFieldNumber;
-const int CommandRes_RaftStageRes::kPortFieldNumber;
+const int CommandRes_RaftStageRes::kRoleFieldNumber;
+const int CommandRes_RaftStageRes::kLeaderIpFieldNumber;
+const int CommandRes_RaftStageRes::kLeaderPortFieldNumber;
+const int CommandRes_RaftStageRes::kVotedForIpFieldNumber;
+const int CommandRes_RaftStageRes::kVotedForPortFieldNumber;
+const int CommandRes_RaftStageRes::kLastLogTermFieldNumber;
+const int CommandRes_RaftStageRes::kLastLogIndexFieldNumber;
+const int CommandRes_RaftStageRes::kLastApplyIndexFieldNumber;
 #endif  // !_MSC_VER
 
 CommandRes_RaftStageRes::CommandRes_RaftStageRes()
@@ -2527,10 +2543,16 @@ CommandRes_RaftStageRes::CommandRes_RaftStageRes(const CommandRes_RaftStageRes& 
 
 void CommandRes_RaftStageRes::SharedCtor() {
   _cached_size_ = 0;
-  term_ = 0;
-  commitindex_ = 0;
-  ip_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  port_ = 0;
+  term_ = GOOGLE_ULONGLONG(0);
+  commit_index_ = GOOGLE_ULONGLONG(0);
+  role_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  leader_ip_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  leader_port_ = 0;
+  voted_for_ip_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  voted_for_port_ = 0;
+  last_log_term_ = GOOGLE_ULONGLONG(0);
+  last_log_index_ = GOOGLE_ULONGLONG(0);
+  last_apply_index_ = GOOGLE_ULONGLONG(0);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -2539,8 +2561,14 @@ CommandRes_RaftStageRes::~CommandRes_RaftStageRes() {
 }
 
 void CommandRes_RaftStageRes::SharedDtor() {
-  if (ip_ != &::google::protobuf::internal::kEmptyString) {
-    delete ip_;
+  if (role_ != &::google::protobuf::internal::kEmptyString) {
+    delete role_;
+  }
+  if (leader_ip_ != &::google::protobuf::internal::kEmptyString) {
+    delete leader_ip_;
+  }
+  if (voted_for_ip_ != &::google::protobuf::internal::kEmptyString) {
+    delete voted_for_ip_;
   }
   if (this != default_instance_) {
   }
@@ -2569,14 +2597,30 @@ CommandRes_RaftStageRes* CommandRes_RaftStageRes::New() const {
 
 void CommandRes_RaftStageRes::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    term_ = 0;
-    commitindex_ = 0;
-    if (has_ip()) {
-      if (ip_ != &::google::protobuf::internal::kEmptyString) {
-        ip_->clear();
+    term_ = GOOGLE_ULONGLONG(0);
+    commit_index_ = GOOGLE_ULONGLONG(0);
+    if (has_role()) {
+      if (role_ != &::google::protobuf::internal::kEmptyString) {
+        role_->clear();
       }
     }
-    port_ = 0;
+    if (has_leader_ip()) {
+      if (leader_ip_ != &::google::protobuf::internal::kEmptyString) {
+        leader_ip_->clear();
+      }
+    }
+    leader_port_ = 0;
+    if (has_voted_for_ip()) {
+      if (voted_for_ip_ != &::google::protobuf::internal::kEmptyString) {
+        voted_for_ip_->clear();
+      }
+    }
+    voted_for_port_ = 0;
+    last_log_term_ = GOOGLE_ULONGLONG(0);
+  }
+  if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
+    last_log_index_ = GOOGLE_ULONGLONG(0);
+    last_apply_index_ = GOOGLE_ULONGLONG(0);
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
@@ -2588,60 +2632,152 @@ bool CommandRes_RaftStageRes::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required int32 term = 1;
+      // required uint64 term = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
                  input, &term_)));
           set_has_term();
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(16)) goto parse_commitIndex;
+        if (input->ExpectTag(16)) goto parse_commit_index;
         break;
       }
 
-      // required int32 commitIndex = 2;
+      // required uint64 commit_index = 2;
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_commitIndex:
+         parse_commit_index:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &commitindex_)));
-          set_has_commitindex();
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &commit_index_)));
+          set_has_commit_index();
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(26)) goto parse_ip;
+        if (input->ExpectTag(26)) goto parse_role;
         break;
       }
 
-      // optional bytes ip = 3;
+      // required bytes role = 3;
       case 3: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_ip:
+         parse_role:
           DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-                input, this->mutable_ip()));
+                input, this->mutable_role()));
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(32)) goto parse_port;
+        if (input->ExpectTag(34)) goto parse_leader_ip;
         break;
       }
 
-      // optional int32 port = 4;
+      // required bytes leader_ip = 4;
       case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_leader_ip:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_leader_ip()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(40)) goto parse_leader_port;
+        break;
+      }
+
+      // required int32 leader_port = 5;
+      case 5: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_port:
+         parse_leader_port:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &port_)));
-          set_has_port();
+                 input, &leader_port_)));
+          set_has_leader_port();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(50)) goto parse_voted_for_ip;
+        break;
+      }
+
+      // required bytes voted_for_ip = 6;
+      case 6: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_voted_for_ip:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_voted_for_ip()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(56)) goto parse_voted_for_port;
+        break;
+      }
+
+      // required int32 voted_for_port = 7;
+      case 7: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_voted_for_port:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &voted_for_port_)));
+          set_has_voted_for_port();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(64)) goto parse_last_log_term;
+        break;
+      }
+
+      // required uint64 last_log_term = 8;
+      case 8: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_last_log_term:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &last_log_term_)));
+          set_has_last_log_term();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(72)) goto parse_last_log_index;
+        break;
+      }
+
+      // required uint64 last_log_index = 9;
+      case 9: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_last_log_index:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &last_log_index_)));
+          set_has_last_log_index();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(80)) goto parse_last_apply_index;
+        break;
+      }
+
+      // required uint64 last_apply_index = 10;
+      case 10: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_last_apply_index:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &last_apply_index_)));
+          set_has_last_apply_index();
         } else {
           goto handle_uninterpreted;
         }
@@ -2667,25 +2803,57 @@ bool CommandRes_RaftStageRes::MergePartialFromCodedStream(
 
 void CommandRes_RaftStageRes::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // required int32 term = 1;
+  // required uint64 term = 1;
   if (has_term()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->term(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(1, this->term(), output);
   }
 
-  // required int32 commitIndex = 2;
-  if (has_commitindex()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->commitindex(), output);
+  // required uint64 commit_index = 2;
+  if (has_commit_index()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(2, this->commit_index(), output);
   }
 
-  // optional bytes ip = 3;
-  if (has_ip()) {
+  // required bytes role = 3;
+  if (has_role()) {
     ::google::protobuf::internal::WireFormatLite::WriteBytes(
-      3, this->ip(), output);
+      3, this->role(), output);
   }
 
-  // optional int32 port = 4;
-  if (has_port()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->port(), output);
+  // required bytes leader_ip = 4;
+  if (has_leader_ip()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      4, this->leader_ip(), output);
+  }
+
+  // required int32 leader_port = 5;
+  if (has_leader_port()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(5, this->leader_port(), output);
+  }
+
+  // required bytes voted_for_ip = 6;
+  if (has_voted_for_ip()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      6, this->voted_for_ip(), output);
+  }
+
+  // required int32 voted_for_port = 7;
+  if (has_voted_for_port()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(7, this->voted_for_port(), output);
+  }
+
+  // required uint64 last_log_term = 8;
+  if (has_last_log_term()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(8, this->last_log_term(), output);
+  }
+
+  // required uint64 last_log_index = 9;
+  if (has_last_log_index()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(9, this->last_log_index(), output);
+  }
+
+  // required uint64 last_apply_index = 10;
+  if (has_last_apply_index()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(10, this->last_apply_index(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -2696,26 +2864,60 @@ void CommandRes_RaftStageRes::SerializeWithCachedSizes(
 
 ::google::protobuf::uint8* CommandRes_RaftStageRes::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // required int32 term = 1;
+  // required uint64 term = 1;
   if (has_term()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->term(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(1, this->term(), target);
   }
 
-  // required int32 commitIndex = 2;
-  if (has_commitindex()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->commitindex(), target);
+  // required uint64 commit_index = 2;
+  if (has_commit_index()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(2, this->commit_index(), target);
   }
 
-  // optional bytes ip = 3;
-  if (has_ip()) {
+  // required bytes role = 3;
+  if (has_role()) {
     target =
       ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-        3, this->ip(), target);
+        3, this->role(), target);
   }
 
-  // optional int32 port = 4;
-  if (has_port()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(4, this->port(), target);
+  // required bytes leader_ip = 4;
+  if (has_leader_ip()) {
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+        4, this->leader_ip(), target);
+  }
+
+  // required int32 leader_port = 5;
+  if (has_leader_port()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(5, this->leader_port(), target);
+  }
+
+  // required bytes voted_for_ip = 6;
+  if (has_voted_for_ip()) {
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+        6, this->voted_for_ip(), target);
+  }
+
+  // required int32 voted_for_port = 7;
+  if (has_voted_for_port()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(7, this->voted_for_port(), target);
+  }
+
+  // required uint64 last_log_term = 8;
+  if (has_last_log_term()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(8, this->last_log_term(), target);
+  }
+
+  // required uint64 last_log_index = 9;
+  if (has_last_log_index()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(9, this->last_log_index(), target);
+  }
+
+  // required uint64 last_apply_index = 10;
+  if (has_last_apply_index()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(10, this->last_apply_index(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -2729,32 +2931,76 @@ int CommandRes_RaftStageRes::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required int32 term = 1;
+    // required uint64 term = 1;
     if (has_term()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
+        ::google::protobuf::internal::WireFormatLite::UInt64Size(
           this->term());
     }
 
-    // required int32 commitIndex = 2;
-    if (has_commitindex()) {
+    // required uint64 commit_index = 2;
+    if (has_commit_index()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->commitindex());
+        ::google::protobuf::internal::WireFormatLite::UInt64Size(
+          this->commit_index());
     }
 
-    // optional bytes ip = 3;
-    if (has_ip()) {
+    // required bytes role = 3;
+    if (has_role()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::BytesSize(
-          this->ip());
+          this->role());
     }
 
-    // optional int32 port = 4;
-    if (has_port()) {
+    // required bytes leader_ip = 4;
+    if (has_leader_ip()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->leader_ip());
+    }
+
+    // required int32 leader_port = 5;
+    if (has_leader_port()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->port());
+          this->leader_port());
+    }
+
+    // required bytes voted_for_ip = 6;
+    if (has_voted_for_ip()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->voted_for_ip());
+    }
+
+    // required int32 voted_for_port = 7;
+    if (has_voted_for_port()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->voted_for_port());
+    }
+
+    // required uint64 last_log_term = 8;
+    if (has_last_log_term()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::UInt64Size(
+          this->last_log_term());
+    }
+
+  }
+  if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
+    // required uint64 last_log_index = 9;
+    if (has_last_log_index()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::UInt64Size(
+          this->last_log_index());
+    }
+
+    // required uint64 last_apply_index = 10;
+    if (has_last_apply_index()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::UInt64Size(
+          this->last_apply_index());
     }
 
   }
@@ -2787,14 +3033,34 @@ void CommandRes_RaftStageRes::MergeFrom(const CommandRes_RaftStageRes& from) {
     if (from.has_term()) {
       set_term(from.term());
     }
-    if (from.has_commitindex()) {
-      set_commitindex(from.commitindex());
+    if (from.has_commit_index()) {
+      set_commit_index(from.commit_index());
     }
-    if (from.has_ip()) {
-      set_ip(from.ip());
+    if (from.has_role()) {
+      set_role(from.role());
     }
-    if (from.has_port()) {
-      set_port(from.port());
+    if (from.has_leader_ip()) {
+      set_leader_ip(from.leader_ip());
+    }
+    if (from.has_leader_port()) {
+      set_leader_port(from.leader_port());
+    }
+    if (from.has_voted_for_ip()) {
+      set_voted_for_ip(from.voted_for_ip());
+    }
+    if (from.has_voted_for_port()) {
+      set_voted_for_port(from.voted_for_port());
+    }
+    if (from.has_last_log_term()) {
+      set_last_log_term(from.last_log_term());
+    }
+  }
+  if (from._has_bits_[8 / 32] & (0xffu << (8 % 32))) {
+    if (from.has_last_log_index()) {
+      set_last_log_index(from.last_log_index());
+    }
+    if (from.has_last_apply_index()) {
+      set_last_apply_index(from.last_apply_index());
     }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
@@ -2813,7 +3079,7 @@ void CommandRes_RaftStageRes::CopyFrom(const CommandRes_RaftStageRes& from) {
 }
 
 bool CommandRes_RaftStageRes::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000003) != 0x00000003) return false;
+  if ((_has_bits_[0] & 0x000003ff) != 0x000003ff) return false;
 
   return true;
 }
@@ -2821,9 +3087,15 @@ bool CommandRes_RaftStageRes::IsInitialized() const {
 void CommandRes_RaftStageRes::Swap(CommandRes_RaftStageRes* other) {
   if (other != this) {
     std::swap(term_, other->term_);
-    std::swap(commitindex_, other->commitindex_);
-    std::swap(ip_, other->ip_);
-    std::swap(port_, other->port_);
+    std::swap(commit_index_, other->commit_index_);
+    std::swap(role_, other->role_);
+    std::swap(leader_ip_, other->leader_ip_);
+    std::swap(leader_port_, other->leader_port_);
+    std::swap(voted_for_ip_, other->voted_for_ip_);
+    std::swap(voted_for_port_, other->voted_for_port_);
+    std::swap(last_log_term_, other->last_log_term_);
+    std::swap(last_log_index_, other->last_log_index_);
+    std::swap(last_apply_index_, other->last_apply_index_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
