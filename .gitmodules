@@ -1,0 +1,9 @@
+[submodule "floyd/third/slash"]
+	path = floyd/third/slash
+	url = git@github.com:baotiao/slash.git
+[submodule "floyd/third/pink"]
+	path = floyd/third/pink
+	url = git@github.com:Qihoo360/pink.git
+[submodule "floyd/third/nemo-rocksdb"]
+	path = floyd/third/nemo-rocksdb
+	url = git@github.com:Qihoo360/nemo-rocksdb.git
