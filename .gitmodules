@@ -1,6 +1,0 @@
-[submodule "third/pink"]
-	path = third/pink
-	url = https://github.com/baotiao/pink.git
-[submodule "third/slash"]
-	path = third/slash
-	url = https://github.com/baotiao/slash.git
