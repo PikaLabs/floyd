@@ -1,20 +1,19 @@
 #ifndef FLOYD_H_
 #define FLOYD_H_
 
-#include "floyd_define.h"
-#include "floyd_options.h"
-#include "floyd_mutex.h"
-//#include "floyd_db.h"
+#include <string>
 
-#include "raft/raft.h"
+#include "slash/include/slash_mutex.h"
+#include "slash/include/slash_status.h"
+#include "pink/include/bg_thread.h"
+#include "floyd/include/floyd_options.h"
+#include "floyd/src/floyd_worker.h"
 
 namespace floyd {
-
-class LeveldbBackend;
-class NodeInfo;
-//class FloydMetaThread;
-class FloydWorkerThread;
-//class FloydHeartBeatThread;
+using slash::Status;
+class FloydWorker;
+class FloydWorkerConn;
+typedef std::map<std::string, PeerThread*> PeersSet;
 
 class Floyd {
  public:
@@ -22,42 +21,49 @@ class Floyd {
   virtual ~Floyd();
 
   Status Start();
-  Status Stop();
+  void Stop();
+  void Erase();
 
-  // nodes info
-  static Mutex nodes_mutex;
-  static std::vector<NodeInfo*> nodes_info;
-  static LeveldbBackend* db;
-  static floyd::raft::RaftConsensus* raft_;
-
-  Status ChaseRaftLog(floyd::raft::RaftConsensus* raft_con);
-  Status DirtyRead(const std::string& key, std::string& value);
-  Status DirtyReadAll(std::map<std::string, std::string>& kvMap);
-  Status DirtyWrite(const std::string& key, const std::string& value);
   Status Write(const std::string& key, const std::string& value);
-  Status Read(const std::string& key, std::string& value);
-  Status ReadAll(std::map<std::string, std::string>& kvMap);
-  Status TryLock(const std::string& key);
-  Status UnLock(const std::string& key);
-  Status Erase();
   Status Delete(const std::string& key);
+  Status Read(const std::string& key, std::string& value);
+  //Status ReadAll(std::map<std::string, std::string>& kvMap);
+  Status DirtyRead(const std::string& key, std::string& value);
+  //Status DirtyReadAll(std::map<std::string, std::string>& kvMap);
+  //Status DirtyWrite(const std::string& key, const std::string& value);
+  //Status TryLock(const std::string& key);
+  //Status UnLock(const std::string& key);
 
   // return true if leader has been elected
-  bool GetLeader(std::string& ip, int& port);
-  void GetAllNodes(std::vector<std::string> &nodes);
-  bool GetServerStatus(std::string& msg);
+  bool GetLeader(std::string& ip_port);
+  // bool GetServerStatus(std::string& msg);
+  
 
  private:
-
+  friend class FloydWorkerConn;
   const Options options_;
+  rocksdb::DBNemo* db_;
+  Log* log_;
+  FloydContext context_;
 
-  //FloydMetaThread* meta_thread_;
-  FloydWorkerThread* worker_thread_;
-  //FloydHeartBeatThread* heartbeat_;
+  FloydWorker* worker_;
+  FLoydApply* apply_;
+  pink::Timer* leader_elect_timer_;
+  PeersSet peers_;
 
+  bool IsSelf(const std::string& ip_port);
   bool IsLeader();
+  bool HasLeader();
 
-  NodeInfo* GetLeaderInfo();
+  Status DoCommand(const command::Command& cmd,
+      command::CommandRes *cmd_res);
+  Status ExecuteCommand(const command::Command& cmd,
+      command::CommandRes *cmd_res);
+  void DoRequestVote(command::Command& cmd,
+      command::CommandRes* cmd_res);
+  void DoAppendEntry(command::Command& cmd,
+      command::CommandRes* cmd_res);
+  static void StartNewElection(void* arg);
 };
 
 } // namespace floyd
