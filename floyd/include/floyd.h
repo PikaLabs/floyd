@@ -11,8 +11,11 @@
 
 namespace floyd {
 using slash::Status;
+
 class FloydWorker;
 class FloydWorkerConn;
+class PeerThread;
+
 typedef std::map<std::string, PeerThread*> PeersSet;
 
 class Floyd {
@@ -38,6 +41,10 @@ class Floyd {
   bool GetLeader(std::string& ip_port);
   // bool GetServerStatus(std::string& msg);
   
+  void BeginLeaderShip();
+  RpcClient* peer_rpc_client() {
+    return peer_rpc_client_;
+  }
 
  private:
   friend class FloydWorkerConn;
@@ -47,9 +54,10 @@ class Floyd {
   FloydContext context_;
 
   FloydWorker* worker_;
-  FLoydApply* apply_;
+  FloydApply* apply_;
   pink::Timer* leader_elect_timer_;
   PeersSet peers_;
+  RpcClient peer_rpc_client_;
 
   bool IsSelf(const std::string& ip_port);
   bool IsLeader();

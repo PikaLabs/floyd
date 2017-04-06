@@ -16,6 +16,7 @@ struct Options {
   std::string data_path;
   std::string log_path;
   uint64_t elect_timeout_ms;
+  uint64_t heartbeat_us;
   uint64_t append_entries_size_once;
 
   void SetMembers(const std::string& cluster_string);
