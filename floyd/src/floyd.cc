@@ -15,7 +15,10 @@ struct LeaderElectTimerEnv {
 Floyd::Floyd(const Options& options)
   : options_(options),
   db_(NULL) {
-  leader_elect_timer_ = new pink::Timer(); 
+  leader_elect_env_ = new LeaderElectTimerEnv(context_, peers_);
+  leader_elect_timer_ = new pink::Timer(options_.elect_timeout_ms,
+      FLoyd::StartNewElection,
+      static_cast<void*>(leader_elect_env_));
   worker_ = new FloydWorker(FloydWorkerEnv(options_.local_port, 1000, this));
   // peer threads
   for (auto it = options_.members.begin();
@@ -29,7 +32,16 @@ Floyd::Floyd(const Options& options)
 }
 
 Floyd::~Floyd() {
-  Stop();
+  delete apply_;
+  for (auto& pt : peers) {
+    delete pt.second;
+  }
+  delete worker_;
+  delete leader_elect_timer_;
+  delete leader_elect_env_;
+  delete db_;
+  delete log_;
+  return Status::OK();
 }
 
 bool Floyd::IsSelf(const std::string& ip_port) {
@@ -67,20 +79,13 @@ Status Floyd::Start() {
     LOG_ERROR("Open file log failed! path: " + options_.log_path);
     return s;
   }
-  context_.RecoverInit(log);
+  context_.RecoverInit(log_);
 
   // Start leader_elect_timer
   int ret;
-  if ((ret = leader_elect_timer_->StartThread()) != 0) {
-    LOG_ERROR("Floyd leader elect timer failed to start, ret is %d", ret);
-    return Status::Corruption("failed to start leader elect timer , return " + std::to_string(ret));
-  }
-  bool ok = leader_elect_timer_.Schedule(options_.elect_timeout_ms,
-      FLoyd::StartNewElection,
-      static_cast<void*>(new LeaderElectTimerEnv(context_, peers_)));
-  if (!ok) {
-    LOG_ERROR("Failed to schedule leader elect timer");
-    return Status::Corruption("Failed to schedule leader elect timer");
+  if (!leader_elect_timer_->Start()) {
+    LOG_ERROR("Floyd leader elect timer failed to start");
+    return Status::Corruption("failed to start leader elect timer");
   }
 
   // Start worker thread
@@ -99,25 +104,6 @@ Status Floyd::Start() {
   }
 
   LOG_DEBUG("Floyd started");
-  return Status::OK();
-}
-
-void Floyd::Stop() {
-  delete apply_;
-  for (auto& pt : peers) {
-    delete pt.second;
-  }
-  delete worker_;
-  delete leader_elect_timer_;
-  delete db_;
-  delete log_;
-  return Status::OK();
-}
-
-void Floyd::Erase() {
-  Stop();
-  slash::DeleteDir(options_.data_path);
-  slash::DeleteDir(options_.log_path);
   return Status::OK();
 }
 

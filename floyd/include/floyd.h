@@ -21,8 +21,6 @@ class Floyd {
   virtual ~Floyd();
 
   Status Start();
-  void Stop();
-  void Erase();
 
   Status Write(const std::string& key, const std::string& value);
   Status Delete(const std::string& key);
@@ -49,6 +47,7 @@ class Floyd {
   FloydWorker* worker_;
   FLoydApply* apply_;
   pink::Timer* leader_elect_timer_;
+  LeaderElectTimerEnv* leader_elect_env_;
   PeersSet peers_;
 
   bool IsSelf(const std::string& ip_port);

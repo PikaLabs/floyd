@@ -120,7 +120,7 @@ bool FloydContext::VoteAndCheck(uint64_t vote_term) {
 }
 
 Status FloydContext::WaitApply(uint64_t commit_index, uint32_t timeout) { 
-  while (log_.GetCommitIndex() < commit_index) {
+  while (commit_index_ < commit_index) {
     if (!commit_cond_.TimeWait(timeout)) {
       return Status::Timeout("apply timeout");
     }
