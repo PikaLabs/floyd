@@ -29,7 +29,24 @@ class FloydContext {
     slash::RWLock l(&stat_rw_, false);
     return current_term_;
   }
-  j
+
+  Role role() {
+    slash::RWLock l(&stat_rw_, false);
+    return role_;
+  }
+
+  std::string local_ip() {
+    return options_.local_ip;
+  }
+
+  int local_port() {
+    return options_.local_port;
+  }
+
+  uint64_t heartbeat_us() {
+    return options_.heartbeat_us;
+  }
+  
   void BecomeFollower(uint64_t new_iterm,
       const std::string leader_ip = "", int port = 0);
   void BecomeCandidate();
@@ -67,6 +84,13 @@ class FloydContext {
     len = commit_index_- apply_index_;
     return apply_index_ + 1;
   }
+
+  uint64_t apply_index() {
+    slash::MutexLock lapply(&apply_mu_);
+    return apply_index_;
+  }
+
+  uint64_t AdvanceCommitIndex(uint64_t* len) {
 
   void ApplyDone(uint64_t index) {
     slash::MutexLock lapply(&apply_mu_);

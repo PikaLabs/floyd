@@ -1,5 +1,7 @@
 #include "floyd/include/floyd.h"
-#include "command.pb.h"
+
+#include "floyd/src/floyd_peer_thread.h"
+#include "floyd/src/command.pb.h"
 
 namespace floyd {
 
@@ -20,15 +22,16 @@ Floyd::Floyd(const Options& options)
       FLoyd::StartNewElection,
       static_cast<void*>(leader_elect_env_));
   worker_ = new FloydWorker(FloydWorkerEnv(options_.local_port, 1000, this));
+  apply_ = new FloydApply(FLoydApplyEnv(context_, db_));
+
   // peer threads
   for (auto it = options_.members.begin();
       it != options_.members.end(); it++) {
     if (!IsSelf(*iter)) {
-      PeerThread* pt = new PeerThread(FloydPeerEnv(&context_, *iter));
+      PeerThread* pt = new PeerThread(FloydPeerEnv(*iter, &context_, *iter, apply_));
       peers_.insert(std::pair<std::string, PeerThread*>(*iter, pt));
+    }
   }
-  
-  apply_ = new FloydApply(FLoydApplyEnv(context_, db_);
 }
 
 Floyd::~Floyd() {
@@ -49,7 +52,7 @@ bool Floyd::IsSelf(const std::string& ip_port) {
     slash::IpPortString(options_.local_ip, options_.local_port));
 }
 
-bool Floyd::GetLeader(std::string& ip_port);
+bool Floyd::GetLeader(std::string& ip_port) {
   auto leader_node = context_.leader_node();
   if (leader_node.first.empty() || leader_node.second == 0) {
     return false;
@@ -111,8 +114,42 @@ void Floyd::StartNewElection(void* arg) {
   LeaderElectTimerEnv* targ = static_cast<Floyd*>(arg);
   targ->context.BecomeCandidate();
   for (auto& peer : targ->peers) {
-    peer.second->RequestVote();
+    peer.second->AddRequestVoteTask();
   }
 }
 
+void Floyd::BeginLeaderShip() {
+  context_.BecomeLeader();
+  for (auto& peer : peers_) {
+    peer.second->BeginLeaderShip();
+  }
 }
+
+void Floyd::AdvanceCommitIndex() {
+  if (context_.role() != Role::kLeader) {
+    return;
+  }
+
+  uint64_t commit_index = context_.commit_index();
+  uint64_t new_commit_index = ULLONG_MAX;
+  for (auto& iter : peers) {
+    new_commit_index = std::min(iter->second->GetLastAgreeIndex(), min_commit_index);
+  }
+  uint64_t apply_index = context_.apply_index();
+  LOG_DEBUG("AdvanceCommitIndex: new_commit_index=%lu, old commit_index_=%lu, apply_index()=%lu",
+            new_commit_index, commit_index, context_.apply_index());
+
+  if (commit_index >= new_commit_index) {
+    if (commit_index > apply_index) {
+      apply_->ScheduleApply();
+    }
+    return;
+  }
+
+  if (log_->GetEntry(new_commit_index).term() == current_term_) {
+    context_.SetCommitIndex(new_commit_index);
+    LOG_DEBUG("AdvanceCommitIndex: commit_index=%ld", new_commit_index);
+  }
+}
+
+} // namespace floyd
