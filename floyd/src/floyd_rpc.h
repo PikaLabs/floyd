@@ -18,7 +18,7 @@ class RpcClient {
   slash::Status SendRequest(const std::string& server, const command::Command& req,
       command::CommandRes* res);
 
-  Status UpHoldCli(slash::PinkCli *cli);
+  Status UpHoldCli(pink::PinkCli *cli);
 
  private:
   slash::Mutex mu_;

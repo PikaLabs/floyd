@@ -19,10 +19,14 @@ class Command;
 class CommandRes;
 }
 
+
 namespace floyd {
 using slash::Status;
 
+namespace raft {
 class Log;
+}
+//class Log;
 class RpcClient;
 class FloydContext;
 class Peer;
@@ -66,7 +70,7 @@ class Floyd {
   friend class FloydWorkerConn;
   const Options options_;
   rocksdb::DBNemo* db_;
-  Log* log_;
+  raft::Log* log_;
   FloydContext* context_;
 
   FloydWorker* worker_;
@@ -80,7 +84,6 @@ class Floyd {
   bool HasLeader();
 
   uint64_t QuorumMatchIndex();
-  void AdvanceCommitIndex();
 
   Status DoCommand(const command::Command& cmd,
       command::CommandRes *cmd_res);

@@ -4,12 +4,10 @@
 #include "floyd/src/floyd_apply.h"
 #include "floyd/src/floyd_worker.h"
 #include "floyd/src/raft/log.h"
-#include "floyd/src/raft/memory_log.h"
 #include "floyd/src/raft/file_log.h"
 #include "floyd/src/floyd_peer_thread.h"
-#include "floyd/src/logger.h"
 #include "floyd/src/floyd_rpc.h"
-#include "floyd/src/raft/file_log.h"
+#include "floyd/src/logger.h"
 
 #include "slash/include/slash_string.h"
 #include "slash/include/env.h"
@@ -29,13 +27,15 @@ Floyd::Floyd(const Options& options)
   : options_(options),
   db_(NULL) {
 
-  log_ = new FileLog(options_.log_path)
+  log_ = new raft::FileLog(options_.log_path)
 
   leader_elect_env_ = new LeaderElectTimerEnv(context_, &peers_);
   leader_elect_timer_ = new pink::Timer(options_.elect_timeout_ms,
       Floyd::StartNewElection,
       static_cast<void*>(leader_elect_env_));
   worker_ = new FloydWorker(FloydWorkerEnv(options_.local_port, 1000, this));
+
+  // TODO db_ is null
   apply_ = new FloydApply(FloydApplyEnv(context_, db_, log_));
 
   // peer threads
@@ -92,7 +92,7 @@ Status Floyd::Start() {
   rocksdb::Status s = rocksdb::DBNemo::Open(options, options_.data_path, &db_);
   if (!s.ok()) {
     LOG_ERROR("Open db failed! path: " + options_.data_path);
-    return Status::Corruption("Open DB failed, ", + s.ToString());
+    return Status::Corruption("Open DB failed, " + s.ToString());
   }
 
   // Recover from log

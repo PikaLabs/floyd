@@ -14,7 +14,7 @@ using slash::Status;
 struct FloydApplyEnv {
   FloydContext* context;
   rocksdb::DBNemo* db;
-  Log* log;
+  raft::Log* log;
   FloydApplyEnv(FloydContext* c,
       rocksdb::DBNemo* d, Log* l)
     : context(c),
