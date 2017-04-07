@@ -1,14 +1,19 @@
 #include "floyd/src/floyd_apply.h"
 
+#include <unistd.h>
+#include "floyd/src/logger.h"
+#include "floyd/src/command.pb.h"
+
+
 namespace floyd {
 
-FloydApply::FLoydApply(const FloydApplyEnv& env)
+FloydApply::FloydApply(const FloydApplyEnv& env)
   : context_(env.context),
-  db_(env.db),
-  log_(env.log){
-    bg_thread_ = new pink::BGThread();
-    BGThread_->set_thread_name("FloydApply");
-  }
+    db_(env.db),
+    log_(env.log) {
+  bg_thread_ = new pink::BGThread();
+  bg_thread_->set_thread_name("FloydApply");
+}
 
 FloydApply::~FloydApply() {
   delete bg_thread_;
@@ -28,12 +33,12 @@ void FloydApply::ApplyStateMachine(void* arg) {
 
   // Apply as more entry as possible
   uint64_t len = 0, to_apply = 0;
-  to_apply = context.NextApplyIndex(&len);
+  to_apply = context->NextApplyIndex(&len);
   while (len-- > 0) {
     const Log::Entry& log_entry = fapply->log_->GetEntry(to_apply);
     Status s = fapply->Apply(log_entry);
     if (!s.ok()) {
-      LOG_WARNING("Apply log entry failed, at: %d, error: %s",
+      LOG_WARN("Apply log entry failed, at: %d, error: %s",
           to_apply, s.ToString().c_str());
       fapply->ScheduleApply(); // try once more
       usleep(1000);
@@ -46,25 +51,25 @@ void FloydApply::ApplyStateMachine(void* arg) {
   }
 }
 
-Status FloyApply::Apply(const Log::Entry& log_entry) {
+Status FloydApply::Apply(const Log::Entry& log_entry) {
   if (log_entry.type() == raft::Entry::NOOP) {
-    return true;
+    return Status::OK();
   }
 
   const std::string& data = log_entry.cmd();
   command::Command cmd;
   if (!cmd.ParseFromArray(data.c_str(), data.length())) {
-    LOG_WARNING("Parse log_entry failed");
-    return false;
+    LOG_WARN("Parse log_entry failed");
+    return Status::IOError("Parse error");
   }
 
   Status ret;
   switch (cmd.type()) {
     case command::Command::Write:
-      ret = db_->Set(cmd.kv().key(), cmd.kv().value());
+      //ret = db_->Put(cmd.kv().key(), cmd.kv().value());
       break;
     case command::Command::Delete:
-      ret = Floyd::db->Delete(cmd.kv().key());
+      //ret = db_->Delete(cmd.kv().key());
       break;
     case command::Command::Read:
       ret = Status::OK();

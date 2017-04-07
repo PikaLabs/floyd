@@ -1,13 +1,17 @@
-#include "floyd_worker.h"
+#include "floyd/src/floyd_worker.h"
 
-#include "floyd.h"
-#include "floyd_mutex.h"
-#include "floyd_util.h"
-#include "command.pb.h"
-#include "include/logger.h"
+#include "floyd/include/floyd.h"
+#include "floyd/src/command.pb.h"
+#include "floyd/src/logger.h"
 
 namespace floyd {
 using slash::Status;
+
+FloydWorker::FloydWorker(const FloydWorkerEnv& env)
+  : conn_factory_(env.floyd) {
+    thread_ = pink::NewHolyThread(env.port,
+                                  &conn_factory_, env.cron_interval, &handle_);
+  }
 
 FloydWorkerConn::FloydWorkerConn(int fd, std::string& ip_port,
     pink::Thread* thread, Floyd* floyd)

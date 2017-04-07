@@ -1,7 +1,7 @@
 #ifndef FLOYD_RPC_H_
 #define FLOYD_RPC_H_
 
-#include "floyd/include/command.pb.h"
+#include "floyd/src/command.pb.h"
 
 #include "pink/include/pink_cli.h"
 

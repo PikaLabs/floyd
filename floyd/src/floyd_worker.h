@@ -1,43 +1,25 @@
 #ifndef FLOYD_WORKER_H_
 #define FLOYD_WORKER_H_
 
+#include "floyd/src/command.pb.h"
+
 #include "pink/include/server_thread.h"
 #include "pink/include/pb_conn.h"
-#include "command.pb.h"
 
 namespace floyd {
 
-struct FloydWorkerEnv() {
+class Floyd;
+class FloydWorkerConnFactory; 
+class FloydWorkerHandle;
+
+struct FloydWorkerEnv {
   int port;
   int cron_interval;
-  Floyd floyd;
+  Floyd* floyd;
   FloydWorkerEnv(int p, int c, Floyd* f)
     : port(p),
     cron_interval(c),
     floyd(f) {}
-};
-
-class FloydWorker {
- public:
-  explicit FloydWorker(const FloydWorkerEnv& env):
-    conn_factory_(env.floyd){
-      thread_ = pink::NewHolyThread(env.port,
-          &conn_factory_, env.cron_interval, &handle_);
-    }
-
-  ~FloydWorker() {
-    thread_->JoinThread();
-    delete thread_;
-  }
-
-  int Start() {
-    return thread_->StartThread();
-  }
-
- private:
-  pink::FloydWorkerConnFactory conn_factory_;
-  pink::FloydWorkerHandle handle_;
-  pink::ServerThread* thread_;
 };
 
 class FloydWorkerConn : public pink::PbConn {
@@ -59,10 +41,11 @@ class FloydWorkerConnFactory : public pink::ConnFactory {
   explicit FloydWorkerConnFactory(Floyd* floyd)
     : floyd_(floyd) {}
 
-  virtual PinkConn *NewPinkConn(int connfd,
-      const std::string &ip_port, Thread *thread) const override {
+  virtual pink::PinkConn *NewPinkConn(int connfd,
+      const std::string &ip_port, pink::Thread *thread) const override {
     return new FloydWorkerConn(connfd, ip_port, thread, floyd_);
   }
+
  private:
   Floyd* floyd_;
 };
@@ -72,5 +55,25 @@ public:
   virtual bool AccessHandle(std::string& ip) const override;
 };
 
-}
+class FloydWorker {
+ public:
+  explicit FloydWorker(const FloydWorkerEnv& env);
+
+  ~FloydWorker() {
+    thread_->JoinThread();
+    delete thread_;
+  }
+
+  int Start() {
+    return thread_->StartThread();
+  }
+
+ private:
+  FloydWorkerConnFactory conn_factory_;
+  FloydWorkerHandle handle_;
+  pink::ServerThread* thread_;
+};
+
+
+} // namspace floyd
 #endif

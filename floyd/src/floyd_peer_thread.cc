@@ -15,7 +15,7 @@ namespace floyd {
 Peer::Peer(FloydPeerEnv env)
   : env_(env),
     next_index_(1),
-    last_agree_index_(0) {
+    match_index_(0) {
 }
 
 int Peer::StartThread() {
@@ -154,7 +154,7 @@ void Peer::BeginLeaderShip() {
   {
     slash::MutexLock(&mu_);
     next_index_ = env_.log->GetLastLogIndex() + 1;
-    last_agree_index_ = 0;
+    match_index_ = 0;
   }
 
   AddAppendEntriesTimerTask(true);
@@ -190,7 +190,8 @@ static void Peer::DoAppendEntriesTimer(void *arg) {
 //bool Peer::HaveVote() { return have_vote_; }
 
 uint64_t Peer::GetLastAgreeIndex() {
-  return last_agree_index_;
+  slash::MutexLock(&mu_);
+  return match_index_;
 }
 
 Status Peer::AppendEntries() {
@@ -252,10 +253,10 @@ Status Peer::AppendEntries() {
     env_.context->BecomeFollower(res_term);
   } else {
     if (cmd_res.aers().status()) {
-      last_agree_index_ = prev_log_index + num_entries;
+      match_index_ = prev_log_index + num_entries;
       //TODO(anan) 
       env_.floyd->AdvanceCommitIndex();
-      next_index_ = last_agree_index_ + 1;
+      next_index_ = match_index_ + 1;
     } else {
       if (next_index_ > 1) --next_index_;
     }

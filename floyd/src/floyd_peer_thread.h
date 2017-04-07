@@ -52,7 +52,7 @@ class Peer {
 
   void BeginLeaderShip();
 
-  uint64_t GetLastAgreeIndex();
+  uint64_t GetMatchIndex();
   void set_next_index(uint64_t next_index);
   uint64_t get_next_index();
 
@@ -64,7 +64,7 @@ class Peer {
  // bool have_vote_;
   bool vote_done_;
   uint64_t next_index_;
-  uint64_t last_agree_index_;
+  uint64_t match_index_;
 
   pink::BGThread bg_thread_;
 

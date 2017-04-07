@@ -1,7 +1,16 @@
 #ifndef FLOYD_CONTEXT_H_
 #define FLOYD_CONTEXT_H_
 
+#include <pthread.h>
+
+#include "floyd/include/floyd_options.h"
+#include "floyd/src/raft/log.h"
+
+#include "slash/include/slash_status.h"
+#include "slash/include/slash_mutex.h"
+
 namespace floyd {
+
 using slash::Status;
 
 enum Role {
@@ -81,7 +90,7 @@ class FloydContext {
   uint64_t NextApplyIndex(uint64_t* len) {
     slash::MutexLock lcommit(&commit_mu_);
     slash::MutexLock lapply(&apply_mu_);
-    len = commit_index_- apply_index_;
+    *len = commit_index_ - apply_index_;
     return apply_index_ + 1;
   }
 
@@ -90,7 +99,7 @@ class FloydContext {
     return apply_index_;
   }
 
-  uint64_t AdvanceCommitIndex(uint64_t* len) {
+  uint64_t AdvanceCommitIndex(uint64_t* len);
 
   void ApplyDone(uint64_t index) {
     slash::MutexLock lapply(&apply_mu_);
@@ -120,10 +129,8 @@ class FloydContext {
   slash::CondVar apply_cond_;
   uint64_t apply_index_;
 
-  void FloydContext::LogApply();
+  void LogApply();
 };
 
-}
-
-
+} // namespace floyd
 #endif

@@ -1,11 +1,12 @@
 #ifndef FLOYD_APPLY_H_
 #define FLOYD_APPLY_H_
 
-#inlcude "slash/include/slash_status.h"
+#include "floyd/src/floyd_context.h"
+
+#include "slash/include/slash_status.h"
 #include "pink/include/bg_thread.h"
 #include "nemo-rocksdb/db_nemo_impl.h"
 
-#include "floyd/src/floyd_context.h"
 
 namespace floyd {
 using slash::Status;
@@ -24,9 +25,12 @@ struct FloydApplyEnv {
 
 class FloydApply {
  public:
-   explicit  FloydApply(const FloydApplyEnv& env);
-   ~FloydApply();
-  void ScheduleApply();
+  explicit  FloydApply(const FloydApplyEnv& env);
+  ~FloydApply();
+  Status ScheduleApply();
+
+  // TODO need impl
+  Status SignalApply();
 
  private:
   pink::BGThread* bg_thread_;

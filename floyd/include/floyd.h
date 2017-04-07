@@ -6,14 +6,30 @@
 #include "slash/include/slash_mutex.h"
 #include "slash/include/slash_status.h"
 #include "pink/include/bg_thread.h"
+
 #include "floyd/include/floyd_options.h"
-#include "floyd/src/floyd_worker.h"
+//#include "floyd/src/raft/log.h"
+//#include "floyd/src/floyd_context.h"
+//#include "floyd/src/floyd_worker.h"
+
+#include "nemo-rocksdb/db_nemo_impl.h"
 
 namespace floyd {
 using slash::Status;
 
+class Log;
+class RpcClient;
+class FloydContext;
+class FloydApply;
 class FloydWorker;
 class FloydWorkerConn;
+struct LeaderElectTimerEnv;
+
+namespace command {
+class Command;
+class CommandRes;
+}
+
 class PeerThread;
 
 typedef std::map<std::string, PeerThread*> PeersSet;
@@ -49,18 +65,20 @@ class Floyd {
   const Options options_;
   rocksdb::DBNemo* db_;
   Log* log_;
-  FloydContext context_;
+  FloydContext* context_;
 
   FloydWorker* worker_;
   FloydApply* apply_;
   pink::Timer* leader_elect_timer_;
   LeaderElectTimerEnv* leader_elect_env_;
   PeersSet peers_;
-  RpcClient peer_rpc_client_;
+  RpcClient* peer_rpc_client_;
 
   bool IsSelf(const std::string& ip_port);
   bool IsLeader();
   bool HasLeader();
+
+  uint64_t QuorumMatchIndex();
 
   Status DoCommand(const command::Command& cmd,
       command::CommandRes *cmd_res);
