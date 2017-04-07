@@ -5,12 +5,14 @@
 #include "floyd/src/floyd_apply.h"
 #include "floyd/src/floyd_worker.h"
 #include "floyd/src/raft/log.h"
-#include "floyd/src/raft/log.h"
+#include "floyd/src/raft/memory_log.h"
+#include "floyd/src/raft/file_log.h"
 #include "floyd/src/floyd_peer_thread.h"
 #include "floyd/src/command.pb.h"
 #include "floyd/src/logger.h"
 
 #include "slash/include/slash_string.h"
+#include "slash/include/env.h"
 
 namespace floyd {
 
@@ -26,6 +28,9 @@ struct LeaderElectTimerEnv {
 Floyd::Floyd(const Options& options)
   : options_(options),
   db_(NULL) {
+
+  log_ = new FileLog(options_.log_path)
+
   leader_elect_env_ = new LeaderElectTimerEnv(context_, &peers_);
   leader_elect_timer_ = new pink::Timer();
  // leader_elect_timer_ = new pink::Timer(options_.elect_timeout_ms,
@@ -38,7 +43,7 @@ Floyd::Floyd(const Options& options)
   for (auto iter = options_.members.begin();
       iter != options_.members.end(); iter++) {
     if (!IsSelf(*iter)) {
-      PeerThread* pt = new PeerThread(FloydPeerEnv(*iter, &context_, *iter, apply_));
+      PeerThread* pt = new PeerThread(FloydPeerEnv(*iter, &context_, this, apply_, log_));
       peers_.insert(std::pair<std::string, PeerThread*>(*iter, pt));
     }
   }
@@ -83,19 +88,19 @@ Status Floyd::Start() {
 
   // Create DB
   rocksdb::Options options;
-  options_.create_if_missing = true;
+  options.create_if_missing = true;
   rocksdb::Status s = rocksdb::DBNemo::Open(options, options_.data_path, &db_);
   if (!s.ok()) {
     LOG_ERROR("Open db failed! path: " + options_.data_path);
-    return s;
+    return Status::Corruption("Open DB failed, ", + s.ToString());
   }
 
   // Recover from log
-  Status s = FileLog::Create(options_.log_path, log_);
-  if (!s.ok()) {
-    LOG_ERROR("Open file log failed! path: " + options_.log_path);
-    return s;
-  }
+  //Status s = FileLog::Create(options_.log_path, log_);
+  //if (!s.ok()) {
+  //  LOG_ERROR("Open file log failed! path: " + options_.log_path);
+  //  return s;
+  //}
   context_->RecoverInit(log_);
 
   // Start leader_elect_timer
@@ -143,10 +148,10 @@ void Floyd::BeginLeaderShip() {
 }
 
 uint64_t Floyd::QuorumMatchIndex() {
-  if (peers_.empty()) return last_synced_index_;
+  //if (peers_.empty()) return last_synced_index_;
   std::vector<uint64_t> values;
   for (auto& iter : peers_) {
-    values.push_back(iter->second->GetMatchIndex());
+    values.push_back(iter.second->GetMatchIndex());
   }
   std::sort(values.begin(), values.end());
   return values.at(values.size() / 2);

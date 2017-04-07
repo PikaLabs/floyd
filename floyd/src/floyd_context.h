@@ -12,6 +12,7 @@
 namespace floyd {
 
 using slash::Status;
+using raft::Log;
 
 enum Role {
   kFollower = 0,

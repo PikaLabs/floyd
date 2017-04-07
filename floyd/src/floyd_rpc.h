@@ -17,13 +17,13 @@ class RpcClient {
   RpcClient();
   bool SendRequest(const std::string& server, command::Command& req, command::Command& res);
 
-  Status RpcClient::UpHoldCli(slash::PinkCli *cli);
+  Status UpHoldCli(slash::PinkCli *cli);
 
  private:
   slash::Mutex mu_;
-  std::map<std::string, slash::PinkCli*> cli_map_;
+  std::map<std::string, pink::PinkCli*> cli_map_;
 
-  pink::PinkCli* RpcClient::GetClient(const std::string& server);
+  pink::PinkCli* GetClient(const std::string& server);
 
   RpcClient(const RpcClient&);
   bool operator=(const RpcClient&);

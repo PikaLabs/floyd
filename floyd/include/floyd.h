@@ -79,6 +79,7 @@ class Floyd {
   bool HasLeader();
 
   uint64_t QuorumMatchIndex();
+  void AdvanceCommitIndex();
 
   Status DoCommand(const command::Command& cmd,
       command::CommandRes *cmd_res);

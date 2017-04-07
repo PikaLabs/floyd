@@ -6,10 +6,10 @@
 #include "log.h"
 #include "memory_log.h"
 
-#include "include/env.h"
-#include "include/slash_slice.h"
-#include "include/slash_status.h"
-#include "include/slash_mutex.h"
+#include "slash/include/env.h"
+#include "slash/include/slash_slice.h"
+#include "slash/include/slash_status.h"
+#include "slash/include/slash_mutex.h"
 
 
 using slash::Status;

@@ -3,12 +3,13 @@
 
 #include <memory>
 
-#include "raft.pb.h"
-#include "log_meta.pb.h"
+#include "floyd/src/raft/raft.pb.h"
+//#include "log_meta.pb.h"
+#include "floyd/src/raft/log_meta.pb.h"
 
 namespace floyd {
 
-//namespace raft {
+namespace raft {
 
 /** 
  * This interface is used by Raft to store log entries and metadata.
@@ -53,7 +54,7 @@ public:
 	floyd::raft::log::MetaData metadata;
 };
 
-//}
+}
 }
 
 #endif
