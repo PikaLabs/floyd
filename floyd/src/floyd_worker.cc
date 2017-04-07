@@ -1,7 +1,6 @@
 #include "floyd/src/floyd_worker.h"
 
 #include "floyd/include/floyd.h"
-#include "floyd/src/command.pb.h"
 #include "floyd/src/logger.h"
 
 namespace floyd {

@@ -1,15 +1,14 @@
 #ifndef FLOYD_CONSENSUS_FILE_LOG_H_
 #define FLOYD_CONSENSUS_FILE_LOG_H_
 
-#include "raft.pb.h"
+#include "floyd/src/raft/raft.pb.h"
 #include "log_meta.pb.h"
 #include "log.h"
-#include "memory_log.h"
 
-#include "include/env.h"
-#include "include/slash_slice.h"
-#include "include/slash_status.h"
-#include "include/slash_mutex.h"
+#include "slash/include/env.h"
+#include "slash/include/slash_slice.h"
+#include "slash/include/slash_status.h"
+#include "slash/include/slash_mutex.h"
 
 
 using slash::Status;
@@ -50,7 +49,6 @@ class FileLog : public Log {
   void UpdateMetadata();
 
  protected:
-  MemoryLog memory_log_;
   //floyd::raft::filelog::MetaData metadata_;
   std::unique_ptr<Sync> current_sync_;
   std::string path_;

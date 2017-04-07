@@ -2,11 +2,10 @@
 #define LOGGER_H_
 #include <stdio.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
-//#include <sys/types.h>
-//#include <unistd.h>
 
 #define gettid() syscall(SYS_gettid)
 static inline char *timenow();

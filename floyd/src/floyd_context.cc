@@ -22,7 +22,7 @@ FloydContext::~FloydContext() {
   pthread_rwlock_destory(&stat_rw_);
 }
 
-void FloydContext::Init() {
+void FloydContext::RecoverInit() {
   assert(log_ != NULL);
   slash::RWLock(&stat_rw_, true);
   if (log_->metadata.has_current_term())

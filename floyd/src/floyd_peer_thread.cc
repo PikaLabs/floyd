@@ -2,7 +2,7 @@
 
 //#include "floyd/include/floyd.h"
 #include "floyd/include/floyd_util.h"
-#include "floyd/include/command.pb.h"
+#include "floyd/src/command.pb.h"
 
 #include <climits>
 #include <google/protobuf/text_format.h>
