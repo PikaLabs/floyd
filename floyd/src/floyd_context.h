@@ -24,7 +24,7 @@ class FloydContext {
  public:
   FloydContext(const Options& opt, Log* log);
 
-  bool Init();
+  bool RecoverInit();
   Log* log() {
     return log_;
   }

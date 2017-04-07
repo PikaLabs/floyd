@@ -15,7 +15,8 @@ class RpcClient;
 class RpcClient {
  public:
   RpcClient();
-  bool SendRequest(const std::string& server, command::Command& req, command::Command& res);
+  slash::Status SendRequest(const std::string& server, const command::Command& req,
+      command::CommandRes* res);
 
   Status UpHoldCli(slash::PinkCli *cli);
 

@@ -14,25 +14,26 @@
 
 #include "nemo-rocksdb/db_nemo_impl.h"
 
+namespace command {
+class Command;
+class CommandRes;
+}
+
 namespace floyd {
 using slash::Status;
 
 class Log;
 class RpcClient;
 class FloydContext;
+class Peer;
 class FloydApply;
 class FloydWorker;
 class FloydWorkerConn;
 struct LeaderElectTimerEnv;
 
-namespace command {
-class Command;
-class CommandRes;
-}
 
-class PeerThread;
 
-typedef std::map<std::string, PeerThread*> PeersSet;
+typedef std::map<std::string, Peer*> PeersSet;
 
 class Floyd {
  public:
@@ -59,6 +60,7 @@ class Floyd {
   RpcClient* peer_rpc_client() {
     return peer_rpc_client_;
   }
+  void AdvanceCommitIndex();
 
  private:
   friend class FloydWorkerConn;
@@ -75,7 +77,6 @@ class Floyd {
   RpcClient* peer_rpc_client_;
 
   bool IsSelf(const std::string& ip_port);
-  bool IsLeader();
   bool HasLeader();
 
   uint64_t QuorumMatchIndex();
@@ -87,7 +88,7 @@ class Floyd {
       command::CommandRes *cmd_res);
   void DoRequestVote(command::Command& cmd,
       command::CommandRes* cmd_res);
-  void DoAppendEntry(command::Command& cmd,
+  void DoAppendEntries(command::Command& cmd,
       command::CommandRes* cmd_res);
   static void StartNewElection(void* arg);
 };

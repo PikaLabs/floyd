@@ -1,6 +1,5 @@
 #include "floyd/include/floyd.h"
 
-#include "floyd/src/floyd_rpc.h"
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_apply.h"
 #include "floyd/src/floyd_worker.h"
@@ -8,8 +7,9 @@
 #include "floyd/src/raft/memory_log.h"
 #include "floyd/src/raft/file_log.h"
 #include "floyd/src/floyd_peer_thread.h"
-#include "floyd/src/command.pb.h"
 #include "floyd/src/logger.h"
+#include "floyd/src/floyd_rpc.h"
+#include "floyd/src/raft/file_log.h"
 
 #include "slash/include/slash_string.h"
 #include "slash/include/env.h"
@@ -32,19 +32,19 @@ Floyd::Floyd(const Options& options)
   log_ = new FileLog(options_.log_path)
 
   leader_elect_env_ = new LeaderElectTimerEnv(context_, &peers_);
-  leader_elect_timer_ = new pink::Timer();
- // leader_elect_timer_ = new pink::Timer(options_.elect_timeout_ms,
- //     Floyd::StartNewElection,
- //     static_cast<void*>(leader_elect_env_));
+  leader_elect_timer_ = new pink::Timer(options_.elect_timeout_ms,
+      Floyd::StartNewElection,
+      static_cast<void*>(leader_elect_env_));
   worker_ = new FloydWorker(FloydWorkerEnv(options_.local_port, 1000, this));
-  apply_ = new FloydApply(FloydApplyEnv(context_, db_));
+  apply_ = new FloydApply(FloydApplyEnv(context_, db_, log_));
 
   // peer threads
   for (auto iter = options_.members.begin();
       iter != options_.members.end(); iter++) {
     if (!IsSelf(*iter)) {
-      PeerThread* pt = new PeerThread(FloydPeerEnv(*iter, &context_, this, apply_, log_));
-      peers_.insert(std::pair<std::string, PeerThread*>(*iter, pt));
+      Peer* pt = new Peer(FloydPeerEnv(*iter, context_, this,
+            apply_, log_));
+      peers_.insert(std::pair<std::string, Peer*>(*iter, pt));
     }
   }
 
@@ -101,7 +101,10 @@ Status Floyd::Start() {
   //  LOG_ERROR("Open file log failed! path: " + options_.log_path);
   //  return s;
   //}
-  context_->RecoverInit(log_);
+  //context_->RecoverInit(log_);
+
+  //log_ = new raft::FileLog(options_.log_path);
+  context_->RecoverInit();
 
   // Start leader_elect_timer
   int ret;
@@ -109,9 +112,6 @@ Status Floyd::Start() {
     LOG_ERROR("Floyd leader elect timer failed to start");
     return Status::Corruption("failed to start leader elect timer");
   }
-  leader_elect_timer_->Schedule(options_.elect_timeout_ms,
-                                Floyd::StartNewElection,
-                                static_cast<void*>(leader_elect_env_));
 
   // Start worker thread
   if ((ret = worker_->Start()) != 0) {
@@ -133,9 +133,9 @@ Status Floyd::Start() {
 }
 
 void Floyd::StartNewElection(void* arg) {
-  LeaderElectTimerEnv* targ = static_cast<Floyd*>(arg);
-  targ->context.BecomeCandidate();
-  for (auto& peer : targ->peers) {
+  LeaderElectTimerEnv* targ = static_cast<LeaderElectTimerEnv*>(arg);
+  targ->context->BecomeCandidate();
+  for (auto& peer : *(targ->peers)) {
     peer.second->AddRequestVoteTask();
   }
 }
@@ -175,7 +175,7 @@ void Floyd::AdvanceCommitIndex() {
     return;
   }
 
-  if (log_->GetEntry(new_commit_index).term() == current_term_) {
+  if (log_->GetEntry(new_commit_index).term() == context_->current_term()) {
     context_->SetCommitIndex(new_commit_index);
     LOG_DEBUG("AdvanceCommitIndex: commit_index=%ld", new_commit_index);
   }
