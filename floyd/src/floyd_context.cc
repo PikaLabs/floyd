@@ -1,4 +1,5 @@
 #include "floyd/src/floyd_context.h"
+#include "floyd/src/logger.h"
 
 namespace floyd {
 
@@ -7,10 +8,11 @@ FloydContext::FloydContext(const floyd::Options& opt,
   : options_(opt),
   log_(log),
   current_term_(0),
-  commit_index_(0),
   role_(Role::kFollower),
-  vote_quorum(0),
   voted_for_port_(0),
+  leader_port_(0),
+  vote_quorum_(0),
+  commit_index_(0),
   apply_cond_(&apply_mu_) {
     pthread_rwlockattr_t attr;
     pthread_rwlockattr_init(&attr);
@@ -19,7 +21,7 @@ FloydContext::FloydContext(const floyd::Options& opt,
   }
 
 FloydContext::~FloydContext() {
-  pthread_rwlock_destory(&stat_rw_);
+  pthread_rwlock_destroy(&stat_rw_);
 }
 
 void FloydContext::RecoverInit() {
@@ -35,9 +37,9 @@ void FloydContext::RecoverInit() {
   role_ = Role::kFollower;
 }
 
-void FloydContext:BecomeFollower(uint64_t new_term,
+void FloydContext::BecomeFollower(uint64_t new_term,
       const std::string leader_ip, int leader_port) {
-  assert(current_term <= new_term)
+  assert(current_term_ <= new_term);
   slash::RWLock(&stat_rw_, true);
   if (current_term_ < new_term) {
     current_term_ = new_term;
@@ -104,6 +106,24 @@ void FloydContext::BecomeLeader() {
   //state_changed_.SignalAll();
 }
 
+bool FloydContext::AdvanceCommitIndex(uint64_t new_commit_index) {
+  slash::MutexLock l(&commit_mu_);
+  if (commit_index_ >= new_commit_index) {
+    // TODO why
+    //if (commit_index > apply_index) {
+    //  apply_->ScheduleApply();
+    //}
+    return false;
+  }
+
+  if (log_->GetEntry(new_commit_index).term() == current_term_) {
+    commit_index_ = new_commit_index;
+    LOG_DEBUG("AdvanceCommitIndex: commit_index=%ld", new_commit_index);
+    return true;
+  }
+  return false;
+}
+
 void FloydContext::LogApply() {
   log_->metadata.set_current_term(current_term_);
   log_->metadata.set_voted_for_ip(voted_for_ip_);
@@ -121,7 +141,7 @@ bool FloydContext::VoteAndCheck(uint64_t vote_term) {
 
 Status FloydContext::WaitApply(uint64_t commit_index, uint32_t timeout) { 
   while (commit_index_ < commit_index) {
-    if (!commit_cond_.TimeWait(timeout)) {
+    if (!apply_cond_.TimedWait(timeout)) {
       return Status::Timeout("apply timeout");
     }
   }
@@ -144,36 +164,39 @@ bool FloydContext::RequestVote(uint64_t term, const std::string ip,
     }
   }
   
-  uint64_t my_log_term = log_->GetLastLogTerm();
   uint64_t my_log_index = log_->GetLastLogIndex();
+  uint64_t my_log_term = log_->GetEntry(my_log_index).term();
   if (log_term < my_log_term
       || (log_term == my_log_term && log_index < my_log_index)) {
     return false; // log index is not up-to-date as mine
   }
 
   // Got my vote
-  vote_for_ip_ = ip;
+  voted_for_ip_ = ip;
   voted_for_port_ = port;
   *my_term = current_term_;
   LogApply();
   return true;
 }
 
-bool FloydContext::AppendEntires(uint64_t term,
+bool FloydContext::AppendEntries(uint64_t term,
     uint64_t pre_log_term, uint64_t pre_log_index,
-    std::vector<Log::Entry*> entries, uint64_t* my_term) {
+    std::vector<const Log::Entry*> entries, uint64_t* my_term) {
   slash::RWLock l(&stat_rw_, true);
   // Check last log
-  if (pre_log_index > log_->GetLastLogIndex()
-      || pre_log_term != log_->GetLastLogTerm()) {
+  uint64_t my_log_index = log_->GetLastLogIndex();
+  uint64_t my_log_term = log_->GetEntry(my_log_index).term();
+  if (pre_log_index > my_log_index
+      || pre_log_term != my_log_term) {
     return false;
   }
 
   // Append entry
   if (pre_log_index < log_->GetLastLogIndex()) {
-      log_->Resize(pre_log_index);
+      //log_->Resize(pre_log_index);
+      log_->TruncateSuffix(pre_log_index + 1);
   }
-  log_.Append(entries);
+  log_->Append(entries);
   *my_term = current_term_;
 
   return true;

@@ -218,7 +218,7 @@ int FileLog::RecoverFromFile(const std::string &file,
   return es.size();
 }
 
-std::pair<uint64_t, uint64_t> FileLog::Append(std::vector<Entry *> &entries) {
+std::pair<uint64_t, uint64_t> FileLog::Append(std::vector<const Entry *> &entries) {
   // int fd = -1;
   std::string path;
   std::pair<uint64_t, uint64_t> range = memory_log_.Append(entries);

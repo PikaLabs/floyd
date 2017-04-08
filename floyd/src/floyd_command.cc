@@ -1,9 +1,13 @@
 #include "nemo-rocksdb/db_nemo_impl.h"
 #include "slash/include/slash_string.h"
+#include "pink/include/bg_thread.h"
 #include "floyd/include/floyd.h"
 #include "floyd/src/command.pb.h"
 #include "floyd/src/floyd_context.h"
+#include "floyd/src/floyd_apply.h"
 #include "floyd/src/floyd_rpc.h"
+#include "floyd/src/floyd_peer_thread.h"
+#include "floyd/src/raft/file_log.h"
 
 namespace floyd {
 
@@ -87,9 +91,9 @@ bool Floyd::HasLeader() {
       && leader_node.second != 0);
 }
 
-static std::vector<Log::Entry*> BuildLogEntry(const command::Command& cmd,
+static std::vector<const Log::Entry*> BuildLogEntry(const command::Command& cmd,
     uint64_t current_term) {
-  std::vector<Log::Entry*> entries;
+  std::vector<const Log::Entry*> entries;
   Log::Entry entry;
   uint64_t len = cmd.ByteSize();
   char* data = new char[len + 1];
@@ -186,8 +190,8 @@ Status Floyd::DoCommand(const command::Command& cmd,
 Status Floyd::ExecuteCommand(const command::Command& cmd,
     command::CommandRes *cmd_res) {
   // Append entry local
-  uint64_t last_index = (log_->Append(BuildLogEntry(cmd,
-      context_->current_term()))).second;
+  std::vector<const Log::Entry*> entry = BuildLogEntry(cmd, context_->current_term());
+  uint64_t last_index = (log_->Append(entry)).second;
 
   // Notify peers then wait for apply
   for (auto& peer : peers_) {
@@ -256,21 +260,20 @@ void Floyd::DoAppendEntries(command::Command& cmd,
   }
   context_->BecomeFollower(cmd.aerq().term(),
       cmd.aerq().ip(), cmd.aerq().port());
-  leader_elect_timer_.Reset();
+  leader_elect_timer_->Reset();
 
-  std::vector<Log::Entry*> entries;
-  for (auto& it = cmd.aerq().entries()) {
-    entries.push_back(it);
+  std::vector<const Log::Entry*> entries;
+  for (auto& it : cmd.aerq().entries()) {
+    entries.push_back(&it);
   }
-  // Try to get my vote
+  // Append entries
   status = context_->AppendEntries(cmd.aerq().term(),
-      cmd.aerq().last_log_term(), cmd.aerq().last_log_index(),
-      cmd.aerq().commit_index(), entries, &my_term);
+      cmd.aerq().prev_log_term(), cmd.aerq().prev_log_index(),
+       entries, &my_term);
 
   // Update log commit index
-  if (commit_index_ < commit_index) {
-    contex_.SetCommitIndex(commit_index);
-    apply_.ScheduleApply();
+  if (context_->AdvanceCommitIndex(cmd.aerq().commit_index())) {
+    apply_->ScheduleApply();
   }
 
   *cmd_res = BuildAppendEntriesResponse(my_term, status);

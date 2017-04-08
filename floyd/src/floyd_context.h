@@ -23,8 +23,9 @@ enum Role {
 class FloydContext {
  public:
   FloydContext(const Options& opt, Log* log);
+  ~FloydContext();
 
-  bool RecoverInit();
+  void RecoverInit();
   Log* log() {
     return log_;
   }
@@ -66,20 +67,12 @@ class FloydContext {
       const std::string ip, uint32_t port,
       uint64_t log_index, uint64_t log_term,
       uint64_t* my_term);
-  bool AppendEntires(uint64_t term,
+  bool AppendEntries(uint64_t term,
       uint64_t pre_log_term, uint64_t pre_log_index,
-      std::vector<Log::Entry*> entries, uint64_t* my_term);
+      std::vector<const Log::Entry*> entries, uint64_t* my_term);
 
   /* Commit related */
-  void SetCommitIndex(uint64_t commit_index) {
-    slash::MutexLock l(&commit_mu_);
-    commit_index_ = commit_index;
-  }
-  
-  uint64_t commit_index() {
-    slash::MutexLock l(&commit_mu_);
-    return commit_index_;
-  }
+  bool AdvanceCommitIndex(uint64_t commit_index);
   
   /* Apply related */
   // Return false if timeout
@@ -116,10 +109,10 @@ class FloydContext {
   uint64_t current_term_;
   Role role_;
   std::string voted_for_ip_;
-  int voted_for_port_;
+  uint64_t voted_for_port_;
   std::string leader_ip_;
-  int leader_port_;
-  int vote_quorum_;
+  uint64_t leader_port_;
+  uint64_t vote_quorum_;
 
   // Commit related
   slash::Mutex commit_mu_;

@@ -9,8 +9,9 @@
 #include "floyd/src/floyd_rpc.h"
 #include "floyd/src/logger.h"
 
-#include "slash/include/slash_string.h"
+
 #include "slash/include/env.h"
+#include "slash/include/slash_string.h"
 
 namespace floyd {
 
@@ -27,7 +28,8 @@ Floyd::Floyd(const Options& options)
   : options_(options),
   db_(NULL) {
 
-  log_ = new raft::FileLog(options_.log_path)
+  log_ = new raft::FileLog(options_.log_path);
+  context_ = new FloydContext(options_, log_);
 
   leader_elect_env_ = new LeaderElectTimerEnv(context_, &peers_);
   leader_elect_timer_ = new pink::Timer(options_.elect_timeout_ms,
@@ -49,7 +51,6 @@ Floyd::Floyd(const Options& options)
   }
 
   peer_rpc_client_ = new RpcClient();
-  context_ = new FloydContext(options_, log_);
 }
 
 Floyd::~Floyd() {
@@ -162,22 +163,9 @@ void Floyd::AdvanceCommitIndex() {
     return;
   }
 
-  uint64_t commit_index = context_->commit_index();
   uint64_t new_commit_index = QuorumMatchIndex();
-  uint64_t apply_index = context_->apply_index();
-  LOG_DEBUG("AdvanceCommitIndex: new_commit_index=%lu, old commit_index_=%lu, apply_index()=%lu",
-            new_commit_index, commit_index, context_->apply_index());
-
-  if (commit_index >= new_commit_index) {
-    if (commit_index > apply_index) {
+  if (context_->AdvanceCommitIndex(new_commit_index)) {
       apply_->ScheduleApply();
-    }
-    return;
-  }
-
-  if (log_->GetEntry(new_commit_index).term() == context_->current_term()) {
-    context_->SetCommitIndex(new_commit_index);
-    LOG_DEBUG("AdvanceCommitIndex: commit_index=%ld", new_commit_index);
   }
 }
 

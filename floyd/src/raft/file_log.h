@@ -36,7 +36,7 @@ class FileLog : public Log {
 
   explicit FileLog(const std::string& path);
   ~FileLog();
-  std::pair<uint64_t, uint64_t> Append(std::vector<Entry*>& entries);
+  std::pair<uint64_t, uint64_t> Append(std::vector<const Entry*>& entries);
   void SplitIfNeeded();
   std::unique_ptr<Log::Sync> TakeSync();
   void TruncatePrefix(uint64_t first_index) { first_index = 0; assert(false); }

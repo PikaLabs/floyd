@@ -1,7 +1,7 @@
 #include "floyd/src/floyd_peer_thread.h"
 
 //#include "floyd/include/floyd.h"
-#include "floyd/include/floyd_util.h"
+//#include "floyd/include/floyd_util.h"
 #include "floyd/src/command.pb.h"
 
 #include <climits>
