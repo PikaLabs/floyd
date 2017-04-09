@@ -1,23 +1,27 @@
 #include "floyd/src/floyd_rpc.h"
 
-#include "flody/include/logger.h"
+#include "floyd/src/logger.h"
+
+#include "slash/include/slash_string.h"
 
 namespace floyd {
 
-Status RpcClient::SendRequest(const std::string& server, command::Command& req, command::Command& res) {
+static std::string CmdType(command::Command& req);
+
+Status RpcClient::SendRequest(const std::string& server, const command::Command& req, command::CommandRes* res) {
   LOG_DEBUG("Client::SendRequest %s cmd to %s", CmdType(cmd).c_str(), server.c_str());
 
-  slash::PinkCli *cli = GetClient(server);
+  pink::PinkCli *cli = GetClient(server);
 
   Status ret = UpHoldCli(cli);
   if (!ret.ok()) return ret;
 
-  ret = cli->Send(&cmd);
-  LOG_DEBUG("Client::SendRequest %s cmd to %s Send return %s", CmdType(cmd).c_str(), server.c_str(),
+  ret = cli->Send((void*)&req);
+  LOG_DEBUG("Client::SendRequest %s cmd to %s Send return %s", CmdType(req).c_str(), server.c_str(),
               ret.ToString().c_str());
   if (ret.ok()) {
-    ret = cli->Recv(&cmd_res);
-    LOG_WARN("Client::SendRequest %s cmd to %s, Recv return %s", CmdType(cmd).c_str(), server.c_str(),
+    ret = cli->Recv(res);
+    LOG_WARN("Client::SendRequest %s cmd to %s, Recv return %s", CmdType(req).c_str(), server.c_str(),
               ret.ToString().c_str());
   }
 
@@ -25,20 +29,20 @@ Status RpcClient::SendRequest(const std::string& server, command::Command& req, 
 }
 
 pink::PinkCli* RpcClient::GetClient(const std::string& server) {
-  slash::MutexLock(&mu_);
+  slash::MutexLock l(&mu_);
   auto iter = cli_map_.find(server);
-  if (iter == cli_map.end()) {
+  if (iter == cli_map_.end()) {
     std::string ip;
     int port;
-    slash::ParseIpPortString(serve, ip, port);
-    slash::PinkCli* cli = slash::NewPbCli(ip, port);
+    slash::ParseIpPortString(server, ip, port);
+    pink::PinkCli* cli = pink::NewPbCli(ip, port);
     cli_map_[server] = cli;
   } else {
-    return iter;
+    return iter->second;
   }
 }
 
-Status RpcClient::UpHoldCli(slash::PinkCli *cli) {
+Status RpcClient::UpHoldCli(pink::PinkCli *cli) {
   Status ret;
   if (cli == NULL || !cli->Available()) {
     if (cli != NULL) {

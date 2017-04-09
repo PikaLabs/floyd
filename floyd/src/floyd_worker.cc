@@ -12,9 +12,9 @@ FloydWorker::FloydWorker(const FloydWorkerEnv& env)
                                   &conn_factory_, env.cron_interval, &handle_);
   }
 
-FloydWorkerConn::FloydWorkerConn(int fd, std::string& ip_port,
+FloydWorkerConn::FloydWorkerConn(int fd, const std::string& ip_port,
     pink::Thread* thread, Floyd* floyd)
-  : PbConn(fd, ip_port),
+  : PbConn(fd, ip_port, thread),
   floyd_(floyd){
   }
 
@@ -37,11 +37,11 @@ int FloydWorkerConn::DealMessage() {
     case command::Command::RaftVote: 
       floyd_->DoRequestVote(command_, &command_res_);
       break;
-    case command::Command::RaftAppendEntries: {
+    case command::Command::RaftAppendEntries:
       floyd_->DoAppendEntries(command_, &command_res_);
       break;
     default:
-      LOG_WARNING("unknown cmd type");
+      LOG_WARN("unknown cmd type");
       return -1;
   }
 
@@ -50,18 +50,19 @@ int FloydWorkerConn::DealMessage() {
 }
 
 // Only connection from other node should be accepted
-bool FloydWorkerHandle::AccessHandle(std::string& ip_port) {
+bool FloydWorkerHandle::AccessHandle(std::string& ip_port) const {
   LOG_DEBUG("WorkerThread::AccessHandle start check(%s)", ip_port.c_str());
-  MutexLock l(&Floyd::nodes_mutex);
-  for (auto it = Floyd::nodes_info.begin(); it != Floyd::nodes_info.end(); it++) {
-    if (ip_port.find((*it)->ip) != std::string::npos) {
-      LOG_DEBUG("WorkerThread::AccessHandle ok, with a node(%s:%d)",
-                (*it)->ip.c_str(), (*it)->port);
-      return true;
-    }
-  }
-  LOG_DEBUG("WorkerThread::AccessHandle failed");
-  return false;
+  return true;
+  //slash::MutexLock l(&Floyd::nodes_mutex);
+  //for (auto it = Floyd::nodes_info.begin(); it != Floyd::nodes_info.end(); it++) {
+  //  if (ip_port.find((*it)->ip) != std::string::npos) {
+  //    LOG_DEBUG("WorkerThread::AccessHandle ok, with a node(%s:%d)",
+  //              (*it)->ip.c_str(), (*it)->port);
+  //    return true;
+  //  }
+  //}
+  //LOG_DEBUG("WorkerThread::AccessHandle failed");
+  //return false;
 }
 
 } // namespace floyd

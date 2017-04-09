@@ -57,6 +57,10 @@ class FloydContext {
   uint64_t heartbeat_us() {
     return options_.heartbeat_us;
   }
+
+  uint64_t append_entries_size_once() {
+    return options_.append_entries_size_once;
+  }
   
   void BecomeFollower(uint64_t new_iterm,
       const std::string leader_ip = "", int port = 0);
@@ -72,6 +76,10 @@ class FloydContext {
       std::vector<const Log::Entry*> entries, uint64_t* my_term);
 
   /* Commit related */
+  uint64_t commit_index() {
+    slash::MutexLock l(&commit_mu_);
+    return commit_index_;
+  }
   bool AdvanceCommitIndex(uint64_t commit_index);
   
   /* Apply related */
@@ -92,8 +100,6 @@ class FloydContext {
     slash::MutexLock lapply(&apply_mu_);
     return apply_index_;
   }
-
-  uint64_t AdvanceCommitIndex(uint64_t* len);
 
   void ApplyDone(uint64_t index) {
     slash::MutexLock lapply(&apply_mu_);

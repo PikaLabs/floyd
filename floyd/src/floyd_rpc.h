@@ -10,12 +10,14 @@
 
 namespace floyd {
 
+using slash::Status;
+
 class RpcClient;
 
 class RpcClient {
  public:
   RpcClient();
-  slash::Status SendRequest(const std::string& server, const command::Command& req,
+  Status SendRequest(const std::string& server, const command::Command& req,
       command::CommandRes* res);
 
   Status UpHoldCli(pink::PinkCli *cli);

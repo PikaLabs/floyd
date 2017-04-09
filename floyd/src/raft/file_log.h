@@ -2,14 +2,13 @@
 #define FLOYD_CONSENSUS_FILE_LOG_H_
 
 #include "floyd/src/raft/raft.pb.h"
-#include "log_meta.pb.h"
-#include "log.h"
+#include "floyd/src/raft/log_meta.pb.h"
+#include "floyd/src/raft/log.h"
 
 #include "slash/include/env.h"
 #include "slash/include/slash_slice.h"
 #include "slash/include/slash_status.h"
 #include "slash/include/slash_mutex.h"
-
 
 using slash::Status;
 using slash::Slice;

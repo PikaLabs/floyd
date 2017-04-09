@@ -1,12 +1,11 @@
+#include "floyd/src/raft/file_log.h"
+
 #include <iostream>
 #include <sys/types.h>
 #include <dirent.h>
 
-#include "floyd_util.h"
-#include "file_log.h"
-#include "logger.h"
-
-#include "slash_mutex.h"
+//#include "floyd/src/floyd_util.h"
+#include "floyd/src/logger.h"
 
 namespace floyd {
 namespace raft {
@@ -211,7 +210,7 @@ int FileLog::RecoverFromFile(const std::string &file,
 
     es.push_back(e);
   }
-  memory_log_.Append(es);
+  //memory_log_.Append(es);
 
   delete iter;
 

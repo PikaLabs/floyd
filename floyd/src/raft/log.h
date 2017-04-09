@@ -7,6 +7,8 @@
 //#include "log_meta.pb.h"
 #include "floyd/src/raft/log_meta.pb.h"
 
+#include "slash/include/slash_string.h"
+
 namespace floyd {
 
 namespace raft {
