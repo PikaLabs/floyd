@@ -2,7 +2,7 @@
 // source: raft/raft.proto
 
 #define INTERNAL_SUPPRESS_PROTOBUF_FIELD_DEPRECATION
-#include "raft/raft.pb.h"
+#include "floyd/src/raft/raft.pb.h"
 
 #include <algorithm>
 

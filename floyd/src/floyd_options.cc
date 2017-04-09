@@ -23,7 +23,7 @@ void Options::SetMembers(const std::string& cluster_string) {
 
 void Options::Dump() {
   for (size_t i = 0; i < members.size(); i++) {
-    printf ("               member %u : %s\n", i, members[i].c_str());
+    printf ("               member %lu : %s\n", i, members[i].c_str());
   }
   printf ("                 local_ip : %s\n"
           "               local_port : %d\n"
