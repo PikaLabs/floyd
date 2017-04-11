@@ -7,8 +7,7 @@
 #include "logger.h"
 #include "client.pb.h"
 
-#include "pink_define.h"
-#include "status.h"
+#include "slash/include/slash_status.h"
 
 namespace floyd {
 namespace client {
@@ -93,8 +92,8 @@ void Option::ParseFromArgs(int argc, char *argv[]) {
 
 ////// Cluster //////
 Cluster::Cluster(const Option& option)
-  : option_(option),
-  pb_cli_(new pink::PbCli) {
+  : option_(option) {
+  pb_cli_ = pink::NewPbCli();
   Init();
 }
 
@@ -104,7 +103,7 @@ bool Cluster::Init() {
     abort();
   }
   // TEST use the first server
-  pink::Status result = pb_cli_->Connect(option_.servers[0].ip, option_.servers[0].port);
+  Status result = pb_cli_->Connect(option_.servers[0].ip, option_.servers[0].port);
   if (!result.ok()) {
     LOG_ERROR("cluster connect error, %s", result.ToString().c_str());
     return false;
@@ -125,7 +124,7 @@ slash::Status Cluster::Write(const std::string& key, const std::string& value) {
       return Status::IOError("init failed");
     }
   }
-  pink::Status result = pb_cli_->Send(&request);
+  Status result = pb_cli_->Send(&request);
   if (!result.ok()) {
     LOG_ERROR("Send error: %s", result.ToString().c_str());
     return Status::IOError("Send failed, " + result.ToString());
@@ -155,7 +154,7 @@ slash::Status Cluster::Read(const std::string& key, std::string* value) {
     }
   }
 
-  pink::Status result = pb_cli_->Send(&request);
+  Status result = pb_cli_->Send(&request);
   if (!result.ok()) {
     LOG_ERROR("Send error: %s", result.ToString().c_str());
     return Status::IOError("Send failed, " + result.ToString());
@@ -185,7 +184,7 @@ slash::Status Cluster::GetStatus(std::string* msg) {
   }
 
 
-  pink::Status result = pb_cli_->Send(&request);
+  Status result = pb_cli_->Send(&request);
   if (!result.ok()) {
     LOG_ERROR("Send error: %s", result.ToString().c_str());
     return Status::IOError("Send failed, " + result.ToString());

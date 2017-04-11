@@ -20,6 +20,7 @@ Peer::Peer(FloydPeerEnv env)
 }
 
 int Peer::StartThread() {
+  bg_thread_.set_thread_name("FloydPr" + env_.server.substr(env_.server.find(':')));
   return bg_thread_.StartThread();
 }
 
@@ -36,7 +37,7 @@ uint64_t Peer::get_next_index() {
   return next_index_;
 }
 
-inline void Peer::AddRequestVoteTask() {
+void Peer::AddRequestVoteTask() {
   bg_thread_.Schedule(DoRequestVote, this);
 }
 
@@ -44,7 +45,7 @@ void Peer::DoRequestVote(void *arg) {
   Peer *peer = static_cast<Peer*>(arg);
   Status result = peer->RequestVote();
   if (!result.ok()) {
-    LOG_ERROR("Peer(%s) failed to RequestVote caz %s.", env_.server.c_str(), result.ToString());
+    LOG_ERROR("Peer(%s) failed to RequestVote caz %s.", peer->env_.server.c_str(), result.ToString().c_str());
   }
 }
 
@@ -72,7 +73,7 @@ Status Peer::RequestVote() {
 #if (LOG_LEVEL != LEVEL_NONE)
   std::string text_format;
   google::protobuf::TextFormat::PrintToString(req, &text_format);
-  LOG_DEBUG("Send RequestVote to %s, message :\n%s", server_.c_str(), text_format.c_str());
+  LOG_DEBUG("Send RequestVote to %s, message :\n%s", env_.server.c_str(), text_format.c_str());
 #endif
 
   command::CommandRes res;
@@ -124,7 +125,7 @@ void Peer::DoAppendEntries(void *arg) {
   Peer* peer = static_cast<Peer*>(arg);
   Status result = peer->AppendEntries();
   if (!result.ok()) {
-    LOG_ERROR("Peer failed to AppendEntries caz %s.", result.ToString());
+    LOG_ERROR("Peer(%s) failed to AppendEntries caz %s.", peer->env_.server.c_str(), result.ToString().c_str());
   }
 }
 
@@ -138,7 +139,7 @@ void Peer::DoAppendEntriesTimer(void *arg) {
   Peer* peer = static_cast<Peer*>(arg);
   Status result = peer->AppendEntries();
   if (!result.ok()) {
-    LOG_ERROR("Peer failed to AppendEntriesTimer caz %s.", result.ToString());
+    LOG_ERROR("Peer(%s) failed to AppendEntriesTimer caz %s.", peer->env_.server.c_str(), result.ToString().c_str());
   }
   peer->AddAppendEntriesTimerTask();
 }

@@ -65,6 +65,7 @@ class FloydWorker {
   }
 
   int Start() {
+    thread_->set_thread_name("FloydWorker");
     return thread_->StartThread();
   }
 

@@ -1,8 +1,9 @@
 CXX = g++
 ifeq ($(__REL), 1)
-	CXXFLAGS = -O0 -g -pg -pipe -fPIC -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -D_GNU_SOURCE -std=c++11 -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls
+	CXXFLAGS = -O0 -g -pg -pipe -fPIC -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -D_GNU_SOURCE -std=c++11 -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls -Wno-unused-variable -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX
 else
-	CXXFLAGS = -O0 -g -pipe -fPIC -W -D__XDEBUG__ -DLOG_LEVEL=LEVEL_DEBUG -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls
+	CXXFLAGS = -O0 -g -pipe -fPIC -W -D__XDEBUG__ -DLOG_LEVEL=LEVEL_DEBUG -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls -Wno-unused-variable -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX 
+
 	# CXXFLAGS = -Wall -W -DDEBUG -g -O0 -D__XDEBUG__ -D__STDC_FORMAT_MACROS -fPIC -std=c++11 -gdwarf-2
 endif
 
@@ -11,25 +12,31 @@ SRC_DIR = ./
 THIRD_PATH = ../../third
 OUTPUT = ./output
 
-LIB_PATH = -L../../output/lib/ \
-		   -L$(THIRD_PATH)/leveldb/ \
-			 -L$(THIRD_PATH)/slash/output/lib/\
-			 -L$(THIRD_PATH)/pink/output/lib/
+LIB_PATH = -L../../lib/ \
+		   -L$(THIRD_PATH)/nemo-rocksdb/lib/ \
+		   -L$(THIRD_PATH)/nemo-rocksdb/rocksdb/ \
+			 -L$(THIRD_PATH)/slash/slash/lib/ \
+			 -L$(THIRD_PATH)/pink/pink/lib/
 
 
 LIBS = -lfloyd \
 			 -lpink \
 			 -lslash \
-			 -lleveldb \
+			 -lnemodb \
+			 -lrocksdb \
 			 -lsnappy \
 			 -lprotobuf \
+			 -lz \
+			 -lbz2 \
+			 -lrt \
 			 -lpthread
 
-INCLUDE_PATH = -I../../output/include/ \
-			   -I$(THIRD_PATH)/leveldb/include \
-			   -I$(THIRD_PATH)/slash/output/include/ \
-			   -I$(THIRD_PATH)/pink/output/include/ \
-			   -I$(THIRD_PATH)/pink/output/
+INCLUDE_PATH = -I../../../ \
+							 -I$(THIRD_PATH)/nemo-rocksdb/include/ \
+							 -I$(THIRD_PATH)/nemo-rocksdb/rocksdb/ \
+							 -I$(THIRD_PATH)/nemo-rocksdb/rocksdb/include/ \
+							 -I$(THIRD_PATH)/slash/ \
+							 -I$(THIRD_PATH)/pink/
 
 LIBRARY = libfloyd.a
 .PHONY: all clean version

@@ -73,7 +73,7 @@ class FloydContext {
       uint64_t* my_term);
   bool AppendEntries(uint64_t term,
       uint64_t pre_log_term, uint64_t pre_log_index,
-      std::vector<const Log::Entry*> entries, uint64_t* my_term);
+      std::vector<Log::Entry*>& entries, uint64_t* my_term);
 
   /* Commit related */
   uint64_t commit_index() {

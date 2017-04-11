@@ -35,8 +35,6 @@ class FloydWorker;
 class FloydWorkerConn;
 struct LeaderElectTimerEnv;
 
-
-
 typedef std::map<std::string, Peer*> PeersSet;
 
 class Floyd {

@@ -46,7 +46,7 @@ LIBS = -lpthread \
 
 LIBRARY = libfloyd.a
 
-.PHONY: all clean distclean
+.PHONY: all clean distclean test
 BASE_OBJS := $(wildcard $(SRC_DIR)/*.cc)
 BASE_OBJS += $(wildcard $(SRC_DIR)/*.c)
 BASE_OBJS += $(wildcard $(SRC_DIR)/*.cpp)
@@ -59,6 +59,12 @@ LIBNEMODB= $(NEMODB_PATH)/nemo-rocksdb/lib/libnemodb.a
 
 all: $(LIBRARY)
 	@echo "Success, go, go, go..."
+
+test: all
+	make -C example/server clean
+	make -C example/server
+	make -C example/sdk clean
+	make -C example/sdk
 
 $(LIBSLASH):
 	make -C $(SLASH_PATH)/slash __PERF=$(__PERF)

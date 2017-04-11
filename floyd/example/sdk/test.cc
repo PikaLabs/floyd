@@ -3,7 +3,8 @@
 #include <string>
 
 #include <unistd.h>
-#include "slash_status.h"
+
+#include "slash/include/slash_status.h"
 
 #include "floyd_client.h"
 

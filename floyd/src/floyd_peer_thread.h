@@ -46,7 +46,7 @@ class Peer {
   Status AppendEntries();
 
   // Request Vote
-  inline void AddRequestVoteTask();
+  void AddRequestVoteTask();
   Status RequestVote();
   static void DoRequestVote(void *arg);
 

@@ -27,29 +27,6 @@ struct LeaderElectTimerEnv {
 Floyd::Floyd(const Options& options)
   : options_(options),
   db_(NULL) {
-
-  log_ = new raft::FileLog(options_.log_path);
-  context_ = new FloydContext(options_, log_);
-
-  leader_elect_env_ = new LeaderElectTimerEnv(context_, &peers_);
-  leader_elect_timer_ = new pink::Timer(options_.elect_timeout_ms,
-      Floyd::StartNewElection,
-      static_cast<void*>(leader_elect_env_));
-  worker_ = new FloydWorker(FloydWorkerEnv(options_.local_port, 1000, this));
-
-  // TODO db_ is null
-  apply_ = new FloydApply(FloydApplyEnv(context_, db_, log_));
-
-  // peer threads
-  for (auto iter = options_.members.begin();
-      iter != options_.members.end(); iter++) {
-    if (!IsSelf(*iter)) {
-      Peer* pt = new Peer(FloydPeerEnv(*iter, context_, this,
-            apply_, log_));
-      peers_.insert(std::pair<std::string, Peer*>(*iter, pt));
-    }
-  }
-
   peer_rpc_client_ = new RpcClient();
 }
 
@@ -92,7 +69,7 @@ Status Floyd::Start() {
   options.create_if_missing = true;
   rocksdb::Status s = rocksdb::DBNemo::Open(options, options_.data_path, &db_);
   if (!s.ok()) {
-    LOG_ERROR("Open db failed! path: " + options_.data_path);
+    LOG_ERROR("Open db failed! path: %s", options_.data_path.c_str());
     return Status::Corruption("Open DB failed, " + s.ToString());
   }
 
@@ -102,27 +79,48 @@ Status Floyd::Start() {
   //  LOG_ERROR("Open file log failed! path: " + options_.log_path);
   //  return s;
   //}
-  //context_->RecoverInit(log_);
 
-  //log_ = new raft::FileLog(options_.log_path);
+  log_ = new raft::FileLog(options_.log_path);
+  context_ = new FloydContext(options_, log_);
+
   context_->RecoverInit();
+
+
+  // TODO Start Apply
+  apply_ = new FloydApply(FloydApplyEnv(context_, db_, log_));
 
   // Start leader_elect_timer
   int ret;
+  leader_elect_env_ = new LeaderElectTimerEnv(context_, &peers_);
+  leader_elect_timer_ = new pink::Timer(options_.elect_timeout_ms,
+      Floyd::StartNewElection,
+      static_cast<void*>(leader_elect_env_));
+
   if (!leader_elect_timer_->Start()) {
     LOG_ERROR("Floyd leader elect timer failed to start");
     return Status::Corruption("failed to start leader elect timer");
   }
 
   // Start worker thread
+  worker_ = new FloydWorker(FloydWorkerEnv(options_.local_port, 1000, this));
   if ((ret = worker_->Start()) != 0) {
     LOG_ERROR("Floyd worker thread failed to start, ret is %d", ret);
     return Status::Corruption("failed to start worker, return " + std::to_string(ret));
   }
+
+  // Create peer threads
+  for (auto iter = options_.members.begin();
+      iter != options_.members.end(); iter++) {
+    if (!IsSelf(*iter)) {
+      Peer* pt = new Peer(FloydPeerEnv(*iter, context_, this,
+            apply_, log_));
+      peers_.insert(std::pair<std::string, Peer*>(*iter, pt));
+    }
+  }
   
   // Start peer thread
   for (auto& pt : peers_) {
-    if (ret = pt.second->StartThread() != 0) {
+    if ((ret = pt.second->StartThread()) != 0) {
       LOG_ERROR("Floyd peer thread to %s failed to start, ret is %d",
           pt.first.c_str(), ret);
       return Status::Corruption("failed to start peer thread to " + pt.first);
@@ -141,8 +139,10 @@ void Floyd::StartNewElection(void* arg) {
   }
 }
 
+// TODO(anan) many peers may call this; maybe critical section
 void Floyd::BeginLeaderShip() {
   context_->BecomeLeader();
+  leader_elect_timer_->Stop();
   for (auto& peer : peers_) {
     peer.second->BeginLeaderShip();
   }

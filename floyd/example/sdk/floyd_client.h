@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "pb_cli.h"
-#include "slash_status.h"
+#include "pink/include/pink_cli.h"
+#include "slash/include/slash_status.h"
 
 
 namespace floyd {
@@ -76,7 +76,7 @@ class Cluster {
 
   //pink::PbCli pb_cli_;
 
-  pink::PbCli *pb_cli_;
+  pink::PinkCli *pb_cli_;
 };
 
 } // namespace client

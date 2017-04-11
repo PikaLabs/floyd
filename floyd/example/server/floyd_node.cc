@@ -3,6 +3,7 @@
 #include <getopt.h>
 #include <iostream>
 #include <sstream>
+#include <signal.h>
 
 #include "floyd_server.h"
 

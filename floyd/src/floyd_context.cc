@@ -63,11 +63,11 @@ void FloydContext::BecomeCandidate() {
   switch(role_) {
     case Role::kFollower:
       LOG_DEBUG("Become Candidate since prev leader timeout, prev term: %lu, prev leader is (%s:%d)",
-          current_term_, leader_ip_.c_str(), eader_port_);
+          current_term_, leader_ip_.c_str(), leader_port_);
       break; 
     case Role::kCandidate:
       LOG_DEBUG("Become Candidate since prev election timeout, prev term: %lu",
-          current_term_, leader_ip_.c_str(), eader_port_);
+          current_term_, leader_ip_.c_str(), leader_port_);
       break; 
     default:
       LOG_DEBUG("Become Candidate, should not be here, role: %d", role_);
@@ -165,7 +165,10 @@ bool FloydContext::RequestVote(uint64_t term, const std::string ip,
   }
   
   uint64_t my_log_index = log_->GetLastLogIndex();
-  uint64_t my_log_term = log_->GetEntry(my_log_index).term();
+  uint64_t my_log_term = 0;
+  if (my_log_index != 0) {
+    my_log_term = log_->GetEntry(my_log_index).term();
+  }
   if (log_term < my_log_term
       || (log_term == my_log_term && log_index < my_log_index)) {
     return false; // log index is not up-to-date as mine
@@ -181,7 +184,7 @@ bool FloydContext::RequestVote(uint64_t term, const std::string ip,
 
 bool FloydContext::AppendEntries(uint64_t term,
     uint64_t pre_log_term, uint64_t pre_log_index,
-    std::vector<const Log::Entry*> entries, uint64_t* my_term) {
+    std::vector<Log::Entry*>& entries, uint64_t* my_term) {
   slash::RWLock l(&stat_rw_, true);
   // Check last log
   uint64_t my_log_index = log_->GetLastLogIndex();
@@ -202,6 +205,4 @@ bool FloydContext::AppendEntries(uint64_t term,
   return true;
 }
 
-
-}
-
+}  // namespace floyd

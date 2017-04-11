@@ -16,7 +16,7 @@ class RpcClient;
 
 class RpcClient {
  public:
-  RpcClient();
+  RpcClient() {}
   Status SendRequest(const std::string& server, const command::Command& req,
       command::CommandRes* res);
 

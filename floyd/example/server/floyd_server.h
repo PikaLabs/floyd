@@ -1,58 +1,63 @@
 #ifndef FLOYD_SERVER_H
 #define FLOYD_SERVER_H
 
+#include "floyd/include/floyd.h"
 #include "client.pb.h"
 
-#include "floyd.h"
+#include "pink/include/pb_conn.h"
+#include "pink/include/server_thread.h"
 
-#include "pb_conn.h"
-#include "pb_cli.h"
-#include "holy_thread.h"
+#include "slash/include/slash_mutex.h"
 
 namespace floyd {
 
 class FloydServer;
 class FloydServerConn;
-class FloydServerThread;
-
-class FloydServer {
- public:
-  explicit FloydServer(int sdk_port, const Options& option);
-  virtual ~FloydServer();
-  Status Start();
-  
-  friend class FloydServerConn;
-  friend class FloydServerThread;
-
- private:
-  Options options_;
-
-  Floyd* floyd_;
-  Mutex server_mutex;
-
-  FloydServerThread* server_thread_;
-
-};
+class FloydServerConnFactory;
 
 class FloydServerConn : public pink::PbConn {
  public:
-  FloydServerConn(int fd, std::string& ip_port, pink::Thread* thread);
+  FloydServerConn(int fd, const std::string& ip_port, pink::Thread* thread,
+                  Floyd* floyd);
   virtual ~FloydServerConn() {}
 
   //virtual pink::Status BuildObuf();
   virtual int DealMessage();
 
  private:
-  FloydServerThread* server_thread_;
+  Floyd* floyd_;
   client::Request command_;
   client::Response command_res_;
 };
 
-class FloydServerThread : public pink::HolyThread<FloydServerConn> {
+class FloydServerConnFactory : public pink::ConnFactory {
  public:
-  explicit FloydServerThread(int port, FloydServer* server_);
-  virtual ~FloydServerThread() {}
-  FloydServer* server_;
+  explicit FloydServerConnFactory(Floyd* floyd)
+    : floyd_(floyd) { }
+
+  virtual pink::PinkConn *NewPinkConn(int connfd,
+      const std::string &ip_port, pink::Thread *thread) const override {
+    return new FloydServerConn(connfd, ip_port, thread, floyd_);
+  }
+
+ private:
+  Floyd* floyd_;
+};
+
+class FloydServer {
+ public:
+  explicit FloydServer(int sdk_port, const Options& option);
+  virtual ~FloydServer();
+  Status Start();
+
+ private:
+  Options options_;
+
+  Floyd* floyd_;
+  slash::Mutex server_mutex;
+
+  FloydServerConnFactory* conn_factory_;
+  pink::ServerThread* server_thread_;
 };
 
 } // namespace floyd

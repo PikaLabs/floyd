@@ -91,9 +91,9 @@ bool Floyd::HasLeader() {
       && leader_node.second != 0);
 }
 
-static std::vector<const Log::Entry*> BuildLogEntry(const command::Command& cmd,
+static std::vector<Log::Entry*> BuildLogEntry(const command::Command& cmd,
     uint64_t current_term) {
-  std::vector<const Log::Entry*> entries;
+  std::vector<Log::Entry*> entries;
   Log::Entry entry;
   uint64_t len = cmd.ByteSize();
   char* data = new char[len + 1];
@@ -190,12 +190,12 @@ Status Floyd::DoCommand(const command::Command& cmd,
 Status Floyd::ExecuteCommand(const command::Command& cmd,
     command::CommandRes *cmd_res) {
   // Append entry local
-  std::vector<const Log::Entry*> entry = BuildLogEntry(cmd, context_->current_term());
+  std::vector<Log::Entry*> entry = BuildLogEntry(cmd, context_->current_term());
   uint64_t last_index = (log_->Append(entry)).second;
 
   // Notify peers then wait for apply
   for (auto& peer : peers_) {
-    peer.second->AppendEntries();
+    peer.second->AddAppendEntriesTask();
   }
   Status res = context_->WaitApply(last_index, 1000);
   if (!res.ok()) {
@@ -261,9 +261,9 @@ void Floyd::DoAppendEntries(command::Command& cmd,
   context_->BecomeFollower(cmd.aerq().term(),
       cmd.aerq().ip(), cmd.aerq().port());
   leader_elect_timer_->Reset();
-
-  std::vector<const Log::Entry*> entries;
-  for (auto& it : cmd.aerq().entries()) {
+  
+  std::vector<Log::Entry*> entries;
+  for (auto& it : *(cmd.mutable_aerq()->mutable_entries())) {
     entries.push_back(&it);
   }
   // Append entries
@@ -279,4 +279,4 @@ void Floyd::DoAppendEntries(command::Command& cmd,
   *cmd_res = BuildAppendEntriesResponse(my_term, status);
 }
 
-}
+}  // namespace floyd

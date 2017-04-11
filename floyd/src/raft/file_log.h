@@ -4,6 +4,7 @@
 #include "floyd/src/raft/raft.pb.h"
 #include "floyd/src/raft/log_meta.pb.h"
 #include "floyd/src/raft/log.h"
+#include "floyd/src/raft/memory_log.h"
 
 #include "slash/include/env.h"
 #include "slash/include/slash_slice.h"
@@ -35,7 +36,7 @@ class FileLog : public Log {
 
   explicit FileLog(const std::string& path);
   ~FileLog();
-  std::pair<uint64_t, uint64_t> Append(std::vector<const Entry*>& entries);
+  std::pair<uint64_t, uint64_t> Append(std::vector<Entry*>& entries);
   void SplitIfNeeded();
   std::unique_ptr<Log::Sync> TakeSync();
   void TruncatePrefix(uint64_t first_index) { first_index = 0; assert(false); }
@@ -48,6 +49,7 @@ class FileLog : public Log {
   void UpdateMetadata();
 
  protected:
+  MemoryLog memory_log_;
   //floyd::raft::filelog::MetaData metadata_;
   std::unique_ptr<Sync> current_sync_;
   std::string path_;

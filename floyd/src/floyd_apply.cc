@@ -47,7 +47,7 @@ void FloydApply::ApplyStateMachine(void* arg) {
     context->ApplyDone(to_apply);
     to_apply++;
     // Notify worker as soon as possible
-    fapply->SignalApply();
+    context->SignalApply();
   }
 }
 

@@ -6,10 +6,10 @@
 
 namespace floyd {
 
-static std::string CmdType(command::Command& req);
+static std::string CmdType(const command::Command& req);
 
 Status RpcClient::SendRequest(const std::string& server, const command::Command& req, command::CommandRes* res) {
-  LOG_DEBUG("Client::SendRequest %s cmd to %s", CmdType(cmd).c_str(), server.c_str());
+  LOG_DEBUG("Client::SendRequest %s cmd to %s", CmdType(req).c_str(), server.c_str());
 
   pink::PinkCli *cli = GetClient(server);
 
@@ -37,6 +37,7 @@ pink::PinkCli* RpcClient::GetClient(const std::string& server) {
     slash::ParseIpPortString(server, ip, port);
     pink::PinkCli* cli = pink::NewPbCli(ip, port);
     cli_map_[server] = cli;
+    return cli;
   } else {
     return iter->second;
   }
@@ -57,7 +58,7 @@ Status RpcClient::UpHoldCli(pink::PinkCli *cli) {
   return ret;
 }
 
-static std::string CmdType(command::Command& cmd) {
+static std::string CmdType(const command::Command& cmd) {
   std::string ret;
   switch (cmd.type()) {
     case command::Command::Read: {

@@ -11,19 +11,17 @@ SRC_DIR = ./
 THIRD_PATH = ../../third
 #OUTPUT = ./output
 
-LIB_PATH = -L$(THIRD_PATH)/pink/output/lib/ \
-			 -L$(THIRD_PATH)/slash/output/lib/
-
+LIB_PATH = -L$(THIRD_PATH)/slash/slash/lib/ \
+					 -L$(THIRD_PATH)/pink/pink/lib/
 
 LIBS = -lpink \
 			 -lslash \
 			 -lprotobuf \
 			 -lpthread
 
-INCLUDE_PATH = -I../../output/include/ \
-			   -I$(THIRD_PATH)/slash/output/include/ \
-			   -I$(THIRD_PATH)/pink/output/include/ \
-			   -I$(THIRD_PATH)/pink/output/
+INCLUDE_PATH = -I../../include/ \
+							 -I$(THIRD_PATH)/slash/ \
+							 -I$(THIRD_PATH)/pink/
 
 .PHONY: all clean
 
@@ -47,8 +45,6 @@ floyd_client:  $(OBJS)
 
 $(OBJS): %.o : %.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE_PATH) 
-
-
 
 clean: 
 	#rm -rf $(OUTPUT)

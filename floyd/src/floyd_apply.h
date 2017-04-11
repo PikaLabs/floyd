@@ -29,9 +29,6 @@ class FloydApply {
   ~FloydApply();
   Status ScheduleApply();
 
-  // TODO need impl
-  Status SignalApply();
-
  private:
   pink::BGThread* bg_thread_;
   FloydContext* context_;
