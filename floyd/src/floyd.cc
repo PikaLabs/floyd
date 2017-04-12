@@ -28,6 +28,7 @@ Floyd::Floyd(const Options& options)
   : options_(options),
   db_(NULL) {
   peer_rpc_client_ = new RpcClient();
+  worker_rpc_client_ = new RpcClient();
 }
 
 Floyd::~Floyd() {
@@ -42,6 +43,7 @@ Floyd::~Floyd() {
   delete log_;
   delete context_;
   delete peer_rpc_client_;
+  delete worker_rpc_client_;
 }
 
 bool Floyd::IsSelf(const std::string& ip_port) {

@@ -28,6 +28,13 @@ Status RpcClient::SendRequest(const std::string& server, const command::Command&
   return ret;
 }
 
+RpcClient::~RpcClient() {
+  slash::MutexLock l(&mu_);
+  for (auto& iter : cli_map_) {
+    delete iter.second;
+  }
+}
+
 pink::PinkCli* RpcClient::GetClient(const std::string& server) {
   slash::MutexLock l(&mu_);
   auto iter = cli_map_.find(server);

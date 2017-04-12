@@ -77,6 +77,7 @@ class Floyd {
   LeaderElectTimerEnv* leader_elect_env_;
   PeersSet peers_;
   RpcClient* peer_rpc_client_;
+  RpcClient* worker_rpc_client_;
 
   bool IsSelf(const std::string& ip_port);
   bool HasLeader();

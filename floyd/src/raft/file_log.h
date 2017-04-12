@@ -165,6 +165,7 @@ class Table {
 
     if (backing_store_ != NULL)
       delete backing_store_;
+    delete header_;
   }
 
   //slash::RandomRWFile *file() { return file_; }

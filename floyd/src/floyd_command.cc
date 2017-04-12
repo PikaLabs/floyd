@@ -185,7 +185,7 @@ Status Floyd::DoCommand(const command::Command& cmd,
     return ExecuteCommand(cmd, cmd_res);
   }
   // Redirect to leader
-  return peer_rpc_client_->SendRequest(
+  return worker_rpc_client_->SendRequest(
       slash::IpPortString(leader_node.first, leader_node.second),
       cmd, cmd_res);
 }
