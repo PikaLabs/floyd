@@ -66,7 +66,7 @@ class Floyd {
 
  private:
   friend class FloydWorkerConn;
-  const Options options_;
+  Options options_;
   rocksdb::DBNemo* db_;
   raft::Log* log_;
   FloydContext* context_;

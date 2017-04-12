@@ -89,7 +89,7 @@ void FloydContext::BecomeLeader() {
   role_ = Role::kLeader;
   leader_ip_ = options_.local_ip;
   leader_port_ = options_.local_port;
-  LOG_DEBUG ("I am become Leader");
+  LOG_DEBUG ("FloydContext::BecomeLeader I am become Leader!!");
 
   //ForEach(&PeerThread::BeginLeaderShip);
   // printf ("I am become Leader\n");
@@ -107,6 +107,9 @@ void FloydContext::BecomeLeader() {
 }
 
 bool FloydContext::AdvanceCommitIndex(uint64_t new_commit_index) {
+  if (new_commit_index == 0) {
+    return false;
+  }
   slash::MutexLock l(&commit_mu_);
   if (commit_index_ >= new_commit_index) {
     // TODO why
@@ -116,9 +119,11 @@ bool FloydContext::AdvanceCommitIndex(uint64_t new_commit_index) {
     return false;
   }
 
+  uint64_t last_log_index = log_->GetLastLogIndex();
+  new_commit_index = std::min(last_log_index, new_commit_index);
   if (log_->GetEntry(new_commit_index).term() == current_term_) {
     commit_index_ = new_commit_index;
-    LOG_DEBUG("AdvanceCommitIndex: commit_index=%ld", new_commit_index);
+    LOG_DEBUG("FloydContext::AdvanceCommitIndex: commit_index=%ld", new_commit_index);
     return true;
   }
   return false;
@@ -133,6 +138,8 @@ void FloydContext::LogApply() {
 
 bool FloydContext::VoteAndCheck(uint64_t vote_term) {
   slash::RWLock(&stat_rw_, true);
+  LOG_DEBUG("FloydContext::VoteAndCheck: current_term=%lu vote_term=%lu vote_quorum_=%lu",
+           current_term_, vote_term, vote_quorum_);
   if (current_term_ != vote_term) {
     return false;
   }
@@ -188,7 +195,10 @@ bool FloydContext::AppendEntries(uint64_t term,
   slash::RWLock l(&stat_rw_, true);
   // Check last log
   uint64_t my_log_index = log_->GetLastLogIndex();
-  uint64_t my_log_term = log_->GetEntry(my_log_index).term();
+  uint64_t my_log_term = 0;
+  if (my_log_index != 0) {
+    my_log_term = log_->GetEntry(my_log_index).term();
+  }
   if (pre_log_index > my_log_index
       || pre_log_term != my_log_term) {
     return false;

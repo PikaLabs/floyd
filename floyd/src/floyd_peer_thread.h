@@ -39,11 +39,11 @@ class Peer {
   int StartThread();
 
   // Apend Entries
-  inline void AddAppendEntriesTask();
+  void AddAppendEntriesTask();
   static void DoAppendEntries(void *arg);
-  inline void AddAppendEntriesTimerTask(bool right_now = false);
-  static void DoAppendEntriesTimer(void *arg);
-  Status AppendEntries();
+  void AddHeartBeatTask();
+  static void DoHeartBeat(void *arg);
+  Status AppendEntries(bool is_heartbeat = false);
 
   // Request Vote
   void AddRequestVoteTask();

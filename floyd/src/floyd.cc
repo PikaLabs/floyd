@@ -127,6 +127,7 @@ Status Floyd::Start() {
     }
   }
 
+  options_.Dump();
   LOG_DEBUG("Floyd started");
   return Status::OK();
 }
@@ -141,6 +142,7 @@ void Floyd::StartNewElection(void* arg) {
 
 // TODO(anan) many peers may call this; maybe critical section
 void Floyd::BeginLeaderShip() {
+  LOG_DEBUG("Floyd::BeginLeaderShip");
   context_->BecomeLeader();
   leader_elect_timer_->Stop();
   for (auto& peer : peers_) {

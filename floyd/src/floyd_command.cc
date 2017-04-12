@@ -1,13 +1,16 @@
-#include "nemo-rocksdb/db_nemo_impl.h"
-#include "slash/include/slash_string.h"
-#include "pink/include/bg_thread.h"
-#include "floyd/include/floyd.h"
 #include "floyd/src/command.pb.h"
+
+#include "floyd/include/floyd.h"
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_apply.h"
 #include "floyd/src/floyd_rpc.h"
 #include "floyd/src/floyd_peer_thread.h"
 #include "floyd/src/raft/file_log.h"
+#include "floyd/src/logger.h"
+
+#include "nemo-rocksdb/db_nemo_impl.h"
+#include "slash/include/slash_string.h"
+#include "pink/include/bg_thread.h"
 
 namespace floyd {
 
@@ -233,12 +236,15 @@ void Floyd::DoRequestVote(command::Command& cmd,
   // Step down by lager term
   bool granted = false;
   uint64_t my_term = context_->current_term();
+  LOG_DEBUG("Floyd::DoRequestVote my_term=%lu rqv.term=%lu", my_term, cmd.rqv().term());
   if (cmd.rqv().term() < my_term) {
     BuildRequestVoteResponse(my_term, granted);
     return;
   }
-  context_->BecomeFollower(cmd.rqv().term());
-  leader_elect_timer_->Reset();
+  if (cmd.rqv().term() > my_term) {
+    context_->BecomeFollower(cmd.rqv().term());
+    leader_elect_timer_->Reset();
+  }
 
   // Try to get my vote
   granted = context_->RequestVote(

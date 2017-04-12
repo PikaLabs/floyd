@@ -43,6 +43,7 @@ void Peer::AddRequestVoteTask() {
 
 void Peer::DoRequestVote(void *arg) {
   Peer *peer = static_cast<Peer*>(arg);
+  LOG_DEBUG("Peer(%s)::DoRequestVote", peer->env_.server.c_str());
   Status result = peer->RequestVote();
   if (!result.ok()) {
     LOG_ERROR("Peer(%s) failed to RequestVote caz %s.", peer->env_.server.c_str(), result.ToString().c_str());
@@ -93,8 +94,11 @@ Status Peer::RequestVote() {
   if (res_term > env_.context->current_term()) {
     //TODO(anan) every peer
     env_.context->BecomeFollower(res_term);
-  } else {
+  }
+
+  if (env_.context->role() == Role::kCandidate) {
     if (res.rsv().granted()) {
+      LOG_DEBUG("Peer(%s)::RequestVote granted will Vote and check", env_.server.c_str());
       if (env_.context->VoteAndCheck(res_term)) {
         //env_.context->BecomeLeader();
         env_.floyd->BeginLeaderShip();  
@@ -113,8 +117,10 @@ void Peer::BeginLeaderShip() {
     next_index_ = env_.log->GetLastLogIndex() + 1;
     match_index_ = 0;
   }
+  LOG_DEBUG("Peer(%s)::BeginLeaderShip next_index=%lu", env_.server.c_str(), next_index_);
 
-  AddAppendEntriesTimerTask(true);
+  // right now
+  bg_thread_.Schedule(DoHeartBeat, this);
 }
 
 void Peer::AddAppendEntriesTask() {
@@ -123,25 +129,26 @@ void Peer::AddAppendEntriesTask() {
 
 void Peer::DoAppendEntries(void *arg) {
   Peer* peer = static_cast<Peer*>(arg);
+  LOG_DEBUG("Peer(%s) DoAppendEntries", peer->env_.server.c_str());
   Status result = peer->AppendEntries();
   if (!result.ok()) {
     LOG_ERROR("Peer(%s) failed to AppendEntries caz %s.", peer->env_.server.c_str(), result.ToString().c_str());
   }
 }
 
-void Peer::AddAppendEntriesTimerTask(bool right_now) {
-  bg_thread_.DelaySchedule(right_now ? slash::NowMicros()
-                           : slash::NowMicros() + env_.context->heartbeat_us(),
-                           DoAppendEntriesTimer, this);
+void Peer::AddHeartBeatTask() {
+  bg_thread_.DelaySchedule(slash::NowMicros() + env_.context->heartbeat_us(),
+                           DoHeartBeat, this);
 }
 
-void Peer::DoAppendEntriesTimer(void *arg) {
+void Peer::DoHeartBeat(void *arg) {
   Peer* peer = static_cast<Peer*>(arg);
-  Status result = peer->AppendEntries();
+  LOG_DEBUG("Peer(%s) DoHeartBeat", peer->env_.server.c_str());
+  Status result = peer->AppendEntries(true);
   if (!result.ok()) {
-    LOG_ERROR("Peer(%s) failed to AppendEntriesTimer caz %s.", peer->env_.server.c_str(), result.ToString().c_str());
+    LOG_ERROR("Peer(%s) failed to DoHeartBeat caz %s.", peer->env_.server.c_str(), result.ToString().c_str());
   }
-  peer->AddAppendEntriesTimerTask();
+  peer->AddHeartBeatTask();
 }
 
 //bool Peer::HaveVote() { return have_vote_; }
@@ -151,7 +158,7 @@ uint64_t Peer::GetMatchIndex() {
   return match_index_;
 }
 
-Status Peer::AppendEntries() {
+Status Peer::AppendEntries(bool is_heartbeat) {
   uint64_t last_log_index = env_.log->GetLastLogIndex();
   uint64_t prev_log_index = next_index_ - 1;
   if (prev_log_index > last_log_index) {
@@ -173,15 +180,17 @@ Status Peer::AppendEntries() {
   aerq->set_prev_log_term(prev_log_term);
 
   uint64_t num_entries = 0;
-  for (uint64_t index = next_index_; index <= last_log_index; ++index) {
-    Log::Entry& entry = env_.log->GetEntry(index);
-    *aerq->add_entries() = entry;
-    uint64_t request_size = aerq->ByteSize();
-    if (request_size < env_.context->append_entries_size_once() ||
-        num_entries == 0)
-      ++num_entries;
-    else
-      aerq->mutable_entries()->RemoveLast();
+  if (!is_heartbeat) {
+    for (uint64_t index = next_index_; index <= last_log_index; ++index) {
+      Log::Entry& entry = env_.log->GetEntry(index);
+      *aerq->add_entries() = entry;
+      uint64_t request_size = aerq->ByteSize();
+      if (request_size < env_.context->append_entries_size_once() ||
+          num_entries == 0)
+        ++num_entries;
+      else
+        aerq->mutable_entries()->RemoveLast();
+    }
   }
   aerq->set_commit_index(
       std::min(env_.context->commit_index(), prev_log_index + num_entries));
@@ -208,7 +217,9 @@ Status Peer::AppendEntries() {
   if (res_term > env_.context->current_term()) {
     //TODO(anan) every peer
     env_.context->BecomeFollower(res_term);
-  } else {
+  }
+  
+  if (env_.context->role() == Role::kLeader) {
     if (res.aers().status()) {
       match_index_ = prev_log_index + num_entries;
       //TODO(anan) 
