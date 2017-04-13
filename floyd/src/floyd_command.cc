@@ -1,5 +1,6 @@
 #include "floyd/src/command.pb.h"
 
+#include <google/protobuf/text_format.h>
 #include "floyd/include/floyd.h"
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_apply.h"
@@ -101,7 +102,6 @@ static std::vector<Log::Entry*> BuildLogEntry(const command::Command& cmd,
   uint64_t len = cmd.ByteSize();
   char* data = new char[len + 1];
   cmd.SerializeToArray(data, len);
-  entry->set_type(floyd::raft::Entry::DATA);
   entry->set_term(current_term);
   entry->set_cmd(data, len);
   delete data;
@@ -213,18 +213,33 @@ Status Floyd::ExecuteCommand(const command::Command& cmd,
   std::string value;
   rocksdb::Status rs;
   switch (cmd.type()) {
-    case command::Command::Write:
+    case command::Command::Write: {
+      rs = db_->Put(rocksdb::WriteOptions(), cmd.kv().key(), cmd.kv().value());
       *cmd_res = BuildWriteResponse(true);
+      LOG_DEBUG("Floyd::ExecuteCommand Write %s, key(%s) value(%s)",
+                rs.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
       break;
-    case command::Command::Delete:
+    }
+    case command::Command::Delete: {
       *cmd_res = BuildDeleteResponse(true);
       break;
-    case command::Command::Read:
+    }
+    case command::Command::Read: {
       rs = db_->Get(rocksdb::ReadOptions(), cmd.kv().key(), &value);
       *cmd_res = BuildReadResponse(cmd.kv().key(),
           value, rs.ok());
-    default:
+      LOG_DEBUG("Floyd::ExecuteCommand Read %s, key(%s) value(%s)",
+                rs.ToString().c_str(), cmd.kv().key().c_str(), value.c_str());
+#if (LOG_LEVEL != LEVEL_NONE)
+      std::string text_format;
+      google::protobuf::TextFormat::PrintToString(*cmd_res, &text_format);
+      LOG_DEBUG("ReadResponse :\n%s", text_format.c_str());
+#endif
+      break;
+    }
+    default: {
       return Status::Corruption("Unknown cmd type");
+    }
   }
   return Status::OK();
   /* TODO wangkang-xy

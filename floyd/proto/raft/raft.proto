@@ -1,11 +1,6 @@
 package floyd.raft;
 
 message Entry {
-	enum Type {
-		DATA = 0;
-		NOOP = 1;
-	}
-  required Type type = 1;
 	required uint64 term = 2;
 	optional bytes cmd = 3;
 }

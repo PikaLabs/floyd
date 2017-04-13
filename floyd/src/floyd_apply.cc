@@ -52,10 +52,6 @@ void FloydApply::ApplyStateMachine(void* arg) {
 }
 
 Status FloydApply::Apply(const Log::Entry& log_entry) {
-  if (log_entry.type() == raft::Entry::NOOP) {
-    return Status::OK();
-  }
-
   const std::string& data = log_entry.cmd();
   command::Command cmd;
   if (!cmd.ParseFromArray(data.c_str(), data.length())) {

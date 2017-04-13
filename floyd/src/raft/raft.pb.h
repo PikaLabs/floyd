@@ -23,7 +23,6 @@
 #include <google/protobuf/message.h>
 #include <google/protobuf/repeated_field.h>
 #include <google/protobuf/extension_set.h>
-#include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
 // @@protoc_insertion_point(includes)
 
@@ -41,25 +40,6 @@ class ResponseVote;
 class AppendEntriesRequest;
 class AppendEntriesResponse;
 
-enum Entry_Type {
-  Entry_Type_DATA = 0,
-  Entry_Type_NOOP = 1
-};
-bool Entry_Type_IsValid(int value);
-const Entry_Type Entry_Type_Type_MIN = Entry_Type_DATA;
-const Entry_Type Entry_Type_Type_MAX = Entry_Type_NOOP;
-const int Entry_Type_Type_ARRAYSIZE = Entry_Type_Type_MAX + 1;
-
-const ::google::protobuf::EnumDescriptor* Entry_Type_descriptor();
-inline const ::std::string& Entry_Type_Name(Entry_Type value) {
-  return ::google::protobuf::internal::NameOfEnum(
-    Entry_Type_descriptor(), value);
-}
-inline bool Entry_Type_Parse(
-    const ::std::string& name, Entry_Type* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<Entry_Type>(
-    Entry_Type_descriptor(), name, value);
-}
 // ===================================================================
 
 class Entry : public ::google::protobuf::Message {
@@ -114,38 +94,7 @@ class Entry : public ::google::protobuf::Message {
 
   // nested types ----------------------------------------------------
 
-  typedef Entry_Type Type;
-  static const Type DATA = Entry_Type_DATA;
-  static const Type NOOP = Entry_Type_NOOP;
-  static inline bool Type_IsValid(int value) {
-    return Entry_Type_IsValid(value);
-  }
-  static const Type Type_MIN =
-    Entry_Type_Type_MIN;
-  static const Type Type_MAX =
-    Entry_Type_Type_MAX;
-  static const int Type_ARRAYSIZE =
-    Entry_Type_Type_ARRAYSIZE;
-  static inline const ::google::protobuf::EnumDescriptor*
-  Type_descriptor() {
-    return Entry_Type_descriptor();
-  }
-  static inline const ::std::string& Type_Name(Type value) {
-    return Entry_Type_Name(value);
-  }
-  static inline bool Type_Parse(const ::std::string& name,
-      Type* value) {
-    return Entry_Type_Parse(name, value);
-  }
-
   // accessors -------------------------------------------------------
-
-  // required .floyd.raft.Entry.Type type = 1;
-  inline bool has_type() const;
-  inline void clear_type();
-  static const int kTypeFieldNumber = 1;
-  inline ::floyd::raft::Entry_Type type() const;
-  inline void set_type(::floyd::raft::Entry_Type value);
 
   // required uint64 term = 2;
   inline bool has_term() const;
@@ -168,8 +117,6 @@ class Entry : public ::google::protobuf::Message {
 
   // @@protoc_insertion_point(class_scope:floyd.raft.Entry)
  private:
-  inline void set_has_type();
-  inline void clear_has_type();
   inline void set_has_term();
   inline void clear_has_term();
   inline void set_has_cmd();
@@ -179,10 +126,9 @@ class Entry : public ::google::protobuf::Message {
 
   ::google::protobuf::uint64 term_;
   ::std::string* cmd_;
-  int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
 
   friend void  protobuf_AddDesc_raft_2fraft_2eproto();
   friend void protobuf_AssignDesc_raft_2fraft_2eproto();
@@ -659,38 +605,15 @@ class AppendEntriesResponse : public ::google::protobuf::Message {
 
 // Entry
 
-// required .floyd.raft.Entry.Type type = 1;
-inline bool Entry::has_type() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void Entry::set_has_type() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void Entry::clear_has_type() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void Entry::clear_type() {
-  type_ = 0;
-  clear_has_type();
-}
-inline ::floyd::raft::Entry_Type Entry::type() const {
-  return static_cast< ::floyd::raft::Entry_Type >(type_);
-}
-inline void Entry::set_type(::floyd::raft::Entry_Type value) {
-  assert(::floyd::raft::Entry_Type_IsValid(value));
-  set_has_type();
-  type_ = value;
-}
-
 // required uint64 term = 2;
 inline bool Entry::has_term() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
+  return (_has_bits_[0] & 0x00000001u) != 0;
 }
 inline void Entry::set_has_term() {
-  _has_bits_[0] |= 0x00000002u;
+  _has_bits_[0] |= 0x00000001u;
 }
 inline void Entry::clear_has_term() {
-  _has_bits_[0] &= ~0x00000002u;
+  _has_bits_[0] &= ~0x00000001u;
 }
 inline void Entry::clear_term() {
   term_ = GOOGLE_ULONGLONG(0);
@@ -706,13 +629,13 @@ inline void Entry::set_term(::google::protobuf::uint64 value) {
 
 // optional bytes cmd = 3;
 inline bool Entry::has_cmd() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000002u) != 0;
 }
 inline void Entry::set_has_cmd() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000002u;
 }
 inline void Entry::clear_has_cmd() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void Entry::clear_cmd() {
   if (cmd_ != &::google::protobuf::internal::kEmptyString) {
@@ -1251,10 +1174,6 @@ inline void AppendEntriesResponse::set_term(::google::protobuf::uint64 value) {
 namespace google {
 namespace protobuf {
 
-template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::floyd::raft::Entry_Type>() {
-  return ::floyd::raft::Entry_Type_descriptor();
-}
 
 }  // namespace google
 }  // namespace protobuf

@@ -24,7 +24,6 @@ namespace {
 const ::google::protobuf::Descriptor* Entry_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   Entry_reflection_ = NULL;
-const ::google::protobuf::EnumDescriptor* Entry_Type_descriptor_ = NULL;
 const ::google::protobuf::Descriptor* RequestVote_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   RequestVote_reflection_ = NULL;
@@ -48,8 +47,7 @@ void protobuf_AssignDesc_raft_2fraft_2eproto() {
       "raft/raft.proto");
   GOOGLE_CHECK(file != NULL);
   Entry_descriptor_ = file->message_type(0);
-  static const int Entry_offsets_[3] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Entry, type_),
+  static const int Entry_offsets_[2] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Entry, term_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Entry, cmd_),
   };
@@ -64,7 +62,6 @@ void protobuf_AssignDesc_raft_2fraft_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(Entry));
-  Entry_Type_descriptor_ = Entry_descriptor_->enum_type(0);
   RequestVote_descriptor_ = file->message_type(1);
   static const int RequestVote_offsets_[5] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(RequestVote, ip_),
@@ -183,19 +180,17 @@ void protobuf_AddDesc_raft_2fraft_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\017raft/raft.proto\022\nfloyd.raft\"d\n\005Entry\022$"
-    "\n\004type\030\001 \002(\0162\026.floyd.raft.Entry.Type\022\014\n\004"
-    "term\030\002 \002(\004\022\013\n\003cmd\030\003 \001(\014\"\032\n\004Type\022\010\n\004DATA\020"
-    "\000\022\010\n\004NOOP\020\001\"d\n\013RequestVote\022\n\n\002ip\030\001 \002(\014\022\014"
-    "\n\004port\030\002 \002(\005\022\014\n\004term\030\003 \002(\004\022\025\n\rlast_log_t"
-    "erm\030\004 \002(\004\022\026\n\016last_log_index\030\005 \002(\004\"-\n\014Res"
-    "ponseVote\022\014\n\004term\030\001 \002(\004\022\017\n\007granted\030\002 \002(\010"
-    "\"\247\001\n\024AppendEntriesRequest\022\n\n\002ip\030\001 \002(\014\022\014\n"
-    "\004port\030\002 \002(\005\022\014\n\004term\030\003 \002(\004\022\026\n\016prev_log_in"
-    "dex\030\004 \002(\004\022\025\n\rprev_log_term\030\005 \002(\004\022\024\n\014comm"
-    "it_index\030\006 \002(\004\022\"\n\007entries\030\007 \003(\0132\021.floyd."
-    "raft.Entry\"5\n\025AppendEntriesResponse\022\016\n\006s"
-    "tatus\030\001 \002(\010\022\014\n\004term\030\002 \002(\004", 505);
+    "\n\017raft/raft.proto\022\nfloyd.raft\"\"\n\005Entry\022\014"
+    "\n\004term\030\002 \002(\004\022\013\n\003cmd\030\003 \001(\014\"d\n\013RequestVote"
+    "\022\n\n\002ip\030\001 \002(\014\022\014\n\004port\030\002 \002(\005\022\014\n\004term\030\003 \002(\004"
+    "\022\025\n\rlast_log_term\030\004 \002(\004\022\026\n\016last_log_inde"
+    "x\030\005 \002(\004\"-\n\014ResponseVote\022\014\n\004term\030\001 \002(\004\022\017\n"
+    "\007granted\030\002 \002(\010\"\247\001\n\024AppendEntriesRequest\022"
+    "\n\n\002ip\030\001 \002(\014\022\014\n\004port\030\002 \002(\005\022\014\n\004term\030\003 \002(\004\022"
+    "\026\n\016prev_log_index\030\004 \002(\004\022\025\n\rprev_log_term"
+    "\030\005 \002(\004\022\024\n\014commit_index\030\006 \002(\004\022\"\n\007entries\030"
+    "\007 \003(\0132\021.floyd.raft.Entry\"5\n\025AppendEntrie"
+    "sResponse\022\016\n\006status\030\001 \002(\010\022\014\n\004term\030\002 \002(\004", 439);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "raft/raft.proto", &protobuf_RegisterTypes);
   Entry::default_instance_ = new Entry();
@@ -220,29 +215,7 @@ struct StaticDescriptorInitializer_raft_2fraft_2eproto {
 
 // ===================================================================
 
-const ::google::protobuf::EnumDescriptor* Entry_Type_descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return Entry_Type_descriptor_;
-}
-bool Entry_Type_IsValid(int value) {
-  switch(value) {
-    case 0:
-    case 1:
-      return true;
-    default:
-      return false;
-  }
-}
-
 #ifndef _MSC_VER
-const Entry_Type Entry::DATA;
-const Entry_Type Entry::NOOP;
-const Entry_Type Entry::Type_MIN;
-const Entry_Type Entry::Type_MAX;
-const int Entry::Type_ARRAYSIZE;
-#endif  // _MSC_VER
-#ifndef _MSC_VER
-const int Entry::kTypeFieldNumber;
 const int Entry::kTermFieldNumber;
 const int Entry::kCmdFieldNumber;
 #endif  // !_MSC_VER
@@ -263,7 +236,6 @@ Entry::Entry(const Entry& from)
 
 void Entry::SharedCtor() {
   _cached_size_ = 0;
-  type_ = 0;
   term_ = GOOGLE_ULONGLONG(0);
   cmd_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -304,7 +276,6 @@ Entry* Entry::New() const {
 
 void Entry::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    type_ = 0;
     term_ = GOOGLE_ULONGLONG(0);
     if (has_cmd()) {
       if (cmd_ != &::google::protobuf::internal::kEmptyString) {
@@ -322,31 +293,10 @@ bool Entry::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required .floyd.raft.Entry.Type type = 1;
-      case 1: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          if (::floyd::raft::Entry_Type_IsValid(value)) {
-            set_type(static_cast< ::floyd::raft::Entry_Type >(value));
-          } else {
-            mutable_unknown_fields()->AddVarint(1, value);
-          }
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(16)) goto parse_term;
-        break;
-      }
-
       // required uint64 term = 2;
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_term:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
                  input, &term_)));
@@ -390,12 +340,6 @@ bool Entry::MergePartialFromCodedStream(
 
 void Entry::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // required .floyd.raft.Entry.Type type = 1;
-  if (has_type()) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      1, this->type(), output);
-  }
-
   // required uint64 term = 2;
   if (has_term()) {
     ::google::protobuf::internal::WireFormatLite::WriteUInt64(2, this->term(), output);
@@ -415,12 +359,6 @@ void Entry::SerializeWithCachedSizes(
 
 ::google::protobuf::uint8* Entry::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // required .floyd.raft.Entry.Type type = 1;
-  if (has_type()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      1, this->type(), target);
-  }
-
   // required uint64 term = 2;
   if (has_term()) {
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(2, this->term(), target);
@@ -444,12 +382,6 @@ int Entry::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required .floyd.raft.Entry.Type type = 1;
-    if (has_type()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
-    }
-
     // required uint64 term = 2;
     if (has_term()) {
       total_size += 1 +
@@ -491,9 +423,6 @@ void Entry::MergeFrom(const ::google::protobuf::Message& from) {
 void Entry::MergeFrom(const Entry& from) {
   GOOGLE_CHECK_NE(&from, this);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_type()) {
-      set_type(from.type());
-    }
     if (from.has_term()) {
       set_term(from.term());
     }
@@ -517,14 +446,13 @@ void Entry::CopyFrom(const Entry& from) {
 }
 
 bool Entry::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000003) != 0x00000003) return false;
+  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
 
   return true;
 }
 
 void Entry::Swap(Entry* other) {
   if (other != this) {
-    std::swap(type_, other->type_);
     std::swap(term_, other->term_);
     std::swap(cmd_, other->cmd_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);

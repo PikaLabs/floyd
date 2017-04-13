@@ -6,7 +6,7 @@
 FILE1="command"
 for file in $FILE1 ; do
   protoc -I=./ --cpp_out=./ ./$file.proto
-  mv $file.pb.h ../include/
+  mv $file.pb.h ../src
   mv $file.pb.cc ../src
 done
 
