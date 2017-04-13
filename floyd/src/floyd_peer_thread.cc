@@ -61,13 +61,14 @@ Status Peer::RequestVote() {
   if (last_log_index != 0) {
     last_log_term = env_.context->log()->GetEntry(last_log_index).term();
   }
+  uint64_t current_term = env_.context->current_term();
 
   command::Command req;
   req.set_type(command::Command::RaftVote);
   floyd::raft::RequestVote* rqv = req.mutable_rqv();
   rqv->set_ip(env_.context->local_ip());
   rqv->set_port(env_.context->local_port());
-  rqv->set_term(env_.context->current_term());
+  rqv->set_term(current_term);
   rqv->set_last_log_term(last_log_term);
   rqv->set_last_log_index(last_log_index);
 
@@ -91,24 +92,24 @@ Status Peer::RequestVote() {
 #endif
 
   uint64_t res_term = res.rsv().term();
-  if (res_term > env_.context->current_term()) {
-    //TODO(anan) every peer
-    env_.context->BecomeFollower(res_term);
-  }
-
-  if (env_.context->role() == Role::kCandidate) {
+  if (result.ok() && env_.context->role() == Role::kCandidate) {
     if (res.rsv().granted()) {
       LOG_DEBUG("Peer(%s)::RequestVote granted will Vote and check", env_.server.c_str());
       if (env_.context->VoteAndCheck(res_term)) {
-        //env_.context->BecomeLeader();
         env_.floyd->BeginLeaderShip();  
       }
     } else {
-      LOG_DEBUG("Vote request denied by %s", env_.server.c_str());
+      LOG_DEBUG("Vote request denied by %s, res_term=%lu, current_term=%lu",
+                env_.server.c_str(), res_term, current_term);
+      if (res_term > current_term) {
+        //TODO(anan) maybe combine these 2 steps
+        env_.context->BecomeFollower(res_term);
+        env_.floyd->ResetLeaderElectTimer();
+      }
     }
   }
 
-  return Status::OK();
+  return result;
 }
 
 void Peer::BeginLeaderShip() {
@@ -137,7 +138,10 @@ void Peer::DoAppendEntries(void *arg) {
 }
 
 void Peer::AddHeartBeatTask() {
-  bg_thread_.DelaySchedule(slash::NowMicros() + env_.context->heartbeat_us(),
+  LOG_DEBUG("Peer(%s) AddHeartBeatTask at heartbeart_us %luus at %lums",
+            env_.server.c_str(), env_.context->heartbeat_us(),
+            (slash::NowMicros() + env_.context->heartbeat_us()) / 1000LL);
+  bg_thread_.DelaySchedule(env_.context->heartbeat_us() / 1000LL,
                            DoHeartBeat, this);
 }
 
@@ -158,7 +162,7 @@ uint64_t Peer::GetMatchIndex() {
   return match_index_;
 }
 
-Status Peer::AppendEntries(bool is_heartbeat) {
+Status Peer::AppendEntries(bool heartbeat) {
   uint64_t last_log_index = env_.log->GetLastLogIndex();
   uint64_t prev_log_index = next_index_ - 1;
   if (prev_log_index > last_log_index) {
@@ -180,7 +184,7 @@ Status Peer::AppendEntries(bool is_heartbeat) {
   aerq->set_prev_log_term(prev_log_term);
 
   uint64_t num_entries = 0;
-  if (!is_heartbeat) {
+  if (!heartbeat) {
     for (uint64_t index = next_index_; index <= last_log_index; ++index) {
       Log::Entry& entry = env_.log->GetEntry(index);
       *aerq->add_entries() = entry;
@@ -214,12 +218,13 @@ Status Peer::AppendEntries(bool is_heartbeat) {
 #endif
 
   uint64_t res_term = res.aers().term();
-  if (res_term > env_.context->current_term()) {
-    //TODO(anan) every peer
+  if (result.ok() && res_term > env_.context->current_term()) {
+    //TODO(anan) maybe combine these 2 steps
     env_.context->BecomeFollower(res_term);
+    env_.floyd->ResetLeaderElectTimer();
   }
   
-  if (env_.context->role() == Role::kLeader) {
+  if (result.ok() && env_.context->role() == Role::kLeader) {
     if (res.aers().status()) {
       match_index_ = prev_log_index + num_entries;
       //TODO(anan) 
@@ -229,7 +234,7 @@ Status Peer::AppendEntries(bool is_heartbeat) {
       if (next_index_ > 1) --next_index_;
     }
   }
-  return Status::OK();
+  return result;
 }
 
 } // namespace floyd

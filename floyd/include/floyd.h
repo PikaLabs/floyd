@@ -58,11 +58,13 @@ class Floyd {
   bool GetLeader(std::string& ip_port);
   // bool GetServerStatus(std::string& msg);
   
+  // TODO(anan) Internal usage
   void BeginLeaderShip();
   RpcClient* peer_rpc_client() {
     return peer_rpc_client_;
   }
   void AdvanceCommitIndex();
+  void ResetLeaderElectTimer();
 
  private:
   friend class FloydWorkerConn;

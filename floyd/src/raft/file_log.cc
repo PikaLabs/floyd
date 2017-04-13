@@ -395,12 +395,14 @@ std::unique_ptr<Log::Sync> FileLog::TakeSync() {
 void Manifest::Clear() {
   std::string ip("");
   int port = 0;
-  floyd::raft::log::MetaData *tmpMeta = new floyd::raft::log::MetaData();
+  floyd::raft::log::MetaData *tmpMeta = metadata_.mutable_raft_metadata();
   tmpMeta->set_voted_for_ip(ip);
   tmpMeta->set_voted_for_port(port);
   // TODO anan init term to 1 not 0 ?
   tmpMeta->set_current_term(1);
-  metadata_.set_allocated_raft_metadata(tmpMeta);
+
+  metadata_.set_entries_start(0);
+  metadata_.set_entries_end(0);
 }
 
 void Manifest::Update(uint64_t entry_start, uint64_t entry_end) {

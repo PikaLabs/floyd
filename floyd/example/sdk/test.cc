@@ -58,13 +58,13 @@ int main(int argc, char* argv[]) {
       printf ("Read failed, %s\n", result.ToString().c_str());
     }
 
-    printf ("\n=====Test ServerStatus==========\n");
-    result = cluster.GetStatus(&value);
-    if (result.ok()) {
-      printf ("GetStatus ok, msg is\n%s", value.c_str());
-    } else {
-      printf ("GetStatus failed, %s\n", result.ToString().c_str());
-    }
+   // printf ("\n=====Test ServerStatus==========\n");
+   // result = cluster.GetStatus(&value);
+   // if (result.ok()) {
+   //   printf ("GetStatus ok, msg is\n%s", value.c_str());
+   // } else {
+   //   printf ("GetStatus failed, %s\n", result.ToString().c_str());
+   // }
   }
 
   cout << "success" << endl;

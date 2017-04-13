@@ -47,7 +47,7 @@ Options::Options()
     data_path("/data/data"),
     log_path("/data/file"),
     elect_timeout_ms(5000),
-    heartbeat_us(200000),
+    heartbeat_us(1000000),
     append_entries_size_once(10240) {
     }
 
@@ -60,7 +60,7 @@ Options::Options(const std::string& cluster_string,
     data_path(_data_path),
     log_path(_log_path),
     elect_timeout_ms(5000),
-    heartbeat_us(200000),
+    heartbeat_us(1000000),
     append_entries_size_once(10240) {
   split(cluster_string, ',', members);
 }

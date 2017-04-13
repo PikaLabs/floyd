@@ -96,7 +96,9 @@ Status Floyd::Start() {
   leader_elect_env_ = new LeaderElectTimerEnv(context_, &peers_);
   leader_elect_timer_ = new pink::Timer(options_.elect_timeout_ms,
       Floyd::StartNewElection,
-      static_cast<void*>(leader_elect_env_));
+      static_cast<void*>(leader_elect_env_),
+      3 * options_.elect_timeout_ms);
+  LOG_DEBUG("First leader elect will in %lums.", leader_elect_timer_->RemainTime());
 
   if (!leader_elect_timer_->Start()) {
     LOG_ERROR("Floyd leader elect timer failed to start");
@@ -171,6 +173,10 @@ void Floyd::AdvanceCommitIndex() {
   if (context_->AdvanceCommitIndex(new_commit_index)) {
       apply_->ScheduleApply();
   }
+}
+
+void Floyd::ResetLeaderElectTimer() {
+  leader_elect_timer_->Reset();
 }
 
 } // namespace floyd

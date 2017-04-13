@@ -97,15 +97,15 @@ bool Floyd::HasLeader() {
 static std::vector<Log::Entry*> BuildLogEntry(const command::Command& cmd,
     uint64_t current_term) {
   std::vector<Log::Entry*> entries;
-  Log::Entry entry;
+  Log::Entry* entry = new Log::Entry;
   uint64_t len = cmd.ByteSize();
   char* data = new char[len + 1];
   cmd.SerializeToArray(data, len);
-  entry.set_type(floyd::raft::Entry::DATA);
-  entry.set_term(current_term);
-  entry.set_cmd(data, len);
+  entry->set_type(floyd::raft::Entry::DATA);
+  entry->set_term(current_term);
+  entry->set_cmd(data, len);
   delete data;
-  entries.push_back(&entry);
+  entries.push_back(entry);
   return entries;
 }
 
@@ -195,6 +195,10 @@ Status Floyd::ExecuteCommand(const command::Command& cmd,
   // Append entry local
   std::vector<Log::Entry*> entry = BuildLogEntry(cmd, context_->current_term());
   uint64_t last_index = (log_->Append(entry)).second;
+
+  for (auto& iter : entry) {
+    delete iter;
+  }
 
   // Notify peers then wait for apply
   for (auto& peer : peers_) {

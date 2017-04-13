@@ -13,6 +13,7 @@ FloydContext::FloydContext(const floyd::Options& opt,
   leader_port_(0),
   vote_quorum_(0),
   commit_index_(0),
+  apply_index_(0),
   apply_cond_(&apply_mu_) {
     pthread_rwlockattr_t attr;
     pthread_rwlockattr_init(&attr);
@@ -40,6 +41,8 @@ void FloydContext::RecoverInit() {
 void FloydContext::BecomeFollower(uint64_t new_term,
       const std::string leader_ip, int leader_port) {
   assert(current_term_ <= new_term);
+  LOG_DEBUG("BecomeFollower: with current_term_(%lu) and new_term(%lu)",
+      current_term_, new_term);
   slash::RWLock(&stat_rw_, true);
   if (current_term_ < new_term) {
     current_term_ = new_term;
@@ -52,9 +55,6 @@ void FloydContext::BecomeFollower(uint64_t new_term,
     leader_port_ = leader_port;
   }
   role_ = Role::kFollower;
-
-  LOG_DEBUG("BecomeFollower: with current_term_(%lu) and new_term(%lu)",
-      current_term_, new_term);
 }
 
 void FloydContext::BecomeCandidate() {
@@ -167,6 +167,8 @@ bool FloydContext::RequestVote(uint64_t term, const std::string ip,
   if (term == current_term_) {
     if (!voted_for_ip_.empty()
         && (voted_for_ip_ != ip || voted_for_port_ != port)) {
+      LOG_DEBUG("FloydContext::RequestVote: I have vote for (%s:%d) already.",
+           voted_for_ip_.c_str(), voted_for_port_);
       return false; // I have vote someone else
     }
   }
@@ -178,6 +180,8 @@ bool FloydContext::RequestVote(uint64_t term, const std::string ip,
   }
   if (log_term < my_log_term
       || (log_term == my_log_term && log_index < my_log_index)) {
+    LOG_DEBUG("FloydContext::RequestVote: log index not up-to-date, my is %lu:%lu, other is %lu:%lu",
+              my_log_term, my_log_index, log_term, log_index);
     return false; // log index is not up-to-date as mine
   }
 
@@ -186,6 +190,8 @@ bool FloydContext::RequestVote(uint64_t term, const std::string ip,
   voted_for_port_ = port;
   *my_term = current_term_;
   LogApply();
+  LOG_DEBUG("FloydContext::RequestVote: grant vote for (%s:%d), my_term=%lu.",
+            voted_for_ip_.c_str(), voted_for_port_, *my_term);
   return true;
 }
 

@@ -43,7 +43,7 @@ class Peer {
   static void DoAppendEntries(void *arg);
   void AddHeartBeatTask();
   static void DoHeartBeat(void *arg);
-  Status AppendEntries(bool is_heartbeat = false);
+  Status AppendEntries(bool heartbeat = false);
 
   // Request Vote
   void AddRequestVoteTask();
