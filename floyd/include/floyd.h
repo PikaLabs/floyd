@@ -45,12 +45,12 @@ class Floyd {
   Status Start();
 
   Status Write(const std::string& key, const std::string& value);
+  Status DirtyWrite(const std::string& key, const std::string& value);
   Status Delete(const std::string& key);
   Status Read(const std::string& key, std::string& value);
   //Status ReadAll(std::map<std::string, std::string>& kvMap);
   Status DirtyRead(const std::string& key, std::string& value);
   //Status DirtyReadAll(std::map<std::string, std::string>& kvMap);
-  //Status DirtyWrite(const std::string& key, const std::string& value);
   //Status TryLock(const std::string& key);
   //Status UnLock(const std::string& key);
 

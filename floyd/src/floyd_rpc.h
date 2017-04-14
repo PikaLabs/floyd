@@ -16,7 +16,8 @@ class RpcClient;
 
 class RpcClient {
  public:
-  RpcClient() {}
+  RpcClient();
+  RpcClient(int timeout_ms);
   ~RpcClient();
   Status SendRequest(const std::string& server, const command::Command& req,
       command::CommandRes* res);
@@ -24,6 +25,8 @@ class RpcClient {
   Status UpHoldCli(pink::PinkCli *cli);
 
  private:
+  //int retry;
+  int timeout_ms_;
   slash::Mutex mu_;
   std::map<std::string, pink::PinkCli*> cli_map_;
 

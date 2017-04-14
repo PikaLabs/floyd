@@ -53,6 +53,16 @@ static command::CommandRes BuildWriteResponse(bool succ) {
   return cmd_res;
 }
 
+static command::Command BuildDirtyWriteCommand(const std::string& key,
+    const std::string& value) {
+  command::Command cmd;
+  cmd.set_type(command::Command::DirtyWrite);
+  command::Command_Kv* kv = cmd.mutable_kv();
+  kv->set_key(key);
+  kv->set_value(value);
+  return cmd;
+}
+
 static command::Command BuildDeleteCommand(const std::string& key) {
   command::Command cmd;
   cmd.set_type(command::Command::Delete);
@@ -123,6 +133,28 @@ Status Floyd::Write(const std::string& key, const std::string& value) {
     return Status::OK();
   }
   return Status::Corruption("Write Error");
+}
+
+Status Floyd::DirtyWrite(const std::string& key, const std::string& value) {
+  // Write myself first
+  rocksdb::Status rs = db_->Put(rocksdb::WriteOptions(), key, value);
+  if (!rs.ok()) {
+    return Status::IOError("DirtyWrite failed, " + rs.ToString());
+  }
+
+  // Sync to other nodes without response
+  command::Command cmd = BuildDirtyWriteCommand(key, value);
+
+  command::CommandRes cmd_res;
+  std::string local_server = slash::IpPortString(options_.local_ip, options_.local_port);
+  for (auto& iter : options_.members) {
+    if (iter != local_server) {
+      Status s = worker_rpc_client_->SendRequest(iter, cmd, &cmd_res);
+      LOG_DEBUG("Floyd::DirtyWrite Send to %s return %s, key(%s) value(%s)",
+                iter.c_str(), s.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
+    }
+  }
+  return Status::OK();
 }
 
 Status Floyd::Delete(const std::string& key) {
