@@ -235,8 +235,9 @@ void protobuf_AddDesc_client_2eproto() {
     "lient.Response.ServerStatus\032$\n\005Write\022\016\n\006"
     "status\030\001 \002(\005\022\013\n\003msg\030\002 \001(\014\032%\n\004Read\022\016\n\006sta"
     "tus\030\001 \002(\005\022\r\n\005value\030\002 \001(\014\032\033\n\014ServerStatus"
-    "\022\013\n\003msg\030\001 \002(\014*\'\n\004Type\022\t\n\005WRITE\020\001\022\010\n\004READ"
-    "\020\002\022\n\n\006STATUS\020\003", 574);
+    "\022\013\n\003msg\030\001 \002(\014*F\n\004Type\022\t\n\005WRITE\020\001\022\010\n\004READ"
+    "\020\002\022\n\n\006STATUS\020\003\022\016\n\nDIRTYWRITE\020\004\022\r\n\tDIRTYR"
+    "EAD\020\005", 605);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "client.proto", &protobuf_RegisterTypes);
   Request::default_instance_ = new Request();
@@ -271,6 +272,8 @@ bool Type_IsValid(int value) {
     case 1:
     case 2:
     case 3:
+    case 4:
+    case 5:
       return true;
     default:
       return false;

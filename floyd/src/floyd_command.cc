@@ -220,6 +220,39 @@ Status Floyd::DoCommand(const command::Command& cmd,
       cmd, cmd_res);
 }
 
+Status Floyd::ExecuteDirtyCommand(const command::Command& cmd,
+    command::CommandRes *cmd_res) {
+  std::string value;
+  rocksdb::Status rs;
+  switch (cmd.type()) {
+    case command::Command::DirtyWrite: {
+      rs = db_->Put(rocksdb::WriteOptions(), cmd.kv().key(), cmd.kv().value());
+      //TODO(anan) add response type or reorganize proto
+      //cmd_res->set_type(command::CommandRes::DirtyWrite);
+      cmd_res->set_type(command::CommandRes::Write);
+      command::CommandRes_KvRet* kvr = cmd_res->mutable_kvr();
+      if (rs.ok()) {
+        kvr->set_status(true);
+      } else {
+        kvr->set_status(false);
+      }
+
+      LOG_DEBUG("Floyd::ExecuteDirtyCommand DirtyWrite %s, key(%s) value(%s)",
+                rs.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
+#if (LOG_LEVEL != LEVEL_NONE)
+      std::string text_format;
+      google::protobuf::TextFormat::PrintToString(*cmd_res, &text_format);
+      LOG_DEBUG("DirtyWrite Response :\n%s", text_format.c_str());
+#endif
+      break;
+    }
+    default: {
+      return Status::Corruption("Unknown cmd type");
+    }
+  }
+  return Status::OK();
+}
+
 Status Floyd::ExecuteCommand(const command::Command& cmd,
     command::CommandRes *cmd_res) {
   // Append entry local
@@ -245,16 +278,43 @@ Status Floyd::ExecuteCommand(const command::Command& cmd,
   switch (cmd.type()) {
     case command::Command::Write: {
       *cmd_res = BuildWriteResponse(true);
+      //rs = db_->Put(rocksdb::WriteOptions(), cmd.kv().key(), cmd.kv().value());
+      //if (rs.ok()) {
+      //  *cmd_res = BuildWriteResponse(true);
+      //} else {
+      //  *cmd_res = BuildWriteResponse(false);
+      //}
+      //LOG_DEBUG("Floyd::ExecuteCommand Write %s, key(%s) value(%s)",
+      //          rs.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
       break;
     }
     case command::Command::Delete: {
+      //rs = db_->Delete(rocksdb::WriteOptions(), cmd.kv().key());
+      //if (rs.ok()) {
+      //  *cmd_res = BuildDeleteResponse(true);
+      //} else {
+      //  *cmd_res = BuildDeleteResponse(false);
+      //}
+      //LOG_DEBUG("Floyd::ExecuteCommand Delete %s, key(%s)",
+      //          rs.ToString().c_str(), cmd.kv().key().c_str());
       *cmd_res = BuildDeleteResponse(true);
       break;
     }
     case command::Command::Read: {
       rs = db_->Get(rocksdb::ReadOptions(), cmd.kv().key(), &value);
+      //if (rs.ok()) {
+      //  *cmd_res = BuildReadResponse(cmd.kv().key(),
+      //                               value, true);
+      //} else if (rs.IsNotFound()) {
+      //  *cmd_res = BuildReadResponse(cmd.kv().key(),
+      //                               value, false);
+      //} else {
+      //  *cmd_res = BuildReadResponse(cmd.kv().key(),
+      //                               value, false);
+      //}
       *cmd_res = BuildReadResponse(cmd.kv().key(),
           value, rs.ok());
+
       LOG_DEBUG("Floyd::ExecuteCommand Read %s, key(%s) value(%s)",
           rs.ToString().c_str(), cmd.kv().key().c_str(), value.c_str());
 #if (LOG_LEVEL != LEVEL_NONE)

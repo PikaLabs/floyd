@@ -66,7 +66,9 @@ class Cluster {
   Cluster(const Option& option);
 
   Status Write(const std::string& key, const std::string& value);
+  Status DirtyWrite(const std::string& key, const std::string& value);
   Status Read(const std::string& key, std::string* value);
+  Status DirtyRead(const std::string& key, std::string* value);
   Status GetStatus(std::string *msg);
 
  private:

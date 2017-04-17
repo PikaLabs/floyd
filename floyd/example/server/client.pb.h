@@ -46,11 +46,13 @@ class Response_ServerStatus;
 enum Type {
   WRITE = 1,
   READ = 2,
-  STATUS = 3
+  STATUS = 3,
+  DIRTYWRITE = 4,
+  DIRTYREAD = 5
 };
 bool Type_IsValid(int value);
 const Type Type_MIN = WRITE;
-const Type Type_MAX = STATUS;
+const Type Type_MAX = DIRTYREAD;
 const int Type_ARRAYSIZE = Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* Type_descriptor();

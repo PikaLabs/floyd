@@ -4,6 +4,8 @@ enum Type {
   WRITE = 1;
   READ = 2;
   STATUS = 3;
+  DIRTYWRITE = 4;
+  DIRTYREAD = 5;
 }
 
 // Write 

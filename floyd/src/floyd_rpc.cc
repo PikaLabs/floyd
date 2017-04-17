@@ -9,7 +9,7 @@ namespace floyd {
 static std::string CmdType(const command::Command& req);
 
 RpcClient::RpcClient()
-  : timeout_ms_(500) {
+  : timeout_ms_(2000) {
 }
 
 RpcClient::RpcClient(int timeout_ms)
@@ -24,8 +24,6 @@ Status RpcClient::SendRequest(const std::string& server, const command::Command&
   Status ret = UpHoldCli(cli);
   if (!ret.ok()) return ret;
 
-  cli->set_send_timeout(timeout_ms_);
-  cli->set_recv_timeout(timeout_ms_);
   ret = cli->Send((void*)&req);
   LOG_DEBUG("Client::SendRequest %s cmd to %s Send return %s", CmdType(req).c_str(), server.c_str(),
               ret.ToString().c_str());
@@ -68,8 +66,8 @@ Status RpcClient::UpHoldCli(pink::PinkCli *cli) {
     }
     ret = cli->Connect();
     if (ret.ok()) {
-      cli->set_send_timeout(1000);
-      cli->set_recv_timeout(1000);
+      cli->set_send_timeout(timeout_ms_);
+      cli->set_recv_timeout(timeout_ms_);
     }
   }
   return ret;
