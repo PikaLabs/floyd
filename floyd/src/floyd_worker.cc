@@ -30,16 +30,29 @@ int FloydWorkerConn::DealMessage() {
 
   switch (command_.type()) {
     case command::Command::Write:
+      LOG_DEBUG("WorkerConn::DealMessage Write");
     case command::Command::Delete:
-    case command::Command::Read:
+      LOG_DEBUG("WorkerConn::DealMessage Delete");
+    case command::Command::Read: {
+      LOG_DEBUG("WorkerConn::DealMessage Read");
       floyd_->DoCommand(command_, &command_res_);
       break;
-    case command::Command::RaftVote: 
+    }
+    case command::Command::DirtyWrite: {
+      LOG_DEBUG("WorkerConn::DealMessage DirtyWrite");
+      floyd_->ExecuteDirtyCommand(command_, &command_res_);
+      break;
+    }
+    case command::Command::RaftVote: {
+      LOG_DEBUG("WorkerConn::DealMessage RaftVote");
       floyd_->DoRequestVote(command_, &command_res_);
       break;
-    case command::Command::RaftAppendEntries:
+    }
+    case command::Command::RaftAppendEntries: {
+      LOG_DEBUG("WorkerConn::DealMessage RaftAppendEntries");
       floyd_->DoAppendEntries(command_, &command_res_);
       break;
+    }
     default:
       LOG_WARN("unknown cmd type");
       return -1;

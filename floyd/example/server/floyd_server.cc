@@ -1,5 +1,7 @@
 #include "floyd_server.h"
 
+#include <google/protobuf/text_format.h>
+
 #include "client.pb.h"
 #include "floyd/src/logger.h"
 
@@ -89,6 +91,10 @@ int FloydServerConn::DealMessage() {
         response->set_value(value);
         LOG_INFO ("read key(%s) ok!", request.key().c_str());
       }
+
+      std::string text_format;
+      google::protobuf::TextFormat::PrintToString(command_res_, &text_format);
+      LOG_DEBUG("Read res message :\n%s", text_format.c_str());
       break;
     }
 
@@ -108,7 +114,51 @@ int FloydServerConn::DealMessage() {
    //   }
    //   break;
    // }
+    case client::Type::DIRTYWRITE: {
+      LOG_DEBUG("ServerConn::DealMessage DirtyWrite");
+      client::Request_Write request = command_.write();
 
+      command_res_.set_type(client::Type::DIRTYWRITE);
+      client::Response_Write* response = command_res_.mutable_write();
+
+      Status result = floyd_->DirtyWrite(request.key(), request.value());
+      if (!result.ok()) {
+        response->set_status(1);
+        response->set_msg(result.ToString());
+        LOG_ERROR("DirtyWrite failed %s", result.ToString().c_str());
+      } else {
+        response->set_status(0);
+        LOG_INFO ("DirtyWrite key(%s) ok!", request.key().c_str());
+      }
+
+      std::string text_format;
+      google::protobuf::TextFormat::PrintToString(command_res_, &text_format);
+      LOG_DEBUG("DirtyWrite res message :\n%s", text_format.c_str());
+      break;
+    }
+    case client::Type::DIRTYREAD: {
+      LOG_DEBUG("ServerConn::DealMessage DIRTYREAD");
+      client::Request_Read request = command_.read();
+
+      command_res_.set_type(client::Type::DIRTYREAD);
+      client::Response_Read* response = command_res_.mutable_read();
+
+      std::string value;
+      Status result = floyd_->DirtyRead(request.key(), value);
+      if (!result.ok()) {
+        response->set_status(1);
+        LOG_ERROR("DirtyRead failed %s", result.ToString().c_str());
+      } else if (result.ok()) {
+        response->set_status(0);
+        response->set_value(value);
+        LOG_INFO ("DirtyRead key(%s) ok!", request.key().c_str());
+      }
+
+      std::string text_format;
+      google::protobuf::TextFormat::PrintToString(command_res_, &text_format);
+      LOG_DEBUG("DirtyRead res message :\n%s", text_format.c_str());
+      break;
+    }
     default:
       LOG_INFO ("invalid msg_code %d\n", command_.type());
       break;

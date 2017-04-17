@@ -3,11 +3,13 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <algorithm>
+#include <google/protobuf/text_format.h>
 
 #include "logger.h"
 #include "client.pb.h"
 
 #include "slash/include/slash_status.h"
+
 
 namespace floyd {
 namespace client {
@@ -167,9 +169,49 @@ slash::Status Cluster::Read(const std::string& key, std::string* value) {
     return Status::IOError("Recv failed, " + result.ToString());
   }
 
+  std::string text_format;
+  google::protobuf::TextFormat::PrintToString(response, &text_format);
+  LOG_DEBUG("Read Recv message :\n%s", text_format.c_str());
+
   *value = response.read().value();
 
   LOG_INFO("Read OK, status is %d, value is %s\n", response.read().status(), response.read().value().c_str());
+  return Status::OK();
+}
+
+slash::Status Cluster::DirtyRead(const std::string& key, std::string* value) {
+  Request request;
+  request.set_type(Type::DIRTYREAD);
+
+  Request_Read* read_req = request.mutable_read();
+  read_req->set_key(key);
+
+  if (!pb_cli_->Available()) {
+    if (!Init()) {
+      return Status::IOError("init failed");
+    }
+  }
+
+  Status result = pb_cli_->Send(&request);
+  if (!result.ok()) {
+    LOG_ERROR("Send error: %s", result.ToString().c_str());
+    return Status::IOError("Send failed, " + result.ToString());
+  }
+
+  Response response;
+  result = pb_cli_->Recv(&response);
+  if (!result.ok()) {
+    LOG_ERROR("Recv error: %s", result.ToString().c_str());
+    return Status::IOError("Recv failed, " + result.ToString());
+  }
+
+  std::string text_format;
+  google::protobuf::TextFormat::PrintToString(response, &text_format);
+  LOG_DEBUG("DirtyRead Recv message :\n%s", text_format.c_str());
+
+  *value = response.read().value();
+
+  LOG_INFO("DirtyRead OK, status is %d, value is %s\n", response.read().status(), response.read().value().c_str());
   return Status::OK();
 }
 
@@ -200,6 +242,40 @@ slash::Status Cluster::GetStatus(std::string* msg) {
   *msg = response.server_status().msg();
 
   LOG_INFO("Status OK, msg:\n%s", response.server_status().msg().c_str());
+  return Status::OK();
+}
+
+slash::Status Cluster::DirtyWrite(const std::string& key, const std::string& value) {
+  Request request;
+  request.set_type(Type::DIRTYWRITE);
+
+  Request_Write* write_req = request.mutable_write();
+  write_req->set_key(key);
+  write_req->set_value(value);
+
+  if (!pb_cli_->Available()) {
+    if (!Init()) {
+      return Status::IOError("init failed");
+    }
+  }
+  Status result = pb_cli_->Send(&request);
+  if (!result.ok()) {
+    LOG_ERROR("Send error: %s", result.ToString().c_str());
+    return Status::IOError("Send failed, " + result.ToString());
+  }
+
+  Response response;
+  result = pb_cli_->Recv(&response);
+  if (!result.ok()) {
+    LOG_ERROR("Recv error: %s", result.ToString().c_str());
+    return Status::IOError("Recv failed, " + result.ToString());
+  }
+
+  std::string text_format;
+  google::protobuf::TextFormat::PrintToString(response, &text_format);
+  LOG_DEBUG("DirtyWrite Recv message :\n%s", text_format.c_str());
+
+  LOG_INFO("DirtyWrite OK, status is %d, msg is %s\n", response.write().status(), response.write().msg().c_str());
   return Status::OK();
 }
 

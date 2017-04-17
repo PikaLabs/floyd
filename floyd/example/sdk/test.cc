@@ -50,12 +50,30 @@ int main(int argc, char* argv[]) {
       printf ("Write failed, %s\n", result.ToString().c_str());
     }
 
+    printf ("\n=====Test DirtyWrite==========\n");
+    result = cluster.DirtyWrite("dirty_" + key, "dirty_" + value);
+    if (result.ok()) {
+      printf ("DirtyWrite ok\n");
+    } else {
+      printf ("DirtyWrite failed, %s\n", result.ToString().c_str());
+    }
+
+    value = "";
     printf ("\n=====Test Read==========\n");
     result = cluster.Read(key, &value);
     if (result.ok()) {
-      printf ("read ok, value is %s\n", value.c_str());
+      printf ("Read ok, value is %s\n", value.c_str());
     } else {
       printf ("Read failed, %s\n", result.ToString().c_str());
+    }
+    
+    value = "";
+    printf ("\n=====Test DirtyRead==========\n");
+    result = cluster.DirtyRead("dirty_" + key, &value);
+    if (result.ok()) {
+      printf ("DirtyRead ok, value is %s\n", value.c_str());
+    } else {
+      printf ("DirtyRead failed, %s\n", result.ToString().c_str());
     }
 
    // printf ("\n=====Test ServerStatus==========\n");

@@ -90,6 +90,8 @@ class Floyd {
       command::CommandRes *cmd_res);
   Status ExecuteCommand(const command::Command& cmd,
       command::CommandRes *cmd_res);
+  Status ExecuteDirtyCommand(const command::Command& cmd,
+      command::CommandRes *cmd_res);
   void DoRequestVote(command::Command& cmd,
       command::CommandRes* cmd_res);
   void DoAppendEntries(command::Command& cmd,
