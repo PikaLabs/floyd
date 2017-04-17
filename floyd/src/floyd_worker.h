@@ -52,7 +52,10 @@ class FloydWorkerConnFactory : public pink::ConnFactory {
 
 class FloydWorkerHandle : public pink::ServerHandle {
 public:
+  FloydWorkerHandle(Floyd* f);
   virtual bool AccessHandle(std::string& ip) const override;
+private:
+  Floyd* floyd_;
 };
 
 class FloydWorker {

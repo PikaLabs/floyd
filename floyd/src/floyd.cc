@@ -23,7 +23,6 @@ struct LeaderElectTimerEnv {
     : context(c),
     peers(s) {}
 };
-
 Floyd::Floyd(const Options& options)
   : options_(options),
   db_(NULL) {
@@ -75,20 +74,12 @@ Status Floyd::Start() {
     return Status::Corruption("Open DB failed, " + s.ToString());
   }
 
-  // Recover from log
-  //Status s = FileLog::Create(options_.log_path, log_);
-  //if (!s.ok()) {
-  //  LOG_ERROR("Open file log failed! path: " + options_.log_path);
-  //  return s;
-  //}
-
+  // Recover Context
   log_ = new raft::FileLog(options_.log_path);
   context_ = new FloydContext(options_, log_);
-
   context_->RecoverInit();
 
-
-  // TODO Start Apply
+  // Start threads
   apply_ = new FloydApply(FloydApplyEnv(context_, db_, log_));
 
   // Start leader_elect_timer
@@ -144,6 +135,10 @@ void Floyd::StartNewElection(void* arg) {
   }
 }
 
+void Floyd::ResetLeaderElectTimer() {
+  leader_elect_timer_->Reset();
+}
+
 // TODO(anan) many peers may call this; maybe critical section
 void Floyd::BeginLeaderShip() {
   LOG_DEBUG("Floyd::BeginLeaderShip");
@@ -175,8 +170,5 @@ void Floyd::AdvanceCommitIndex() {
   }
 }
 
-void Floyd::ResetLeaderElectTimer() {
-  leader_elect_timer_->Reset();
-}
 
 } // namespace floyd
