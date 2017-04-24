@@ -59,21 +59,26 @@ Status FloydApply::Apply(const Log::Entry& log_entry) {
     return Status::IOError("Parse error");
   }
 
-  Status ret;
+  rocksdb::Status ret;
   switch (cmd.type()) {
     case command::Command::Write:
-      //ret = db_->Put(cmd.kv().key(), cmd.kv().value());
+      ret = db_->Put(rocksdb::WriteOptions(), cmd.kv().key(), cmd.kv().value());
+      LOG_DEBUG("Floyd Apply Write %s, key(%s) value(%s)",
+          ret.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
       break;
     case command::Command::Delete:
-      //ret = db_->Delete(cmd.kv().key());
+      ret = db_->Delete(rocksdb::WriteOptions(), cmd.kv().key());
       break;
     case command::Command::Read:
-      ret = Status::OK();
+      ret = rocksdb::Status::OK();
       break;
     default:
-      ret = Status::Corruption("Unknown cmd type");
+      ret = rocksdb::Status::Corruption("Unknown cmd type");
   }
-  return ret;
+  if (!ret.ok()) {
+    return Status::Corruption(ret.ToString());
+  }
+  return Status::OK();
   /* TODO wangkang-xy
   // case command::Command::ReadAll:
   // case command::Command::TryLock:

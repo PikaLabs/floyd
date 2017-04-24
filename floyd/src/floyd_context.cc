@@ -13,8 +13,8 @@ FloydContext::FloydContext(const floyd::Options& opt,
   leader_port_(0),
   vote_quorum_(0),
   commit_index_(0),
-  apply_index_(0),
-  apply_cond_(&apply_mu_) {
+  apply_cond_(&apply_mu_),
+  apply_index_(0) {
     pthread_rwlockattr_t attr;
     pthread_rwlockattr_init(&attr);
     pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
@@ -90,20 +90,6 @@ void FloydContext::BecomeLeader() {
   leader_ip_ = options_.local_ip;
   leader_port_ = options_.local_port;
   LOG_DEBUG ("FloydContext::BecomeLeader I am become Leader!!");
-
-  //ForEach(&PeerThread::BeginLeaderShip);
-  // printf ("I am become Leader\n");
-
-  // Append noop entry to guarantee that new leader can
-  // Get commitindex timely.
-  //std::vector<Log::Entry*> entries;
-  //Log::Entry entry;
-  //entry.set_type(floyd::raft::Entry::NOOP);
-  //entry.set_term(current_term_);
-  //entries.push_back(&entry);
-  //Append(entries);
-
-  //state_changed_.SignalAll();
 }
 
 bool FloydContext::AdvanceCommitIndex(uint64_t new_commit_index) {
@@ -112,10 +98,6 @@ bool FloydContext::AdvanceCommitIndex(uint64_t new_commit_index) {
   }
   slash::MutexLock l(&commit_mu_);
   if (commit_index_ >= new_commit_index) {
-    // TODO why
-    //if (commit_index > apply_index) {
-    //  apply_->ScheduleApply();
-    //}
     return false;
   }
 

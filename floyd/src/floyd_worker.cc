@@ -7,9 +7,10 @@ namespace floyd {
 using slash::Status;
 
 FloydWorker::FloydWorker(const FloydWorkerEnv& env)
-  : conn_factory_(env.floyd) {
+  : conn_factory_(env.floyd),
+  handle_(env.floyd) {
     thread_ = pink::NewHolyThread(env.port,
-                                  &conn_factory_, env.cron_interval, &handle_);
+        &conn_factory_, env.cron_interval, &handle_);
   }
 
 FloydWorkerConn::FloydWorkerConn(int fd, const std::string& ip_port,
@@ -61,20 +62,17 @@ int FloydWorkerConn::DealMessage() {
   return 0;
 }
 
+FloydWorkerHandle::FloydWorkerHandle(Floyd* f)
+  : floyd_(f) {
+  }
+
 // Only connection from other node should be accepted
 bool FloydWorkerHandle::AccessHandle(std::string& ip_port) const {
-  LOG_DEBUG("WorkerThread::AccessHandle start check(%s)", ip_port.c_str());
+  if (floyd_->peers_.find(ip_port) == floyd_->peers_.end()) {
+    LOG_WARN("WorkerThread deny access from %s", ip_port.c_str());
+    return false;
+  }
   return true;
-  //slash::MutexLock l(&Floyd::nodes_mutex);
-  //for (auto it = Floyd::nodes_info.begin(); it != Floyd::nodes_info.end(); it++) {
-  //  if (ip_port.find((*it)->ip) != std::string::npos) {
-  //    LOG_DEBUG("WorkerThread::AccessHandle ok, with a node(%s:%d)",
-  //              (*it)->ip.c_str(), (*it)->port);
-  //    return true;
-  //  }
-  //}
-  //LOG_DEBUG("WorkerThread::AccessHandle failed");
-  //return false;
 }
 
 } // namespace floyd

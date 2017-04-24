@@ -28,9 +28,7 @@ static command::CommandRes BuildReadResponse(const std::string &key,
   command::CommandRes cmd_res;
   cmd_res.set_type(command::CommandRes::Read);
   command::CommandRes_KvRet* kvr = cmd_res.mutable_kvr();
-  kvr->set_status(succ);
-  if (succ) {
-    kvr->set_value(value);
+  kvr->set_status(succ); if (succ) { kvr->set_value(value);
   }
   return cmd_res;
 }
@@ -381,41 +379,46 @@ Status Floyd::ExecuteCommand(const command::Command& cmd,
   rocksdb::Status rs;
   switch (cmd.type()) {
     case command::Command::Write: {
-      rs = db_->Put(rocksdb::WriteOptions(), cmd.kv().key(), cmd.kv().value());
-      if (rs.ok()) {
-        *cmd_res = BuildWriteResponse(true);
-      } else {
-        *cmd_res = BuildWriteResponse(false);
-      }
-      LOG_DEBUG("Floyd::ExecuteCommand Write %s, key(%s) value(%s)",
-                rs.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
+      *cmd_res = BuildWriteResponse(true);
+      //rs = db_->Put(rocksdb::WriteOptions(), cmd.kv().key(), cmd.kv().value());
+      //if (rs.ok()) {
+      //  *cmd_res = BuildWriteResponse(true);
+      //} else {
+      //  *cmd_res = BuildWriteResponse(false);
+      //}
+      //LOG_DEBUG("Floyd::ExecuteCommand Write %s, key(%s) value(%s)",
+      //          rs.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
       break;
     }
     case command::Command::Delete: {
-      rs = db_->Delete(rocksdb::WriteOptions(), cmd.kv().key());
-      if (rs.ok()) {
-        *cmd_res = BuildDeleteResponse(true);
-      } else {
-        *cmd_res = BuildDeleteResponse(false);
-      }
-      LOG_DEBUG("Floyd::ExecuteCommand Delete %s, key(%s)",
-                rs.ToString().c_str(), cmd.kv().key().c_str());
+      //rs = db_->Delete(rocksdb::WriteOptions(), cmd.kv().key());
+      //if (rs.ok()) {
+      //  *cmd_res = BuildDeleteResponse(true);
+      //} else {
+      //  *cmd_res = BuildDeleteResponse(false);
+      //}
+      //LOG_DEBUG("Floyd::ExecuteCommand Delete %s, key(%s)",
+      //          rs.ToString().c_str(), cmd.kv().key().c_str());
+      *cmd_res = BuildDeleteResponse(true);
       break;
     }
     case command::Command::Read: {
       rs = db_->Get(rocksdb::ReadOptions(), cmd.kv().key(), &value);
-      if (rs.ok()) {
-        *cmd_res = BuildReadResponse(cmd.kv().key(),
-                                     value, true);
-      } else if (rs.IsNotFound()) {
-        *cmd_res = BuildReadResponse(cmd.kv().key(),
-                                     value, false);
-      } else {
-        *cmd_res = BuildReadResponse(cmd.kv().key(),
-                                     value, false);
-      }
+      //if (rs.ok()) {
+      //  *cmd_res = BuildReadResponse(cmd.kv().key(),
+      //                               value, true);
+      //} else if (rs.IsNotFound()) {
+      //  *cmd_res = BuildReadResponse(cmd.kv().key(),
+      //                               value, false);
+      //} else {
+      //  *cmd_res = BuildReadResponse(cmd.kv().key(),
+      //                               value, false);
+      //}
+      *cmd_res = BuildReadResponse(cmd.kv().key(),
+          value, rs.ok());
+
       LOG_DEBUG("Floyd::ExecuteCommand Read %s, key(%s) value(%s)",
-                rs.ToString().c_str(), cmd.kv().key().c_str(), value.c_str());
+          rs.ToString().c_str(), cmd.kv().key().c_str(), value.c_str());
 #if (LOG_LEVEL != LEVEL_NONE)
       std::string text_format;
       google::protobuf::TextFormat::PrintToString(*cmd_res, &text_format);
@@ -441,7 +444,8 @@ void Floyd::DoRequestVote(command::Command& cmd,
   // Step down by lager term
   bool granted = false;
   uint64_t my_term = context_->current_term();
-  LOG_DEBUG("Floyd::DoRequestVote my_term=%lu rqv.term=%lu", my_term, cmd.rqv().term());
+  LOG_DEBUG("Floyd::DoRequestVote my_term=%lu rqv.term=%lu",
+      my_term, cmd.rqv().term());
   if (cmd.rqv().term() < my_term) {
     BuildRequestVoteResponse(my_term, granted);
     return;
@@ -480,7 +484,7 @@ void Floyd::DoAppendEntries(command::Command& cmd,
   // Append entries
   status = context_->AppendEntries(cmd.aerq().term(),
       cmd.aerq().prev_log_term(), cmd.aerq().prev_log_index(),
-       entries, &my_term);
+      entries, &my_term);
 
   // Update log commit index
   if (context_->AdvanceCommitIndex(cmd.aerq().commit_index())) {
