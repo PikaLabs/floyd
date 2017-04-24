@@ -17,6 +17,7 @@
 namespace command {
 class Command;
 class CommandRes;
+class CommandRes_RaftStageRes;
 }
 
 
@@ -56,7 +57,7 @@ class Floyd {
 
   // return true if leader has been elected
   bool GetLeader(std::string& ip_port);
-  // bool GetServerStatus(std::string& msg);
+  bool GetServerStatus(std::string& msg);
   
   // TODO(anan) Internal usage
   void BeginLeaderShip();
@@ -78,6 +79,7 @@ class Floyd {
   pink::Timer* leader_elect_timer_;
   LeaderElectTimerEnv* leader_elect_env_;
   PeersSet peers_;
+  // TODO clientPool
   RpcClient* peer_rpc_client_;
   RpcClient* worker_rpc_client_;
 
@@ -96,7 +98,9 @@ class Floyd {
       command::CommandRes* cmd_res);
   void DoAppendEntries(command::Command& cmd,
       command::CommandRes* cmd_res);
+  bool DoGetServerStatus(command::CommandRes_RaftStageRes* res);
   static void StartNewElection(void* arg);
+  
 };
 
 } // namespace floyd

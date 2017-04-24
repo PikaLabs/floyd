@@ -98,22 +98,22 @@ int FloydServerConn::DealMessage() {
       break;
     }
 
-   // case client::Type::STATUS: {
-   //   LOG_DEBUG("ServerConn::DealMessage ServerStaus");
-   //   command_res_.set_type(client::Type::STATUS);
-   //   client::Response_ServerStatus* response = command_res_.mutable_server_status();
+    case client::Type::STATUS: {
+      LOG_DEBUG("ServerConn::DealMessage ServerStaus");
+      command_res_.set_type(client::Type::STATUS);
+      client::Response_ServerStatus* response = command_res_.mutable_server_status();
 
-   //   std::string value;
-   //   bool ret = floyd_->GetServerStatus(value);
-   //   if (!ret) {
-   //     response->set_msg("failed to dump status");
-   //     LOG_ERROR("Status failed");
-   //   } else {
-   //     response->set_msg(value);
-   //     LOG_INFO ("Status ok!\n%s", value.c_str());
-   //   }
-   //   break;
-   // }
+      std::string value;
+      bool ret = floyd_->GetServerStatus(value);
+      if (!ret) {
+        response->set_msg("failed to dump status");
+        LOG_ERROR("Status failed");
+      } else {
+        response->set_msg(value);
+        LOG_INFO ("Status ok!\n%s", value.c_str());
+      }
+      break;
+    }
     case client::Type::DIRTYWRITE: {
       LOG_DEBUG("ServerConn::DealMessage DirtyWrite");
       client::Request_Write request = command_.write();

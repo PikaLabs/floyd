@@ -207,6 +207,55 @@ Status Floyd::DirtyRead(const std::string& key, std::string& value) {
 // GetServerStatus
 */
 
+bool Floyd::GetServerStatus(std::string& msg) {
+  LOG_DEBUG("Floyd::GetServerStatus start");
+
+  command::CommandRes_RaftStageRes stage;
+  DoGetServerStatus(&stage);
+
+  char str[512];
+  snprintf (str, 512,
+            "      Node           | Role    |   Term    | CommitIdx |    Leader         |  VoteFor          | LastLogTerm | LastLogIdx | LastApplyIdx |\n" 
+            "%15s:%-6d %9s %10lu %10lu %15s:%-6d %15s:%-6d %10lu %10lu %10lu\n",
+            options_.local_ip.c_str(), options_.local_port,
+            stage.role().c_str(),
+            stage.term(), stage.commit_index(),
+            stage.leader_ip().c_str(), stage.leader_port(),
+            stage.voted_for_ip().c_str(), stage.voted_for_port(),
+            stage.last_log_term(), stage.last_log_index(), stage.last_apply_index());
+
+  msg.clear();
+  msg.append(str);
+
+  command::Command cmd;
+  cmd.set_type(command::Command::SynRaftStage);
+  command::CommandRes cmd_res;
+  std::string local_server = slash::IpPortString(options_.local_ip, options_.local_port);
+  for (auto& iter : options_.members) {
+    if (iter != local_server) {
+      Status s = worker_rpc_client_->SendRequest(iter, cmd, &cmd_res);
+      LOG_DEBUG("Floyd::GetServerStatus Send to %s return %s",
+                iter.c_str(), s.ToString().c_str());
+      if (s.ok()) {
+        std::string ip;
+        int port;
+        slash::ParseIpPortString(iter, ip, port);
+        command::CommandRes_RaftStageRes stage = cmd_res.raftstage();
+        snprintf (str, 512,
+                  "%15s:%-6d %9s %10lu %10lu %15s:%-6d %15s:%-6d %10lu %10lu %10lu\n",
+                  ip.c_str(), port,
+                  stage.role().c_str(),
+                  stage.term(), stage.commit_index(),
+                  stage.leader_ip().c_str(), stage.leader_port(),
+                  stage.voted_for_ip().c_str(), stage.voted_for_port(),
+                  stage.last_log_term(), stage.last_log_index(), stage.last_apply_index());
+        msg.append(str);
+        LOG_DEBUG("GetServerStatus msg(%s)", str);
+      }
+    }
+  }
+  return true;
+}
 
 Status Floyd::DoCommand(const command::Command& cmd,
     command::CommandRes *cmd_res) {
@@ -248,11 +297,64 @@ Status Floyd::ExecuteDirtyCommand(const command::Command& cmd,
 #endif
       break;
     }
+    case command::Command::SynRaftStage: {
+      cmd_res->set_type(command::CommandRes::SynRaftStage);
+      command::CommandRes_RaftStageRes* stage = cmd_res->mutable_raftstage();
+      DoGetServerStatus(stage);
+      LOG_DEBUG("Floyd::ExecuteDirtyCommand GetServerStatus %s",
+                rs.ToString().c_str());
+      break;
+    }
     default: {
       return Status::Corruption("Unknown cmd type");
     }
   }
   return Status::OK();
+}
+
+bool Floyd::DoGetServerStatus(command::CommandRes_RaftStageRes* res) {
+  std::string role_msg;
+  switch (context_->role()) {
+    case Role::kFollower:
+      role_msg = "follower";
+      break;
+    case Role::kCandidate:
+      role_msg = "candidate";
+      break;
+    case Role::kLeader:
+      role_msg = "leader";
+      break;
+  }
+
+  res->set_term(context_->current_term());   
+  res->set_commit_index(context_->commit_index());
+  res->set_role(role_msg);
+
+  auto leader_node = context_->leader_node();
+  if (leader_node.first.empty()) {
+    res->set_leader_ip("null");
+  } else {
+    res->set_leader_ip(leader_node.first);
+  }
+  res->set_leader_port(leader_node.second);
+
+  auto voted_for_node = context_->voted_for_node();
+  if (voted_for_node.first.empty()) {
+    res->set_voted_for_ip("null");
+  } else {
+    res->set_voted_for_ip(voted_for_node.first);
+  }
+  res->set_voted_for_port(voted_for_node.second);
+  
+  int64_t last_log_index = log_->GetLastLogIndex();
+  int64_t last_log_term = 0;
+  if (last_log_index > 0) {
+    last_log_term = log_->GetEntry(last_log_index).term();
+  }
+  res->set_last_log_term(last_log_term);
+  res->set_last_log_index(last_log_index);
+  res->set_last_apply_index(context_->apply_index());
+  return true;
 }
 
 Status Floyd::ExecuteCommand(const command::Command& cmd,

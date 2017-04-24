@@ -36,6 +36,11 @@ class FloydContext {
     return {leader_ip_, leader_port_};
   }
 
+  std::pair<std::string, int> voted_for_node() {
+    slash::RWLock l(&stat_rw_, false);
+    return {voted_for_ip_, voted_for_port_};
+  }
+
   uint64_t current_term() {
     slash::RWLock l(&stat_rw_, false);
     return current_term_;
@@ -90,9 +95,9 @@ class FloydContext {
   }
   
   uint64_t NextApplyIndex(uint64_t* len) {
-    slash::MutexLock lcommit(&commit_mu_);
+    //slash::MutexLock lcommit(&commit_mu_);
     slash::MutexLock lapply(&apply_mu_);
-    *len = commit_index_ - apply_index_;
+    *len = commit_index() - apply_index_;
     return apply_index_ + 1;
   }
 

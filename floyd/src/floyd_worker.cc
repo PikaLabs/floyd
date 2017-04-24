@@ -30,16 +30,15 @@ int FloydWorkerConn::DealMessage() {
 
   switch (command_.type()) {
     case command::Command::Write:
-      LOG_DEBUG("WorkerConn::DealMessage Write");
     case command::Command::Delete:
-      LOG_DEBUG("WorkerConn::DealMessage Delete");
     case command::Command::Read: {
-      LOG_DEBUG("WorkerConn::DealMessage Read");
+      LOG_DEBUG("WorkerConn::DealMessage Write/Delete/Read");
       floyd_->DoCommand(command_, &command_res_);
       break;
     }
-    case command::Command::DirtyWrite: {
-      LOG_DEBUG("WorkerConn::DealMessage DirtyWrite");
+    case command::Command::DirtyWrite:
+    case command::Command::SynRaftStage: {
+      LOG_DEBUG("WorkerConn::DealMessage DirtyWrite/SyncRaftStage");
       floyd_->ExecuteDirtyCommand(command_, &command_res_);
       break;
     }

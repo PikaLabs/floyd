@@ -37,13 +37,14 @@ int main(int argc, char* argv[]) {
   printf ("start=%d cnt=%d\n", start, cnt);
   sleep(3);
 
-  for (int i = 0; i < cnt; i++) {
-    printf ("\n=====Test Write==========\n");
-
+  for (int i = start; i < cnt; i++) {
     std::string key = "test_key" + std::to_string(i);
     std::string value = "test_value" + std::to_string(i);
+    
+    slash::Status result;
 
-    slash::Status result = cluster.Write(key, value);
+    printf ("\n=====Test Write==========\n");
+    result = cluster.Write(key, value);
     if (result.ok()) {
       printf ("Write ok\n");
     } else {
@@ -76,6 +77,7 @@ int main(int argc, char* argv[]) {
       printf ("DirtyRead failed, %s\n", result.ToString().c_str());
     }
 
+   // value = "";
    // printf ("\n=====Test ServerStatus==========\n");
    // result = cluster.GetStatus(&value);
    // if (result.ok()) {

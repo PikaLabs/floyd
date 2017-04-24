@@ -147,6 +147,7 @@ bool FloydContext::VoteAndCheck(uint64_t vote_term) {
 }
 
 Status FloydContext::WaitApply(uint64_t commit_index, uint32_t timeout) { 
+  slash::MutexLock lcommit(&commit_mu_);
   while (commit_index_ < commit_index) {
     if (!apply_cond_.TimedWait(timeout)) {
       return Status::Timeout("apply timeout");

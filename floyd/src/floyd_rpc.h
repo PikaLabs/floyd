@@ -36,12 +36,5 @@ class RpcClient {
   bool operator=(const RpcClient&);
 };
 
-//Status Rpc(NodeInfo* ni, command::Command& cmd, command::CommandRes& cmd_res);
-//command::Command BuildWriteCommand(const std::string& key,
-//                                   const std::string& value);
-//command::Command BuildReadAllCommand();
-//command::Command BuildReadCommand(const std::string& key);
-//command::Command BuildDeleteCommand(const std::string& key);
-
-}
+} // namespace floyd
 #endif

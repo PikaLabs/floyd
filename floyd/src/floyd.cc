@@ -28,7 +28,7 @@ Floyd::Floyd(const Options& options)
   : options_(options),
   db_(NULL) {
   peer_rpc_client_ = new RpcClient();
-  worker_rpc_client_ = new RpcClient();
+  worker_rpc_client_ = new RpcClient(4000);
 }
 
 Floyd::~Floyd() {
@@ -98,12 +98,12 @@ Status Floyd::Start() {
       Floyd::StartNewElection,
       static_cast<void*>(leader_elect_env_),
       3 * options_.elect_timeout_ms);
-  LOG_DEBUG("First leader elect will in %lums.", leader_elect_timer_->RemainTime());
-
+  leader_elect_timer_->set_thread_name("FloydTimer");
   if (!leader_elect_timer_->Start()) {
     LOG_ERROR("Floyd leader elect timer failed to start");
     return Status::Corruption("failed to start leader elect timer");
   }
+  LOG_DEBUG("First leader elect will in %lums.", leader_elect_timer_->RemainTime());
 
   // Start worker thread
   worker_ = new FloydWorker(FloydWorkerEnv(options_.local_port, 1000, this));
@@ -170,8 +170,10 @@ void Floyd::AdvanceCommitIndex() {
   }
 
   uint64_t new_commit_index = QuorumMatchIndex();
+  LOG_DEBUG("Floyd::AdvanceCommitIndex new_commit_index=%lu", new_commit_index);
   if (context_->AdvanceCommitIndex(new_commit_index)) {
-      apply_->ScheduleApply();
+    LOG_DEBUG("Floyd::AdvanceCommitIndex ok, ScheduleApply");
+    apply_->ScheduleApply();
   }
 }
 

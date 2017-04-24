@@ -24,6 +24,8 @@ Status RpcClient::SendRequest(const std::string& server, const command::Command&
   Status ret = UpHoldCli(cli);
   if (!ret.ok()) return ret;
 
+  // TODO PinkCli need SendAndRecv ？
+  //    retry ?
   ret = cli->Send((void*)&req);
   LOG_DEBUG("Client::SendRequest %s cmd to %s Send return %s", CmdType(req).c_str(), server.c_str(),
               ret.ToString().c_str());

@@ -82,4 +82,4 @@ Status FloydApply::Apply(const Log::Entry& log_entry) {
   */
 }
 
-}
+} // namespace floyd
