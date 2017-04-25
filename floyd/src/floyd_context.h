@@ -89,10 +89,7 @@ class FloydContext {
   
   /* Apply related */
   // Return false if timeout
-  Status WaitApply(uint64_t commit_index, uint32_t timeout);
-  void SignalApply() {
-    apply_cond_.SignalAll();
-  }
+  Status WaitApply(uint64_t apply_index, uint32_t timeout);
   
   uint64_t NextApplyIndex(uint64_t* len) {
     //slash::MutexLock lcommit(&commit_mu_);
@@ -109,6 +106,7 @@ class FloydContext {
   void ApplyDone(uint64_t index) {
     slash::MutexLock lapply(&apply_mu_);
     apply_index_ = index; 
+    apply_cond_.SignalAll();
   }
 
  private:

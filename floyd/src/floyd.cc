@@ -31,13 +31,13 @@ Floyd::Floyd(const Options& options)
 }
 
 Floyd::~Floyd() {
+  delete leader_elect_timer_;
+  delete leader_elect_env_;
   delete apply_;
   for (auto& pt : peers_) {
     delete pt.second;
   }
   delete worker_;
-  delete leader_elect_timer_;
-  delete leader_elect_env_;
   delete db_;
   delete log_;
   delete context_;
@@ -79,29 +79,8 @@ Status Floyd::Start() {
   context_ = new FloydContext(options_, log_);
   context_->RecoverInit();
 
-  // Start threads
+  // Create Apply threads
   apply_ = new FloydApply(FloydApplyEnv(context_, db_, log_));
-
-  // Start leader_elect_timer
-  int ret;
-  leader_elect_env_ = new LeaderElectTimerEnv(context_, &peers_);
-  leader_elect_timer_ = new pink::Timer(options_.elect_timeout_ms,
-      Floyd::StartNewElection,
-      static_cast<void*>(leader_elect_env_),
-      3 * options_.elect_timeout_ms);
-  leader_elect_timer_->set_thread_name("FloydTimer");
-  if (!leader_elect_timer_->Start()) {
-    LOG_ERROR("Floyd leader elect timer failed to start");
-    return Status::Corruption("failed to start leader elect timer");
-  }
-  LOG_DEBUG("First leader elect will in %lums.", leader_elect_timer_->RemainTime());
-
-  // Start worker thread
-  worker_ = new FloydWorker(FloydWorkerEnv(options_.local_port, 1000, this));
-  if ((ret = worker_->Start()) != 0) {
-    LOG_ERROR("Floyd worker thread failed to start, ret is %d", ret);
-    return Status::Corruption("failed to start worker, return " + std::to_string(ret));
-  }
 
   // Create peer threads
   for (auto iter = options_.members.begin();
@@ -114,6 +93,7 @@ Status Floyd::Start() {
   }
   
   // Start peer thread
+  int ret;
   for (auto& pt : peers_) {
     if ((ret = pt.second->StartThread()) != 0) {
       LOG_ERROR("Floyd peer thread to %s failed to start, ret is %d",
@@ -121,6 +101,26 @@ Status Floyd::Start() {
       return Status::Corruption("failed to start peer thread to " + pt.first);
     }
   }
+
+  // Start worker thread after Peers, because WorkerHandle will check peers
+  worker_ = new FloydWorker(FloydWorkerEnv(options_.local_port, 1000, this));
+  if ((ret = worker_->Start()) != 0) {
+    LOG_ERROR("Floyd worker thread failed to start, ret is %d", ret);
+    return Status::Corruption("failed to start worker, return " + std::to_string(ret));
+  }
+
+  // Start leader_elect_timer
+  leader_elect_env_ = new LeaderElectTimerEnv(context_, &peers_);
+  leader_elect_timer_ = new pink::Timer(options_.elect_timeout_ms,
+      Floyd::StartNewElection,
+      static_cast<void*>(leader_elect_env_),
+      3 * options_.elect_timeout_ms);
+  leader_elect_timer_->set_thread_name("FloydTimer");
+  if (!leader_elect_timer_->Start()) {
+    LOG_ERROR("Floyd leader elect timer failed to start");
+    return Status::Corruption("failed to start leader elect timer");
+  }
+  LOG_DEBUG("First leader elect will in %lums.", leader_elect_timer_->RemainTime());
 
   options_.Dump();
   LOG_DEBUG("Floyd started");

@@ -128,9 +128,9 @@ bool FloydContext::VoteAndCheck(uint64_t vote_term) {
   return (++vote_quorum_) > (options_.members.size() / 2);
 }
 
-Status FloydContext::WaitApply(uint64_t commit_index, uint32_t timeout) { 
-  slash::MutexLock lcommit(&commit_mu_);
-  while (commit_index_ < commit_index) {
+Status FloydContext::WaitApply(uint64_t apply_index, uint32_t timeout) { 
+  slash::MutexLock lapply(&apply_mu_);
+  while (apply_index_ < apply_index) {
     if (!apply_cond_.TimedWait(timeout)) {
       return Status::Timeout("apply timeout");
     }

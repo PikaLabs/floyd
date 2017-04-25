@@ -68,10 +68,11 @@ FloydWorkerHandle::FloydWorkerHandle(Floyd* f)
 
 // Only connection from other node should be accepted
 bool FloydWorkerHandle::AccessHandle(std::string& ip_port) const {
-  if (floyd_->peers_.find(ip_port) == floyd_->peers_.end()) {
-    LOG_WARN("WorkerThread deny access from %s", ip_port.c_str());
-    return false;
-  }
+  //TODO(anan) 
+  //if (floyd_->peers_.find(ip_port) == floyd_->peers_.end()) {
+  //  LOG_WARN("WorkerThread deny access from %s", ip_port.c_str());
+  //  return false;
+  //}
   return true;
 }
 

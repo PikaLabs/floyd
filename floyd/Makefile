@@ -8,15 +8,15 @@ else
 endif
 
 ifndef SLASH_PATH
-SLASH_PATH = ./third/slash
+SLASH_PATH = $(realpath ./third/slash)
 endif
 
 ifndef PINK_PATH
-PINK_PATH = ./third/pink
+PINK_PATH = $(realpath ./third/pink)
 endif
 
 ifndef NEMODB_PATH
-NEMODB_PATH = ./third/nemo-rocksdb
+NEMODB_PATH = $(realpath ./third/nemo-rocksdb)
 endif
 
 OBJECT = floyd
@@ -39,9 +39,9 @@ LIB_PATH = -L./ \
 
 LIBS = -lpthread \
 	   -lprotobuf \
-	   -lslash \
 	   -lpink \
 	   -lnemodb \
+	   -lslash \
 	   -lrocksdb
 
 LIBRARY = libfloyd.a
@@ -70,7 +70,7 @@ $(LIBSLASH):
 	make -C $(SLASH_PATH)/slash __PERF=$(__PERF)
 
 $(LIBPINK):
-	make -C $(PINK_PATH)/pink __PERF=$(__PERF)  SLASH_PATH=../../../$(SLASH_PATH)
+	make -C $(PINK_PATH)/pink __PERF=$(__PERF)  SLASH_PATH=$(SLASH_PATH)
 
 $(LIBNEMODB): 
 	make -C $(NEMODB_PATH)/ __PERF=$(__PERF)
