@@ -8,15 +8,15 @@
 
 namespace floyd {
 
-class Floyd;
+class FloydImpl;
 class FloydWorkerConnFactory; 
 class FloydWorkerHandle;
 
 struct FloydWorkerEnv {
   int port;
   int cron_interval;
-  Floyd* floyd;
-  FloydWorkerEnv(int p, int c, Floyd* f)
+  FloydImpl* floyd;
+  FloydWorkerEnv(int p, int c, FloydImpl* f)
     : port(p),
     cron_interval(c),
     floyd(f) {}
@@ -25,20 +25,20 @@ struct FloydWorkerEnv {
 class FloydWorkerConn : public pink::PbConn {
  public:
   FloydWorkerConn(int fd, const std::string& ip_port,
-      pink::Thread* thread, Floyd* floyd);
+      pink::Thread* thread, FloydImpl* floyd);
   virtual ~FloydWorkerConn();
 
   virtual int DealMessage();
 
  private:
-  Floyd* floyd_;
+  FloydImpl* floyd_;
   command::Command command_;
   command::CommandRes command_res_;
 };
 
 class FloydWorkerConnFactory : public pink::ConnFactory {
  public:
-  explicit FloydWorkerConnFactory(Floyd* floyd)
+  explicit FloydWorkerConnFactory(FloydImpl* floyd)
     : floyd_(floyd) {}
 
   virtual pink::PinkConn *NewPinkConn(int connfd,
@@ -47,15 +47,15 @@ class FloydWorkerConnFactory : public pink::ConnFactory {
   }
 
  private:
-  Floyd* floyd_;
+  FloydImpl* floyd_;
 };
 
 class FloydWorkerHandle : public pink::ServerHandle {
 public:
-  FloydWorkerHandle(Floyd* f);
+  FloydWorkerHandle(FloydImpl* f);
   virtual bool AccessHandle(std::string& ip) const override;
 private:
-  Floyd* floyd_;
+  FloydImpl* floyd_;
 };
 
 class FloydWorker {

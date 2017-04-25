@@ -1,4 +1,4 @@
-#include "floyd/include/floyd.h"
+#include "floyd/src/floyd_impl.h"
 
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_apply.h"
@@ -23,7 +23,8 @@ struct LeaderElectTimerEnv {
     : context(c),
     peers(s) {}
 };
-Floyd::Floyd(const Options& options)
+
+FloydImpl::FloydImpl(const Options& options)
   : options_(options),
   db_(NULL) {
   // TODO (anan) set timeout and retry
@@ -31,7 +32,7 @@ Floyd::Floyd(const Options& options)
   worker_client_pool_ = new ClientPool();
 }
 
-Floyd::~Floyd() {
+FloydImpl::~FloydImpl() {
   delete leader_elect_timer_;
   delete leader_elect_env_;
   delete apply_;
@@ -46,12 +47,12 @@ Floyd::~Floyd() {
   delete worker_client_pool_;
 }
 
-bool Floyd::IsSelf(const std::string& ip_port) {
+bool FloydImpl::IsSelf(const std::string& ip_port) {
   return (ip_port == 
     slash::IpPortString(options_.local_ip, options_.local_port));
 }
 
-bool Floyd::GetLeader(std::string& ip_port) {
+bool FloydImpl::GetLeader(std::string& ip_port) {
   auto leader_node = context_->leader_node();
   if (leader_node.first.empty() || leader_node.second == 0) {
     return false;
@@ -60,7 +61,7 @@ bool Floyd::GetLeader(std::string& ip_port) {
   return true;
 }
 
-Status Floyd::Start() {
+Status FloydImpl::Start() {
   LOG_DEBUG("Start: floyd starting...");
 
   slash::CreatePath(options_.log_path);
@@ -97,7 +98,7 @@ Status Floyd::Start() {
   int ret;
   for (auto& pt : peers_) {
     if ((ret = pt.second->StartThread()) != 0) {
-      LOG_ERROR("Floyd peer thread to %s failed to start, ret is %d",
+      LOG_ERROR("FloydImpl peer thread to %s failed to start, ret is %d",
           pt.first.c_str(), ret);
       return Status::Corruption("failed to start peer thread to " + pt.first);
     }
@@ -106,29 +107,29 @@ Status Floyd::Start() {
   // Start worker thread after Peers, because WorkerHandle will check peers
   worker_ = new FloydWorker(FloydWorkerEnv(options_.local_port, 1000, this));
   if ((ret = worker_->Start()) != 0) {
-    LOG_ERROR("Floyd worker thread failed to start, ret is %d", ret);
+    LOG_ERROR("FloydImpl worker thread failed to start, ret is %d", ret);
     return Status::Corruption("failed to start worker, return " + std::to_string(ret));
   }
 
   // Start leader_elect_timer
   leader_elect_env_ = new LeaderElectTimerEnv(context_, &peers_);
   leader_elect_timer_ = new pink::Timer(options_.elect_timeout_ms,
-      Floyd::StartNewElection,
+      FloydImpl::StartNewElection,
       static_cast<void*>(leader_elect_env_),
       3 * options_.elect_timeout_ms);
   leader_elect_timer_->set_thread_name("FloydTimer");
   if (!leader_elect_timer_->Start()) {
-    LOG_ERROR("Floyd leader elect timer failed to start");
+    LOG_ERROR("FloydImpl leader elect timer failed to start");
     return Status::Corruption("failed to start leader elect timer");
   }
   LOG_DEBUG("First leader elect will in %lums.", leader_elect_timer_->RemainTime());
 
   options_.Dump();
-  LOG_DEBUG("Floyd started");
+  LOG_DEBUG("FloydImpl started");
   return Status::OK();
 }
 
-void Floyd::StartNewElection(void* arg) {
+void FloydImpl::StartNewElection(void* arg) {
   LeaderElectTimerEnv* targ = static_cast<LeaderElectTimerEnv*>(arg);
   targ->context->BecomeCandidate();
   for (auto& peer : *(targ->peers)) {
@@ -136,13 +137,13 @@ void Floyd::StartNewElection(void* arg) {
   }
 }
 
-void Floyd::ResetLeaderElectTimer() {
+void FloydImpl::ResetLeaderElectTimer() {
   leader_elect_timer_->Reset();
 }
 
 // TODO(anan) many peers may call this; maybe critical section
-void Floyd::BeginLeaderShip() {
-  LOG_DEBUG("Floyd::BeginLeaderShip");
+void FloydImpl::BeginLeaderShip() {
+  LOG_DEBUG("FloydImpl::BeginLeaderShip");
   context_->BecomeLeader();
   leader_elect_timer_->Stop();
   for (auto& peer : peers_) {
@@ -150,7 +151,7 @@ void Floyd::BeginLeaderShip() {
   }
 }
 
-uint64_t Floyd::QuorumMatchIndex() {
+uint64_t FloydImpl::QuorumMatchIndex() {
   //if (peers_.empty()) return last_synced_index_;
   std::vector<uint64_t> values;
   for (auto& iter : peers_) {
@@ -160,18 +161,24 @@ uint64_t Floyd::QuorumMatchIndex() {
   return values.at(values.size() / 2);
 }
 
-void Floyd::AdvanceCommitIndex() {
+void FloydImpl::AdvanceCommitIndex() {
   if (context_->role() != Role::kLeader) {
     return;
   }
 
   uint64_t new_commit_index = QuorumMatchIndex();
-  LOG_DEBUG("Floyd::AdvanceCommitIndex new_commit_index=%lu", new_commit_index);
+  LOG_DEBUG("FloydImpl::AdvanceCommitIndex new_commit_index=%lu", new_commit_index);
   if (context_->AdvanceCommitIndex(new_commit_index)) {
-    LOG_DEBUG("Floyd::AdvanceCommitIndex ok, ScheduleApply");
+    LOG_DEBUG("FloydImpl::AdvanceCommitIndex ok, ScheduleApply");
     apply_->ScheduleApply();
   }
 }
 
+Status Floyd::Open(const Options& options, Floyd** floyd) {
+  *floyd = new FloydImpl(options);
+  return Status::OK();
+}
+
+Floyd::~Floyd() { }
 
 } // namespace floyd

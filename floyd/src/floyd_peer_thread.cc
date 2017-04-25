@@ -2,6 +2,7 @@
 
 #include <climits>
 #include <google/protobuf/text_format.h>
+#include "floyd/src/floyd_impl.h"
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_client_pool.h"
 #include "floyd/src/raft/log.h"

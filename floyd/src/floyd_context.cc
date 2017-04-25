@@ -84,6 +84,10 @@ void FloydContext::BecomeCandidate() {
 }
 
 void FloydContext::BecomeLeader() {
+  if (role_ == Role::kLeader) {
+    LOG_DEBUG ("FloydContext::BecomeLeader already Leader!!");
+    return;
+  }
   assert(role_ == Role::kCandidate);
   slash::RWLock(&stat_rw_, true);
   role_ = Role::kLeader;

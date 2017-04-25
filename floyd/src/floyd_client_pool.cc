@@ -17,23 +17,40 @@ ClientPool::ClientPool(int timeout_ms, int retry)
 Status ClientPool::SendAndRecv(const std::string& server, const command::Command& req, command::CommandRes* res) {
   LOG_DEBUG("Client::SendAndRecv %s cmd to %s", CmdType(req).c_str(), server.c_str());
   Status ret;
+  char stage = 0;
   pink::PinkCli *cli = GetClient(server);
+  // TODO(anan) PinkCli need SendAndRecv ? 
 
   for (int i = 0; i < retry_; i++) {
-    ret = UpHoldCli(cli);
-    if (!ret.ok()) {
-      usleep(5000);
-      continue;
+    // Stage 0: Need Connect
+    if ((stage & 0x01) == 0) {
+      ret = UpHoldCli(cli);
+      if (!ret.ok()) {
+        LOG_DEBUG("Client::SendAndRecv %s cmd to %s, Connect Failed %s",
+                  CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
+        cli->Close();
+        usleep(5000);
+        continue;
+      }
+      stage |= 0x01;
     }
 
-    // TODO(anan) PinkCli need SendAndRecv ? 
-    ret = cli->Send((void*)&req);
-    LOG_DEBUG("Client::SendRequest %s cmd to %s Send return %s", CmdType(req).c_str(), server.c_str(),
-              ret.ToString().c_str());
-    if (ret.ok()) {
+    // Stage 1: Need Send
+    if ((stage & 0x02) == 0) {
+      ret = cli->Send((void*)&req);
+      LOG_DEBUG("Client::SendAndRecv %s cmd to %s Send return %s", CmdType(req).c_str(), server.c_str(),
+                ret.ToString().c_str());
+      if (ret.ok()) {
+        stage |= 0x02;
+      }
+    }
+
+    // Stage 2: Need Recv
+    if ((stage & 0x04) == 0) {
       ret = cli->Recv(res);
-      LOG_WARN("Client::SendRequest %s cmd to %s, Recv return %s", CmdType(req).c_str(), server.c_str(),
+      LOG_WARN("Client::SendAndRecv %s cmd to %s, Recv return %s", CmdType(req).c_str(), server.c_str(),
                ret.ToString().c_str());
+      if (ret.ok()) break;
     }
   }
 
@@ -63,11 +80,12 @@ pink::PinkCli* ClientPool::GetClient(const std::string& server) {
 }
 
 Status ClientPool::UpHoldCli(pink::PinkCli *cli) {
+  if (cli == NULL) {
+    return Status::Corruption("null PinkCli");
+  }
+
   Status ret;
-  if (cli == NULL || !cli->Available()) {
-    if (cli != NULL) {
-      cli->Close();
-    }
+  if (!cli->Available()) {
     ret = cli->Connect();
     if (ret.ok()) {
       cli->set_send_timeout(timeout_ms_);

@@ -1,7 +1,6 @@
 #ifndef FLOYD_PEER_THREAD_H_
 #define FLOYD_PEER_THREAD_H_
 
-#include "floyd/include/floyd.h"
 #include "floyd/src/floyd_context.h"
 
 #include "slash/include/slash_status.h"
@@ -13,16 +12,24 @@ namespace floyd {
 
 using slash::Status;
 
-class PeerThread;
+class Peer;
+
+class FloydContext;
+class FloydImpl;
+class FloydApply;
+
+namespace raft {
+class Log;
+}
 
 struct FloydPeerEnv {
   std::string server;
   FloydContext* context;
-  Floyd* floyd;
+  FloydImpl* floyd;
   FloydApply* apply;
   Log* log;
   
-  FloydPeerEnv(const std::string _server, FloydContext* _ctx, Floyd* _floyd,
+  FloydPeerEnv(const std::string _server, FloydContext* _ctx, FloydImpl* _floyd,
                FloydApply* _apply, Log* _log)
     : server(_server),
       context(_ctx), 

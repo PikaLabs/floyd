@@ -1,6 +1,6 @@
 #include "floyd/src/floyd_worker.h"
 
-#include "floyd/include/floyd.h"
+#include "floyd/src/floyd_impl.h"
 #include "floyd/src/logger.h"
 
 namespace floyd {
@@ -14,7 +14,7 @@ FloydWorker::FloydWorker(const FloydWorkerEnv& env)
   }
 
 FloydWorkerConn::FloydWorkerConn(int fd, const std::string& ip_port,
-    pink::Thread* thread, Floyd* floyd)
+    pink::Thread* thread, FloydImpl* floyd)
   : PbConn(fd, ip_port, thread),
   floyd_(floyd){
   }
@@ -62,7 +62,7 @@ int FloydWorkerConn::DealMessage() {
   return 0;
 }
 
-FloydWorkerHandle::FloydWorkerHandle(Floyd* f)
+FloydWorkerHandle::FloydWorkerHandle(FloydImpl* f)
   : floyd_(f) {
   }
 

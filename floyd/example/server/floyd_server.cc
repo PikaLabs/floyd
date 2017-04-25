@@ -11,7 +11,7 @@ namespace floyd {
 
 FloydServer::FloydServer(int sdk_port, const Options& options)
   : options_(options) {
-  floyd_ = new Floyd(options_);
+  Floyd::Open(options_, &floyd_);
   conn_factory_ = new FloydServerConnFactory(floyd_); 
   server_thread_ = pink::NewHolyThread(sdk_port, conn_factory_);
   LOG_INFO ("FloydServer will started on port:%d", sdk_port);

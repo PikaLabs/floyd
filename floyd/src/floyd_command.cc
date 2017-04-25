@@ -1,7 +1,7 @@
 #include "floyd/src/command.pb.h"
 
 #include <google/protobuf/text_format.h>
-#include "floyd/include/floyd.h"
+#include "floyd/src/floyd_impl.h"
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_apply.h"
 #include "floyd/src/floyd_client_pool.h"
@@ -97,7 +97,7 @@ static command::CommandRes BuildAppendEntriesResponse(uint64_t term,
   return cmd_res;
 }
 
-bool Floyd::HasLeader() {
+bool FloydImpl::HasLeader() {
   auto leader_node = context_->leader_node();
   return ((!leader_node.first.empty())
       && leader_node.second != 0);
@@ -117,7 +117,7 @@ static std::vector<Log::Entry*> BuildLogEntry(const command::Command& cmd,
   return entries;
 }
 
-Status Floyd::Write(const std::string& key, const std::string& value) {
+Status FloydImpl::Write(const std::string& key, const std::string& value) {
   if (!HasLeader()) {
     return Status::Incomplete("no leader node!");
   }
@@ -133,7 +133,7 @@ Status Floyd::Write(const std::string& key, const std::string& value) {
   return Status::Corruption("Write Error");
 }
 
-Status Floyd::DirtyWrite(const std::string& key, const std::string& value) {
+Status FloydImpl::DirtyWrite(const std::string& key, const std::string& value) {
   // Write myself first
   rocksdb::Status rs = db_->Put(rocksdb::WriteOptions(), key, value);
   if (!rs.ok()) {
@@ -148,14 +148,14 @@ Status Floyd::DirtyWrite(const std::string& key, const std::string& value) {
   for (auto& iter : options_.members) {
     if (iter != local_server) {
       Status s = worker_client_pool_->SendAndRecv(iter, cmd, &cmd_res);
-      LOG_DEBUG("Floyd::DirtyWrite Send to %s return %s, key(%s) value(%s)",
+      LOG_DEBUG("FloydImpl::DirtyWrite Send to %s return %s, key(%s) value(%s)",
                 iter.c_str(), s.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
     }
   }
   return Status::OK();
 }
 
-Status Floyd::Delete(const std::string& key) {
+Status FloydImpl::Delete(const std::string& key) {
   if (!HasLeader()) {
     return Status::Incomplete("no leader node!");
   }
@@ -171,7 +171,7 @@ Status Floyd::Delete(const std::string& key) {
   return Status::Corruption("Delete Error");
 }
 
-Status Floyd::Read(const std::string& key, std::string& value) {
+Status FloydImpl::Read(const std::string& key, std::string& value) {
   if (!HasLeader()) {
     return Status::Incomplete("no leader node!");
   }
@@ -188,7 +188,7 @@ Status Floyd::Read(const std::string& key, std::string& value) {
   return Status::Corruption("Read Error");
 }
 
-Status Floyd::DirtyRead(const std::string& key, std::string& value) {
+Status FloydImpl::DirtyRead(const std::string& key, std::string& value) {
   rocksdb::Status s = db_->Get(rocksdb::ReadOptions(), key, &value);
   if (s.ok()) {
     return Status::OK();
@@ -205,8 +205,8 @@ Status Floyd::DirtyRead(const std::string& key, std::string& value) {
 // GetServerStatus
 */
 
-bool Floyd::GetServerStatus(std::string& msg) {
-  LOG_DEBUG("Floyd::GetServerStatus start");
+bool FloydImpl::GetServerStatus(std::string& msg) {
+  LOG_DEBUG("FloydImpl::GetServerStatus start");
 
   command::CommandRes_RaftStageRes stage;
   DoGetServerStatus(&stage);
@@ -232,7 +232,7 @@ bool Floyd::GetServerStatus(std::string& msg) {
   for (auto& iter : options_.members) {
     if (iter != local_server) {
       Status s = worker_client_pool_->SendAndRecv(iter, cmd, &cmd_res);
-      LOG_DEBUG("Floyd::GetServerStatus Send to %s return %s",
+      LOG_DEBUG("FloydImpl::GetServerStatus Send to %s return %s",
                 iter.c_str(), s.ToString().c_str());
       if (s.ok()) {
         std::string ip;
@@ -255,7 +255,7 @@ bool Floyd::GetServerStatus(std::string& msg) {
   return true;
 }
 
-Status Floyd::DoCommand(const command::Command& cmd,
+Status FloydImpl::DoCommand(const command::Command& cmd,
     command::CommandRes *cmd_res) {
   // Execute if is leader
   std::pair<std::string, int> leader_node = context_->leader_node();
@@ -269,7 +269,7 @@ Status Floyd::DoCommand(const command::Command& cmd,
       cmd, cmd_res);
 }
 
-Status Floyd::ExecuteDirtyCommand(const command::Command& cmd,
+Status FloydImpl::ExecuteDirtyCommand(const command::Command& cmd,
     command::CommandRes *cmd_res) {
   std::string value;
   rocksdb::Status rs;
@@ -286,7 +286,7 @@ Status Floyd::ExecuteDirtyCommand(const command::Command& cmd,
         kvr->set_status(false);
       }
 
-      LOG_DEBUG("Floyd::ExecuteDirtyCommand DirtyWrite %s, key(%s) value(%s)",
+      LOG_DEBUG("FloydImpl::ExecuteDirtyCommand DirtyWrite %s, key(%s) value(%s)",
                 rs.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
 #if (LOG_LEVEL != LEVEL_NONE)
       std::string text_format;
@@ -299,7 +299,7 @@ Status Floyd::ExecuteDirtyCommand(const command::Command& cmd,
       cmd_res->set_type(command::CommandRes::SynRaftStage);
       command::CommandRes_RaftStageRes* stage = cmd_res->mutable_raftstage();
       DoGetServerStatus(stage);
-      LOG_DEBUG("Floyd::ExecuteDirtyCommand GetServerStatus %s",
+      LOG_DEBUG("FloydImpl::ExecuteDirtyCommand GetServerStatus %s",
                 rs.ToString().c_str());
       break;
     }
@@ -310,7 +310,7 @@ Status Floyd::ExecuteDirtyCommand(const command::Command& cmd,
   return Status::OK();
 }
 
-bool Floyd::DoGetServerStatus(command::CommandRes_RaftStageRes* res) {
+bool FloydImpl::DoGetServerStatus(command::CommandRes_RaftStageRes* res) {
   std::string role_msg;
   switch (context_->role()) {
     case Role::kFollower:
@@ -355,7 +355,7 @@ bool Floyd::DoGetServerStatus(command::CommandRes_RaftStageRes* res) {
   return true;
 }
 
-Status Floyd::ExecuteCommand(const command::Command& cmd,
+Status FloydImpl::ExecuteCommand(const command::Command& cmd,
     command::CommandRes *cmd_res) {
   // Append entry local
   std::vector<Log::Entry*> entry = BuildLogEntry(cmd, context_->current_term());
@@ -386,7 +386,7 @@ Status Floyd::ExecuteCommand(const command::Command& cmd,
       //} else {
       //  *cmd_res = BuildWriteResponse(false);
       //}
-      //LOG_DEBUG("Floyd::ExecuteCommand Write %s, key(%s) value(%s)",
+      //LOG_DEBUG("FloydImpl::ExecuteCommand Write %s, key(%s) value(%s)",
       //          rs.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
       break;
     }
@@ -397,7 +397,7 @@ Status Floyd::ExecuteCommand(const command::Command& cmd,
       //} else {
       //  *cmd_res = BuildDeleteResponse(false);
       //}
-      //LOG_DEBUG("Floyd::ExecuteCommand Delete %s, key(%s)",
+      //LOG_DEBUG("FloydImpl::ExecuteCommand Delete %s, key(%s)",
       //          rs.ToString().c_str(), cmd.kv().key().c_str());
       *cmd_res = BuildDeleteResponse(true);
       break;
@@ -417,7 +417,7 @@ Status Floyd::ExecuteCommand(const command::Command& cmd,
       *cmd_res = BuildReadResponse(cmd.kv().key(),
           value, rs.ok());
 
-      LOG_DEBUG("Floyd::ExecuteCommand Read %s, key(%s) value(%s)",
+      LOG_DEBUG("FloydImpl::ExecuteCommand Read %s, key(%s) value(%s)",
           rs.ToString().c_str(), cmd.kv().key().c_str(), value.c_str());
 #if (LOG_LEVEL != LEVEL_NONE)
       std::string text_format;
@@ -439,12 +439,12 @@ Status Floyd::ExecuteCommand(const command::Command& cmd,
   */
 }
 
-void Floyd::DoRequestVote(command::Command& cmd,
+void FloydImpl::DoRequestVote(command::Command& cmd,
     command::CommandRes* cmd_res) {
   // Step down by lager term
   bool granted = false;
   uint64_t my_term = context_->current_term();
-  LOG_DEBUG("Floyd::DoRequestVote my_term=%lu rqv.term=%lu",
+  LOG_DEBUG("FloydImpl::DoRequestVote my_term=%lu rqv.term=%lu",
       my_term, cmd.rqv().term());
   if (cmd.rqv().term() < my_term) {
     BuildRequestVoteResponse(my_term, granted);
@@ -464,7 +464,7 @@ void Floyd::DoRequestVote(command::Command& cmd,
   *cmd_res = BuildRequestVoteResponse(my_term, granted);
 }
 
-void Floyd::DoAppendEntries(command::Command& cmd,
+void FloydImpl::DoAppendEntries(command::Command& cmd,
     command::CommandRes* cmd_res) {
   // Ignore stale term
   bool status = false;
