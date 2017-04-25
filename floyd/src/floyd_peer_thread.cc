@@ -3,7 +3,7 @@
 #include <climits>
 #include <google/protobuf/text_format.h>
 #include "floyd/src/floyd_context.h"
-#include "floyd/src/floyd_rpc.h"
+#include "floyd/src/floyd_client_pool.h"
 #include "floyd/src/raft/log.h"
 #include "floyd/src/command.pb.h"
 #include "floyd/src/logger.h"
@@ -79,7 +79,7 @@ Status Peer::RequestVote() {
 #endif
 
   command::CommandRes res;
-  Status result = env_.floyd->peer_rpc_client()->SendRequest(env_.server, req, &res);
+  Status result = env_.floyd->peer_client_pool()->SendAndRecv(env_.server, req, &res);
   
   if (!result.ok()) {
     LOG_DEBUG("RequestVote to %s failed %s", env_.server.c_str(), result.ToString().c_str());
@@ -206,7 +206,7 @@ Status Peer::AppendEntries(bool heartbeat) {
 #endif
 
   command::CommandRes res;
-  Status result = env_.floyd->peer_rpc_client()->SendRequest(env_.server, req, &res);
+  Status result = env_.floyd->peer_client_pool()->SendAndRecv(env_.server, req, &res);
   
   if (!result.ok()) {
     LOG_DEBUG("AppendEntry to %s failed %s", env_.server.c_str(), result.ToString().c_str());

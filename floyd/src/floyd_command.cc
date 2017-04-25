@@ -4,7 +4,7 @@
 #include "floyd/include/floyd.h"
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_apply.h"
-#include "floyd/src/floyd_rpc.h"
+#include "floyd/src/floyd_client_pool.h"
 #include "floyd/src/floyd_peer_thread.h"
 #include "floyd/src/raft/file_log.h"
 #include "floyd/src/logger.h"
@@ -147,7 +147,7 @@ Status Floyd::DirtyWrite(const std::string& key, const std::string& value) {
   std::string local_server = slash::IpPortString(options_.local_ip, options_.local_port);
   for (auto& iter : options_.members) {
     if (iter != local_server) {
-      Status s = worker_rpc_client_->SendRequest(iter, cmd, &cmd_res);
+      Status s = worker_client_pool_->SendAndRecv(iter, cmd, &cmd_res);
       LOG_DEBUG("Floyd::DirtyWrite Send to %s return %s, key(%s) value(%s)",
                 iter.c_str(), s.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
     }
@@ -231,7 +231,7 @@ bool Floyd::GetServerStatus(std::string& msg) {
   std::string local_server = slash::IpPortString(options_.local_ip, options_.local_port);
   for (auto& iter : options_.members) {
     if (iter != local_server) {
-      Status s = worker_rpc_client_->SendRequest(iter, cmd, &cmd_res);
+      Status s = worker_client_pool_->SendAndRecv(iter, cmd, &cmd_res);
       LOG_DEBUG("Floyd::GetServerStatus Send to %s return %s",
                 iter.c_str(), s.ToString().c_str());
       if (s.ok()) {
@@ -264,7 +264,7 @@ Status Floyd::DoCommand(const command::Command& cmd,
     return ExecuteCommand(cmd, cmd_res);
   }
   // Redirect to leader
-  return worker_rpc_client_->SendRequest(
+  return worker_client_pool_->SendAndRecv(
       slash::IpPortString(leader_node.first, leader_node.second),
       cmd, cmd_res);
 }

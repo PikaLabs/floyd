@@ -28,7 +28,7 @@ namespace raft {
 class Log;
 }
 //class Log;
-class RpcClient;
+class ClientPool;
 class FloydContext;
 class Peer;
 class FloydApply;
@@ -49,8 +49,8 @@ class Floyd {
   Status DirtyWrite(const std::string& key, const std::string& value);
   Status Delete(const std::string& key);
   Status Read(const std::string& key, std::string& value);
-  //Status ReadAll(std::map<std::string, std::string>& kvMap);
   Status DirtyRead(const std::string& key, std::string& value);
+  //Status ReadAll(std::map<std::string, std::string>& kvMap);
   //Status DirtyReadAll(std::map<std::string, std::string>& kvMap);
   //Status TryLock(const std::string& key);
   //Status UnLock(const std::string& key);
@@ -61,8 +61,8 @@ class Floyd {
   
   // TODO(anan) Internal usage
   void BeginLeaderShip();
-  RpcClient* peer_rpc_client() {
-    return peer_rpc_client_;
+  ClientPool* peer_client_pool() {
+    return peer_client_pool_;
   }
   void AdvanceCommitIndex();
   void ResetLeaderElectTimer();
@@ -80,9 +80,8 @@ class Floyd {
   pink::Timer* leader_elect_timer_;
   LeaderElectTimerEnv* leader_elect_env_;
   PeersSet peers_;
-  // TODO clientPool
-  RpcClient* peer_rpc_client_;
-  RpcClient* worker_rpc_client_;
+  ClientPool* peer_client_pool_;
+  ClientPool* worker_client_pool_;
 
   bool IsSelf(const std::string& ip_port);
   bool HasLeader();

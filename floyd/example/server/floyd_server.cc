@@ -5,6 +5,8 @@
 #include "client.pb.h"
 #include "floyd/src/logger.h"
 
+#include "pink/include/server_thread.h"
+
 namespace floyd {
 
 FloydServer::FloydServer(int sdk_port, const Options& options)

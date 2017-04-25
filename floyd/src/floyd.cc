@@ -6,7 +6,7 @@
 #include "floyd/src/raft/log.h"
 #include "floyd/src/raft/file_log.h"
 #include "floyd/src/floyd_peer_thread.h"
-#include "floyd/src/floyd_rpc.h"
+#include "floyd/src/floyd_client_pool.h"
 #include "floyd/src/logger.h"
 
 
@@ -26,8 +26,9 @@ struct LeaderElectTimerEnv {
 Floyd::Floyd(const Options& options)
   : options_(options),
   db_(NULL) {
-  peer_rpc_client_ = new RpcClient();
-  worker_rpc_client_ = new RpcClient(4000);
+  // TODO (anan) set timeout and retry
+  peer_client_pool_ = new ClientPool();
+  worker_client_pool_ = new ClientPool();
 }
 
 Floyd::~Floyd() {
@@ -41,8 +42,8 @@ Floyd::~Floyd() {
   delete db_;
   delete log_;
   delete context_;
-  delete peer_rpc_client_;
-  delete worker_rpc_client_;
+  delete peer_client_pool_;
+  delete worker_client_pool_;
 }
 
 bool Floyd::IsSelf(const std::string& ip_port) {

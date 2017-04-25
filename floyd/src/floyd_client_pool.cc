@@ -1,5 +1,6 @@
-#include "floyd/src/floyd_rpc.h"
+#include "floyd/src/floyd_client_pool.h"
 
+#include <unistd.h>
 #include "floyd/src/logger.h"
 
 #include "slash/include/slash_string.h"
@@ -8,44 +9,45 @@ namespace floyd {
 
 static std::string CmdType(const command::Command& req);
 
-RpcClient::RpcClient()
-  : timeout_ms_(2000) {
+ClientPool::ClientPool(int timeout_ms, int retry)
+  : timeout_ms_(timeout_ms),
+    retry_(retry) {
 }
 
-RpcClient::RpcClient(int timeout_ms)
-  : timeout_ms_(timeout_ms) {
-}
-
-Status RpcClient::SendRequest(const std::string& server, const command::Command& req, command::CommandRes* res) {
-  LOG_DEBUG("Client::SendRequest %s cmd to %s", CmdType(req).c_str(), server.c_str());
-
+Status ClientPool::SendAndRecv(const std::string& server, const command::Command& req, command::CommandRes* res) {
+  LOG_DEBUG("Client::SendAndRecv %s cmd to %s", CmdType(req).c_str(), server.c_str());
+  Status ret;
   pink::PinkCli *cli = GetClient(server);
 
-  Status ret = UpHoldCli(cli);
-  if (!ret.ok()) return ret;
+  for (int i = 0; i < retry_; i++) {
+    ret = UpHoldCli(cli);
+    if (!ret.ok()) {
+      usleep(5000);
+      continue;
+    }
 
-  // TODO PinkCli need SendAndRecv ？
-  //    retry ?
-  ret = cli->Send((void*)&req);
-  LOG_DEBUG("Client::SendRequest %s cmd to %s Send return %s", CmdType(req).c_str(), server.c_str(),
+    // TODO(anan) PinkCli need SendAndRecv ? 
+    ret = cli->Send((void*)&req);
+    LOG_DEBUG("Client::SendRequest %s cmd to %s Send return %s", CmdType(req).c_str(), server.c_str(),
               ret.ToString().c_str());
-  if (ret.ok()) {
-    ret = cli->Recv(res);
-    LOG_WARN("Client::SendRequest %s cmd to %s, Recv return %s", CmdType(req).c_str(), server.c_str(),
-              ret.ToString().c_str());
+    if (ret.ok()) {
+      ret = cli->Recv(res);
+      LOG_WARN("Client::SendRequest %s cmd to %s, Recv return %s", CmdType(req).c_str(), server.c_str(),
+               ret.ToString().c_str());
+    }
   }
 
   return ret;
 }
 
-RpcClient::~RpcClient() {
+ClientPool::~ClientPool() {
   slash::MutexLock l(&mu_);
   for (auto& iter : cli_map_) {
     delete iter.second;
   }
 }
 
-pink::PinkCli* RpcClient::GetClient(const std::string& server) {
+pink::PinkCli* ClientPool::GetClient(const std::string& server) {
   slash::MutexLock l(&mu_);
   auto iter = cli_map_.find(server);
   if (iter == cli_map_.end()) {
@@ -60,7 +62,7 @@ pink::PinkCli* RpcClient::GetClient(const std::string& server) {
   }
 }
 
-Status RpcClient::UpHoldCli(pink::PinkCli *cli) {
+Status ClientPool::UpHoldCli(pink::PinkCli *cli) {
   Status ret;
   if (cli == NULL || !cli->Available()) {
     if (cli != NULL) {

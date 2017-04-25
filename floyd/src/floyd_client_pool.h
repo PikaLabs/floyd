@@ -1,5 +1,5 @@
-#ifndef FLOYD_RPC_H_
-#define FLOYD_RPC_H_
+#ifndef FLOYD_CLIENT_POOL_H_
+#define FLOYD_CLIENT_POOL_H_
 
 #include "floyd/src/command.pb.h"
 
@@ -12,28 +12,29 @@ namespace floyd {
 
 using slash::Status;
 
-class RpcClient;
+class ClientPool;
 
-class RpcClient {
+class ClientPool {
  public:
-  RpcClient();
-  RpcClient(int timeout_ms);
-  ~RpcClient();
-  Status SendRequest(const std::string& server, const command::Command& req,
+  explicit ClientPool(int timeout_ms = 5000, int retry = 3);
+  ~ClientPool();
+
+  // Each try consists of Connect, Send and Recv;
+  Status SendAndRecv(const std::string& server, const command::Command& req,
       command::CommandRes* res);
 
   Status UpHoldCli(pink::PinkCli *cli);
 
  private:
-  //int retry;
   int timeout_ms_;
+  int retry_;
   slash::Mutex mu_;
   std::map<std::string, pink::PinkCli*> cli_map_;
 
   pink::PinkCli* GetClient(const std::string& server);
 
-  RpcClient(const RpcClient&);
-  bool operator=(const RpcClient&);
+  ClientPool(const ClientPool&);
+  bool operator=(const ClientPool&);
 };
 
 } // namespace floyd
