@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sys/types.h>
 #include <dirent.h>
+#include <google/protobuf/text_format.h>
 
 #include "floyd/src/logger.h"
 //#include "slash/include/slash_mutex.h"
@@ -97,11 +98,19 @@ bool FileLog::Recover() {
               filename.c_str());
     }
 
+    manifest_->Save();
+
+//#if (LOG_LEVEL != LEVEL_NONE)
+//    std::string text_format;
+//    google::protobuf::TextFormat::PrintToString(manifest_->metadata_, &text_format);
+//    LOG_DEBUG("FileLog::Recover new metadata message :\n%s", text_format.c_str());
+//#endif
+
     current_sync_ = std::unique_ptr<Sync>(new Sync(0, manifest_, table_));
 
   } else {
 
-    // mainifest recover
+    // manifest recover
     slash::NewRandomRWFile(filename, &file);
     manifest_ = new Manifest(file);
     manifest_->Recover();
@@ -142,6 +151,11 @@ bool FileLog::Recover() {
         std::unique_ptr<Sync>(new Sync(GetLastLogIndex(), manifest_, table_));
 
     manifest_->Save();
+//#if (LOG_LEVEL != LEVEL_NONE)
+//    std::string text_format;
+//    google::protobuf::TextFormat::PrintToString(manifest_->metadata_, &text_format);
+//    LOG_DEBUG("FileLog::Recover old metadata message :\n%s", text_format.c_str());
+//#endif
   }
   return true;
 }
@@ -421,6 +435,12 @@ bool Manifest::Save() {
   memcpy(scratch + offset, &length_, sizeof(kOffsetLength));
   offset += kOffsetLength;
 
+//#if (LOG_LEVEL != LEVEL_NONE)
+//  std::string text_format;
+//  google::protobuf::TextFormat::PrintToString(metadata_, &text_format);
+//  LOG_DEBUG("Manifest::Save metadata message :\n%s", text_format.c_str());
+//#endif
+
 //  std::cout << "current_term: " << metadata_.raft_metadata().current_term() << " entry_start: " << metadata_.entries_start() << " entry_end: " << metadata_.entries_end() << std::endl << std::flush;
   if (!metadata_.SerializeToArray(scratch + offset, length_)) {
     return false;
@@ -440,6 +460,8 @@ bool Manifest::Save() {
 void FileLog::UpdateMetadata() {
   // metadata_.set_entries_start(memory_log_.GetStartLogIndex());
   // metadata_.set_entries_end(memory_log_.GetLastLogIndex());
+
+  *(manifest_->metadata_.mutable_raft_metadata()) = Log::metadata;
   manifest_->Update(memory_log_.GetStartLogIndex(),
                     memory_log_.GetLastLogIndex());
 }

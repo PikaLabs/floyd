@@ -15,32 +15,35 @@ using slash::Status;
 class Peer;
 
 class FloydContext;
-class FloydImpl;
+class FloydPrimary;
 class FloydApply;
 
 namespace raft {
 class Log;
 }
+class ClientPool;
 
 struct FloydPeerEnv {
   std::string server;
   FloydContext* context;
-  FloydImpl* floyd;
+  FloydPrimary* primary;
   FloydApply* apply;
   Log* log;
+  ClientPool* pool;
   
-  FloydPeerEnv(const std::string _server, FloydContext* _ctx, FloydImpl* _floyd,
-               FloydApply* _apply, Log* _log)
+  FloydPeerEnv(const std::string _server, FloydContext* _ctx, FloydPrimary* _pm,
+               FloydApply* _apply, Log* _log, ClientPool* _pool)
     : server(_server),
       context(_ctx), 
-      floyd(_floyd),
+      primary(_pm),
       apply(_apply),
-      log(_log) { }
+      log(_log),
+      pool(_pool) { }
 };
 
 class Peer {
  public:
-  Peer(FloydPeerEnv env);
+  explicit Peer(FloydPeerEnv env);
   ~Peer();
 
   int StartThread();
@@ -57,7 +60,7 @@ class Peer {
   Status RequestVote();
   static void DoRequestVote(void *arg);
 
-  void BeginLeaderShip();
+  void BecomeLeader();
 
   uint64_t GetMatchIndex();
   void set_next_index(uint64_t next_index);

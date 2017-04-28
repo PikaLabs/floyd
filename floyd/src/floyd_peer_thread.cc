@@ -2,7 +2,7 @@
 
 #include <climits>
 #include <google/protobuf/text_format.h>
-#include "floyd/src/floyd_impl.h"
+#include "floyd/src/floyd_primary_thread.h"
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_client_pool.h"
 #include "floyd/src/raft/log.h"
@@ -80,7 +80,7 @@ Status Peer::RequestVote() {
 #endif
 
   command::CommandRes res;
-  Status result = env_.floyd->peer_client_pool()->SendAndRecv(env_.server, req, &res);
+  Status result = env_.pool->SendAndRecv(env_.server, req, &res);
   
   if (!result.ok()) {
     LOG_DEBUG("RequestVote to %s failed %s", env_.server.c_str(), result.ToString().c_str());
@@ -97,7 +97,7 @@ Status Peer::RequestVote() {
     if (res.rsv().granted()) {
       LOG_DEBUG("Peer(%s)::RequestVote granted will Vote and check", env_.server.c_str());
       if (env_.context->VoteAndCheck(res_term)) {
-        env_.floyd->BeginLeaderShip();  
+        env_.primary->AddTask(kBecomeLeader);  
       }
     } else {
       LOG_DEBUG("Vote request denied by %s, res_term=%lu, current_term=%lu",
@@ -105,7 +105,9 @@ Status Peer::RequestVote() {
       if (res_term > current_term) {
         //TODO(anan) maybe combine these 2 steps
         env_.context->BecomeFollower(res_term);
-        env_.floyd->ResetLeaderElectTimer();
+        env_.primary->ResetElectLeaderTimer();
+        //env_.primary->AddTask(TaskType::kCheckElectLeader);
+        //env_.floyd->ResetLeaderElectTimer();
       }
     }
   }
@@ -113,13 +115,13 @@ Status Peer::RequestVote() {
   return result;
 }
 
-void Peer::BeginLeaderShip() {
+void Peer::BecomeLeader() {
   {
     slash::MutexLock l(&mu_);
     next_index_ = env_.log->GetLastLogIndex() + 1;
     match_index_ = 0;
   }
-  LOG_DEBUG("Peer(%s)::BeginLeaderShip next_index=%lu", env_.server.c_str(), next_index_);
+  LOG_DEBUG("Peer(%s)::BecomeLeader next_index=%lu", env_.server.c_str(), next_index_);
 
   // right now
   bg_thread_.Schedule(DoHeartBeat, this);
@@ -207,7 +209,7 @@ Status Peer::AppendEntries(bool heartbeat) {
 #endif
 
   command::CommandRes res;
-  Status result = env_.floyd->peer_client_pool()->SendAndRecv(env_.server, req, &res);
+  Status result = env_.pool->SendAndRecv(env_.server, req, &res);
   
   if (!result.ok()) {
     LOG_DEBUG("AppendEntry to %s failed %s", env_.server.c_str(), result.ToString().c_str());
@@ -222,14 +224,16 @@ Status Peer::AppendEntries(bool heartbeat) {
   if (result.ok() && res_term > env_.context->current_term()) {
     //TODO(anan) maybe combine these 2 steps
     env_.context->BecomeFollower(res_term);
-    env_.floyd->ResetLeaderElectTimer();
+    env_.primary->ResetElectLeaderTimer();
+    //env_.primary->AddTask(TaskType::kCheckElectLeader);
+    //env_.floyd->ResetLeaderElectTimer();
   }
   
   if (result.ok() && env_.context->role() == Role::kLeader) {
     if (res.aers().status()) {
       match_index_ = prev_log_index + num_entries;
-      //TODO(anan) 
-      env_.floyd->AdvanceCommitIndex();
+      //TODO(anan) AddTask or direct call
+      env_.primary->AdvanceCommitIndex();
       next_index_ = match_index_ + 1;
     } else {
       if (next_index_ > 1) --next_index_;

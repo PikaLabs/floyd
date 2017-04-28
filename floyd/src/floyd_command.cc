@@ -5,6 +5,7 @@
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_apply.h"
 #include "floyd/src/floyd_client_pool.h"
+#include "floyd/src/floyd_primary_thread.h"
 #include "floyd/src/floyd_peer_thread.h"
 #include "floyd/src/raft/file_log.h"
 #include "floyd/src/logger.h"
@@ -452,7 +453,7 @@ void FloydImpl::DoRequestVote(command::Command& cmd,
   }
   if (cmd.rqv().term() > my_term) {
     context_->BecomeFollower(cmd.rqv().term());
-    leader_elect_timer_->Reset();
+    primary_->ResetElectLeaderTimer();
   }
 
   // Try to get my vote
@@ -475,7 +476,9 @@ void FloydImpl::DoAppendEntries(command::Command& cmd,
   }
   context_->BecomeFollower(cmd.aerq().term(),
       cmd.aerq().ip(), cmd.aerq().port());
-  leader_elect_timer_->Reset();
+  primary_->ResetElectLeaderTimer();
+  //primary_->AddTask(TaskType::kCheckElectLeader);
+  //leader_elect_timer_->Reset();
   
   std::vector<Log::Entry*> entries;
   for (auto& it : *(cmd.mutable_aerq()->mutable_entries())) {

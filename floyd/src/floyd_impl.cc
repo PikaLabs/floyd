@@ -6,6 +6,7 @@
 #include "floyd/src/raft/log.h"
 #include "floyd/src/raft/file_log.h"
 #include "floyd/src/floyd_peer_thread.h"
+#include "floyd/src/floyd_primary_thread.h"
 #include "floyd/src/floyd_client_pool.h"
 #include "floyd/src/logger.h"
 
@@ -14,15 +15,6 @@
 #include "slash/include/slash_string.h"
 
 namespace floyd {
-
-
-struct LeaderElectTimerEnv {
-  FloydContext* context;
-  PeersSet* peers;
-  LeaderElectTimerEnv(FloydContext* c, PeersSet* s)
-    : context(c),
-    peers(s) {}
-};
 
 FloydImpl::FloydImpl(const Options& options)
   : options_(options),
@@ -33,8 +25,7 @@ FloydImpl::FloydImpl(const Options& options)
 }
 
 FloydImpl::~FloydImpl() {
-  delete leader_elect_timer_;
-  delete leader_elect_env_;
+  delete primary_;
   delete apply_;
   for (auto& pt : peers_) {
     delete pt.second;
@@ -84,12 +75,16 @@ Status FloydImpl::Start() {
   // Create Apply threads
   apply_ = new FloydApply(FloydApplyEnv(context_, db_, log_));
 
+  // TODO(annan) peers and primary refer to each other
+  // Create PrimaryThread before Peers
+  primary_ = new FloydPrimary(FloydPrimaryEnv(context_, apply_, log_));
+
   // Create peer threads
   for (auto iter = options_.members.begin();
       iter != options_.members.end(); iter++) {
     if (!IsSelf(*iter)) {
-      Peer* pt = new Peer(FloydPeerEnv(*iter, context_, this,
-            apply_, log_));
+      Peer* pt = new Peer(FloydPeerEnv(*iter, context_, primary_,
+            apply_, log_, peer_client_pool_));
       peers_.insert(std::pair<std::string, Peer*>(*iter, pt));
     }
   }
@@ -111,67 +106,17 @@ Status FloydImpl::Start() {
     return Status::Corruption("failed to start worker, return " + std::to_string(ret));
   }
 
-  // Start leader_elect_timer
-  leader_elect_env_ = new LeaderElectTimerEnv(context_, &peers_);
-  leader_elect_timer_ = new pink::Timer(options_.elect_timeout_ms,
-      FloydImpl::StartNewElection,
-      static_cast<void*>(leader_elect_env_),
-      3 * options_.elect_timeout_ms);
-  leader_elect_timer_->set_thread_name("FloydTimer");
-  if (!leader_elect_timer_->Start()) {
-    LOG_ERROR("FloydImpl leader elect timer failed to start");
-    return Status::Corruption("failed to start leader elect timer");
+  // Set and Start PrimaryThread
+  primary_->SetPeers(&peers_);
+  if ((ret = primary_->Start()) != 0) {
+    LOG_ERROR("FloydImpl primary thread failed to start, ret is %d", ret);
+    return Status::Corruption("failed to start primary thread, return " + std::to_string(ret));
   }
-  LOG_DEBUG("First leader elect will in %lums.", leader_elect_timer_->RemainTime());
+  primary_->AddTask(kCheckElectLeader);
 
   options_.Dump();
   LOG_DEBUG("FloydImpl started");
   return Status::OK();
-}
-
-void FloydImpl::StartNewElection(void* arg) {
-  LeaderElectTimerEnv* targ = static_cast<LeaderElectTimerEnv*>(arg);
-  targ->context->BecomeCandidate();
-  for (auto& peer : *(targ->peers)) {
-    peer.second->AddRequestVoteTask();
-  }
-}
-
-void FloydImpl::ResetLeaderElectTimer() {
-  leader_elect_timer_->Reset();
-}
-
-// TODO(anan) many peers may call this; maybe critical section
-void FloydImpl::BeginLeaderShip() {
-  LOG_DEBUG("FloydImpl::BeginLeaderShip");
-  context_->BecomeLeader();
-  leader_elect_timer_->Stop();
-  for (auto& peer : peers_) {
-    peer.second->BeginLeaderShip();
-  }
-}
-
-uint64_t FloydImpl::QuorumMatchIndex() {
-  //if (peers_.empty()) return last_synced_index_;
-  std::vector<uint64_t> values;
-  for (auto& iter : peers_) {
-    values.push_back(iter.second->GetMatchIndex());
-  }
-  std::sort(values.begin(), values.end());
-  return values.at(values.size() / 2);
-}
-
-void FloydImpl::AdvanceCommitIndex() {
-  if (context_->role() != Role::kLeader) {
-    return;
-  }
-
-  uint64_t new_commit_index = QuorumMatchIndex();
-  LOG_DEBUG("FloydImpl::AdvanceCommitIndex new_commit_index=%lu", new_commit_index);
-  if (context_->AdvanceCommitIndex(new_commit_index)) {
-    LOG_DEBUG("FloydImpl::AdvanceCommitIndex ok, ScheduleApply");
-    apply_->ScheduleApply();
-  }
 }
 
 Status Floyd::Open(const Options& options, Floyd** floyd) {

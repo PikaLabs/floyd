@@ -10,14 +10,13 @@ SRC_DIR = ./
 THIRD_PATH = ../third
 
 
-INCLUDE_PATH = -I./include/ \
-			   -I$(THIRD_PATH)/slash/output/include/ \
-			   -I$(THIRD_PATH)/pink/output/include/ \
-			   -I$(THIRD_PATH)/pink/output/
+INCLUDE_PATH = -I./ \
+							 -I$(THIRD_PATH)/slash/ \
+							 -I$(THIRD_PATH)/pink/
 
 LIB_PATH = -L./ \
-		   -L$(THIRD_PATH)/slash/output/lib/ \
-		   -L$(THIRD_PATH)/pink/output/lib
+			 -L$(THIRD_PATH)/slash/slash/lib/ \
+			 -L$(THIRD_PATH)/pink/pink/lib/
 
 LIBS = -lpthread \
 	   -lprotobuf \
@@ -31,9 +30,8 @@ BASE_OBJS += $(wildcard $(SRC_DIR)/*.c)
 BASE_OBJS += $(wildcard $(SRC_DIR)/*.cpp)
 OBJS = $(patsubst %.cc,%.o,$(BASE_OBJS))
 
-LIBSLASH = $(THIRD_PATH)/slash/output/lib/libslash.a
-LIBPINK = $(THIRD_PATH)/pink/output/lib/libpink.a
-LIBLEVELDB = $(THIRD_PATH)/leveldb/out-static/libleveldb.a
+LIBSLASH = $(THIRD_PATH)/slash/slash/lib/libslash.a
+LIBPINK = $(THIRD_PATH)/pink/pink/lib/libpink.a
 
 all: $(OBJECT)
 	@echo " OBJS : $(OBJS)"
@@ -44,9 +42,6 @@ $(LIBSLASH):
 
 $(LIBPINK):
 	make -C $(THIRD_PATH)/pink/
-
-$(LIBLEVELDB): 
-	make -C $(THIRD_PATH)/leveldb/
 
 $(OBJECT): $(LIBSLASH) $(LIBPINK) $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) -Wl,-Bdynamic $(LIBS)

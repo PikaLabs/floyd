@@ -33,10 +33,11 @@ class Log;
 class ClientPool;
 class FloydContext;
 class Peer;
+class FloydPrimary;
 class FloydApply;
 class FloydWorker;
 class FloydWorkerConn;
-struct LeaderElectTimerEnv;
+//struct LeaderElectTimerEnv;
 
 typedef std::map<std::string, Peer*> PeersSet;
 
@@ -75,18 +76,10 @@ class FloydImpl : public Floyd {
 
   FloydWorker* worker_;
   FloydApply* apply_;
-  pink::Timer* leader_elect_timer_;
-  LeaderElectTimerEnv* leader_elect_env_;
+  FloydPrimary* primary_;
   PeersSet peers_;
   ClientPool* peer_client_pool_;
   ClientPool* worker_client_pool_;
-
-  void BeginLeaderShip();
-  ClientPool* peer_client_pool() {
-    return peer_client_pool_;
-  }
-  void AdvanceCommitIndex();
-  void ResetLeaderElectTimer();
 
   bool IsSelf(const std::string& ip_port);
   bool HasLeader();
@@ -104,7 +97,7 @@ class FloydImpl : public Floyd {
   void DoAppendEntries(command::Command& cmd,
       command::CommandRes* cmd_res);
   bool DoGetServerStatus(command::CommandRes_RaftStageRes* res);
-  static void StartNewElection(void* arg);
+  //static void StartNewElection(void* arg);
   
   // No coping allowed
   FloydImpl(const FloydImpl&);

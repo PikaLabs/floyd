@@ -2,7 +2,7 @@
 #include <dirent.h>
 //#include "floyd_util.h"
 #include "file_log.h"
-#include "include/slash_mutex.h"
+#include "slash/include/slash_mutex.h"
 
 #include <iostream>
 #include <google/protobuf/text_format.h>

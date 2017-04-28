@@ -1,4 +1,6 @@
 #include "floyd/src/floyd_context.h"
+
+#include <stdlib.h>
 #include "floyd/src/logger.h"
 
 namespace floyd {
@@ -19,6 +21,7 @@ FloydContext::FloydContext(const floyd::Options& opt,
     pthread_rwlockattr_init(&attr);
     pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
     pthread_rwlock_init(&stat_rw_, &attr);
+    srandom(time(NULL));
   }
 
 FloydContext::~FloydContext() {
@@ -38,12 +41,20 @@ void FloydContext::RecoverInit() {
   role_ = Role::kFollower;
 }
 
+uint64_t FloydContext::GetElectLeaderTimeout() {
+  return rand() % (options_.elect_timeout_ms * 2) + options_.elect_timeout_ms;
+}
+
 void FloydContext::BecomeFollower(uint64_t new_term,
       const std::string leader_ip, int leader_port) {
-  assert(current_term_ <= new_term);
+  slash::RWLock(&stat_rw_, true);
   LOG_DEBUG("BecomeFollower: with current_term_(%lu) and new_term(%lu)",
       current_term_, new_term);
-  slash::RWLock(&stat_rw_, true);
+  //TODO(anan) BecameCandidate will conflict this assert
+  //assert(current_term_ <= new_term);
+  if (current_term_ > new_term) {
+    return;
+  }
   if (current_term_ < new_term) {
     current_term_ = new_term;
     voted_for_ip_ = "";
@@ -84,12 +95,11 @@ void FloydContext::BecomeCandidate() {
 }
 
 void FloydContext::BecomeLeader() {
+  slash::RWLock(&stat_rw_, true);
   if (role_ == Role::kLeader) {
     LOG_DEBUG ("FloydContext::BecomeLeader already Leader!!");
     return;
   }
-  assert(role_ == Role::kCandidate);
-  slash::RWLock(&stat_rw_, true);
   role_ = Role::kLeader;
   leader_ip_ = options_.local_ip;
   leader_port_ = options_.local_port;
@@ -198,11 +208,13 @@ bool FloydContext::AppendEntries(uint64_t term,
   }
 
   // Append entry
-  if (pre_log_index < log_->GetLastLogIndex()) {
+  if (pre_log_index < my_log_index) {
       //log_->Resize(pre_log_index);
       log_->TruncateSuffix(pre_log_index + 1);
   }
-  log_->Append(entries);
+  if (entries.size() > 0) {
+    log_->Append(entries);
+  }
   *my_term = current_term_;
 
   return true;

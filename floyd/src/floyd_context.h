@@ -63,6 +63,8 @@ class FloydContext {
     return options_.heartbeat_us;
   }
 
+  uint64_t GetElectLeaderTimeout();
+
   uint64_t append_entries_size_once() {
     return options_.append_entries_size_once;
   }
