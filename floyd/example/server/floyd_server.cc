@@ -163,7 +163,7 @@ int FloydServerConn::DealMessage() {
     }
     case client::Type::DELETE: {
       LOG_DEBUG("ServerConn::DealMessage Delete");
-      client::Request_Write request = command_.write();
+      client::Request_Delete request = command_.del();
 
       command_res_.set_type(client::Type::DELETE);
       client::Response_Delete* response = command_res_.mutable_del();

@@ -126,7 +126,7 @@ slash::Status Cluster::Read(const std::string& key, std::string* value) {
 //  LOG_DEBUG("Read Recv message :\n%s", text_format.c_str());
 
 //  LOG_INFO("Read OK, status is %d, value is %s\n", response.read().status(), response.read().value().c_str());
-  if (response.write().status() == 0) {
+  if (response.read().status() == 0) {
     *value = response.read().value();
     return Status::OK();
   } else {
@@ -167,7 +167,7 @@ slash::Status Cluster::DirtyRead(const std::string& key, std::string* value) {
   *value = response.read().value();
 
 //  LOG_INFO("DirtyRead OK, status is %d, value is %s\n", response.read().status(), response.read().value().c_str());
-  if (response.write().status() == 0) {
+  if (response.read().status() == 0) {
     *value = response.read().value();
     return Status::OK();
   } else {
