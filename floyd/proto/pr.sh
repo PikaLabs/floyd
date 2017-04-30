@@ -14,7 +14,6 @@ done
 # raft/raft.proto
 # raft/log_meta.proto
 ###################
-
 FILE2="raft/raft raft/log_meta"
 for file in $FILE2 ; do
   protoc -I=./ --cpp_out=./ ./$file.proto

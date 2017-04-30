@@ -1,7 +1,5 @@
 #include "floyd_client.h"
 
-#include <unistd.h>
-#include <getopt.h>
 #include <algorithm>
 #include <google/protobuf/text_format.h>
 
@@ -36,61 +34,16 @@ Server::Server(const std::string& str) {
 }
 
 ///// Option //////
-Option::Option()
-    : timeout(1000) {
-    }
-
-Option::Option(const std::string& server_str) 
-  : timeout(1000) {
-  std::vector<std::string> server_list;
-  Tokenize(server_str, server_list, ',');
-  Init(server_list);
-}
-
-Option::Option(const std::vector<std::string>& server_list)
-  : timeout(1000) {
-  Init(server_list); 
+Option::Option(const std::string& _server)
+  : timeout(1000),
+  server(_server) {
 }
 
 Option::Option(const Option& option)
-  : timeout(option.timeout) {
-    std::copy(option.servers.begin(), option.servers.end(), std::back_inserter(servers));
-  }
-
-
-void Option::Init(const std::vector<std::string>& server_list) {
-  for (auto it = server_list.begin(); it != server_list.end(); it++) {
-    servers.push_back(Server(*it));
-  }
+  : timeout(option.timeout),
+    server(option.server) {
 }
 
-void Option::ParseFromArgs(int argc, char *argv[]) {
-  if (argc < 2) {
-    printf ("Usage: ./client --server ip1:port1,ip2:port2\n");
-    exit(-1);
-  }
-
-  static struct option const long_options[] = {
-    {"server", required_argument, NULL, 's'},
-    {NULL, 0, NULL, 0} };
-
-  std::string server_str;
-  int opt, optindex;
-  while ((opt = getopt_long(argc, argv, "s:", long_options, &optindex)) != -1) {
-    switch (opt) {
-      case 's':
-        server_str = optarg;
-        break;
-      default:
-        break;
-    }
-  }
-
-  std::vector<std::string> server_list;
-
-  Tokenize(server_str, server_list, ',');
-  Init(server_list);
-}
 
 ////// Cluster //////
 Cluster::Cluster(const Option& option)
@@ -100,12 +53,7 @@ Cluster::Cluster(const Option& option)
 }
 
 bool Cluster::Init() {
-  if (option_.servers.size() < 1) {
-    LOG_ERROR("cluster has no server!");
-    abort();
-  }
-  // TEST use the first server
-  Status result = pb_cli_->Connect(option_.servers[0].ip, option_.servers[0].port);
+  Status result = pb_cli_->Connect(option_.server.ip, option_.server.port);
   if (!result.ok()) {
     LOG_ERROR("cluster connect error, %s", result.ToString().c_str());
     return false;
@@ -139,8 +87,12 @@ slash::Status Cluster::Write(const std::string& key, const std::string& value) {
     return Status::IOError("Recv failed, " + result.ToString());
   }
 
-  LOG_INFO("Write OK, status is %d, msg is %s\n", response.write().status(), response.write().msg().c_str());
-  return Status::OK();
+  //LOG_INFO("Write OK, status is %d, msg is %s\n", response.write().status(), response.write().msg().c_str());
+  if (response.write().status() == 0) {
+    return Status::OK();
+  } else {
+    return Status::IOError("Write failed with status " + std::to_string(response.write().status()));
+  }
 }
 
 slash::Status Cluster::Read(const std::string& key, std::string* value) {
@@ -169,14 +121,17 @@ slash::Status Cluster::Read(const std::string& key, std::string* value) {
     return Status::IOError("Recv failed, " + result.ToString());
   }
 
-  std::string text_format;
-  google::protobuf::TextFormat::PrintToString(response, &text_format);
-  LOG_DEBUG("Read Recv message :\n%s", text_format.c_str());
+//  std::string text_format;
+//  google::protobuf::TextFormat::PrintToString(response, &text_format);
+//  LOG_DEBUG("Read Recv message :\n%s", text_format.c_str());
 
-  *value = response.read().value();
-
-  LOG_INFO("Read OK, status is %d, value is %s\n", response.read().status(), response.read().value().c_str());
-  return Status::OK();
+//  LOG_INFO("Read OK, status is %d, value is %s\n", response.read().status(), response.read().value().c_str());
+  if (response.write().status() == 0) {
+    *value = response.read().value();
+    return Status::OK();
+  } else {
+    return Status::IOError("Read failed with status " + std::to_string(response.read().status()));
+  }
 }
 
 slash::Status Cluster::DirtyRead(const std::string& key, std::string* value) {
@@ -205,14 +160,19 @@ slash::Status Cluster::DirtyRead(const std::string& key, std::string* value) {
     return Status::IOError("Recv failed, " + result.ToString());
   }
 
-  std::string text_format;
-  google::protobuf::TextFormat::PrintToString(response, &text_format);
-  LOG_DEBUG("DirtyRead Recv message :\n%s", text_format.c_str());
+//  std::string text_format;
+//  google::protobuf::TextFormat::PrintToString(response, &text_format);
+//  LOG_DEBUG("DirtyRead Recv message :\n%s", text_format.c_str());
 
   *value = response.read().value();
 
-  LOG_INFO("DirtyRead OK, status is %d, value is %s\n", response.read().status(), response.read().value().c_str());
-  return Status::OK();
+//  LOG_INFO("DirtyRead OK, status is %d, value is %s\n", response.read().status(), response.read().value().c_str());
+  if (response.write().status() == 0) {
+    *value = response.read().value();
+    return Status::OK();
+  } else {
+    return Status::IOError("DirtyRead failed with status " + std::to_string(response.read().status()));
+  }
 }
 
 slash::Status Cluster::GetStatus(std::string* msg) {
@@ -241,7 +201,7 @@ slash::Status Cluster::GetStatus(std::string* msg) {
 
   *msg = response.server_status().msg();
 
-  LOG_INFO("Status OK, msg:\n%s", response.server_status().msg().c_str());
+  //LOG_INFO("Status OK, msg:\n%s", response.server_status().msg().c_str());
   return Status::OK();
 }
 
@@ -271,13 +231,55 @@ slash::Status Cluster::DirtyWrite(const std::string& key, const std::string& val
     return Status::IOError("Recv failed, " + result.ToString());
   }
 
-  std::string text_format;
-  google::protobuf::TextFormat::PrintToString(response, &text_format);
-  LOG_DEBUG("DirtyWrite Recv message :\n%s", text_format.c_str());
+//  std::string text_format;
+//  google::protobuf::TextFormat::PrintToString(response, &text_format);
+//  LOG_DEBUG("DirtyWrite Recv message :\n%s", text_format.c_str());
 
-  LOG_INFO("DirtyWrite OK, status is %d, msg is %s\n", response.write().status(), response.write().msg().c_str());
-  return Status::OK();
+//  LOG_INFO("DirtyWrite OK, status is %d, msg is %s\n", response.write().status(), response.write().msg().c_str());
+  if (response.write().status() == 0) {
+    return Status::OK();
+  } else {
+    return Status::IOError("DirtyWrite failed with status " + std::to_string(response.write().status()));
+  }
 }
+
+slash::Status Cluster::Delete(const std::string& key) {
+  Request request;
+  request.set_type(Type::DELETE);
+
+  Request_Delete* del_req = request.mutable_del();
+  del_req->set_key(key);
+
+  if (!pb_cli_->Available()) {
+    if (!Init()) {
+      return Status::IOError("init failed");
+    }
+  }
+  Status result = pb_cli_->Send(&request);
+  if (!result.ok()) {
+    LOG_ERROR("Send error: %s", result.ToString().c_str());
+    return Status::IOError("Send failed, " + result.ToString());
+  }
+
+  Response response;
+  result = pb_cli_->Recv(&response);
+  if (!result.ok()) {
+    LOG_ERROR("Recv error: %s", result.ToString().c_str());
+    return Status::IOError("Recv failed, " + result.ToString());
+  }
+
+//  std::string text_format;
+//  google::protobuf::TextFormat::PrintToString(response, &text_format);
+//  LOG_DEBUG("Delete Recv message :\n%s", text_format.c_str());
+
+//  LOG_INFO("Delete OK, status is %d, msg is %s\n", response.del().status(), response.del().msg().c_str());
+  if (response.del().status() == 0) {
+    return Status::OK();
+  } else {
+    return Status::IOError("Delete failed with status " + std::to_string(response.write().status()));
+  }
+}
+
 
 } // namespace client
 } // namspace floyd

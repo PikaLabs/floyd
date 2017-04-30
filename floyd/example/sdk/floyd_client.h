@@ -46,19 +46,10 @@ class Server {
 struct Option {
   // TODO session timeout
   int64_t timeout;
+  Server server;
 
-  std::vector<Server> servers;
-
-  Option();
-
-  // comma separated server list:   ip1:port1,ip2:port2
-  Option(const std::string& server_str);
-
-  Option(const std::vector<std::string>& server_list); 
+  Option(const std::string& _server);
   Option(const Option& option);
-
-  void ParseFromArgs(int argc, char *argv[]);
-  void Init(const std::vector<std::string>& server_list);
 };
 
 class Cluster {
@@ -70,13 +61,12 @@ class Cluster {
   Status Read(const std::string& key, std::string* value);
   Status DirtyRead(const std::string& key, std::string* value);
   Status GetStatus(std::string *msg);
+  Status Delete(const std::string& key);
 
  private:
   bool Init();
 
   Option option_;
-
-  //pink::PbCli pb_cli_;
 
   pink::PinkCli *pb_cli_;
 };

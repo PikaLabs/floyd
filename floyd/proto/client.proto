@@ -3,9 +3,10 @@ package floyd.client;
 enum Type {
   WRITE = 1;
   READ = 2;
-  STATUS = 3;
-  DIRTYWRITE = 4;
-  DIRTYREAD = 5;
+  DELETE = 3;
+  STATUS = 4;
+  DIRTYWRITE = 5;
+  DIRTYREAD = 6;
 }
 
 // Write 
@@ -23,6 +24,11 @@ message Request {
     required bytes key = 1;
   }
   optional Read read = 3;
+
+  message Delete {
+    required bytes key = 1;
+  }
+  optional Delete del = 4;
 }
 
 message Response {
@@ -44,4 +50,10 @@ message Response {
     required bytes msg = 1;
   }
   optional ServerStatus server_status = 4;
+
+  message Delete {
+    required int32 status = 1;
+    optional bytes msg = 2;
+  }
+  optional Delete del = 5;
 }

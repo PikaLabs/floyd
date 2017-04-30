@@ -16,7 +16,7 @@ class ClientPool;
 
 class ClientPool {
  public:
-  explicit ClientPool(int timeout_ms = 5000, int retry = 3);
+  explicit ClientPool(int timeout_ms = 5000, int retry = 1);
   ~ClientPool();
 
   // Each try consists of Connect, Send and Recv;

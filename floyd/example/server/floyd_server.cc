@@ -161,6 +161,28 @@ int FloydServerConn::DealMessage() {
       LOG_DEBUG("DirtyRead res message :\n%s", text_format.c_str());
       break;
     }
+    case client::Type::DELETE: {
+      LOG_DEBUG("ServerConn::DealMessage Delete");
+      client::Request_Write request = command_.write();
+
+      command_res_.set_type(client::Type::DELETE);
+      client::Response_Delete* response = command_res_.mutable_del();
+
+      Status result = floyd_->Delete(request.key());
+      if (!result.ok()) {
+        response->set_status(1);
+        response->set_msg(result.ToString());
+        LOG_ERROR("Delete failed %s", result.ToString().c_str());
+      } else {
+        response->set_status(0);
+        LOG_INFO ("Delete key(%s) ok!", request.key().c_str());
+      }
+
+      std::string text_format;
+      google::protobuf::TextFormat::PrintToString(command_res_, &text_format);
+      LOG_DEBUG("Delete res message :\n%s", text_format.c_str());
+      break;
+    }
     default:
       LOG_INFO ("invalid msg_code %d\n", command_.type());
       break;

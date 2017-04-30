@@ -38,17 +38,20 @@ void protobuf_ShutdownFile_client_2eproto();
 class Request;
 class Request_Write;
 class Request_Read;
+class Request_Delete;
 class Response;
 class Response_Write;
 class Response_Read;
 class Response_ServerStatus;
+class Response_Delete;
 
 enum Type {
   WRITE = 1,
   READ = 2,
-  STATUS = 3,
-  DIRTYWRITE = 4,
-  DIRTYREAD = 5
+  DELETE = 3,
+  STATUS = 4,
+  DIRTYWRITE = 5,
+  DIRTYREAD = 6
 };
 bool Type_IsValid(int value);
 const Type Type_MIN = WRITE;
@@ -271,6 +274,93 @@ class Request_Read : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
+class Request_Delete : public ::google::protobuf::Message {
+ public:
+  Request_Delete();
+  virtual ~Request_Delete();
+
+  Request_Delete(const Request_Delete& from);
+
+  inline Request_Delete& operator=(const Request_Delete& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Request_Delete& default_instance();
+
+  void Swap(Request_Delete* other);
+
+  // implements Message ----------------------------------------------
+
+  Request_Delete* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Request_Delete& from);
+  void MergeFrom(const Request_Delete& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // required bytes key = 1;
+  inline bool has_key() const;
+  inline void clear_key();
+  static const int kKeyFieldNumber = 1;
+  inline const ::std::string& key() const;
+  inline void set_key(const ::std::string& value);
+  inline void set_key(const char* value);
+  inline void set_key(const void* value, size_t size);
+  inline ::std::string* mutable_key();
+  inline ::std::string* release_key();
+  inline void set_allocated_key(::std::string* key);
+
+  // @@protoc_insertion_point(class_scope:floyd.client.Request.Delete)
+ private:
+  inline void set_has_key();
+  inline void clear_has_key();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* key_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_client_2eproto();
+  friend void protobuf_AssignDesc_client_2eproto();
+  friend void protobuf_ShutdownFile_client_2eproto();
+
+  void InitAsDefaultInstance();
+  static Request_Delete* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class Request : public ::google::protobuf::Message {
  public:
   Request();
@@ -325,6 +415,7 @@ class Request : public ::google::protobuf::Message {
 
   typedef Request_Write Write;
   typedef Request_Read Read;
+  typedef Request_Delete Delete;
 
   // accessors -------------------------------------------------------
 
@@ -353,6 +444,15 @@ class Request : public ::google::protobuf::Message {
   inline ::floyd::client::Request_Read* release_read();
   inline void set_allocated_read(::floyd::client::Request_Read* read);
 
+  // optional .floyd.client.Request.Delete del = 4;
+  inline bool has_del() const;
+  inline void clear_del();
+  static const int kDelFieldNumber = 4;
+  inline const ::floyd::client::Request_Delete& del() const;
+  inline ::floyd::client::Request_Delete* mutable_del();
+  inline ::floyd::client::Request_Delete* release_del();
+  inline void set_allocated_del(::floyd::client::Request_Delete* del);
+
   // @@protoc_insertion_point(class_scope:floyd.client.Request)
  private:
   inline void set_has_type();
@@ -361,15 +461,18 @@ class Request : public ::google::protobuf::Message {
   inline void clear_has_write();
   inline void set_has_read();
   inline void clear_has_read();
+  inline void set_has_del();
+  inline void clear_has_del();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::floyd::client::Request_Write* write_;
   ::floyd::client::Request_Read* read_;
+  ::floyd::client::Request_Delete* del_;
   int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_client_2eproto();
   friend void protobuf_AssignDesc_client_2eproto();
@@ -661,6 +764,103 @@ class Response_ServerStatus : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
+class Response_Delete : public ::google::protobuf::Message {
+ public:
+  Response_Delete();
+  virtual ~Response_Delete();
+
+  Response_Delete(const Response_Delete& from);
+
+  inline Response_Delete& operator=(const Response_Delete& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Response_Delete& default_instance();
+
+  void Swap(Response_Delete* other);
+
+  // implements Message ----------------------------------------------
+
+  Response_Delete* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Response_Delete& from);
+  void MergeFrom(const Response_Delete& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // required int32 status = 1;
+  inline bool has_status() const;
+  inline void clear_status();
+  static const int kStatusFieldNumber = 1;
+  inline ::google::protobuf::int32 status() const;
+  inline void set_status(::google::protobuf::int32 value);
+
+  // optional bytes msg = 2;
+  inline bool has_msg() const;
+  inline void clear_msg();
+  static const int kMsgFieldNumber = 2;
+  inline const ::std::string& msg() const;
+  inline void set_msg(const ::std::string& value);
+  inline void set_msg(const char* value);
+  inline void set_msg(const void* value, size_t size);
+  inline ::std::string* mutable_msg();
+  inline ::std::string* release_msg();
+  inline void set_allocated_msg(::std::string* msg);
+
+  // @@protoc_insertion_point(class_scope:floyd.client.Response.Delete)
+ private:
+  inline void set_has_status();
+  inline void clear_has_status();
+  inline void set_has_msg();
+  inline void clear_has_msg();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* msg_;
+  ::google::protobuf::int32 status_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_client_2eproto();
+  friend void protobuf_AssignDesc_client_2eproto();
+  friend void protobuf_ShutdownFile_client_2eproto();
+
+  void InitAsDefaultInstance();
+  static Response_Delete* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class Response : public ::google::protobuf::Message {
  public:
   Response();
@@ -716,6 +916,7 @@ class Response : public ::google::protobuf::Message {
   typedef Response_Write Write;
   typedef Response_Read Read;
   typedef Response_ServerStatus ServerStatus;
+  typedef Response_Delete Delete;
 
   // accessors -------------------------------------------------------
 
@@ -753,6 +954,15 @@ class Response : public ::google::protobuf::Message {
   inline ::floyd::client::Response_ServerStatus* release_server_status();
   inline void set_allocated_server_status(::floyd::client::Response_ServerStatus* server_status);
 
+  // optional .floyd.client.Response.Delete del = 5;
+  inline bool has_del() const;
+  inline void clear_del();
+  static const int kDelFieldNumber = 5;
+  inline const ::floyd::client::Response_Delete& del() const;
+  inline ::floyd::client::Response_Delete* mutable_del();
+  inline ::floyd::client::Response_Delete* release_del();
+  inline void set_allocated_del(::floyd::client::Response_Delete* del);
+
   // @@protoc_insertion_point(class_scope:floyd.client.Response)
  private:
   inline void set_has_type();
@@ -763,16 +973,19 @@ class Response : public ::google::protobuf::Message {
   inline void clear_has_read();
   inline void set_has_server_status();
   inline void clear_has_server_status();
+  inline void set_has_del();
+  inline void clear_has_del();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::floyd::client::Response_Write* write_;
   ::floyd::client::Response_Read* read_;
   ::floyd::client::Response_ServerStatus* server_status_;
+  ::floyd::client::Response_Delete* del_;
   int type_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
 
   friend void  protobuf_AddDesc_client_2eproto();
   friend void protobuf_AssignDesc_client_2eproto();
@@ -1074,6 +1287,80 @@ inline void Request_Read::set_allocated_key(::std::string* key) {
 
 // -------------------------------------------------------------------
 
+// Request_Delete
+
+// required bytes key = 1;
+inline bool Request_Delete::has_key() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Request_Delete::set_has_key() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Request_Delete::clear_has_key() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Request_Delete::clear_key() {
+  if (key_ != &::google::protobuf::internal::kEmptyString) {
+    key_->clear();
+  }
+  clear_has_key();
+}
+inline const ::std::string& Request_Delete::key() const {
+  return *key_;
+}
+inline void Request_Delete::set_key(const ::std::string& value) {
+  set_has_key();
+  if (key_ == &::google::protobuf::internal::kEmptyString) {
+    key_ = new ::std::string;
+  }
+  key_->assign(value);
+}
+inline void Request_Delete::set_key(const char* value) {
+  set_has_key();
+  if (key_ == &::google::protobuf::internal::kEmptyString) {
+    key_ = new ::std::string;
+  }
+  key_->assign(value);
+}
+inline void Request_Delete::set_key(const void* value, size_t size) {
+  set_has_key();
+  if (key_ == &::google::protobuf::internal::kEmptyString) {
+    key_ = new ::std::string;
+  }
+  key_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Request_Delete::mutable_key() {
+  set_has_key();
+  if (key_ == &::google::protobuf::internal::kEmptyString) {
+    key_ = new ::std::string;
+  }
+  return key_;
+}
+inline ::std::string* Request_Delete::release_key() {
+  clear_has_key();
+  if (key_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = key_;
+    key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Request_Delete::set_allocated_key(::std::string* key) {
+  if (key_ != &::google::protobuf::internal::kEmptyString) {
+    delete key_;
+  }
+  if (key) {
+    set_has_key();
+    key_ = key;
+  } else {
+    clear_has_key();
+    key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// -------------------------------------------------------------------
+
 // Request
 
 // required .floyd.client.Type type = 1;
@@ -1172,6 +1459,44 @@ inline void Request::set_allocated_read(::floyd::client::Request_Read* read) {
     set_has_read();
   } else {
     clear_has_read();
+  }
+}
+
+// optional .floyd.client.Request.Delete del = 4;
+inline bool Request::has_del() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void Request::set_has_del() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void Request::clear_has_del() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void Request::clear_del() {
+  if (del_ != NULL) del_->::floyd::client::Request_Delete::Clear();
+  clear_has_del();
+}
+inline const ::floyd::client::Request_Delete& Request::del() const {
+  return del_ != NULL ? *del_ : *default_instance_->del_;
+}
+inline ::floyd::client::Request_Delete* Request::mutable_del() {
+  set_has_del();
+  if (del_ == NULL) del_ = new ::floyd::client::Request_Delete;
+  return del_;
+}
+inline ::floyd::client::Request_Delete* Request::release_del() {
+  clear_has_del();
+  ::floyd::client::Request_Delete* temp = del_;
+  del_ = NULL;
+  return temp;
+}
+inline void Request::set_allocated_del(::floyd::client::Request_Delete* del) {
+  delete del_;
+  del_ = del;
+  if (del) {
+    set_has_del();
+  } else {
+    clear_has_del();
   }
 }
 
@@ -1443,6 +1768,102 @@ inline void Response_ServerStatus::set_allocated_msg(::std::string* msg) {
 
 // -------------------------------------------------------------------
 
+// Response_Delete
+
+// required int32 status = 1;
+inline bool Response_Delete::has_status() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Response_Delete::set_has_status() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Response_Delete::clear_has_status() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Response_Delete::clear_status() {
+  status_ = 0;
+  clear_has_status();
+}
+inline ::google::protobuf::int32 Response_Delete::status() const {
+  return status_;
+}
+inline void Response_Delete::set_status(::google::protobuf::int32 value) {
+  set_has_status();
+  status_ = value;
+}
+
+// optional bytes msg = 2;
+inline bool Response_Delete::has_msg() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void Response_Delete::set_has_msg() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void Response_Delete::clear_has_msg() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void Response_Delete::clear_msg() {
+  if (msg_ != &::google::protobuf::internal::kEmptyString) {
+    msg_->clear();
+  }
+  clear_has_msg();
+}
+inline const ::std::string& Response_Delete::msg() const {
+  return *msg_;
+}
+inline void Response_Delete::set_msg(const ::std::string& value) {
+  set_has_msg();
+  if (msg_ == &::google::protobuf::internal::kEmptyString) {
+    msg_ = new ::std::string;
+  }
+  msg_->assign(value);
+}
+inline void Response_Delete::set_msg(const char* value) {
+  set_has_msg();
+  if (msg_ == &::google::protobuf::internal::kEmptyString) {
+    msg_ = new ::std::string;
+  }
+  msg_->assign(value);
+}
+inline void Response_Delete::set_msg(const void* value, size_t size) {
+  set_has_msg();
+  if (msg_ == &::google::protobuf::internal::kEmptyString) {
+    msg_ = new ::std::string;
+  }
+  msg_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Response_Delete::mutable_msg() {
+  set_has_msg();
+  if (msg_ == &::google::protobuf::internal::kEmptyString) {
+    msg_ = new ::std::string;
+  }
+  return msg_;
+}
+inline ::std::string* Response_Delete::release_msg() {
+  clear_has_msg();
+  if (msg_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = msg_;
+    msg_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Response_Delete::set_allocated_msg(::std::string* msg) {
+  if (msg_ != &::google::protobuf::internal::kEmptyString) {
+    delete msg_;
+  }
+  if (msg) {
+    set_has_msg();
+    msg_ = msg;
+  } else {
+    clear_has_msg();
+    msg_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// -------------------------------------------------------------------
+
 // Response
 
 // required .floyd.client.Type type = 1;
@@ -1579,6 +2000,44 @@ inline void Response::set_allocated_server_status(::floyd::client::Response_Serv
     set_has_server_status();
   } else {
     clear_has_server_status();
+  }
+}
+
+// optional .floyd.client.Response.Delete del = 5;
+inline bool Response::has_del() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void Response::set_has_del() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void Response::clear_has_del() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void Response::clear_del() {
+  if (del_ != NULL) del_->::floyd::client::Response_Delete::Clear();
+  clear_has_del();
+}
+inline const ::floyd::client::Response_Delete& Response::del() const {
+  return del_ != NULL ? *del_ : *default_instance_->del_;
+}
+inline ::floyd::client::Response_Delete* Response::mutable_del() {
+  set_has_del();
+  if (del_ == NULL) del_ = new ::floyd::client::Response_Delete;
+  return del_;
+}
+inline ::floyd::client::Response_Delete* Response::release_del() {
+  clear_has_del();
+  ::floyd::client::Response_Delete* temp = del_;
+  del_ = NULL;
+  return temp;
+}
+inline void Response::set_allocated_del(::floyd::client::Response_Delete* del) {
+  delete del_;
+  del_ = del;
+  if (del) {
+    set_has_del();
+  } else {
+    clear_has_del();
   }
 }
 

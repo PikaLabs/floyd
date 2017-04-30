@@ -30,6 +30,9 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
 const ::google::protobuf::Descriptor* Request_Read_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   Request_Read_reflection_ = NULL;
+const ::google::protobuf::Descriptor* Request_Delete_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  Request_Delete_reflection_ = NULL;
 const ::google::protobuf::Descriptor* Response_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   Response_reflection_ = NULL;
@@ -42,6 +45,9 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
 const ::google::protobuf::Descriptor* Response_ServerStatus_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   Response_ServerStatus_reflection_ = NULL;
+const ::google::protobuf::Descriptor* Response_Delete_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  Response_Delete_reflection_ = NULL;
 const ::google::protobuf::EnumDescriptor* Type_descriptor_ = NULL;
 
 }  // namespace
@@ -54,10 +60,11 @@ void protobuf_AssignDesc_client_2eproto() {
       "client.proto");
   GOOGLE_CHECK(file != NULL);
   Request_descriptor_ = file->message_type(0);
-  static const int Request_offsets_[3] = {
+  static const int Request_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Request, type_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Request, write_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Request, read_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Request, del_),
   };
   Request_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -102,12 +109,28 @@ void protobuf_AssignDesc_client_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(Request_Read));
+  Request_Delete_descriptor_ = Request_descriptor_->nested_type(2);
+  static const int Request_Delete_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Request_Delete, key_),
+  };
+  Request_Delete_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      Request_Delete_descriptor_,
+      Request_Delete::default_instance_,
+      Request_Delete_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Request_Delete, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Request_Delete, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(Request_Delete));
   Response_descriptor_ = file->message_type(1);
-  static const int Response_offsets_[4] = {
+  static const int Response_offsets_[5] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Response, type_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Response, write_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Response, read_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Response, server_status_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Response, del_),
   };
   Response_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -167,6 +190,22 @@ void protobuf_AssignDesc_client_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(Response_ServerStatus));
+  Response_Delete_descriptor_ = Response_descriptor_->nested_type(3);
+  static const int Response_Delete_offsets_[2] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Response_Delete, status_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Response_Delete, msg_),
+  };
+  Response_Delete_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      Response_Delete_descriptor_,
+      Response_Delete::default_instance_,
+      Response_Delete_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Response_Delete, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Response_Delete, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(Response_Delete));
   Type_descriptor_ = file->enum_type(0);
 }
 
@@ -187,6 +226,8 @@ void protobuf_RegisterTypes(const ::std::string&) {
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     Request_Read_descriptor_, &Request_Read::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    Request_Delete_descriptor_, &Request_Delete::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     Response_descriptor_, &Response::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     Response_Write_descriptor_, &Response_Write::default_instance());
@@ -194,6 +235,8 @@ void protobuf_RegisterTypes(const ::std::string&) {
     Response_Read_descriptor_, &Response_Read::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     Response_ServerStatus_descriptor_, &Response_ServerStatus::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    Response_Delete_descriptor_, &Response_Delete::default_instance());
 }
 
 }  // namespace
@@ -205,6 +248,8 @@ void protobuf_ShutdownFile_client_2eproto() {
   delete Request_Write_reflection_;
   delete Request_Read::default_instance_;
   delete Request_Read_reflection_;
+  delete Request_Delete::default_instance_;
+  delete Request_Delete_reflection_;
   delete Response::default_instance_;
   delete Response_reflection_;
   delete Response_Write::default_instance_;
@@ -213,6 +258,8 @@ void protobuf_ShutdownFile_client_2eproto() {
   delete Response_Read_reflection_;
   delete Response_ServerStatus::default_instance_;
   delete Response_ServerStatus_reflection_;
+  delete Response_Delete::default_instance_;
+  delete Response_Delete_reflection_;
 }
 
 void protobuf_AddDesc_client_2eproto() {
@@ -222,38 +269,46 @@ void protobuf_AddDesc_client_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\014client.proto\022\014floyd.client\"\311\001\n\007Request"
+    "\n\014client.proto\022\014floyd.client\"\213\002\n\007Request"
     "\022 \n\004type\030\001 \002(\0162\022.floyd.client.Type\022*\n\005wr"
     "ite\030\002 \001(\0132\033.floyd.client.Request.Write\022("
     "\n\004read\030\003 \001(\0132\032.floyd.client.Request.Read"
-    "\0321\n\005Write\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 \002(\014\022\014\n"
-    "\004uuid\030\003 \001(\014\032\023\n\004Read\022\013\n\003key\030\001 \002(\014\"\252\002\n\010Res"
-    "ponse\022 \n\004type\030\001 \002(\0162\022.floyd.client.Type\022"
-    "+\n\005write\030\002 \001(\0132\034.floyd.client.Response.W"
-    "rite\022)\n\004read\030\003 \001(\0132\033.floyd.client.Respon"
-    "se.Read\022:\n\rserver_status\030\004 \001(\0132#.floyd.c"
-    "lient.Response.ServerStatus\032$\n\005Write\022\016\n\006"
-    "status\030\001 \002(\005\022\013\n\003msg\030\002 \001(\014\032%\n\004Read\022\016\n\006sta"
-    "tus\030\001 \002(\005\022\r\n\005value\030\002 \001(\014\032\033\n\014ServerStatus"
-    "\022\013\n\003msg\030\001 \002(\014*F\n\004Type\022\t\n\005WRITE\020\001\022\010\n\004READ"
-    "\020\002\022\n\n\006STATUS\020\003\022\016\n\nDIRTYWRITE\020\004\022\r\n\tDIRTYR"
-    "EAD\020\005", 605);
+    "\022)\n\003del\030\004 \001(\0132\034.floyd.client.Request.Del"
+    "ete\0321\n\005Write\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 \002(\014"
+    "\022\014\n\004uuid\030\003 \001(\014\032\023\n\004Read\022\013\n\003key\030\001 \002(\014\032\025\n\006D"
+    "elete\022\013\n\003key\030\001 \002(\014\"\375\002\n\010Response\022 \n\004type\030"
+    "\001 \002(\0162\022.floyd.client.Type\022+\n\005write\030\002 \001(\013"
+    "2\034.floyd.client.Response.Write\022)\n\004read\030\003"
+    " \001(\0132\033.floyd.client.Response.Read\022:\n\rser"
+    "ver_status\030\004 \001(\0132#.floyd.client.Response"
+    ".ServerStatus\022*\n\003del\030\005 \001(\0132\035.floyd.clien"
+    "t.Response.Delete\032$\n\005Write\022\016\n\006status\030\001 \002"
+    "(\005\022\013\n\003msg\030\002 \001(\014\032%\n\004Read\022\016\n\006status\030\001 \002(\005\022"
+    "\r\n\005value\030\002 \001(\014\032\033\n\014ServerStatus\022\013\n\003msg\030\001 "
+    "\002(\014\032%\n\006Delete\022\016\n\006status\030\001 \002(\005\022\013\n\003msg\030\002 \001"
+    "(\014*R\n\004Type\022\t\n\005WRITE\020\001\022\010\n\004READ\020\002\022\n\n\006DELET"
+    "E\020\003\022\n\n\006STATUS\020\004\022\016\n\nDIRTYWRITE\020\005\022\r\n\tDIRTY"
+    "READ\020\006", 766);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "client.proto", &protobuf_RegisterTypes);
   Request::default_instance_ = new Request();
   Request_Write::default_instance_ = new Request_Write();
   Request_Read::default_instance_ = new Request_Read();
+  Request_Delete::default_instance_ = new Request_Delete();
   Response::default_instance_ = new Response();
   Response_Write::default_instance_ = new Response_Write();
   Response_Read::default_instance_ = new Response_Read();
   Response_ServerStatus::default_instance_ = new Response_ServerStatus();
+  Response_Delete::default_instance_ = new Response_Delete();
   Request::default_instance_->InitAsDefaultInstance();
   Request_Write::default_instance_->InitAsDefaultInstance();
   Request_Read::default_instance_->InitAsDefaultInstance();
+  Request_Delete::default_instance_->InitAsDefaultInstance();
   Response::default_instance_->InitAsDefaultInstance();
   Response_Write::default_instance_->InitAsDefaultInstance();
   Response_Read::default_instance_->InitAsDefaultInstance();
   Response_ServerStatus::default_instance_->InitAsDefaultInstance();
+  Response_Delete::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_client_2eproto);
 }
 
@@ -274,6 +329,7 @@ bool Type_IsValid(int value) {
     case 3:
     case 4:
     case 5:
+    case 6:
       return true;
     default:
       return false;
@@ -814,9 +870,227 @@ void Request_Read::Swap(Request_Read* other) {
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
+const int Request_Delete::kKeyFieldNumber;
+#endif  // !_MSC_VER
+
+Request_Delete::Request_Delete()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void Request_Delete::InitAsDefaultInstance() {
+}
+
+Request_Delete::Request_Delete(const Request_Delete& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void Request_Delete::SharedCtor() {
+  _cached_size_ = 0;
+  key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+Request_Delete::~Request_Delete() {
+  SharedDtor();
+}
+
+void Request_Delete::SharedDtor() {
+  if (key_ != &::google::protobuf::internal::kEmptyString) {
+    delete key_;
+  }
+  if (this != default_instance_) {
+  }
+}
+
+void Request_Delete::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* Request_Delete::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return Request_Delete_descriptor_;
+}
+
+const Request_Delete& Request_Delete::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_client_2eproto();
+  return *default_instance_;
+}
+
+Request_Delete* Request_Delete::default_instance_ = NULL;
+
+Request_Delete* Request_Delete::New() const {
+  return new Request_Delete;
+}
+
+void Request_Delete::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (has_key()) {
+      if (key_ != &::google::protobuf::internal::kEmptyString) {
+        key_->clear();
+      }
+    }
+  }
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool Request_Delete::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // required bytes key = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_key()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void Request_Delete::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // required bytes key = 1;
+  if (has_key()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      1, this->key(), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* Request_Delete::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // required bytes key = 1;
+  if (has_key()) {
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+        1, this->key(), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int Request_Delete::ByteSize() const {
+  int total_size = 0;
+
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // required bytes key = 1;
+    if (has_key()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->key());
+    }
+
+  }
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void Request_Delete::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const Request_Delete* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const Request_Delete*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void Request_Delete::MergeFrom(const Request_Delete& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_key()) {
+      set_key(from.key());
+    }
+  }
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void Request_Delete::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void Request_Delete::CopyFrom(const Request_Delete& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Request_Delete::IsInitialized() const {
+  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
+
+  return true;
+}
+
+void Request_Delete::Swap(Request_Delete* other) {
+  if (other != this) {
+    std::swap(key_, other->key_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata Request_Delete::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = Request_Delete_descriptor_;
+  metadata.reflection = Request_Delete_reflection_;
+  return metadata;
+}
+
+
+// -------------------------------------------------------------------
+
+#ifndef _MSC_VER
 const int Request::kTypeFieldNumber;
 const int Request::kWriteFieldNumber;
 const int Request::kReadFieldNumber;
+const int Request::kDelFieldNumber;
 #endif  // !_MSC_VER
 
 Request::Request()
@@ -827,6 +1101,7 @@ Request::Request()
 void Request::InitAsDefaultInstance() {
   write_ = const_cast< ::floyd::client::Request_Write*>(&::floyd::client::Request_Write::default_instance());
   read_ = const_cast< ::floyd::client::Request_Read*>(&::floyd::client::Request_Read::default_instance());
+  del_ = const_cast< ::floyd::client::Request_Delete*>(&::floyd::client::Request_Delete::default_instance());
 }
 
 Request::Request(const Request& from)
@@ -840,6 +1115,7 @@ void Request::SharedCtor() {
   type_ = 1;
   write_ = NULL;
   read_ = NULL;
+  del_ = NULL;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -851,6 +1127,7 @@ void Request::SharedDtor() {
   if (this != default_instance_) {
     delete write_;
     delete read_;
+    delete del_;
   }
 }
 
@@ -883,6 +1160,9 @@ void Request::Clear() {
     }
     if (has_read()) {
       if (read_ != NULL) read_->::floyd::client::Request_Read::Clear();
+    }
+    if (has_del()) {
+      if (del_ != NULL) del_->::floyd::client::Request_Delete::Clear();
     }
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -939,6 +1219,20 @@ bool Request::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(34)) goto parse_del;
+        break;
+      }
+
+      // optional .floyd.client.Request.Delete del = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_del:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_del()));
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -979,6 +1273,12 @@ void Request::SerializeWithCachedSizes(
       3, this->read(), output);
   }
 
+  // optional .floyd.client.Request.Delete del = 4;
+  if (has_del()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      4, this->del(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -1005,6 +1305,13 @@ void Request::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
         3, this->read(), target);
+  }
+
+  // optional .floyd.client.Request.Delete del = 4;
+  if (has_del()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        4, this->del(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -1036,6 +1343,13 @@ int Request::ByteSize() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           this->read());
+    }
+
+    // optional .floyd.client.Request.Delete del = 4;
+    if (has_del()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->del());
     }
 
   }
@@ -1074,6 +1388,9 @@ void Request::MergeFrom(const Request& from) {
     if (from.has_read()) {
       mutable_read()->::floyd::client::Request_Read::MergeFrom(from.read());
     }
+    if (from.has_del()) {
+      mutable_del()->::floyd::client::Request_Delete::MergeFrom(from.del());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -1099,6 +1416,9 @@ bool Request::IsInitialized() const {
   if (has_read()) {
     if (!this->read().IsInitialized()) return false;
   }
+  if (has_del()) {
+    if (!this->del().IsInitialized()) return false;
+  }
   return true;
 }
 
@@ -1107,6 +1427,7 @@ void Request::Swap(Request* other) {
     std::swap(type_, other->type_);
     std::swap(write_, other->write_);
     std::swap(read_, other->read_);
+    std::swap(del_, other->del_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
@@ -1856,10 +2177,268 @@ void Response_ServerStatus::Swap(Response_ServerStatus* other) {
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
+const int Response_Delete::kStatusFieldNumber;
+const int Response_Delete::kMsgFieldNumber;
+#endif  // !_MSC_VER
+
+Response_Delete::Response_Delete()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void Response_Delete::InitAsDefaultInstance() {
+}
+
+Response_Delete::Response_Delete(const Response_Delete& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void Response_Delete::SharedCtor() {
+  _cached_size_ = 0;
+  status_ = 0;
+  msg_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+Response_Delete::~Response_Delete() {
+  SharedDtor();
+}
+
+void Response_Delete::SharedDtor() {
+  if (msg_ != &::google::protobuf::internal::kEmptyString) {
+    delete msg_;
+  }
+  if (this != default_instance_) {
+  }
+}
+
+void Response_Delete::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* Response_Delete::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return Response_Delete_descriptor_;
+}
+
+const Response_Delete& Response_Delete::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_client_2eproto();
+  return *default_instance_;
+}
+
+Response_Delete* Response_Delete::default_instance_ = NULL;
+
+Response_Delete* Response_Delete::New() const {
+  return new Response_Delete;
+}
+
+void Response_Delete::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    status_ = 0;
+    if (has_msg()) {
+      if (msg_ != &::google::protobuf::internal::kEmptyString) {
+        msg_->clear();
+      }
+    }
+  }
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool Response_Delete::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // required int32 status = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &status_)));
+          set_has_status();
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(18)) goto parse_msg;
+        break;
+      }
+
+      // optional bytes msg = 2;
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_msg:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_msg()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void Response_Delete::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // required int32 status = 1;
+  if (has_status()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->status(), output);
+  }
+
+  // optional bytes msg = 2;
+  if (has_msg()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      2, this->msg(), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* Response_Delete::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // required int32 status = 1;
+  if (has_status()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(1, this->status(), target);
+  }
+
+  // optional bytes msg = 2;
+  if (has_msg()) {
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+        2, this->msg(), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int Response_Delete::ByteSize() const {
+  int total_size = 0;
+
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // required int32 status = 1;
+    if (has_status()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->status());
+    }
+
+    // optional bytes msg = 2;
+    if (has_msg()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->msg());
+    }
+
+  }
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void Response_Delete::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const Response_Delete* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const Response_Delete*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void Response_Delete::MergeFrom(const Response_Delete& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_status()) {
+      set_status(from.status());
+    }
+    if (from.has_msg()) {
+      set_msg(from.msg());
+    }
+  }
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void Response_Delete::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void Response_Delete::CopyFrom(const Response_Delete& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Response_Delete::IsInitialized() const {
+  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
+
+  return true;
+}
+
+void Response_Delete::Swap(Response_Delete* other) {
+  if (other != this) {
+    std::swap(status_, other->status_);
+    std::swap(msg_, other->msg_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata Response_Delete::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = Response_Delete_descriptor_;
+  metadata.reflection = Response_Delete_reflection_;
+  return metadata;
+}
+
+
+// -------------------------------------------------------------------
+
+#ifndef _MSC_VER
 const int Response::kTypeFieldNumber;
 const int Response::kWriteFieldNumber;
 const int Response::kReadFieldNumber;
 const int Response::kServerStatusFieldNumber;
+const int Response::kDelFieldNumber;
 #endif  // !_MSC_VER
 
 Response::Response()
@@ -1871,6 +2450,7 @@ void Response::InitAsDefaultInstance() {
   write_ = const_cast< ::floyd::client::Response_Write*>(&::floyd::client::Response_Write::default_instance());
   read_ = const_cast< ::floyd::client::Response_Read*>(&::floyd::client::Response_Read::default_instance());
   server_status_ = const_cast< ::floyd::client::Response_ServerStatus*>(&::floyd::client::Response_ServerStatus::default_instance());
+  del_ = const_cast< ::floyd::client::Response_Delete*>(&::floyd::client::Response_Delete::default_instance());
 }
 
 Response::Response(const Response& from)
@@ -1885,6 +2465,7 @@ void Response::SharedCtor() {
   write_ = NULL;
   read_ = NULL;
   server_status_ = NULL;
+  del_ = NULL;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -1897,6 +2478,7 @@ void Response::SharedDtor() {
     delete write_;
     delete read_;
     delete server_status_;
+    delete del_;
   }
 }
 
@@ -1932,6 +2514,9 @@ void Response::Clear() {
     }
     if (has_server_status()) {
       if (server_status_ != NULL) server_status_->::floyd::client::Response_ServerStatus::Clear();
+    }
+    if (has_del()) {
+      if (del_ != NULL) del_->::floyd::client::Response_Delete::Clear();
     }
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -2002,6 +2587,20 @@ bool Response::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(42)) goto parse_del;
+        break;
+      }
+
+      // optional .floyd.client.Response.Delete del = 5;
+      case 5: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_del:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_del()));
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -2048,6 +2647,12 @@ void Response::SerializeWithCachedSizes(
       4, this->server_status(), output);
   }
 
+  // optional .floyd.client.Response.Delete del = 5;
+  if (has_del()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      5, this->del(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -2081,6 +2686,13 @@ void Response::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
         4, this->server_status(), target);
+  }
+
+  // optional .floyd.client.Response.Delete del = 5;
+  if (has_del()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        5, this->del(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -2119,6 +2731,13 @@ int Response::ByteSize() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           this->server_status());
+    }
+
+    // optional .floyd.client.Response.Delete del = 5;
+    if (has_del()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->del());
     }
 
   }
@@ -2160,6 +2779,9 @@ void Response::MergeFrom(const Response& from) {
     if (from.has_server_status()) {
       mutable_server_status()->::floyd::client::Response_ServerStatus::MergeFrom(from.server_status());
     }
+    if (from.has_del()) {
+      mutable_del()->::floyd::client::Response_Delete::MergeFrom(from.del());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -2188,6 +2810,9 @@ bool Response::IsInitialized() const {
   if (has_server_status()) {
     if (!this->server_status().IsInitialized()) return false;
   }
+  if (has_del()) {
+    if (!this->del().IsInitialized()) return false;
+  }
   return true;
 }
 
@@ -2197,6 +2822,7 @@ void Response::Swap(Response* other) {
     std::swap(write_, other->write_);
     std::swap(read_, other->read_);
     std::swap(server_status_, other->server_status_);
+    std::swap(del_, other->del_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
