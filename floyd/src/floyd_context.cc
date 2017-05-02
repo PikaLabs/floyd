@@ -202,6 +202,8 @@ bool FloydContext::AppendEntries(uint64_t term,
   if (my_log_index != 0) {
     my_log_term = log_->GetEntry(my_log_index).term();
   }
+  LOG_DEBUG("FloydContext::AppendEntries: pre_log(%lu, %lu), my_log(%lu, %lu).",
+            pre_log_term, pre_log_index, my_log_term, my_log_index);
   if (pre_log_index > my_log_index
       || pre_log_term != my_log_term) {
     return false;
@@ -209,8 +211,10 @@ bool FloydContext::AppendEntries(uint64_t term,
 
   // Append entry
   if (pre_log_index < my_log_index) {
-      //log_->Resize(pre_log_index);
-      log_->TruncateSuffix(pre_log_index + 1);
+    LOG_DEBUG("FloydContext::AppendEntries: truncate suffix from %lu",
+              pre_log_index + 1);
+    // TruncateSuffix exclude pre_log_index
+    log_->TruncateSuffix(pre_log_index);
   }
   if (entries.size() > 0) {
     log_->Append(entries);

@@ -162,6 +162,12 @@ Status FloydImpl::Delete(const std::string& key) {
   }
   command::Command cmd = BuildDeleteCommand(key);
   command::CommandRes cmd_res;
+
+//#if (LOG_LEVEL != LEVEL_NONE)
+//  std::string text_format;
+//  google::protobuf::TextFormat::PrintToString(cmd, &text_format);
+//  LOG_DEBUG("Delete Command :\n%s", text_format.c_str());
+//#endif
   Status s = DoCommand(cmd, &cmd_res);
   if (!s.ok()) {
     return s;

@@ -600,12 +600,12 @@ int Table::ReadMessage(int offset, Message *msg, bool from_end) {
 
 bool Table::Sync() {
 // TODO anan rm
-//  Slice result((char *)header_, sizeof(Header));
-//
-//  Status s = file_->Write(0, result);
-//  if (!s.ok()) {
-//    return false;
-//  }
+  Slice result((char *)header_, sizeof(Header));
+
+  Status s = file_->Write(0, result);
+  if (!s.ok()) {
+    return false;
+  }
 
   if (file_ != NULL) {
     file_->Sync();
