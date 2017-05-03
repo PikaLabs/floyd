@@ -14,9 +14,9 @@ using slash::Status;
 struct FloydApplyEnv {
   FloydContext* context;
   rocksdb::DBNemo* db;
-  raft::Log* log;
+  FileLog* log;
   FloydApplyEnv(FloydContext* c,
-      rocksdb::DBNemo* d, Log* l)
+      rocksdb::DBNemo* d, FileLog* l)
     : context(c),
     db(d),
     log(l) {
@@ -33,10 +33,10 @@ class FloydApply {
   pink::BGThread* bg_thread_;
   FloydContext* context_;
   rocksdb::DBNemo* db_;
-  Log* log_;
+  FileLog* log_;
   
   static void ApplyStateMachine(void* arg);
-  Status Apply(const Log::Entry& log_entry);
+  Status Apply(const Entry& log_entry);
 };
 
 }

@@ -5,9 +5,6 @@
 
 #include "floyd/include/floyd.h"
 #include "floyd/include/floyd_options.h"
-//#include "floyd/src/raft/log.h"
-//#include "floyd/src/floyd_context.h"
-//#include "floyd/src/floyd_worker.h"
 
 #include "slash/include/slash_mutex.h"
 #include "slash/include/slash_status.h"
@@ -16,19 +13,10 @@
 
 #include "nemo-rocksdb/db_nemo_impl.h"
 
-namespace command {
-class Command;
-class CommandRes;
-class CommandRes_RaftStageRes;
-}
-
-
 namespace floyd {
 using slash::Status;
 
-namespace raft {
-class Log;
-}
+class FileLog;
 
 class ClientPool;
 class FloydContext;
@@ -38,6 +26,9 @@ class FloydApply;
 class FloydWorker;
 class FloydWorkerConn;
 //struct LeaderElectTimerEnv;
+class CmdRequest;
+class CmdResponse;
+class CmdResponse_ServerStatus;
 
 typedef std::map<std::string, Peer*> PeersSet;
 
@@ -71,7 +62,7 @@ class FloydImpl : public Floyd {
 
   Options options_;
   rocksdb::DBNemo* db_;
-  raft::Log* log_;
+  FileLog* log_;
   FloydContext* context_;
 
   FloydWorker* worker_;
@@ -86,18 +77,12 @@ class FloydImpl : public Floyd {
 
   uint64_t QuorumMatchIndex();
 
-  Status DoCommand(const command::Command& cmd,
-      command::CommandRes *cmd_res);
-  Status ExecuteCommand(const command::Command& cmd,
-      command::CommandRes *cmd_res);
-  Status ExecuteDirtyCommand(const command::Command& cmd,
-      command::CommandRes *cmd_res);
-  void DoRequestVote(command::Command& cmd,
-      command::CommandRes* cmd_res);
-  void DoAppendEntries(command::Command& cmd,
-      command::CommandRes* cmd_res);
-  bool DoGetServerStatus(command::CommandRes_RaftStageRes* res);
-  //static void StartNewElection(void* arg);
+  Status DoCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
+  Status ExecuteCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
+  Status ExecuteDirtyCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
+  void DoRequestVote(CmdRequest& cmd, CmdResponse* cmd_res);
+  void DoAppendEntries(CmdRequest& cmd, CmdResponse* cmd_res);
+  bool DoGetServerStatus(CmdResponse_ServerStatus* res);
   
   // No coping allowed
   FloydImpl(const FloydImpl&);

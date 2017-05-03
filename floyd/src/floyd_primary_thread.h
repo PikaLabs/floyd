@@ -21,24 +21,22 @@ class FloydApply;
 class Peer;
 typedef std::map<std::string, Peer*> PeersSet;
 
-namespace raft {
-class Log;
-}
+class FileLog;
 
 struct FloydPrimaryEnv {
   FloydContext* context;
   PeersSet* peers;
   FloydApply* apply;
-  Log* log;
+  FileLog* log;
   
   FloydPrimaryEnv(FloydContext* _ctx, PeersSet* _peers,
-               FloydApply* _apply, Log* _log)
+               FloydApply* _apply, FileLog* _log)
     : context(_ctx), 
       peers(_peers),
       apply(_apply),
       log(_log) { }
 
-  FloydPrimaryEnv(FloydContext* _ctx, FloydApply* _apply, Log* _log)
+  FloydPrimaryEnv(FloydContext* _ctx, FloydApply* _apply, FileLog* _log)
     : context(_ctx), 
       apply(_apply),
       log(_log) { }

@@ -8,8 +8,8 @@
 #include "floyd/src/floyd_apply.h"
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_client_pool.h"
-#include "floyd/src/raft/log.h"
-#include "floyd/src/command.pb.h"
+#include "floyd/src/file_log.h"
+#include "floyd/src/floyd.pb.h"
 #include "floyd/src/logger.h"
 
 #include "slash/include/env.h"

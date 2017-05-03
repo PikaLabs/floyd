@@ -5,8 +5,8 @@
 #include "floyd/src/floyd_primary_thread.h"
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_client_pool.h"
-#include "floyd/src/raft/log.h"
-#include "floyd/src/command.pb.h"
+#include "floyd/src/file_log.h"
+#include "floyd/src/floyd.pb.h"
 #include "floyd/src/logger.h"
 
 #include "slash/include/env.h"
@@ -57,21 +57,19 @@ Status Peer::RequestVote() {
   }
   
   // TODO (anan) log->getEntry() need lock
-  uint64_t last_log_term = 0;
-  uint64_t last_log_index = env_.context->log()->GetLastLogIndex();
-  if (last_log_index != 0) {
-    last_log_term = env_.context->log()->GetEntry(last_log_index).term();
-  }
+  uint64_t last_log_term;
+  uint64_t last_log_index;
+  env_.context->log()->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
   uint64_t current_term = env_.context->current_term();
 
-  command::Command req;
-  req.set_type(command::Command::RaftVote);
-  floyd::raft::RequestVote* rqv = req.mutable_rqv();
-  rqv->set_ip(env_.context->local_ip());
-  rqv->set_port(env_.context->local_port());
-  rqv->set_term(current_term);
-  rqv->set_last_log_term(last_log_term);
-  rqv->set_last_log_index(last_log_index);
+  CmdRequest req;
+  req.set_type(Type::RequestVote);
+  CmdRequest_RequestVote* request_vote = req.mutable_request_vote();
+  request_vote->set_ip(env_.context->local_ip());
+  request_vote->set_port(env_.context->local_port());
+  request_vote->set_term(current_term);
+  request_vote->set_last_log_term(last_log_term);
+  request_vote->set_last_log_index(last_log_index);
 
 #if (LOG_LEVEL != LEVEL_NONE)
   std::string text_format;
@@ -79,7 +77,7 @@ Status Peer::RequestVote() {
   LOG_DEBUG("Send RequestVote to %s, message :\n%s", env_.server.c_str(), text_format.c_str());
 #endif
 
-  command::CommandRes res;
+  CmdResponse res;
   Status result = env_.pool->SendAndRecv(env_.server, req, &res);
   
   if (!result.ok()) {
@@ -92,9 +90,9 @@ Status Peer::RequestVote() {
   LOG_DEBUG("Recv RequestVote from %s, message :\n%s", env_.server.c_str(), text_format.c_str());
 #endif
 
-  uint64_t res_term = res.rsv().term();
+  uint64_t res_term = res.request_vote().term();
   if (result.ok() && env_.context->role() == Role::kCandidate) {
-    if (res.rsv().granted()) {
+    if (res.code() == StatusCode::kOk) {    // granted
       LOG_DEBUG("Peer(%s)::RequestVote granted will Vote and check", env_.server.c_str());
       if (env_.context->VoteAndCheck(res_term)) {
         env_.primary->AddTask(kBecomeLeader);  
@@ -121,7 +119,8 @@ void Peer::BecomeLeader() {
     next_index_ = env_.log->GetLastLogIndex() + 1;
     match_index_ = 0;
   }
-  LOG_DEBUG("Peer(%s)::BecomeLeader next_index=%lu", env_.server.c_str(), next_index_);
+  LOG_DEBUG("Peer(%s)::BecomeLeader next_index=%lu match_index=%lu",
+            env_.server.c_str(), next_index_, match_index_);
 
   // right now
   bg_thread_.Schedule(DoHeartBeat, this);
@@ -141,7 +140,7 @@ void Peer::DoAppendEntries(void *arg) {
 }
 
 void Peer::AddHeartBeatTask() {
-  LOG_DEBUG("Peer(%s) AddHeartBeatTask at heartbeart_us %luus at %lums",
+  LOG_DEBUG("Peer(%s) AddHeartBeatTask with heartbeart_us %luus at %lums",
             env_.server.c_str(), env_.context->heartbeat_us(),
             (slash::NowMicros() + env_.context->heartbeat_us()) / 1000LL);
   bg_thread_.DelaySchedule(env_.context->heartbeat_us() / 1000LL,
@@ -174,32 +173,35 @@ Status Peer::AppendEntries(bool heartbeat) {
 
   uint64_t prev_log_term = 0;
   if (prev_log_index != 0) {
-    prev_log_term = env_.log->GetEntry(prev_log_index).term();
+    Entry entry;
+    env_.log->GetEntry(prev_log_index, &entry);
+    prev_log_term = entry.term();
   }
 
-  command::Command req;
-  floyd::raft::AppendEntriesRequest* aerq = req.mutable_aerq();
-  req.set_type(command::Command::RaftAppendEntries);
-  aerq->set_ip(env_.context->local_ip());
-  aerq->set_port(env_.context->local_port());
-  aerq->set_term(env_.context->current_term());
-  aerq->set_prev_log_index(prev_log_index);
-  aerq->set_prev_log_term(prev_log_term);
+  CmdRequest req;
+  CmdRequest_AppendEntries* append_entries = req.mutable_append_entries();
+  req.set_type(Type::AppendEntries);
+  append_entries->set_ip(env_.context->local_ip());
+  append_entries->set_port(env_.context->local_port());
+  append_entries->set_term(env_.context->current_term());
+  append_entries->set_prev_log_index(prev_log_index);
+  append_entries->set_prev_log_term(prev_log_term);
 
   uint64_t num_entries = 0;
-  if (!heartbeat) {
+  //if (!heartbeat) {
     for (uint64_t index = next_index_; index <= last_log_index; ++index) {
-      Log::Entry& entry = env_.log->GetEntry(index);
-      *aerq->add_entries() = entry;
-      uint64_t request_size = aerq->ByteSize();
+      Entry entry;
+      env_.log->GetEntry(index, &entry);
+      *append_entries->add_entries() = entry;
+      uint64_t request_size = append_entries->ByteSize();
       if (request_size < env_.context->append_entries_size_once() ||
           num_entries == 0)
         ++num_entries;
       else
-        aerq->mutable_entries()->RemoveLast();
+        append_entries->mutable_entries()->RemoveLast();
     }
-  }
-  aerq->set_commit_index(
+  //}
+  append_entries->set_commit_index(
       std::min(env_.context->commit_index(), prev_log_index + num_entries));
 
 #if (LOG_LEVEL != LEVEL_NONE)
@@ -208,7 +210,7 @@ Status Peer::AppendEntries(bool heartbeat) {
   LOG_DEBUG("AppendEntry Send to %s, message :\n%s", env_.server.c_str(), text_format.c_str());
 #endif
 
-  command::CommandRes res;
+  CmdResponse res;
   Status result = env_.pool->SendAndRecv(env_.server, req, &res);
   
   if (!result.ok()) {
@@ -220,7 +222,7 @@ Status Peer::AppendEntries(bool heartbeat) {
   LOG_DEBUG("AppendEntry Receive from %s, message :\n%s", env_.server.c_str(), text_format.c_str());
 #endif
 
-  uint64_t res_term = res.aers().term();
+  uint64_t res_term = res.append_entries().term();
   if (result.ok() && res_term > env_.context->current_term()) {
     //TODO(anan) maybe combine these 2 steps
     env_.context->BecomeFollower(res_term);
@@ -230,7 +232,7 @@ Status Peer::AppendEntries(bool heartbeat) {
   }
   
   if (result.ok() && env_.context->role() == Role::kLeader) {
-    if (res.aers().status()) {
+    if (res.code() == StatusCode::kOk) {
       match_index_ = prev_log_index + num_entries;
       //TODO(anan) AddTask or direct call
       env_.primary->AdvanceCommitIndex();

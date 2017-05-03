@@ -4,7 +4,7 @@
 #include <pthread.h>
 
 #include "floyd/include/floyd_options.h"
-#include "floyd/src/raft/log.h"
+#include "floyd/src/file_log.h"
 
 #include "slash/include/slash_status.h"
 #include "slash/include/slash_mutex.h"
@@ -12,7 +12,6 @@
 namespace floyd {
 
 using slash::Status;
-using raft::Log;
 
 enum Role {
   kFollower = 0,
@@ -22,11 +21,11 @@ enum Role {
 
 class FloydContext {
  public:
-  FloydContext(const Options& opt, Log* log);
+  FloydContext(const Options& opt, FileLog* log);
   ~FloydContext();
 
   void RecoverInit();
-  Log* log() {
+  FileLog* log() {
     return log_;
   }
 
@@ -80,7 +79,7 @@ class FloydContext {
       uint64_t* my_term);
   bool AppendEntries(uint64_t term,
       uint64_t pre_log_term, uint64_t pre_log_index,
-      std::vector<Log::Entry*>& entries, uint64_t* my_term);
+      std::vector<Entry*>& entries, uint64_t* my_term);
 
   /* Commit related */
   uint64_t commit_index() {
@@ -113,7 +112,7 @@ class FloydContext {
 
  private:
   Options options_;
-  Log* log_;
+  FileLog* log_;
 
   // Role related
   pthread_rwlock_t stat_rw_;

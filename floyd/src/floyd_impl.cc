@@ -3,8 +3,7 @@
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_apply.h"
 #include "floyd/src/floyd_worker.h"
-#include "floyd/src/raft/log.h"
-#include "floyd/src/raft/file_log.h"
+#include "floyd/src/file_log.h"
 #include "floyd/src/floyd_peer_thread.h"
 #include "floyd/src/floyd_primary_thread.h"
 #include "floyd/src/floyd_client_pool.h"
@@ -68,7 +67,7 @@ Status FloydImpl::Start() {
   }
 
   // Recover Context
-  log_ = new raft::FileLog(options_.log_path);
+  log_ = new FileLog(options_.log_path);
   context_ = new FloydContext(options_, log_);
   context_->RecoverInit();
 

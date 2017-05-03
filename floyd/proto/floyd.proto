@@ -1,0 +1,126 @@
+package floyd;
+
+enum Type {
+  // User cmd
+  Read = 0;
+  ReadAll = 1;
+  DirtyWrite = 2;
+  Write = 3;
+  Delete = 4;
+  TryLock = 5;
+  UnLock = 6;
+  DeleteUser = 7;
+
+  // Raft RPC
+  RequestVote = 8;
+  AppendEntries = 9;
+  ServerStatus = 10;
+}
+
+message Entry {
+  required uint64 term = 2;
+  optional bytes cmd = 3;
+}
+
+message CmdRequest {
+  required Type type = 1;
+
+  message Kv {
+    required bytes key = 1;
+    optional bytes value = 2;
+  }
+  optional Kv kv = 2;
+
+  message User {
+    required bytes ip = 1;
+    required int32 port = 2;
+  }
+  optional User user = 3;
+
+  message RequestVote {
+    required bytes ip = 1;
+    required int32 port = 2;
+    required uint64 term = 3;
+    required uint64 last_log_term = 4;
+    required uint64 last_log_index = 5;
+  }
+  optional RequestVote request_vote = 4;
+
+  message AppendEntries {
+    required bytes ip = 1;
+    required int32 port = 2;
+    required uint64 term = 3;
+    required uint64 prev_log_index = 4;
+    required uint64 prev_log_term = 5;
+    required uint64 commit_index = 6;
+    repeated Entry entries = 7;
+  }
+  optional AppendEntries append_entries = 5;
+
+  message ServerStatus {
+    required int64 term = 1;
+    required int64 commit_index = 2;
+    optional bytes ip = 3;
+    optional int32 port = 4;
+  }
+  optional ServerStatus server_status = 6;
+}
+
+enum StatusCode {
+  kOk = 0;
+  kNotFound = 1;
+  kError = 2;
+}
+
+message CmdResponse {
+  required Type type = 1;
+  required StatusCode code = 2;
+  optional bytes msg = 3;
+
+  message Kv {
+    optional bytes value = 1;
+  }
+  optional Kv kv = 4;
+
+  message Kvs {
+    repeated Kv kv = 1;
+  }
+  optional Kvs kvs = 5;
+
+  message ServerStatus {
+    required uint64 term = 1;
+    required uint64 commit_index = 2;
+    required bytes role = 3;
+    optional bytes leader_ip = 4;
+    optional int32 leader_port = 5;
+    optional bytes voted_for_ip = 6;
+    optional int32 voted_for_port = 7;
+    optional uint64 last_log_term = 8;
+    optional uint64 last_log_index = 9;
+    optional uint64 last_apply_index = 10;
+  }
+  optional ServerStatus server_status = 6;
+
+  message RequestVote {
+    required uint64 term = 1;
+  }
+  optional RequestVote request_vote = 7;
+
+  message AppendEntries {
+    required uint64 term = 1;
+  }
+
+  optional AppendEntries append_entries = 8;
+}
+
+// Not used
+//message FileLogMetaData {
+//  // Raft usage 
+//  required uint64 current_term = 1;
+//  required bytes voted_for_ip = 2;
+//  required int32 voted_for_port = 3;
+//  // FileLog usage
+//  required uint64 file_number = 4 [default = 0];
+//  optional uint64 entries_start = 5 [default = 1];
+//  optional uint64 entries_end = 6 [default = 0];
+//}

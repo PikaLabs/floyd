@@ -22,35 +22,35 @@ FloydWorkerConn::FloydWorkerConn(int fd, const std::string& ip_port,
 FloydWorkerConn::~FloydWorkerConn() {}
 
 int FloydWorkerConn::DealMessage() {
-  if (!command_.ParseFromArray(rbuf_ + 4, header_len_)) {
+  if (!request_.ParseFromArray(rbuf_ + 4, header_len_)) {
     LOG_DEBUG("DealMessage ParseFromArray failed");
     return -1;
   }
-  command_res_.Clear();
+  response_.Clear();
   set_is_reply(true);
 
-  switch (command_.type()) {
-    case command::Command::Write:
-    case command::Command::Delete:
-    case command::Command::Read: {
+  switch (request_.type()) {
+    case Type::Write:
+    case Type::Delete:
+    case Type::Read: {
       LOG_DEBUG("WorkerConn::DealMessage Write/Delete/Read");
-      floyd_->DoCommand(command_, &command_res_);
+      floyd_->DoCommand(request_, &response_);
       break;
     }
-    case command::Command::DirtyWrite:
-    case command::Command::SynRaftStage: {
-      LOG_DEBUG("WorkerConn::DealMessage DirtyWrite/SyncRaftStage");
-      floyd_->ExecuteDirtyCommand(command_, &command_res_);
+    case Type::DirtyWrite:
+    case Type::ServerStatus: {
+      LOG_DEBUG("WorkerConn::DealMessage DirtyWrite/ServerStatus");
+      floyd_->ExecuteDirtyCommand(request_, &response_);
       break;
     }
-    case command::Command::RaftVote: {
-      LOG_DEBUG("WorkerConn::DealMessage RaftVote");
-      floyd_->DoRequestVote(command_, &command_res_);
+    case Type::RequestVote: {
+      LOG_DEBUG("WorkerConn::DealMessage RequestVote");
+      floyd_->DoRequestVote(request_, &response_);
       break;
     }
-    case command::Command::RaftAppendEntries: {
-      LOG_DEBUG("WorkerConn::DealMessage RaftAppendEntries");
-      floyd_->DoAppendEntries(command_, &command_res_);
+    case Type::AppendEntries: {
+      LOG_DEBUG("WorkerConn::DealMessage AppendEntries");
+      floyd_->DoAppendEntries(request_, &response_);
       break;
     }
     default:
@@ -58,7 +58,7 @@ int FloydWorkerConn::DealMessage() {
       return -1;
   }
 
-  res_ = &command_res_;
+  res_ = &response_;
   return 0;
 }
 

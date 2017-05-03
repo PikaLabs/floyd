@@ -6,7 +6,7 @@
 namespace floyd {
 
 FloydContext::FloydContext(const floyd::Options& opt,
-    Log* log)
+    FileLog* log)
   : options_(opt),
   log_(log),
   current_term_(0),
@@ -31,13 +31,9 @@ FloydContext::~FloydContext() {
 void FloydContext::RecoverInit() {
   assert(log_ != NULL);
   slash::RWLock(&stat_rw_, true);
-  if (log_->metadata.has_current_term())
-    current_term_ = log_->metadata.current_term();
-  if (log_->metadata.has_voted_for_ip() &&
-      log_->metadata.has_voted_for_port()) {
-    voted_for_ip_ = log_->metadata.voted_for_ip();
-    voted_for_port_ = log_->metadata.voted_for_port();
-  }
+  current_term_ = log_->current_term();
+  voted_for_ip_ = log_->voted_for_ip();
+  voted_for_port_ = log_->voted_for_port();
   role_ = Role::kFollower;
 }
 
@@ -117,7 +113,9 @@ bool FloydContext::AdvanceCommitIndex(uint64_t new_commit_index) {
 
   uint64_t last_log_index = log_->GetLastLogIndex();
   new_commit_index = std::min(last_log_index, new_commit_index);
-  if (log_->GetEntry(new_commit_index).term() == current_term_) {
+  Entry entry;
+  log_->GetEntry(new_commit_index, &entry);
+  if (entry.term() == current_term_) {
     commit_index_ = new_commit_index;
     LOG_DEBUG("FloydContext::AdvanceCommitIndex: commit_index=%ld", new_commit_index);
     return true;
@@ -126,10 +124,10 @@ bool FloydContext::AdvanceCommitIndex(uint64_t new_commit_index) {
 }
 
 void FloydContext::LogApply() {
-  log_->metadata.set_current_term(current_term_);
-  log_->metadata.set_voted_for_ip(voted_for_ip_);
-  log_->metadata.set_voted_for_port(voted_for_port_);
-  log_->UpdateMetadata();
+  //log_->metadata.set_current_term(current_term_);
+  //log_->metadata.set_voted_for_ip(voted_for_ip_);
+  //log_->metadata.set_voted_for_port(voted_for_port_);
+  log_->UpdateMetadata(current_term_, voted_for_ip_, voted_for_port_);
 }
 
 bool FloydContext::VoteAndCheck(uint64_t vote_term) {
@@ -170,11 +168,9 @@ bool FloydContext::RequestVote(uint64_t term, const std::string ip,
     }
   }
   
-  uint64_t my_log_index = log_->GetLastLogIndex();
-  uint64_t my_log_term = 0;
-  if (my_log_index != 0) {
-    my_log_term = log_->GetEntry(my_log_index).term();
-  }
+  uint64_t my_log_index;
+  uint64_t my_log_term;
+  log_->GetLastLogTermAndIndex(&my_log_term, &my_log_index);
   if (log_term < my_log_term
       || (log_term == my_log_term && log_index < my_log_index)) {
     LOG_DEBUG("FloydContext::RequestVote: log index not up-to-date, my is %lu:%lu, other is %lu:%lu",
@@ -194,14 +190,12 @@ bool FloydContext::RequestVote(uint64_t term, const std::string ip,
 
 bool FloydContext::AppendEntries(uint64_t term,
     uint64_t pre_log_term, uint64_t pre_log_index,
-    std::vector<Log::Entry*>& entries, uint64_t* my_term) {
+    std::vector<Entry*>& entries, uint64_t* my_term) {
   slash::RWLock l(&stat_rw_, true);
   // Check last log
-  uint64_t my_log_index = log_->GetLastLogIndex();
-  uint64_t my_log_term = 0;
-  if (my_log_index != 0) {
-    my_log_term = log_->GetEntry(my_log_index).term();
-  }
+  uint64_t my_log_index;
+  uint64_t my_log_term;
+  log_->GetLastLogTermAndIndex(&my_log_term, &my_log_index);
   LOG_DEBUG("FloydContext::AppendEntries: pre_log(%lu, %lu), my_log(%lu, %lu).",
             pre_log_term, pre_log_index, my_log_term, my_log_index);
   if (pre_log_index > my_log_index

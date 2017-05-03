@@ -7,14 +7,14 @@
 
 namespace floyd {
 
-static std::string CmdType(const command::Command& req);
+static std::string CmdType(const CmdRequest& req);
 
 ClientPool::ClientPool(int timeout_ms, int retry)
   : timeout_ms_(timeout_ms),
     retry_(retry) {
 }
 
-Status ClientPool::SendAndRecv(const std::string& server, const command::Command& req, command::CommandRes* res) {
+Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req, CmdResponse* res) {
   LOG_DEBUG("Client::SendAndRecv %s cmd to %s", CmdType(req).c_str(), server.c_str());
   Status ret;
   char stage = 0;
@@ -42,6 +42,8 @@ Status ClientPool::SendAndRecv(const std::string& server, const command::Command
                 ret.ToString().c_str());
       if (ret.ok()) {
         stage |= 0x02;
+      } else if (!ret.IsTimeout()) {
+        cli->Close();
       }
     }
 
@@ -50,7 +52,11 @@ Status ClientPool::SendAndRecv(const std::string& server, const command::Command
       ret = cli->Recv(res);
       LOG_WARN("Client::SendAndRecv %s cmd to %s, Recv return %s", CmdType(req).c_str(), server.c_str(),
                ret.ToString().c_str());
-      if (ret.ok()) break;
+      if (ret.ok()) {
+        break;
+      } else if (!ret.IsTimeout()) {
+        cli->Close();
+      }
     }
   }
 
@@ -95,51 +101,51 @@ Status ClientPool::UpHoldCli(pink::PinkCli *cli) {
   return ret;
 }
 
-static std::string CmdType(const command::Command& cmd) {
+static std::string CmdType(const CmdRequest& cmd) {
   std::string ret;
   switch (cmd.type()) {
-    case command::Command::Read: {
+    case Type::Read: {
       ret = "Read";
       break;
     }
-    case command::Command::ReadAll: {
+    case Type::ReadAll: {
       ret = "ReadAll";
       break;
     }
-    case command::Command::DirtyWrite: {
+    case Type::DirtyWrite: {
       ret = "DirtyWrite";
       break;
     }
-    case command::Command::Write: {
+    case Type::Write: {
       ret = "Write";
       break;
     }
-    case command::Command::Delete: {
+    case Type::Delete: {
       ret = "Delete";
       break;
     }
-    case command::Command::TryLock: {
+    case Type::TryLock: {
       ret = "TryLock";
       break;
     }
-    case command::Command::UnLock: {
+    case Type::UnLock: {
       ret = "UnLock";
       break;
     }
-    case command::Command::DeleteUser: {
+    case Type::DeleteUser: {
       ret = "DeleteUser";
       break;
     }
-    case command::Command::RaftVote: {
-      ret = "RaftVote";
+    case Type::RequestVote: {
+      ret = "RequestVote";
       break;
     }
-    case command::Command::RaftAppendEntries: {
-      ret = "RaftAppendEntries";
+    case Type::AppendEntries: {
+      ret = "AppendEntries";
       break;
     }
-    case command::Command::SynRaftStage: {
-      ret = "SynRaftStage";
+    case Type::ServerStatus: {
+      ret = "ServerStatus";
       break;
     }
     default:

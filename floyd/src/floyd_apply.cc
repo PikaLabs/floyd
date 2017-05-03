@@ -2,7 +2,7 @@
 
 #include <unistd.h>
 #include "floyd/src/logger.h"
-#include "floyd/src/command.pb.h"
+#include "floyd/src/floyd.pb.h"
 
 
 namespace floyd {
@@ -35,7 +35,8 @@ void FloydApply::ApplyStateMachine(void* arg) {
   uint64_t len = 0, to_apply = 0;
   to_apply = context->NextApplyIndex(&len);
   while (len-- > 0) {
-    const Log::Entry& log_entry = fapply->log_->GetEntry(to_apply);
+    Entry log_entry;
+    fapply->log_->GetEntry(to_apply, &log_entry);
     Status s = fapply->Apply(log_entry);
     if (!s.ok()) {
       LOG_WARN("Apply log entry failed, at: %d, error: %s",
@@ -49,9 +50,9 @@ void FloydApply::ApplyStateMachine(void* arg) {
   }
 }
 
-Status FloydApply::Apply(const Log::Entry& log_entry) {
+Status FloydApply::Apply(const Entry& log_entry) {
   const std::string& data = log_entry.cmd();
-  command::Command cmd;
+  CmdRequest cmd;
   if (!cmd.ParseFromArray(data.c_str(), data.length())) {
     LOG_WARN("Parse log_entry failed");
     return Status::IOError("Parse error");
@@ -59,15 +60,15 @@ Status FloydApply::Apply(const Log::Entry& log_entry) {
 
   rocksdb::Status ret;
   switch (cmd.type()) {
-    case command::Command::Write:
+    case Type::Write:
       ret = db_->Put(rocksdb::WriteOptions(), cmd.kv().key(), cmd.kv().value());
       LOG_DEBUG("Floyd Apply Write %s, key(%s) value(%s)",
           ret.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
       break;
-    case command::Command::Delete:
+    case Type::Delete:
       ret = db_->Delete(rocksdb::WriteOptions(), cmd.kv().key());
       break;
-    case command::Command::Read:
+    case Type::Read:
       ret = rocksdb::Status::OK();
       break;
     default:
@@ -78,10 +79,10 @@ Status FloydApply::Apply(const Log::Entry& log_entry) {
   }
   return Status::OK();
   /* TODO wangkang-xy
-  // case command::Command::ReadAll:
-  // case command::Command::TryLock:
-  // case command::Command::UnLock:
-  // case command::Command::DeleteUser:
+  // case CmdRequest::ReadAll:
+  // case CmdRequest::TryLock:
+  // case CmdRequest::UnLock:
+  // case CmdRequest::DeleteUser:
   */
 }
 

@@ -1,7 +1,7 @@
 #ifndef FLOYD_CLIENT_POOL_H_
 #define FLOYD_CLIENT_POOL_H_
 
-#include "floyd/src/command.pb.h"
+#include "floyd/src/floyd.pb.h"
 
 #include "pink/include/pink_cli.h"
 
@@ -20,8 +20,8 @@ class ClientPool {
   ~ClientPool();
 
   // Each try consists of Connect, Send and Recv;
-  Status SendAndRecv(const std::string& server, const command::Command& req,
-      command::CommandRes* res);
+  Status SendAndRecv(const std::string& server, const CmdRequest& req,
+      CmdResponse* res);
 
   Status UpHoldCli(pink::PinkCli *cli);
 

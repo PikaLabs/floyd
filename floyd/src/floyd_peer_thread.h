@@ -18,9 +18,7 @@ class FloydContext;
 class FloydPrimary;
 class FloydApply;
 
-namespace raft {
-class Log;
-}
+class FileLog;
 class ClientPool;
 
 struct FloydPeerEnv {
@@ -28,11 +26,11 @@ struct FloydPeerEnv {
   FloydContext* context;
   FloydPrimary* primary;
   FloydApply* apply;
-  Log* log;
+  FileLog* log;
   ClientPool* pool;
   
   FloydPeerEnv(const std::string _server, FloydContext* _ctx, FloydPrimary* _pm,
-               FloydApply* _apply, Log* _log, ClientPool* _pool)
+               FloydApply* _apply, FileLog* _log, ClientPool* _pool)
     : server(_server),
       context(_ctx), 
       primary(_pm),

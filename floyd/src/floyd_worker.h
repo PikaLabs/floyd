@@ -1,7 +1,7 @@
 #ifndef FLOYD_WORKER_H_
 #define FLOYD_WORKER_H_
 
-#include "floyd/src/command.pb.h"
+#include "floyd/src/floyd.pb.h"
 
 #include "pink/include/server_thread.h"
 #include "pink/include/pb_conn.h"
@@ -32,8 +32,8 @@ class FloydWorkerConn : public pink::PbConn {
 
  private:
   FloydImpl* floyd_;
-  command::Command command_;
-  command::CommandRes command_res_;
+  CmdRequest request_;
+  CmdResponse  response_;
 };
 
 class FloydWorkerConnFactory : public pink::ConnFactory {
