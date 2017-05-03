@@ -11,21 +11,9 @@
 namespace floyd {
 using slash::Status;
 
-struct FloydApplyEnv {
-  FloydContext* context;
-  rocksdb::DBNemo* db;
-  FileLog* log;
-  FloydApplyEnv(FloydContext* c,
-      rocksdb::DBNemo* d, FileLog* l)
-    : context(c),
-    db(d),
-    log(l) {
-    }
-};
-
 class FloydApply {
  public:
-  explicit  FloydApply(const FloydApplyEnv& env);
+  FloydApply(FloydContext* context, rocksdb::DBNemo* db, FileLog* log);
   ~FloydApply();
   Status ScheduleApply();
 

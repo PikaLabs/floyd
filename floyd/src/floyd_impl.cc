@@ -72,18 +72,17 @@ Status FloydImpl::Start() {
   context_->RecoverInit();
 
   // Create Apply threads
-  apply_ = new FloydApply(FloydApplyEnv(context_, db_, log_));
+  apply_ = new FloydApply(context_, db_, log_);
 
   // TODO(annan) peers and primary refer to each other
   // Create PrimaryThread before Peers
-  primary_ = new FloydPrimary(FloydPrimaryEnv(context_, apply_, log_));
+  primary_ = new FloydPrimary(context_, apply_);
 
   // Create peer threads
   for (auto iter = options_.members.begin();
       iter != options_.members.end(); iter++) {
     if (!IsSelf(*iter)) {
-      Peer* pt = new Peer(FloydPeerEnv(*iter, context_, primary_,
-            apply_, log_, peer_client_pool_));
+      Peer* pt = new Peer(*iter, context_, primary_, log_, peer_client_pool_);
       peers_.insert(std::pair<std::string, Peer*>(*iter, pt));
     }
   }
@@ -99,7 +98,7 @@ Status FloydImpl::Start() {
   }
 
   // Start worker thread after Peers, because WorkerHandle will check peers
-  worker_ = new FloydWorker(FloydWorkerEnv(options_.local_port, 1000, this));
+  worker_ = new FloydWorker(options_.local_port, 1000, this);
   if ((ret = worker_->Start()) != 0) {
     LOG_ERROR("FloydImpl worker thread failed to start, ret is %d", ret);
     return Status::Corruption("failed to start worker, return " + std::to_string(ret));

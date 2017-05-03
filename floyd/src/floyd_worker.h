@@ -12,16 +12,6 @@ class FloydImpl;
 class FloydWorkerConnFactory; 
 class FloydWorkerHandle;
 
-struct FloydWorkerEnv {
-  int port;
-  int cron_interval;
-  FloydImpl* floyd;
-  FloydWorkerEnv(int p, int c, FloydImpl* f)
-    : port(p),
-    cron_interval(c),
-    floyd(f) {}
-};
-
 class FloydWorkerConn : public pink::PbConn {
  public:
   FloydWorkerConn(int fd, const std::string& ip_port,
@@ -60,7 +50,7 @@ private:
 
 class FloydWorker {
  public:
-  explicit FloydWorker(const FloydWorkerEnv& env);
+  FloydWorker(int port, int cron_interval, FloydImpl* floyd);
 
   ~FloydWorker() {
     thread_->JoinThread();

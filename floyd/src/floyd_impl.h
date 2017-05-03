@@ -25,7 +25,6 @@ class FloydPrimary;
 class FloydApply;
 class FloydWorker;
 class FloydWorkerConn;
-//struct LeaderElectTimerEnv;
 class CmdRequest;
 class CmdResponse;
 class CmdResponse_ServerStatus;

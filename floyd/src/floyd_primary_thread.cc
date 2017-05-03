@@ -25,8 +25,10 @@ namespace floyd {
 //    : ptr(_ptr), term(_term) { }
 //};
 
-FloydPrimary::FloydPrimary(FloydPrimaryEnv env)
-  : env_(env),
+FloydPrimary::FloydPrimary(FloydContext* context, FloydApply* apply)
+  : context_(context),
+    apply_(apply),
+//    log_(log),
     elect_leader_reset_(false) {
   srand(time(NULL));
 }
@@ -43,13 +45,13 @@ FloydPrimary::~FloydPrimary() {
 
 void FloydPrimary::SetPeers(PeersSet* peers) {
   LOG_DEBUG("FloydPrimary::SetPeers peers has %d pairs", peers->size());
-  env_.peers = peers;
+  peers_ = peers;
 }
 
 void FloydPrimary::AddTask(TaskType type, void* arg) {
   switch (type) {
     case kCheckElectLeader: {
-      uint64_t timeout = env_.context->GetElectLeaderTimeout();
+      uint64_t timeout = context_->GetElectLeaderTimeout();
       LOG_INFO("FloydPrimary::AddTask will CheckElectLeader in %dms", timeout);
       bg_thread_.DelaySchedule(timeout, DoCheckElectLeader, this);
       break;
@@ -79,18 +81,18 @@ void FloydPrimary::DoCheckElectLeader(void *arg) {
 }
 
 void FloydPrimary::CheckElectLeader() {
-  if (env_.context->role() == Role::kLeader) {
+  if (context_->role() == Role::kLeader) {
     LOG_DEBUG("FloydPrimary::CheckElectLeader already Leader, Stop check");
     AddTask(kCheckElectLeader);
     return;
   }
-  if (env_.context->role() == Role::kFollower && elect_leader_reset_) {
+  if (context_->role() == Role::kFollower && elect_leader_reset_) {
     LOG_DEBUG("FloydPrimary::CheckElectLeader still live");
     elect_leader_reset_ = false;
   } else {
     LOG_DEBUG("FloydPrimary::CheckElectLeader start Elect leader after timeout");
-    env_.context->BecomeCandidate();
-    for (auto& peer : *(env_.peers)) {
+    context_->BecomeCandidate();
+    for (auto& peer : *peers_) {
       peer.second->AddRequestVoteTask();
     }
   }
@@ -104,20 +106,20 @@ void FloydPrimary::DoBecomeLeader(void *arg) {
 }
 
 void FloydPrimary::BecomeLeader() {
-  if (env_.context->role() == Role::kLeader) {
+  if (context_->role() == Role::kLeader) {
     LOG_DEBUG("FloydPrimary::BecomeLeader already Leader");
     return;
   }
   LOG_DEBUG("FloydPrimary::BecomeLeader");
-  env_.context->BecomeLeader();
-  for (auto& peer : *(env_.peers)) {
+  context_->BecomeLeader();
+  for (auto& peer : *peers_) {
     peer.second->BecomeLeader();
   }
 }
 
 uint64_t FloydPrimary::QuorumMatchIndex() {
   std::vector<uint64_t> values;
-  for (auto& iter : *(env_.peers)) {
+  for (auto& iter : *peers_) {
     values.push_back(iter.second->GetMatchIndex());
   }
   std::sort(values.begin(), values.end());
@@ -125,15 +127,15 @@ uint64_t FloydPrimary::QuorumMatchIndex() {
 }
 
 void FloydPrimary::AdvanceCommitIndex() {
-  if (env_.context->role() != Role::kLeader) {
+  if (context_->role() != Role::kLeader) {
     return;
   }
 
   uint64_t new_commit_index = QuorumMatchIndex();
   LOG_DEBUG("FloydPrimary::AdvanceCommitIndex new_commit_index=%lu", new_commit_index);
-  if (env_.context->AdvanceCommitIndex(new_commit_index)) {
+  if (context_->AdvanceCommitIndex(new_commit_index)) {
     LOG_DEBUG("FloydPrimary::AdvanceCommitIndex ok, ScheduleApply");
-    env_.apply->ScheduleApply();
+    apply_->ScheduleApply();
   }
 }
 

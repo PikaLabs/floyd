@@ -21,27 +21,6 @@ class FloydApply;
 class Peer;
 typedef std::map<std::string, Peer*> PeersSet;
 
-class FileLog;
-
-struct FloydPrimaryEnv {
-  FloydContext* context;
-  PeersSet* peers;
-  FloydApply* apply;
-  FileLog* log;
-  
-  FloydPrimaryEnv(FloydContext* _ctx, PeersSet* _peers,
-               FloydApply* _apply, FileLog* _log)
-    : context(_ctx), 
-      peers(_peers),
-      apply(_apply),
-      log(_log) { }
-
-  FloydPrimaryEnv(FloydContext* _ctx, FloydApply* _apply, FileLog* _log)
-    : context(_ctx), 
-      apply(_apply),
-      log(_log) { }
-};
-
 enum TaskType {
   kCheckElectLeader = 0,
   kBecomeLeader,
@@ -52,7 +31,7 @@ enum TaskType {
 
 class FloydPrimary {
  public:
-  explicit FloydPrimary(FloydPrimaryEnv env);
+  FloydPrimary(FloydContext* context, FloydApply* apply);
   ~FloydPrimary();
 
   int Start();
@@ -76,7 +55,11 @@ class FloydPrimary {
 
  private:
 
-  FloydPrimaryEnv env_;
+  FloydContext* context_;
+  PeersSet* peers_;
+  FloydApply* apply_;
+  //FileLog* log_;
+
   std::atomic<bool> elect_leader_reset_;
   pink::BGThread bg_thread_;
 

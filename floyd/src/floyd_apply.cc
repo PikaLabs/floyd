@@ -7,10 +7,10 @@
 
 namespace floyd {
 
-FloydApply::FloydApply(const FloydApplyEnv& env)
-  : context_(env.context),
-    db_(env.db),
-    log_(env.log) {
+FloydApply::FloydApply(FloydContext* context, rocksdb::DBNemo* db, FileLog* log)
+  : context_(context),
+    db_(db),
+    log_(log) {
   bg_thread_ = new pink::BGThread();
   bg_thread_->set_thread_name("FloydApply");
 }

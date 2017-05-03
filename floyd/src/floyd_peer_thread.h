@@ -16,32 +16,14 @@ class Peer;
 
 class FloydContext;
 class FloydPrimary;
-class FloydApply;
-
+//class FloydApply;
 class FileLog;
 class ClientPool;
 
-struct FloydPeerEnv {
-  std::string server;
-  FloydContext* context;
-  FloydPrimary* primary;
-  FloydApply* apply;
-  FileLog* log;
-  ClientPool* pool;
-  
-  FloydPeerEnv(const std::string _server, FloydContext* _ctx, FloydPrimary* _pm,
-               FloydApply* _apply, FileLog* _log, ClientPool* _pool)
-    : server(_server),
-      context(_ctx), 
-      primary(_pm),
-      apply(_apply),
-      log(_log),
-      pool(_pool) { }
-};
-
 class Peer {
  public:
-  explicit Peer(FloydPeerEnv env);
+  Peer(std::string server, FloydContext* context, FloydPrimary* primary,
+       FileLog* log, ClientPool* pool);
   ~Peer();
 
   int StartThread();
@@ -66,11 +48,13 @@ class Peer {
 
  private:
 
-  FloydPeerEnv env_;
+  std::string server_;
+  FloydContext* context_;
+  FloydPrimary* primary_;
+  FileLog* log_;
+  ClientPool* pool_;
 
   slash::Mutex mu_;
- // bool have_vote_;
-  bool vote_done_;
   uint64_t next_index_;
   uint64_t match_index_;
 

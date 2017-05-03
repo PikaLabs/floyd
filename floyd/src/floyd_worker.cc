@@ -6,12 +6,11 @@
 namespace floyd {
 using slash::Status;
 
-FloydWorker::FloydWorker(const FloydWorkerEnv& env)
-  : conn_factory_(env.floyd),
-  handle_(env.floyd) {
-    thread_ = pink::NewHolyThread(env.port,
-        &conn_factory_, env.cron_interval, &handle_);
-  }
+FloydWorker::FloydWorker(int port, int cron_interval, FloydImpl* floyd)
+  : conn_factory_(floyd),
+    handle_(floyd) {
+    thread_ = pink::NewHolyThread(port, &conn_factory_, cron_interval, &handle_);
+}
 
 FloydWorkerConn::FloydWorkerConn(int fd, const std::string& ip_port,
     pink::Thread* thread, FloydImpl* floyd)
