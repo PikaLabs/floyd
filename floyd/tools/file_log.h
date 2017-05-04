@@ -1,120 +1,116 @@
-#ifndef FLOYD_CONSENSUS_FILE_LOG_H_
-#define FLOYD_CONSENSUS_FILE_LOG_H_
+#ifndef FLOYD_FILE_LOG_H_
+#define FLOYD_FILE_LOG_H_
 
-#include "log_meta.pb.h"
-#include "log.h"
-#include "memory_log.h"
+#include <string>
+#include <map>
+#include "floyd.pb.h"
 
 #include "slash/include/env.h"
 #include "slash/include/slash_slice.h"
 #include "slash/include/slash_status.h"
 #include "slash/include/slash_mutex.h"
 
-
 using slash::Status;
 using slash::Slice;
 
 namespace floyd {
-namespace raft {
 
 class Iterator;
 class Manifest;
 class Table;
 
-class FileLog : public Log {
-  class Sync : public Log::Sync {
-   public:
-    Sync(uint64_t lastindex, Manifest* mn, Table* tb);
-    void Wait();
-
-    //std::vector<std::pair<int, bool>> fds;
-    Manifest* manifest;
-    Table* table;
-  };
+// TODO(anan) 
+//    1. we don't remove log files
+class FileLog {
  public:
-  typedef floyd::raft::Entry Entry;
-
   explicit FileLog(const std::string& path);
   ~FileLog();
-  std::pair<uint64_t, uint64_t> Append(std::vector<Entry*>& entries);
-  void SplitIfNeeded();
-  std::unique_ptr<Log::Sync> TakeSync();
-  void TruncatePrefix(uint64_t first_index) { first_index = 0; assert(false); }
-  void TruncateSuffix(uint64_t last_index);
 
-  Entry& GetEntry(uint64_t index);
+  std::pair<uint64_t, uint64_t> Append(std::vector<Entry*>& entries);
+  //void TruncatePrefix(uint64_t first_index) { first_index = 0; assert(false); }
+  bool TruncateSuffix(uint64_t last_index);
+
+  bool GetEntry(uint64_t index, Entry* entry);
   uint64_t GetStartLogIndex();
   uint64_t GetLastLogIndex();
-  uint64_t GetSizeBytes();
-  void UpdateMetadata();
+  bool GetLastLogTermAndIndex(uint64_t* last_log_term, uint64_t* last_log_index);
 
-  void DumpSingleFile(const std::string& filename);
+  void UpdateMetadata(uint64_t current_term, std::string voted_for_ip,
+                      int32_t voted_for_port);
 
-// protected:
-  MemoryLog memory_log_;
-  //floyd::raft::filelog::MetaData metadata_;
-  std::unique_ptr<Sync> current_sync_;
-  std::string path_;
+  uint64_t current_term();
+  std::string voted_for_ip();
+  uint32_t voted_for_port(); 
+
+  void DumpSingleFile(const std::string &filename);
 
   Manifest *manifest_;
-  Table *table_;
-  //uint64_t log_number_;
 
-  //bool ReadMetadata(std::string& filename,
-  //                  floyd::raft::Filelog::MetaData& metadata);
+ private:
+  std::string path_;
+  Table *last_table_;
+  int cache_size_;
 
-  //std::vector<uint64_t> GetEntryIds();
-  Entry Read(std::string& path);
-  int ProtocolToFile(google::protobuf::Message& in, std::string& path);
-  int FileToProtocol(google::protobuf::Message& out, std::string& path);
+  slash::Mutex mu_;
+  std::map<std::string, Table*> tables_;
 
-// private:
-
-  //bool ReadMetadata(std::string& path, log::FileLogMetaData& metadata);
   bool Recover();
-  int RecoverFromFile(const std::string &file, const uint64_t entry_start, const uint64_t entry_end);
-};
+  bool GetTable(const std::string &file, Table** table);
+  void SplitIfNeeded();
 
+  bool TruncateLastTable();
+
+  // No copying allowed
+  FileLog(const FileLog&);
+  void operator=(const FileLog&);
+};
 
 const size_t kIdLength = sizeof(uint64_t);
 const size_t kOffsetLength = sizeof(uint64_t);
 const size_t kTableHeaderLength = 2 * kIdLength + kOffsetLength;
+//const size_t kManifestMetaLength = 4 * kIdLength + 2 * sizeof(uint32_t);
 
 //
 // Manifest structure:
-//  | log_number(uint64) | length(int32)  | pb message(length) |
+//  | length(int32)  | FileLogMetaData pb message(length) |
 // 
 class Manifest {
  public:
+  struct Meta {
+    // FileLog needed
+    uint64_t file_num;
+    uint64_t entry_start;
+    uint64_t entry_end;
+
+    // Raft needed
+    uint64_t current_term;
+    uint32_t voted_for_ip;
+    uint32_t voted_for_port;
+    
+    Meta()
+      : file_num(0LL), entry_start(1LL), entry_end(0LL), 
+        current_term(1), voted_for_ip(0), voted_for_port(0) { }
+  };
+
   explicit Manifest(slash::RandomRWFile* file)
-      : file_(file),
-      log_number_(0LL),
-      length_(0) {}
+      : file_(file) { }
 
   bool Recover();
   void Update(uint64_t entry_start, uint64_t entry_end);
-  void Clear();
   bool Save();
+  
   void Dump();
 
   slash::RandomRWFile *file_;
-  uint64_t log_number_;
-  int length_;
-
-  log::FileLogMetaData metadata_;
+  Meta meta_;
 
  private:
-
-  int Serialize(uint64_t index, int length, Slice *result, char *scratch);
-
-
-  char scratch[1024];
+  char scratch[256];
 
   // No copying allowed
   Manifest(const Manifest&);
   void operator=(const Manifest&);
 };
-
 
 //
 // Table structure:
@@ -123,8 +119,6 @@ class Manifest {
 // Entry structure:
 //    | entry_id(uint64) | length(int32) | pb format msg(length bytes) | begin_offset(int32) |
 //
-
-
 class Table {
  public:
   struct Header {
@@ -147,26 +141,28 @@ class Table {
   static bool ReadHeader(slash::RandomRWFile* file, Header *header);
 
   int ReadMessage(int offset, Message *msg, bool from_end = false);
-  int AppendEntry(uint64_t index, Log::Entry &entry);
+  int AppendEntry(uint64_t index, Entry& entry);
 
   void TruncateEntry(uint64_t index, int offset) {
     header_->entry_end = index - 1;
     header_->filesize = offset;
   }
 
-  void DumpHeader();
-
+  bool GetEntry(uint64_t index, Entry* entry);
   bool Sync();
+  void DumpHeader();
 
   Iterator* NewIterator();
   ~Table() {
     if (file_ != NULL) {
-      file_->Sync();
+      //file_->Sync();
+      Sync();
     }
     delete file_;
 
     if (backing_store_ != NULL)
       delete backing_store_;
+    delete header_;
   }
 
   //slash::RandomRWFile *file() { return file_; }
@@ -181,7 +177,7 @@ class Table {
         file_(file),
         backing_store_(NULL) {}
 
-  int Serialize(uint64_t index, int length, Log::Entry &entry, Slice *result, char *scratch);
+  int Serialize(uint64_t index, int length, Entry &entry, Slice *result, char *scratch);
 
 
   char scratch[1024 * 4];
@@ -265,6 +261,5 @@ private:
   void operator=(const Iterator&);
 };
 
-} // namespace raft
 } // namespace floyd
 #endif

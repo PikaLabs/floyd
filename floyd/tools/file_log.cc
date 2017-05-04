@@ -1,14 +1,17 @@
-#include <sys/types.h>
-#include <dirent.h>
-//#include "floyd_util.h"
 #include "file_log.h"
-#include "slash/include/slash_mutex.h"
 
 #include <iostream>
+#include <sys/types.h>
+#include <dirent.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <google/protobuf/text_format.h>
 
+#include "logger.h"
+//#include "slash/include/slash_mutex.h"
+
 namespace floyd {
-namespace raft {
 
 const std::string kManifest = "manifest";
 const std::string kLog = "floyd.log";
@@ -27,81 +30,40 @@ std::string LogFileName(const std::string &name, uint64_t number) {
 }
 
 FileLog::FileLog(const std::string &path)
-    : memory_log_(),
-      // metadata_(),
-      // current_sync_(new Sync(0)),
-      path_(path),
-      manifest_(NULL),
-      table_(NULL) {
-
-  Status s;
-
-  if (path.back() != '/') path_ = path + '/';
+  : path_(path),
+    manifest_(NULL),
+    last_table_(NULL),
+    cache_size_(30000) {
+  if (path.back() != '/') {
+    path_ = path + '/';
+  }
 
   slash::CreateDir(path_);
-  // std::vector<uint64_t> entryids = GetEntryIds();
-
-  // std::string filename = path_ + kManifest;
-
-  //	if (!ReadMetadata(filename, metadata_)) {
-  //		metadata_.set_entries_start(1);
-  //		metadata_.set_entries_end(0);
-  //	}
-
   Recover();
-
-  // memory_log_.TruncatePrefix(metadata_.entries_start());
-  // memory_log_.TruncateSuffix(metadata_.entries_end());
-
-  // TruncatePrefix(metadata_.entries_start());
-  // TruncateSuffix(metadata_.entries_end());
-  // for (uint64_t id = metadata_.entries_start(); id <=
-  // metadata_.entries_end(); ++id) {
-  //	path = format("%016lx", id);
-  //	Log::Entry e = Read(path);
-  //	std::vector<Log::Entry*> es;
-  //	es.push_back(&e);
-  //	memory_log_.Append(es);
-  //}
-
-  Log::metadata = manifest_->metadata_.raft_metadata();
-//  std::cout << "file_log init, log_num: " << manifest_->log_number_ << std::endl;
 }
 
 FileLog::~FileLog() {
   if (manifest_ != NULL) {
-    UpdateMetadata();
+    manifest_->Save();
     delete manifest_;
   }
-  if (table_ != NULL) {
-    table_->Sync();
-    delete table_;
+  for (auto& it : tables_) {
+    delete it.second;
   }
-  //	if (current_sync_->fds.empty())
-  //		current_sync_->completed = true;
 }
+
+
 
 bool FileLog::Recover() {
   slash::RandomRWFile *file;
 
   std::string filename = path_ + kManifest;
   if (!slash::FileExists(filename)) {
-
+    LOG_DEBUG("FileLog::Recover newly node");
     slash::NewRandomRWFile(filename, &file);
     manifest_ = new Manifest(file);
-    manifest_->Clear();
-
-    filename = LogFileName(path_, ++manifest_->log_number_);
-    if (!Table::Open(filename, &table_)) {
-      fprintf(stderr, "[WARN] (%s:%d) open %s failed\n", __FILE__, __LINE__,
-              filename.c_str());
-    }
-
-    current_sync_ = std::unique_ptr<Sync>(new Sync(0, manifest_, table_));
-
   } else {
-
-    // mainifest recover
+    // manifest recover
     slash::NewRandomRWFile(filename, &file);
     manifest_ = new Manifest(file);
     manifest_->Recover();
@@ -111,7 +73,7 @@ bool FileLog::Recover() {
 
     int ret = slash::GetChildren(path_, files);
     if (ret != 0) {
-      fprintf(stderr, "recover failed when open path %s, %s", path_.c_str(),
+      LOG_ERROR("recover failed when open path %s, %s", path_.c_str(),
               strerror(ret));
       return false;
     }
@@ -120,68 +82,40 @@ bool FileLog::Recover() {
     for (size_t i = 0; i < files.size(); i++) {
       // printf (" files[%lu]=%s klog=%s\n", i, files[i].c_str(), kLog.c_str());
       if (files[i].find(kLog) != std::string::npos) {
-        int cnt = RecoverFromFile(path_ + files[i],
-                                  manifest_->metadata_.entries_start(),
-                                  manifest_->metadata_.entries_end());
-
-        // TODO
-        if (cnt > 0) {
+        Table* tmp;
+        if (!GetTable(path_ + files[i], &tmp)) {
+          fprintf(stderr, "[WARN] (%s:%d) open %s failed\n", __FILE__, __LINE__,
+                  files[i].c_str());
         }
+        LOG_DEBUG("FileLog::Recover old node with exist file %s", (path_ + files[i]).c_str());
+        last_table_ = tmp;
       }
     }
-
-    if (table_ == NULL) {
-      filename = LogFileName(path_, ++manifest_->log_number_);
-      if (!Table::Open(filename, &table_)) {
-        fprintf(stderr, "[WARN] (%s:%d) open %s failed\n", __FILE__, __LINE__,
-                filename.c_str());
-      }
-    }
-
-    current_sync_ =
-        std::unique_ptr<Sync>(new Sync(GetLastLogIndex(), manifest_, table_));
-
-    manifest_->Save();
   }
+
+  if (last_table_ == NULL) {
+    filename = LogFileName(path_, ++manifest_->meta_.file_num);
+    if (!GetTable(filename, &last_table_)) {
+      fprintf(stderr, "[WARN] (%s:%d) open %s failed\n", __FILE__, __LINE__,
+              filename.c_str());
+    }
+    LOG_DEBUG("FileLog::Recover new last_table_ %s", filename.c_str());
+    manifest_->Save();
+    last_table_->Sync();
+  }
+#if (LOG_LEVEL != LEVEL_NONE)
+  manifest_->Dump();
+#endif
   return true;
 }
 
-bool Manifest::Recover() {
-  Slice result;
-  int nread = 0;
-
-  Status s = file_->Read(nread, kIdLength + kOffsetLength, &result, scratch);
-  if (!s.ok()) {
-    return false;
-  }
-
-  const char *p = result.data();
-  memcpy((char *)(&log_number_), p, kIdLength);
-  memcpy((char *)(&length_), p + kIdLength, kOffsetLength);
-
-  nread += kIdLength + kOffsetLength;
-
-  s = file_->Read(nread, length_, &result, scratch);
-  if (!s.ok()) {
-    return false;
-  }
-
-  return metadata_.ParseFromArray(result.data(), result.size());
+void Table::DumpHeader() {
+  printf ("   Header:\n"
+          "      entry_start:%lu, entry_end:%lu, filesize=%d\n", header_->entry_start, header_->entry_end, header_->filesize);
 }
 
-void Manifest::Dump() {
-  printf ("=============== Manifest ============\n"
-          "     log_number : %lu\n"
-          "         length : %d\n",
-          log_number_, length_);
 
-  std::string text_format;
-  google::protobuf::TextFormat::PrintToString(metadata_, &text_format);
-  printf ("    metadata_  :\n%s\n"
-          "------------------------------------\n", text_format.c_str());
-}
-
-void FileLog::DumpSingleFile(const std::string& filename) {
+void FileLog::DumpSingleFile(const std::string &filename) {
   Table *table;
   if (!Table::Open(filename, &table)) {
     return ;
@@ -194,154 +128,190 @@ void FileLog::DumpSingleFile(const std::string& filename) {
   iter->SeekToFirst();
 
   for (; iter->Valid(); iter->Next()) {
-//    std::cout << "Got id: " << iter->msg.entry_id << std::endl << std::flush;
-//    if (iter->msg.entry_id < entry_start || iter->msg.entry_id > entry_end)
-//      continue;
+    //if (iter->msg.entry_id < entry_start || iter->msg.entry_id > entry_end)
+    //  continue;
 
-    printf (" entry_id:%lu length:%d\n", iter->msg.entry_id, iter->msg.length);
+    printf (" entry_id:%lu length:%d\n", iter->msg.entry_id,
+            iter->msg.length);
     // TODO memory leak
-    Log::Entry *e = new Log::Entry;
-    e->ParseFromArray(iter->msg.pb, iter->msg.length);
-    // e.ParseFromString(iter->msg.pb);
+    Entry e;
+    //e->ParseFromArray(iter->msg.pb, iter->msg.length);
+    e.ParseFromString(iter->msg.pb);
 
     std::string text_format;
-    google::protobuf::TextFormat::PrintToString(*e, &text_format);
-    printf ( "%s\n------------------------------------\n", text_format.c_str());
+    google::protobuf::TextFormat::PrintToString(e, &text_format);
+    printf ("%s\n------------------------------------\n", text_format.c_str());
   }
 }
 
-int FileLog::RecoverFromFile(const std::string &file,
-                             const uint64_t entry_start,
-                             const uint64_t entry_end) {
+bool FileLog::GetTable(const std::string &file, Table** table) {
+  // mu_.AssertLock();
+  *table = NULL;
+  auto tmp = tables_.find(file);
+  Table *tb;
 
-  if (table_ != NULL) {
-    delete table_;
-    table_ = NULL;
+  if (tmp == tables_.end()) {
+    if (!Table::Open(file, &tb)) {
+      return false;
+    }
+    tables_[file] = tb;
+
+    // limit cache size to cache_size
+    if (tables_.size() > cache_size_) {
+      Table *smallest_table = tables_.begin()->second;
+      delete smallest_table;
+      tables_.erase(tables_.begin());
+    }
+  } else {
+    tb = tmp->second;
   }
-
-  if (!Table::Open(file, &table_)) {
-    return -1;
-  }
-
-//  std::cout << "Open log: " << file << " entry_start: " << table_->header_->entry_start << " entry_end: " << table_->header_->entry_end << std::endl;
 
   // stale table
-  if (table_->header_->entry_start > entry_end ||
-      table_->header_->entry_end < entry_start) {
-    delete table_;
-    table_ = NULL;
+  if (tb->header_->entry_end > 0          // not new table;
+      && (tb->header_->entry_start > manifest_->meta_.entry_end
+          || tb->header_->entry_end < manifest_->meta_.entry_start)) {
+    LOG_DEBUG("FileLog::GetTable stale file %s with entry(%lu, %lu), global entry(%lu, %lu)",
+              file.c_str(), tb->header_->entry_start, tb->header_->entry_end,
+              manifest_->meta_.entry_start, manifest_->meta_.entry_end);
+    delete tb;
     slash::DeleteFile(file);
-    return 0;
+    tables_.erase(file);
+    return false;
   }
 
-  Iterator *iter = table_->NewIterator();
-  iter->SeekToFirst();
-
-  std::vector<Log::Entry *> es;
-
-  for (; iter->Valid(); iter->Next()) {
-//    std::cout << "Got id: " << iter->msg.entry_id << std::endl << std::flush;
-    if (iter->msg.entry_id < entry_start || iter->msg.entry_id > entry_end)
-      continue;
-
-    // TODO memory leak
-    Log::Entry *e = new Log::Entry;
-    e->ParseFromArray(iter->msg.pb, iter->msg.length);
-    // e.ParseFromString(iter->msg.pb);
-
-    es.push_back(e);
-  }
-  memory_log_.Append(es);
-
-  delete iter;
-
-  return es.size();
+  *table = tb;
+  return true;
 }
 
 std::pair<uint64_t, uint64_t> FileLog::Append(std::vector<Entry *> &entries) {
-  // int fd = -1;
-  std::string path;
-  std::pair<uint64_t, uint64_t> range = memory_log_.Append(entries);
-  for (uint64_t i = range.first; i <= range.second; ++i) {
-    Log::Entry entry = memory_log_.GetEntry(i);
-
-    Slice result;
-    int nwrite = table_->AppendEntry(i, entry);
-
-    // TODO
-    if (nwrite > 0) {
-    }
-    // path = path_ + format("%016lx", i);
-    // fd = ProtocolToFile(memory_log_.GetEntry(i), path);
-    // if (fd != -1)
-    //	current_sync_->fds.push_back({fd, true});
+  slash::MutexLock l(&mu_);
+  uint64_t start = manifest_->meta_.entry_end + 1;
+  uint64_t end = start + entries.size() - 1;
+  for (uint64_t i = start; i <= end; ++i) {
+    int nwrite = last_table_->AppendEntry(i, *(entries[i - start]));
+    SplitIfNeeded();
   }
 
-  *(manifest_->metadata_.mutable_raft_metadata()) = Log::metadata;
-  manifest_->Update(memory_log_.GetStartLogIndex(),
-                    memory_log_.GetLastLogIndex());
+  manifest_->meta_.entry_end = end;
+  manifest_->Save();
+  return {start, end}; 
+}
 
-  // metadata_.set_entries_start(memory_log_.GetStartLogIndex());
-  // metadata_.set_entries_end(memory_log_.GetLastLogIndex());
-  // path = path_ + kManifest;
-  // fd = ProtocolToFile(metadata_, path);
-  // if (fd != -1)
-  //	current_sync_->fds.push_back({fd, true});
-  // current_sync_->last_index = range.second;
-  return range;
+void FileLog::UpdateMetadata(uint64_t current_term, std::string voted_for_ip, 
+                             int32_t voted_for_port) {
+  uint32_t ip = 0;
+  if (!voted_for_ip.empty()) {
+    struct in_addr in;
+    inet_aton(voted_for_ip.c_str(), &in); 
+    ip = in.s_addr;
+  }
+
+  slash::MutexLock l(&mu_);
+  manifest_->meta_.current_term = current_term;
+  manifest_->meta_.voted_for_ip = ip;
+  manifest_->meta_.voted_for_port = voted_for_port;
+  manifest_->Save();
+}
+
+uint64_t FileLog::GetStartLogIndex() {
+  slash::MutexLock l(&mu_);
+  return manifest_->meta_.entry_start;
+}
+
+uint64_t FileLog::GetLastLogIndex() {
+  slash::MutexLock l(&mu_);
+  return manifest_->meta_.entry_end;
+}
+
+bool FileLog::GetLastLogTermAndIndex(uint64_t* last_log_term, uint64_t* last_log_index) {
+  slash::MutexLock l(&mu_);
+  *last_log_index = manifest_->meta_.entry_end;
+  if (*last_log_index == 0) {
+    *last_log_term = 0;
+  } else {
+    Entry entry;
+    last_table_->GetEntry(*last_log_index, &entry);
+    *last_log_term = entry.term();
+  }
+  return true;
+}
+
+bool FileLog::GetEntry(uint64_t index, Entry* entry) {
+  slash::MutexLock l(&mu_);
+  Table* tmp = NULL;
+  if (index >= last_table_->header_->entry_start && index <= last_table_->header_->entry_end) {
+    tmp = last_table_;
+  } else {
+    for (auto it = tables_.rbegin(); it != tables_.rend(); it++) {
+      if (index >= it->second->header_->entry_start && index <= it->second->header_->entry_end) {
+        tmp = last_table_;
+        break;
+      }
+    }
+  }
+
+  if (tmp != NULL) {
+    return tmp->GetEntry(index, entry);
+  }
+  
+  return false;
+}
+
+uint64_t FileLog::current_term() {
+  slash::MutexLock l(&mu_);
+  return manifest_->meta_.current_term;
+}
+
+std::string FileLog::voted_for_ip() {
+  struct in_addr in;
+  {
+    slash::MutexLock l(&mu_);
+    in.s_addr = manifest_->meta_.voted_for_ip;
+  }
+  std::string ip = inet_ntoa(in);
+  return ip; 
+}
+
+uint32_t FileLog::voted_for_port() {
+  slash::MutexLock l(&mu_);
+  return manifest_->meta_.voted_for_port;
 }
 
 void FileLog::SplitIfNeeded() {
-
-  if (table_->header_->filesize > 1024 * 1024) {
-    
-    uint64_t next  = table_->header_->entry_end+1;
-
-    delete table_;
-    table_ = NULL;
-
-    std::string filename = LogFileName(path_, ++manifest_->log_number_);
-    if (!Table::Open(filename, &table_)) {
+  if (last_table_->header_->filesize > 1024) {
+  //if (last_table_->header_->filesize > 16 * 1024 * 1024) {
+    Table * tmp;
+    std::string filename = LogFileName(path_, ++manifest_->meta_.file_num);
+    if (!GetTable(filename, &tmp)) {
       fprintf(stderr, "[WARN] (%s:%d) open %s failed\n", __FILE__, __LINE__,
               filename.c_str());
     }
-
-    table_->header_->entry_start = next;
-    table_->header_->entry_end = next;
-
-    current_sync_ = std::unique_ptr<Sync>(new Sync(0, manifest_, table_));
+    
+    uint64_t next = last_table_->header_->entry_end + 1;
+    LOG_DEBUG("FileLog::SplitIfNeeded create new file %s with entry_start (%lu)",
+              filename.c_str(), next);
+    last_table_ = tmp;
+    last_table_->header_->entry_start = next;
+    last_table_->header_->entry_end = next;
   }
-
 }
 
-void FileLog::TruncateSuffix(uint64_t last_index) {
-  uint64_t current_index = GetLastLogIndex();
-  memory_log_.TruncateSuffix(last_index);
-  UpdateMetadata();
+bool FileLog::TruncateSuffix(uint64_t last_index) {
+  slash::MutexLock l(&mu_);
+  uint64_t current_index = manifest_->meta_.entry_end;
 
   while (current_index > last_index) {
     // whole log file should be abondon
-    if (table_->header_->entry_start >= last_index) {
-      delete table_;
-
-      std::string filename = LogFileName(path_, manifest_->log_number_);
-      slash::DeleteFile(filename);
-
-      if (manifest_->log_number_ == 1) {
-        std::string filename = LogFileName(path_, manifest_->log_number_);
-        Table::Open(filename, &table_);
-        break;
+    if (last_table_->header_->entry_start >= last_index) {
+      if (!TruncateLastTable()) {
+        return false;
       }
-
-      filename = LogFileName(path_, --manifest_->log_number_);
-      Table::Open(filename, &table_);
-
-      current_index = table_->header_->entry_end;
+      current_index = last_table_->header_->entry_end;
     } else {
-      Iterator *iter = table_->NewIterator();
+      Iterator *iter = last_table_->NewIterator();
       iter->SeekToLast();
 
-      std::vector<Log::Entry *> es;
+      std::vector<Entry *> es;
 
       for (; iter->Valid(); iter->Prev()) {
         current_index = iter->msg.entry_id;
@@ -354,10 +324,36 @@ void FileLog::TruncateSuffix(uint64_t last_index) {
     }
   }
 
-  table_->Sync();
+  last_table_->Sync();
+  return true;
 }
 
-int Table::AppendEntry(uint64_t index, Log::Entry &entry) {
+bool FileLog::TruncateLastTable() {
+  //mu_.AssertLock();
+
+  std::string filename = LogFileName(path_, manifest_->meta_.file_num);
+  tables_.erase(tables_.find(filename));
+  delete last_table_;
+  last_table_ = NULL;
+  slash::DeleteFile(filename);
+
+  if (manifest_->meta_.file_num > 1) {
+    --manifest_->meta_.file_num;
+  }
+
+  filename = LogFileName(path_, manifest_->meta_.file_num);
+  Table* tmp;
+  if (!GetTable(filename, &tmp)) {
+    return false;
+  }
+  last_table_ = tmp;
+  return true;
+}
+
+//
+// Table
+//
+int Table::AppendEntry(uint64_t index, Entry &entry) {
   int length = entry.ByteSize();
   int nwrite = kIdLength + 2 * kOffsetLength + length;
   int byte_size;
@@ -375,6 +371,8 @@ int Table::AppendEntry(uint64_t index, Log::Entry &entry) {
 
 //  std::cout << "AppendEntry, id: " << index << std::endl << std::flush;
 
+  LOG_DEBUG("Table::AppendEntry index=%lu, length=%d, before file_size=%d, byte_size=%d",
+            index, length, header_->filesize, byte_size);
   Status s = file_->Write(header_->filesize, result);
   if (!s.ok()) {
     return -1;
@@ -382,11 +380,38 @@ int Table::AppendEntry(uint64_t index, Log::Entry &entry) {
 
   header_->filesize += byte_size;
   header_->entry_end = index;
+  result = Slice((char *)header_, sizeof(Header));
+  s = file_->Write(0, result);
+  if (!s.ok()) {
+    return -1;
+  }
+
+  LOG_DEBUG("Table::AppendEntry header_  filesize=%d, entry_start=%lu, entry_end=%lu",
+            header_->filesize, header_->entry_start, header_->entry_end);
 
   return byte_size;
 }
 
-int Table::Serialize(uint64_t index, int length, Log::Entry &entry,
+bool Table::GetEntry(uint64_t index, Entry* entry) {
+  if (index < header_->entry_start || index > header_->entry_end) {
+    return false;
+  }
+
+  Iterator *iter = NewIterator();
+  iter->SeekToLast();
+
+  std::vector<Entry *> es;
+  for (; iter->Valid(); iter->Prev()) {
+    if (iter->msg.entry_id == index) {
+      break;
+    }
+  }
+  bool ret = entry->ParseFromArray(iter->msg.pb, iter->msg.length);
+  delete iter;
+  return ret;
+}
+
+int Table::Serialize(uint64_t index, int length, Entry &entry,
                      Slice *result, char *scratch) {
   int offset = 0;
   memcpy(scratch, &index, sizeof(kIdLength));
@@ -406,12 +431,6 @@ int Table::Serialize(uint64_t index, int length, Log::Entry &entry,
   return offset;
 }
 
-std::unique_ptr<Log::Sync> FileLog::TakeSync() {
-  std::unique_ptr<Sync> other(new Sync(GetLastLogIndex(), manifest_, table_));
-  std::swap(other, current_sync_);
-  return std::move(other);
-}
-
 // TODO we need file size, maybe mmap isnot suitable;
 // bool FileLog::ReadMetadata() {
 //  char *p = manifest_->GetData();
@@ -422,89 +441,50 @@ std::unique_ptr<Log::Sync> FileLog::TakeSync() {
 //	return true;
 //}
 
-void Manifest::Clear() {
-  std::string ip("");
-  int port = 0;
-  floyd::raft::log::MetaData *tmpMeta = new floyd::raft::log::MetaData();
-  tmpMeta->set_voted_for_ip(ip);
-  tmpMeta->set_voted_for_port(port);
-  // TODO anan init term to 1 not 0 ?
-  tmpMeta->set_current_term(1);
-  metadata_.set_allocated_raft_metadata(tmpMeta);
-}
+//
+// Mainifest
+//
+bool Manifest::Recover() {
+  Slice result;
+  Status s = file_->Read(0, sizeof(Meta), &result, scratch);
+  if (!s.ok()) {
+    LOG_DEBUG("Manifest::Recover file Write failed, %s", s.ToString().c_str());
+    return false;
+  }
 
-void Manifest::Update(uint64_t entry_start, uint64_t entry_end) {
-  metadata_.set_entries_start(entry_start);
-  metadata_.set_entries_end(entry_end);
-  Save();
+  const char *p = result.data();
+  memcpy((char *)(&meta_), p, sizeof(Meta));
+  return true;
 }
 
 bool Manifest::Save() {
-  length_ = metadata_.ByteSize();
-  int nwrite = kIdLength + kOffsetLength + length_;
-  int offset = 0;
-
-  memcpy(scratch, &log_number_, sizeof(kIdLength));
-  offset += kIdLength;
-  memcpy(scratch + offset, &length_, sizeof(kOffsetLength));
-  offset += kOffsetLength;
-
-//  std::cout << "current_term: " << metadata_.raft_metadata().current_term() << " entry_start: " << metadata_.entries_start() << " entry_end: " << metadata_.entries_end() << std::endl << std::flush;
-  if (!metadata_.SerializeToArray(scratch + offset, length_)) {
-    return false;
-  }
-
-  Slice result(scratch, nwrite);
-
-  Status s = file_->Write(0, result);
+  Slice buf((char *)&meta_, sizeof(Meta));
+  Status s = file_->Write(0, buf);
   if (!s.ok()) {
+    LOG_DEBUG("Manifest::Save file Write failed, %s", s.ToString().c_str());
     return false;
   }
+
+#if (LOG_LEVEL != LEVEL_NONE)
+  LOG_DEBUG("Manifest::Save after save Manifest", s.ToString().c_str());
+  Dump();
+#endif
 
   file_->Sync();
   return true;
 }
 
-void FileLog::UpdateMetadata() {
-  // metadata_.set_entries_start(memory_log_.GetStartLogIndex());
-  // metadata_.set_entries_end(memory_log_.GetLastLogIndex());
-  manifest_->Update(memory_log_.GetStartLogIndex(),
-                    memory_log_.GetLastLogIndex());
+void Manifest::Dump() {
+  LOG_INFO ("          file_num  :  %lu\n"
+          "       entry_start  :  %lu\n"
+          "         entry_end  :  %lu\n"
+          "      current_term  :  %lu\n"
+          "      voted_for_ip  :  %u\n"
+          "    voted_for_port  :  %u\n",
+          meta_.file_num, meta_.entry_start, meta_.entry_end,
+          meta_.current_term, meta_.voted_for_ip, meta_.voted_for_port);
 }
 
-// Log::Entry FileLog::Read(std::string& path) {
-//	Log::Entry entry;
-//	FileToProtocol(entry, path);
-//	return entry;
-//}
-
-uint64_t FileLog::GetStartLogIndex() { return memory_log_.GetStartLogIndex(); }
-
-uint64_t FileLog::GetLastLogIndex() { return memory_log_.GetLastLogIndex(); }
-
-uint64_t FileLog::GetSizeBytes() { return memory_log_.GetSizeBytes(); }
-
-FileLog::Entry &FileLog::GetEntry(uint64_t index) {
-  return memory_log_.GetEntry(index);
-}
-
-FileLog::Sync::Sync(uint64_t lastindex, Manifest *mn, Table *tb)
-    : Log::Sync(lastindex), manifest(mn), table(tb) {}
-
-void FileLog::Sync::Wait() {
-  // TODO sync
-//  if (manifest != NULL) {
-//    manifest->Save();
-//  }
-  if (table != NULL) {
-    table->Sync();
-  }
-  //	for (auto it = fds.begin(); it != fds.end(); ++it) {
-  //		fsync(it->first);
-  //		if (it->second)
-  //			close(it->first);
-  //	}
-}
 
 //
 // Table related
@@ -533,20 +513,6 @@ bool Table::Open(const std::string &filename, Table **table) {
   return true;
 }
 
-// bool Table::Open(slash::RandomRWFile* file, Table** table) {
-//  *table = NULL;
-//
-//  // ReadHeader
-//  Header *header = new Header;
-//  if (!ReadHeader(file, header)) {
-//    return false;
-//  }
-//
-//  *table = new Table(file, header);
-//
-//  return true;
-//}
-
 bool Table::ReadHeader(slash::RandomRWFile *file, Header *h) {
   char scratch[256];
   Slice result;
@@ -561,11 +527,6 @@ bool Table::ReadHeader(slash::RandomRWFile *file, Header *h) {
   memcpy((char *)(&(h->entry_end)), p + sizeof(uint64_t), sizeof(uint64_t));
   memcpy((char *)(&(h->filesize)), p + 2 * sizeof(uint64_t), sizeof(uint64_t));
   return true;
-}
-
-void Table::DumpHeader() {
-   printf ("   Header:\n"
-           "      entry_start:%lu, entry_end:%lu, filesize=%d\n", header_->entry_start, header_->entry_end, header_->filesize);
 }
 
 int Table::ReadMessage(int offset, Message *msg, bool from_end) {
@@ -624,9 +585,8 @@ int Table::ReadMessage(int offset, Message *msg, bool from_end) {
 }
 
 bool Table::Sync() {
+// TODO anan rm
   Slice result((char *)header_, sizeof(Header));
-
-//  std::cout << "header size: " << result.size() << " start: " << header_->entry_start << " end: " << header_->entry_end << " filesize: " << header_->filesize << std::endl << std::flush;
 
   Status s = file_->Write(0, result);
   if (!s.ok()) {
@@ -644,106 +604,4 @@ Iterator *Table::NewIterator() {
   return iter;
 }
 
-//
-// discarded
-//
-/*
-
-int FileLog::ProtocolToFile(google::protobuf::Message& in,
-                                                                         std::string&
-path) {
-        int fd = open(path.c_str(), O_CREAT|O_WRONLY|O_TRUNC, 0644);
-        if (fd == -1)
-                return -1;
-
-        uint64_t len = in.ByteSize();
-        char* data = new char[len + 1];
-        if (!in.SerializeToArray(data, len)) {
-                close(fd);
-                return -1;
-        }
-
-        ssize_t written = write(fd, data, len);
-        if (written == -1) {
-                delete data;
-                close(fd);
-                return -1;
-        }
-
-        delete data;
-        return fd;
-}
-
-int FileLog::FileToProtocol(google::protobuf::Message& out,
-                                                                         std::string&
-path) {
-        int fd = open(path.c_str(), O_RDONLY, 0644);
-        if (fd == -1)
-                return -1;
-
-        struct stat st;
-        uint64_t file_size = 0;
-        if (stat(path.c_str(), &st) == -1) {
-                close(fd);
-                return -1;
-        }
-        file_size = st.st_size;
-
-        char* data = new char[file_size + 1];
-        ssize_t read_size = read(fd, data, file_size);
-        if (read_size == -1) {
-                delete data;
-                close(fd);
-                return -1;
-        }
-
-        if (!out.ParseFromArray(static_cast<const char*>(data),
-                                static_cast<int>(read_size))) {
-                delete data;
-                close(fd);
-                return -1;
-        }
-
-        close(fd);
-        return 0;
-}
-void FileLog::TruncatePrefix(uint64_t first_index) {
-        uint64_t old = GetStartLogIndex();
-        memory_log_.TruncatePrefix(first_index);
-        UpdateMetadata();
-        for (uint64_t index = old; index < GetStartLogIndex(); ++index)
-                unlink((path_ + format("%016lx", index)).c_str());
-}
-
-
-bool FileLog::ReadMetadata(std::string& path, floyd::raft::filelog::MetaData&
-metadata) {
-        int ret = FileToProtocol(metadata, path);
-        if (ret == -1)
-                return false;
-        return true;
-}
-
-std::vector<uint64_t> FileLog::GetEntryIds() {
-        DIR* dir;
-        struct dirent* ptr;
-        std::vector<uint64_t> entry_ids;
-        if ((dir = opendir(path_.c_str())) == NULL)
-                return entry_ids;
-        while ((ptr = readdir(dir)) != NULL) {
-                if (strcmp(ptr->d_name, ".") == 0 ||
-                                strcmp(ptr->d_name, "..") == 0 ||
-                                strcmp(ptr->d_name, "metadata") == 0)
-                        continue;
-                uint64_t entry_id;
-                int matched = sscanf(ptr->d_name, "%016lx", &entry_id);
-                if (matched != 1)
-                        continue;
-                entry_ids.push_back(entry_id);
-        }
-        closedir(dir);
-        return entry_ids;
-}
-*/
-}
-}
+} // namespace floyd

@@ -151,8 +151,8 @@ std::pair<uint64_t, uint64_t> FileLog::Append(std::vector<Entry *> &entries) {
   uint64_t start = manifest_->meta_.entry_end + 1;
   uint64_t end = start + entries.size() - 1;
   for (uint64_t i = start; i <= end; ++i) {
-    int nwrite = last_table_->AppendEntry(i, *(entries[i - start]));
     SplitIfNeeded();
+    int nwrite = last_table_->AppendEntry(i, *(entries[i - start]));
   }
 
   manifest_->meta_.entry_end = end;
@@ -207,7 +207,7 @@ bool FileLog::GetEntry(uint64_t index, Entry* entry) {
   } else {
     for (auto it = tables_.rbegin(); it != tables_.rend(); it++) {
       if (index >= it->second->header_->entry_start && index <= it->second->header_->entry_end) {
-        tmp = last_table_;
+        tmp = it->second;
         break;
       }
     }
@@ -241,6 +241,7 @@ uint32_t FileLog::voted_for_port() {
 }
 
 void FileLog::SplitIfNeeded() {
+  //if (last_table_->header_->filesize > 1024) {
   if (last_table_->header_->filesize > 16 * 1024 * 1024) {
     Table * tmp;
     std::string filename = LogFileName(path_, ++manifest_->meta_.file_num);
@@ -254,7 +255,7 @@ void FileLog::SplitIfNeeded() {
               filename.c_str(), next);
     last_table_ = tmp;
     last_table_->header_->entry_start = next;
-    last_table_->header_->entry_end = next;
+    last_table_->header_->entry_end = next - 1;
   }
 }
 
@@ -272,8 +273,6 @@ bool FileLog::TruncateSuffix(uint64_t last_index) {
     } else {
       Iterator *iter = last_table_->NewIterator();
       iter->SeekToLast();
-
-      std::vector<Entry *> es;
 
       for (; iter->Valid(); iter->Prev()) {
         current_index = iter->msg.entry_id;
@@ -362,7 +361,6 @@ bool Table::GetEntry(uint64_t index, Entry* entry) {
   Iterator *iter = NewIterator();
   iter->SeekToLast();
 
-  std::vector<Entry *> es;
   for (; iter->Valid(); iter->Prev()) {
     if (iter->msg.entry_id == index) {
       break;

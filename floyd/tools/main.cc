@@ -1,13 +1,15 @@
 #include <iostream>
+#include <google/protobuf/text_format.h>
 #include "file_log.h"
 
 using namespace std;
-using namespace floyd::raft;
+using namespace floyd;
 
 void Usage() {
   printf ("Usage:\n"
           "  ./parse -d ./log/path/ -c cnt          ----  scan the first cnt files \n"
-          "  ./parse -d ./log/path/ -f pecific_file ----  scan single file\n");
+          "  ./parse -d ./log/path/ -f pecific_file ----  scan single file\n"
+          "  ./parse -d ./log/path/ -r index        ----  read specific index entry\n");
 }
 
 int main(int argc, char* argv[]) {
@@ -19,20 +21,27 @@ int main(int argc, char* argv[]) {
   std::string path;
   std::string file;
   int cnt = 1;
+  int index = 0;
 
   char ch;
-  while (-1 != (ch = getopt(argc, argv, "d:f:c:"))) {
+  while (-1 != (ch = getopt(argc, argv, "d:f:c:r:"))) {
     switch (ch) {
       case 'd':
         path = optarg;
         break;
-      case 'c':
+      case 'c': {
         char *pend;
         cnt = std::strtol(optarg, &pend, 10);
         break;
+      }
       case 'f':
         file = optarg;
         break;
+      case 'r': {
+        char *pend;
+        index = std::strtol(optarg, &pend, 10);
+        break;
+      }
       default:
         Usage();
         exit(-1);
@@ -44,6 +53,17 @@ int main(int argc, char* argv[]) {
   FileLog* file_log = new FileLog(path); 
 
   file_log->manifest_->Dump();
+
+  if (index > 0) {
+    //for (int i = file_log->manifest_->meta_.entry_end; i > 0; i--) {
+      Entry entry;
+      file_log->GetEntry(index, &entry);
+      std::string text_format;
+      google::protobuf::TextFormat::PrintToString(entry, &text_format);
+      printf ("%s------------------------------------\n", text_format.c_str());
+   // }
+    return 0;
+  }
 
 
   std::vector<std::string> files;
