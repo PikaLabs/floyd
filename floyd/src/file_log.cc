@@ -270,6 +270,7 @@ bool FileLog::TruncateSuffix(uint64_t last_index) {
         return false;
       }
       current_index = last_table_->header_->entry_end;
+      manifest_->meta_.entry_end = current_index;
     } else {
       Iterator *iter = last_table_->NewIterator();
       iter->SeekToLast();
@@ -282,6 +283,7 @@ bool FileLog::TruncateSuffix(uint64_t last_index) {
         iter->TruncateEntry();
       }
       delete iter;
+      manifest_->meta_.entry_end = current_index;
     }
   }
 
