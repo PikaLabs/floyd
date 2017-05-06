@@ -206,15 +206,6 @@ Status FloydImpl::DirtyRead(const std::string& key, std::string& value) {
   return Status::Corruption(s.ToString());
 }
 
-/* TODO wangkang-xy
-// DirtyWrite
-// ReadAll:
-// TryLock:
-// UnLock:
-// DeleteUser:
-// GetServerStatus
-*/
-
 bool FloydImpl::GetServerStatus(std::string& msg) {
   LOG_DEBUG("FloydImpl::GetServerStatus start");
 
@@ -375,10 +366,9 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
     delete iter;
   }
 
-  // Notify peers then wait for apply
-  for (auto& peer : peers_) {
-    peer.second->AddAppendEntriesTask();
-  }
+  // Notify primary then wait for apply
+  primary_->AddTask(kNewCommand);
+
   Status res = context_->WaitApply(last_index, 1000);
   if (!res.ok()) {
     return res;
@@ -390,25 +380,9 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
   switch (cmd.type()) {
     case Type::Write: {
       *response = BuildWriteResponse(StatusCode::kOk);
-      //rs = db_->Put(rocksdb::WriteOptions(), cmd.kv().key(), cmd.kv().value());
-      //if (rs.ok()) {
-      //  *response = BuildWriteResponse(true);
-      //} else {
-      //  *response = BuildWriteResponse(false);
-      //}
-      //LOG_DEBUG("FloydImpl::ExecuteCommand Write %s, key(%s) value(%s)",
-      //          rs.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
       break;
     }
     case Type::Delete: {
-      //rs = db_->Delete(rocksdb::WriteOptions(), cmd.kv().key());
-      //if (rs.ok()) {
-      //  *response = BuildDeleteResponse(StatusCode::kOk);
-      //} else {
-      //  *response = BuildDeleteResponse(StatusCode::kError);
-      //}
-      //LOG_DEBUG("FloydImpl::ExecuteCommand Delete %s, key(%s)",
-      //          rs.ToString().c_str(), cmd.kv().key().c_str());
       *response = BuildDeleteResponse(StatusCode::kOk);
       break;
     }
@@ -435,12 +409,6 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
     }
   }
   return Status::OK();
-  /* TODO wangkang-xy
-  // case ReadAll:
-  // case TryLock:
-  // case UnLock:
-  // case DeleteUser:
-  */
 }
 
 void FloydImpl::DoRequestVote(CmdRequest& cmd,
@@ -458,7 +426,7 @@ void FloydImpl::DoRequestVote(CmdRequest& cmd,
   }
   if (request_vote.term() > my_term) {
     context_->BecomeFollower(request_vote.term());
-    primary_->ResetElectLeaderTimer();
+    primary_->ResetCronTimer();
   }
 
   // Try to get my vote
@@ -482,9 +450,7 @@ void FloydImpl::DoAppendEntries(CmdRequest& cmd,
   }
   context_->BecomeFollower(append_entries.term(),
       append_entries.ip(), append_entries.port());
-  primary_->ResetElectLeaderTimer();
-  //primary_->AddTask(TaskType::kCheckElectLeader);
-  //leader_elect_timer_->Reset();
+  primary_->ResetCronTimer();
   
   std::vector<Entry*> entries;
   for (auto& it : *(cmd.mutable_append_entries()->mutable_entries())) {

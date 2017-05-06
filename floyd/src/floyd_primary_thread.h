@@ -3,6 +3,7 @@
 
 #include "floyd/src/floyd_context.h"
 
+#include "slash/include/env.h"
 #include "slash/include/slash_status.h"
 #include "slash/include/slash_mutex.h"
 
@@ -23,10 +24,11 @@ typedef std::map<std::string, Peer*> PeersSet;
 
 enum TaskType {
   kCheckElectLeader = 0,
+  kLeaderHeartbeat,
   kBecomeLeader,
-  // TODO(anan) heartbeat triggered by MainThread
-  //kHeartbeat,
-  kBecomeFollower
+  kBecomeFollower,
+  kNewCommand,
+  kAdvanceCommitIndex
 };
 
 class FloydPrimary {
@@ -38,30 +40,32 @@ class FloydPrimary {
 
   void AddTask(TaskType type, void *arg = NULL);
 
-  static void DoCheckElectLeader(void *arg);
-  void CheckElectLeader();
-
-  static void DoBecomeLeader(void *arg);
-  void BecomeLeader();
-
-  void ResetElectLeaderTimer() {
-    elect_leader_reset_ = true;
+  void ResetCronTimer() {
+    reset_time_ = slash::NowMicros();
   }
 
   void SetPeers(PeersSet* peers);
-
-  uint64_t QuorumMatchIndex();
-  void AdvanceCommitIndex();
 
  private:
 
   FloydContext* context_;
   PeersSet* peers_;
   FloydApply* apply_;
-  //FileLog* log_;
 
-  std::atomic<bool> elect_leader_reset_;
+  std::atomic<uint64_t> reset_time_;
   pink::BGThread bg_thread_;
+
+  // Cron task
+  static void DoTimingTask(void *arg);
+  void LeaderHeartbeat();
+  void CheckElectLeader();
+
+  static void DoBecomeLeader(void *arg);
+  static void DoNewCommand(void *arg);
+  static void DoAdvanceCommitIndex(void *arg);
+
+  void NoticePeerTask(TaskType type);
+  uint64_t QuorumMatchIndex();
 
   // No copying allowed
   FloydPrimary(const FloydPrimary&);

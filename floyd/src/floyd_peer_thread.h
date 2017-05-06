@@ -33,14 +33,12 @@ class Peer {
   static void DoAppendEntries(void *arg);
   void AddHeartBeatTask();
   static void DoHeartBeat(void *arg);
-  Status AppendEntries(bool heartbeat = false);
+  Status AppendEntries();
 
   // Request Vote
   void AddRequestVoteTask();
   Status RequestVote();
   static void DoRequestVote(void *arg);
-
-  void BecomeLeader();
 
   uint64_t GetMatchIndex();
   void set_next_index(uint64_t next_index);
@@ -56,7 +54,6 @@ class Peer {
 
   slash::Mutex mu_;
   uint64_t next_index_;
-  uint64_t match_index_;
 
   pink::BGThread bg_thread_;
 

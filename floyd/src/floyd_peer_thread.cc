@@ -21,8 +21,7 @@ Peer::Peer(std::string server, FloydContext* context, FloydPrimary* primary,
     primary_(primary),
     log_(log),
     pool_(pool),
-    next_index_(1),
-    match_index_(0) {
+    next_index_(1) {
 }
 
 int Peer::StartThread() {
@@ -32,7 +31,6 @@ int Peer::StartThread() {
 
 Peer::~Peer() {
   LOG_INFO("Peer(%s) exit!!!", server_.c_str());
-  //bg_thread_.set_runing(false);
 }
 
 void Peer::set_next_index(uint64_t next_index) {
@@ -105,30 +103,15 @@ Status Peer::RequestVote() {
     } else {
       LOG_DEBUG("Vote request denied by %s, res_term=%lu, current_term=%lu",
                 server_.c_str(), res_term, current_term);
-      if (res_term > current_term) {
-        //TODO(anan) maybe combine these 2 steps
-        context_->BecomeFollower(res_term);
-        primary_->ResetElectLeaderTimer();
-        //primary_->AddTask(TaskType::kCheckElectLeader);
-        //env_.floyd->ResetLeaderElectTimer();
-      }
+      // TODO wangkang-xy should be follower by the response
     }
   }
 
   return result;
 }
 
-void Peer::BecomeLeader() {
-  {
-    slash::MutexLock l(&mu_);
-    next_index_ = log_->GetLastLogIndex() + 1;
-    match_index_ = 0;
-  }
-  LOG_DEBUG("Peer(%s)::BecomeLeader next_index=%lu match_index=%lu",
-            server_.c_str(), next_index_, match_index_);
-
-  // right now
-  bg_thread_.Schedule(DoHeartBeat, this);
+void Peer::AddHeartBeatTask() {
+  AddAppendEntriesTask();
 }
 
 void Peer::AddAppendEntriesTask() {
@@ -144,32 +127,12 @@ void Peer::DoAppendEntries(void *arg) {
   }
 }
 
-void Peer::AddHeartBeatTask() {
-  LOG_DEBUG("Peer(%s) AddHeartBeatTask with heartbeart_us %luus at %lums",
-            server_.c_str(), context_->heartbeat_us(),
-            (slash::NowMicros() + context_->heartbeat_us()) / 1000LL);
-  bg_thread_.DelaySchedule(context_->heartbeat_us() / 1000LL,
-                           DoHeartBeat, this);
-}
-
-void Peer::DoHeartBeat(void *arg) {
-  Peer* peer = static_cast<Peer*>(arg);
-  LOG_DEBUG("Peer(%s) DoHeartBeat", peer->server_.c_str());
-  Status result = peer->AppendEntries(true);
-  if (!result.ok()) {
-    LOG_ERROR("Peer(%s) failed to DoHeartBeat caz %s.", peer->server_.c_str(), result.ToString().c_str());
-  }
-  peer->AddHeartBeatTask();
-}
-
-//bool Peer::HaveVote() { return have_vote_; }
-
 uint64_t Peer::GetMatchIndex() {
   slash::MutexLock l(&mu_);
-  return match_index_;
+  return (next_index_ - 1);
 }
 
-Status Peer::AppendEntries(bool heartbeat) {
+Status Peer::AppendEntries() {
   uint64_t last_log_index = log_->GetLastLogIndex();
   uint64_t prev_log_index = next_index_ - 1;
   if (prev_log_index > last_log_index) {
@@ -193,19 +156,17 @@ Status Peer::AppendEntries(bool heartbeat) {
   append_entries->set_prev_log_term(prev_log_term);
 
   uint64_t num_entries = 0;
-  //if (!heartbeat) {
-    for (uint64_t index = next_index_; index <= last_log_index; ++index) {
-      Entry entry;
-      log_->GetEntry(index, &entry);
-      *append_entries->add_entries() = entry;
-      uint64_t request_size = append_entries->ByteSize();
-      if (request_size < context_->append_entries_size_once() ||
-          num_entries == 0)
-        ++num_entries;
-      else
-        append_entries->mutable_entries()->RemoveLast();
-    }
-  //}
+  for (uint64_t index = next_index_; index <= last_log_index; ++index) {
+    Entry entry;
+    log_->GetEntry(index, &entry);
+    *append_entries->add_entries() = entry;
+    uint64_t request_size = append_entries->ByteSize();
+    if (request_size < context_->append_entries_size_once() ||
+        num_entries == 0)
+      ++num_entries;
+    else
+      append_entries->mutable_entries()->RemoveLast();
+  }
   append_entries->set_commit_index(
       std::min(context_->commit_index(), prev_log_index + num_entries));
 
@@ -217,7 +178,7 @@ Status Peer::AppendEntries(bool heartbeat) {
 
   CmdResponse res;
   Status result = pool_->SendAndRecv(server_, req, &res);
-  
+
   if (!result.ok()) {
     LOG_DEBUG("AppendEntry to %s failed %s", server_.c_str(), result.ToString().c_str());
     return result;
@@ -227,21 +188,18 @@ Status Peer::AppendEntries(bool heartbeat) {
   LOG_DEBUG("AppendEntry Receive from %s, message :\n%s", server_.c_str(), text_format.c_str());
 #endif
 
-  uint64_t res_term = res.append_entries().term();
-  if (result.ok() && res_term > context_->current_term()) {
-    //TODO(anan) maybe combine these 2 steps
-    context_->BecomeFollower(res_term);
-    primary_->ResetElectLeaderTimer();
-    //primary_->AddTask(TaskType::kCheckElectLeader);
-    //env_.floyd->ResetLeaderElectTimer();
-  }
+  // TODO wangkang-xy should be follower by the response
+  //uint64_t res_term = res.append_entries().term();
+  //if (result.ok() && res_term > context_->current_term()) {
+  //  //TODO(anan) maybe combine these 2 steps
+  //  context_->BecomeFollower(res_term);
+  //  primary_->ResetElectLeaderTimer();
+  //}
   
   if (result.ok() && context_->role() == Role::kLeader) {
     if (res.code() == StatusCode::kOk) {
-      match_index_ = prev_log_index + num_entries;
-      //TODO(anan) AddTask or direct call
-      primary_->AdvanceCommitIndex();
-      next_index_ = match_index_ + 1;
+      next_index_ = prev_log_index + num_entries + 1;
+      primary_->AddTask(kAdvanceCommitIndex);
     } else {
       if (next_index_ > 1) --next_index_;
     }
