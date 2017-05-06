@@ -4,8 +4,6 @@
 #include "floyd/src/floyd_context.h"
 
 #include "slash/include/slash_status.h"
-#include "slash/include/slash_mutex.h"
-
 #include "pink/include/bg_thread.h"
 
 namespace floyd {
@@ -30,9 +28,9 @@ class Peer {
 
   // Apend Entries
   void AddAppendEntriesTask();
-  static void DoAppendEntries(void *arg);
   void AddHeartBeatTask();
-  static void DoHeartBeat(void *arg);
+  void AddBecomeLeaderTask();
+  static void DoAppendEntries(void *arg);
   Status AppendEntries();
 
   // Request Vote
@@ -52,8 +50,7 @@ class Peer {
   FileLog* log_;
   ClientPool* pool_;
 
-  slash::Mutex mu_;
-  uint64_t next_index_;
+  std::atomic<uint64_t> next_index_;
 
   pink::BGThread bg_thread_;
 

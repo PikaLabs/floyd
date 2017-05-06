@@ -114,9 +114,15 @@ void Peer::AddHeartBeatTask() {
   AddAppendEntriesTask();
 }
 
+void Peer::AddBecomeLeaderTask() {
+  next_index_ = log_->GetLastLogIndex() + 1;
+  AddAppendEntriesTask();
+}
+
 void Peer::AddAppendEntriesTask() {
   bg_thread_.Schedule(DoAppendEntries, this);
 }
+
 
 void Peer::DoAppendEntries(void *arg) {
   Peer* peer = static_cast<Peer*>(arg);
@@ -128,7 +134,6 @@ void Peer::DoAppendEntries(void *arg) {
 }
 
 uint64_t Peer::GetMatchIndex() {
-  slash::MutexLock l(&mu_);
   return (next_index_ - 1);
 }
 

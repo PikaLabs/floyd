@@ -112,7 +112,7 @@ void FloydPrimary::DoBecomeLeader(void *arg) {
   }
   LOG_DEBUG("FloydPrimary::BecomeLeader");
   ptr->context_->BecomeLeader();
-  ptr->NoticePeerTask(kLeaderHeartbeat);
+  ptr->NoticePeerTask(kBecomeLeader);
   ptr->AddTask(kLeaderHeartbeat);
 }
 
@@ -153,6 +153,9 @@ void FloydPrimary::NoticePeerTask(TaskType type) {
         break;
       case kNewCommand:
         peer.second->AddAppendEntriesTask();
+        break;
+      case kBecomeLeader:
+        peer.second->AddBecomeLeaderTask();
         break;
       default:
         LOG_WARN("Error TaskType to notice peer");
