@@ -39,38 +39,38 @@ void FloydPrimary::SetPeers(PeersSet* peers) {
 
 void FloydPrimary::AddTask(TaskType type, void* arg) {
   switch (type) {
-    case kLeaderHeartbeat:
-    case kCheckElectLeader: {
-      uint64_t timeout = context_->GetElectLeaderTimeout();
-      if (reset_time_) {
-        uint64_t delta = (slash::NowMicros() - reset_time_);
-        timeout = (delta < timeout) ? (timeout - delta) : 0;
-        reset_time_ = 0;
-      }
-      LOG_INFO("FloydPrimary::AddTask will %s in %dms", 
-          (type == kHeartbeat ? "kHeartbeat" : kCheckElectLeader), timeout);
-      bg_thread_.DelaySchedule(timeout, DoTimingTask, this);
-      break;
+  case kLeaderHeartbeat:
+  case kCheckElectLeader: {
+    uint64_t timeout = context_->GetElectLeaderTimeout();
+    if (reset_time_) {
+      uint64_t delta = (slash::NowMicros() - reset_time_);
+      timeout = (delta < timeout) ? (timeout - delta) : 0;
+      reset_time_ = 0;
     }
-    case kBecomeLeader: {
-      LOG_INFO("FloydPrimary::AddTask BecomeLeader");
-      bg_thread_.Schedule(DoBecomeLeader, this);
-      break;
-    }
-    case kNewCommand: {
-      LOG_INFO("FloydPrimary::AddTask NewCommand");
-      bg_thread_.Schedule(DoNewCommand, this);
-      break;
-    }
-    case kAdvanceCommitIndex: {
-      LOG_INFO("FloydPrimary::AddTask AddvanceCommitIndex");
-      bg_thread_.Schedule(DoAdvanceCommitIndex, this);
-      break;
-    }
-    default: {
-      LOG_INFO("FloydPrimary:: unknown task type %d", type);
-    }
+    LOG_INFO("FloydPrimary::AddTask will %s in %dms",
+        (type == kHeartbeat ? "kHeartbeat" : kCheckElectLeader), timeout);
+    bg_thread_.DelaySchedule(timeout, DoTimingTask, this);
+    break;
   }
+  case kBecomeLeader: {
+    LOG_INFO("FloydPrimary::AddTask BecomeLeader");
+    bg_thread_.Schedule(DoBecomeLeader, this);
+    break;
+  }
+  case kNewCommand: {
+    LOG_INFO("FloydPrimary::AddTask NewCommand");
+    bg_thread_.Schedule(DoNewCommand, this);
+    break;
+  }
+  case kAdvanceCommitIndex: {
+    LOG_INFO("FloydPrimary::AddTask AddvanceCommitIndex");
+    bg_thread_.Schedule(DoAdvanceCommitIndex, this);
+    break;
+  }
+  default: {
+    LOG_INFO("FloydPrimary:: unknown task type %d", type);
+  }
+}
 }
 
 void FloydPrimary::DoTimingTask(void *arg) {
@@ -145,20 +145,20 @@ void FloydPrimary::DoAdvanceCommitIndex(void *arg) {
 void FloydPrimary::NoticePeerTask(TaskType type) {
   for (auto& peer : *peers_) {
     switch (type) {
-      case kLeaderHeartbeat:
-        peer.second->AddHeartBeatTask();
-        break;
-      case kCheckElectLeader:
-        peer.second->AddRequestVoteTask();
-        break;
-      case kNewCommand:
-        peer.second->AddAppendEntriesTask();
-        break;
-      case kBecomeLeader:
-        peer.second->AddBecomeLeaderTask();
-        break;
-      default:
-        LOG_WARN("Error TaskType to notice peer");
+    case kLeaderHeartbeat:
+      peer.second->AddHeartBeatTask();
+      break;
+    case kCheckElectLeader:
+      peer.second->AddRequestVoteTask();
+      break;
+    case kNewCommand:
+      peer.second->AddAppendEntriesTask();
+      break;
+    case kBecomeLeader:
+      peer.second->AddBecomeLeaderTask();
+      break;
+    default:
+      LOG_WARN("Error TaskType to notice peer");
     }
   }
 }
