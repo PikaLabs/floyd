@@ -103,7 +103,11 @@ Status Peer::RequestVote() {
     } else {
       LOG_DEBUG("Vote request denied by %s, res_term=%lu, current_term=%lu",
                 server_.c_str(), res_term, current_term);
-      // TODO wangkang-xy should be follower by the response
+      if (res_term > current_term) {
+        //TODO(anan) maybe combine these 2 steps
+        context_->BecomeFollower(res_term);
+        primary_->ResetCronTimer();
+      }
     }
   }
 
@@ -193,13 +197,12 @@ Status Peer::AppendEntries() {
   LOG_DEBUG("AppendEntry Receive from %s, message :\n%s", server_.c_str(), text_format.c_str());
 #endif
 
-  // TODO wangkang-xy should be follower by the response
-  //uint64_t res_term = res.append_entries().term();
-  //if (result.ok() && res_term > context_->current_term()) {
-  //  //TODO(anan) maybe combine these 2 steps
-  //  context_->BecomeFollower(res_term);
-  //  primary_->ResetElectLeaderTimer();
-  //}
+  uint64_t res_term = res.append_entries().term();
+  if (result.ok() && res_term > context_->current_term()) {
+    //TODO(anan) maybe combine these 2 steps
+    context_->BecomeFollower(res_term);
+    primary_->ResetCronTimer();
+  }
   
   if (result.ok() && context_->role() == Role::kLeader) {
     if (res.code() == StatusCode::kOk) {
