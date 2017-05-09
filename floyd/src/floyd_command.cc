@@ -426,7 +426,7 @@ void FloydImpl::DoRequestVote(CmdRequest& cmd,
   }
   if (request_vote.term() > my_term) {
     context_->BecomeFollower(request_vote.term());
-    primary_->ResetCronTimer();
+    primary_->ResetElectLeaderTimer();
   }
 
   // Try to get my vote
@@ -450,7 +450,7 @@ void FloydImpl::DoAppendEntries(CmdRequest& cmd,
   }
   context_->BecomeFollower(append_entries.term(),
       append_entries.ip(), append_entries.port());
-  primary_->ResetCronTimer();
+  primary_->ResetElectLeaderTimer();
   
   std::vector<Entry*> entries;
   for (auto& it : *(cmd.mutable_append_entries()->mutable_entries())) {

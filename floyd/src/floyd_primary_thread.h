@@ -40,8 +40,11 @@ class FloydPrimary {
 
   void AddTask(TaskType type, void *arg = NULL);
 
-  void ResetCronTimer() {
-    reset_time_ = slash::NowMicros();
+  void ResetElectLeaderTimer() {
+    reset_elect_leader_time_ = slash::NowMicros();
+  }
+  void ResetLeaderHeartbeatTimer() {
+    reset_leader_heartbeat_time_ = slash::NowMicros();
   }
 
   void SetPeers(PeersSet* peers);
@@ -52,11 +55,13 @@ class FloydPrimary {
   PeersSet* peers_;
   FloydApply* apply_;
 
-  std::atomic<uint64_t> reset_time_;
+  std::atomic<uint64_t> reset_leader_heartbeat_time_;
+  std::atomic<uint64_t> reset_elect_leader_time_;
   pink::BGThread bg_thread_;
 
   // Cron task
-  static void DoTimingTask(void *arg);
+  static void DoLeaderHeartbeat(void *arg);
+  static void DoCheckElectLeader(void *arg);
   //void LeaderHeartbeat();
   //void CheckElectLeader();
 

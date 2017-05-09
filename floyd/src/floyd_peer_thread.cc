@@ -106,7 +106,7 @@ Status Peer::RequestVote() {
       if (res_term > current_term) {
         //TODO(anan) maybe combine these 2 steps
         context_->BecomeFollower(res_term);
-        primary_->ResetCronTimer();
+        primary_->ResetElectLeaderTimer();
       }
     }
   }
@@ -201,7 +201,7 @@ Status Peer::AppendEntries() {
   if (result.ok() && res_term > context_->current_term()) {
     //TODO(anan) maybe combine these 2 steps
     context_->BecomeFollower(res_term);
-    primary_->ResetCronTimer();
+    primary_->ResetElectLeaderTimer();
   }
   
   if (result.ok() && context_->role() == Role::kLeader) {
