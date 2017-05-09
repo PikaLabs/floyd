@@ -192,21 +192,34 @@ bool FloydContext::AppendEntries(uint64_t term,
     uint64_t pre_log_term, uint64_t pre_log_index,
     std::vector<Entry*>& entries, uint64_t* my_term) {
   slash::RWLock l(&stat_rw_, true);
-  // Check last log
-  uint64_t my_log_index;
-  uint64_t my_log_term;
-  log_->GetLastLogTermAndIndex(&my_log_term, &my_log_index);
-  LOG_DEBUG("FloydContext::AppendEntries: pre_log(%lu, %lu), my_log(%lu, %lu).",
-            pre_log_term, pre_log_index, my_log_term, my_log_index);
-  if (pre_log_index > my_log_index
-      || pre_log_term != my_log_term) {
+  // Check pre_log match local log entry
+  uint64_t last_log_index = log_->GetLastLogIndex();
+  if (pre_log_index > last_log_index) {
+    LOG_DEBUG("FloydContext::AppendEntries: pre_log(%lu, %lu) > last_log_index(%lu)",
+              pre_log_term, pre_log_index, last_log_index);
+    return false;
+  }
+
+  uint64_t my_log_term = 0;
+  Entry entry;
+  if (log_->GetEntry(pre_log_index, &entry)) {
+    my_log_term = entry.term();
+  }
+  if (pre_log_term != my_log_term) {
+    LOG_DEBUG("FloydContext::AppendEntries: pre_log(%lu, %lu) don't match with local log(%lu).",
+              pre_log_term, pre_log_index, my_log_term);
     return false;
   }
 
   // Append entry
-  if (pre_log_index < my_log_index) {
-    LOG_DEBUG("FloydContext::AppendEntries: truncate suffix from %lu",
-              pre_log_index + 1);
+  if (pre_log_index < last_log_index) {
+#if (LOG_LEVEL != LEVEL_NONE)
+    uint64_t last_log_term;
+    log_->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
+      LOG_DEBUG("FloydContext::AppendEntries: truncate suffix from %lu, "
+                "pre_log(%lu,%lu), last_log(%lu,%lu)",
+                pre_log_index + 1, pre_log_term, pre_log_index, last_log_term, last_log_index);
+#endif
     // TruncateSuffix exclude pre_log_index
     log_->TruncateSuffix(pre_log_index);
   }

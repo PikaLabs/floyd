@@ -57,8 +57,8 @@ class FloydPrimary {
 
   // Cron task
   static void DoTimingTask(void *arg);
-  void LeaderHeartbeat();
-  void CheckElectLeader();
+  //void LeaderHeartbeat();
+  //void CheckElectLeader();
 
   static void DoBecomeLeader(void *arg);
   static void DoNewCommand(void *arg);

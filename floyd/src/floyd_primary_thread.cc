@@ -1,4 +1,5 @@
 #include "floyd/src/floyd_primary_thread.h"
+
 #include <climits>
 #include <stdlib.h>
 #include <time.h>
@@ -39,17 +40,26 @@ void FloydPrimary::SetPeers(PeersSet* peers) {
 
 void FloydPrimary::AddTask(TaskType type, void* arg) {
   switch (type) {
-  case kLeaderHeartbeat:
-  case kCheckElectLeader: {
-    uint64_t timeout = context_->GetElectLeaderTimeout();
+  case kLeaderHeartbeat: {
+    uint64_t timeout = context_->heartbeat_us();
     if (reset_time_) {
       uint64_t delta = (slash::NowMicros() - reset_time_);
       timeout = (delta < timeout) ? (timeout - delta) : 0;
       reset_time_ = 0;
     }
-    LOG_INFO("FloydPrimary::AddTask will %s in %dms",
-        (type == kHeartbeat ? "kHeartbeat" : kCheckElectLeader), timeout);
-    bg_thread_.DelaySchedule(timeout, DoTimingTask, this);
+    LOG_INFO("FloydPrimary::AddTask kLeaderHeartbeat will in %dms", timeout / 1000LL);
+    bg_thread_.DelaySchedule(timeout / 1000LL, DoTimingTask, this);
+    break;
+  }
+  case kCheckElectLeader: {
+    uint64_t timeout = context_->GetElectLeaderTimeout() * 1000LL;
+    if (reset_time_) {
+      uint64_t delta = (slash::NowMicros() - reset_time_);
+      timeout = (delta < timeout) ? (timeout - delta) : 0;
+      reset_time_ = 0;
+    }
+    LOG_INFO("FloydPrimary::AddTask kCheckElectLeader will in %dms", timeout / 1000LL);
+    bg_thread_.DelaySchedule(timeout / 1000LL, DoTimingTask, this);
     break;
   }
   case kBecomeLeader: {
@@ -75,33 +85,49 @@ void FloydPrimary::AddTask(TaskType type, void* arg) {
 
 void FloydPrimary::DoTimingTask(void *arg) {
   FloydPrimary* ptr = static_cast<FloydPrimary*>(arg);
-  if (ptr->reset_time_) {
-    return;
-  }
-  LOG_DEBUG("FloydPrimary::DoCheckElectLeader");
+  //if (ptr->reset_time_) {
+  //  LOG_DEBUG("FloydPrimary::DoTimingTask reset_timer");
+  //  if (ptr->context_->role() == Role::kLeader) {
+  //    ptr->AddTask(kLeaderHeartbeat);
+  //  } else {
+  //    ptr->AddTask(kCheckElectLeader);
+  //  }
+  //  return;
+  //}
   if (ptr->context_->role() == Role::kLeader) {
-    ptr->LeaderHeartbeat();
+    if (ptr->reset_time_ == 0) {
+      LOG_DEBUG("FloydPrimary::DoTimingTask Start LeaderHeartbeat");
+      //ptr->LeaderHeartbeat();
+      ptr->NoticePeerTask(kLeaderHeartbeat);
+    }
+    ptr->AddTask(kLeaderHeartbeat);
   } else {
-    ptr->CheckElectLeader();
+    if (ptr->reset_time_ == 0) {
+      LOG_DEBUG("FloydPrimary::DoTimingTask Start CheckElectLeader");
+      //ptr->CheckElectLeader();
+      ptr->context_->BecomeCandidate();
+      ptr->NoticePeerTask(kCheckElectLeader);
+    }
+    ptr->AddTask(kCheckElectLeader);
   }
 }
 
-void FloydPrimary::LeaderHeartbeat() {
-  if (context_->role() == Role::kLeader) {
-    LOG_DEBUG("FloydPrimary:: LeaderHeartbeat");
-    NoticePeerTask(kLeaderHeartbeat);
-  }
-  AddTask(kLeaderHeartbeat);
-}
-
-void FloydPrimary::CheckElectLeader() {
-  if (context_->role() != Role::kLeader) {
-    LOG_DEBUG("FloydPrimary::CheckElectLeader start Elect leader after timeout");
-    context_->BecomeCandidate();
-    NoticePeerTask(kCheckElectLeader);
-  }
-  AddTask(kCheckElectLeader);
-}
+//void FloydPrimary::LeaderHeartbeat() {
+//  if (context_->role() == Role::kLeader) {
+//    LOG_DEBUG("FloydPrimary:: LeaderHeartbeat");
+//    NoticePeerTask(kLeaderHeartbeat);
+//  }
+//  AddTask(kLeaderHeartbeat);
+//}
+//
+//void FloydPrimary::CheckElectLeader() {
+//  if (context_->role() != Role::kLeader) {
+//    LOG_DEBUG("FloydPrimary::CheckElectLeader start Elect leader after timeout");
+//    context_->BecomeCandidate();
+//    NoticePeerTask(kCheckElectLeader);
+//  }
+//  AddTask(kCheckElectLeader);
+//}
 
 void FloydPrimary::DoBecomeLeader(void *arg) {
   FloydPrimary* ptr = static_cast<FloydPrimary*>(arg);
