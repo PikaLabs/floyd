@@ -24,14 +24,17 @@ FloydServer::~FloydServer() {
   delete floyd_;
 }
 
-Status FloydServer::Start() {
+slash::Status FloydServer::Start() {
   Status result = floyd_->Start();
   if (!result.ok()) {
     LOG_INFO ("Floyd started failed, %s", result.ToString().c_str());
     return result;
   }
 
-  server_thread_->StartThread();
+  int ret = server_thread_->StartThread();
+  if (ret != 0) {
+    return Status::Corruption("Start server server error");
+  }
   LOG_INFO ("Floyd started on port:%d", options_.local_port);
   server_mutex.Lock();
   server_mutex.Lock();

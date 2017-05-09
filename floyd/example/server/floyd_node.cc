@@ -7,6 +7,8 @@
 
 #include "floyd_server.h"
 
+#include "slash/include/slash_status.h"
+
 void Usage();
 const struct option long_options[] = {
   {"servers", required_argument, NULL, 's'},
@@ -62,8 +64,13 @@ int main(int argc, char** argv) {
 
   signal(SIGPIPE, SIG_IGN);
 
-  floyd::FloydServer server(server_port, options);
-  server.Start();
+  floyd::FloydServer *fs = new floyd::FloydServer(server_port, options);
+  slash::Status s = fs->Start();
+  
+  if (!s.ok()) {
+    printf("Start Floyd Server error\n");
+    return -1;
+  }
 
   printf ("OK\n");
 

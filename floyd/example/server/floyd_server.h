@@ -8,6 +8,7 @@
 #include "pink/include/server_thread.h"
 
 #include "slash/include/slash_mutex.h"
+#include "slash/include/slash_status.h"
 
 namespace floyd {
 
@@ -48,7 +49,7 @@ class FloydServer {
  public:
   explicit FloydServer(int sdk_port, const Options& option);
   virtual ~FloydServer();
-  Status Start();
+  slash::Status Start();
 
  private:
   Options options_;
