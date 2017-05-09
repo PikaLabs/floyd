@@ -7,7 +7,7 @@
 
 namespace floyd {
 
-FloydApply::FloydApply(FloydContext* context, rocksdb::DBNemo* db, FileLog* log)
+FloydApply::FloydApply(FloydContext* context, rocksdb::DBNemo* db, Log* log)
   : context_(context),
     db_(db),
     log_(log) {

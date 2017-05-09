@@ -13,7 +13,7 @@ using slash::Status;
 
 class FloydApply {
  public:
-  FloydApply(FloydContext* context, rocksdb::DBNemo* db, FileLog* log);
+  FloydApply(FloydContext* context, rocksdb::DBNemo* db, Log* log);
   ~FloydApply();
   Status ScheduleApply();
 
@@ -21,7 +21,7 @@ class FloydApply {
   pink::BGThread* bg_thread_;
   FloydContext* context_;
   rocksdb::DBNemo* db_;
-  FileLog* log_;
+  Log* log_;
   
   static void ApplyStateMachine(void* arg);
   Status Apply(const Entry& log_entry);

@@ -15,7 +15,7 @@
 namespace floyd {
 
 Peer::Peer(std::string server, FloydContext* context, FloydPrimary* primary,
-  FileLog* log, ClientPool* pool)
+  Log* log, ClientPool* pool)
   : server_(server),
     context_(context),
     primary_(primary),

@@ -21,11 +21,11 @@ enum Role {
 
 class FloydContext {
  public:
-  FloydContext(const Options& opt, FileLog* log);
+  FloydContext(const Options& opt, Log* log);
   ~FloydContext();
 
   void RecoverInit();
-  FileLog* log() {
+  Log* log() {
     return log_;
   }
 
@@ -112,7 +112,7 @@ class FloydContext {
 
  private:
   Options options_;
-  FileLog* log_;
+  Log* log_;
 
   // Role related
   pthread_rwlock_t stat_rw_;
@@ -133,7 +133,7 @@ class FloydContext {
   slash::CondVar apply_cond_;
   uint64_t apply_index_;
 
-  void LogApply();
+  void MetaApply();
 };
 
 } // namespace floyd

@@ -6,7 +6,7 @@
 namespace floyd {
 
 FloydContext::FloydContext(const floyd::Options& opt,
-    FileLog* log)
+    Log* log)
   : options_(opt),
   log_(log),
   current_term_(0),
@@ -55,7 +55,7 @@ void FloydContext::BecomeFollower(uint64_t new_term,
     current_term_ = new_term;
     voted_for_ip_ = "";
     voted_for_port_ = 0;
-    LogApply();
+    MetaApply();
   }
   if (!leader_ip.empty() && leader_port != 0) {
     leader_ip_ = leader_ip;
@@ -87,7 +87,7 @@ void FloydContext::BecomeCandidate() {
   voted_for_ip_ = options_.local_ip;
   voted_for_port_ = options_.local_port;
   vote_quorum_ = 1;
-  LogApply();
+  MetaApply();
 }
 
 void FloydContext::BecomeLeader() {
@@ -123,7 +123,7 @@ bool FloydContext::AdvanceCommitIndex(uint64_t new_commit_index) {
   return false;
 }
 
-void FloydContext::LogApply() {
+void FloydContext::MetaApply() {
   //log_->metadata.set_current_term(current_term_);
   //log_->metadata.set_voted_for_ip(voted_for_ip_);
   //log_->metadata.set_voted_for_port(voted_for_port_);
@@ -182,7 +182,7 @@ bool FloydContext::RequestVote(uint64_t term, const std::string ip,
   voted_for_ip_ = ip;
   voted_for_port_ = port;
   *my_term = current_term_;
-  LogApply();
+  MetaApply();
   LOG_DEBUG("FloydContext::RequestVote: grant vote for (%s:%d), my_term=%lu.",
             voted_for_ip_.c_str(), voted_for_port_, *my_term);
   return true;

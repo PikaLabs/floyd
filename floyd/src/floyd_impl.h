@@ -16,8 +16,7 @@
 namespace floyd {
 using slash::Status;
 
-class FileLog;
-
+class Log;
 class ClientPool;
 class FloydContext;
 class Peer;
@@ -61,7 +60,7 @@ class FloydImpl : public Floyd {
 
   Options options_;
   rocksdb::DBNemo* db_;
-  FileLog* log_;
+  Log* log_;
   FloydContext* context_;
 
   FloydWorker* worker_;

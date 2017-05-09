@@ -67,7 +67,7 @@ Status FloydImpl::Start() {
   }
 
   // Recover Context
-  log_ = new FileLog(options_.log_path);
+  log_ = new Log(options_.log_path);
   context_ = new FloydContext(options_, log_);
   context_->RecoverInit();
 

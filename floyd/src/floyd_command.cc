@@ -1,7 +1,7 @@
-#include "floyd/src/floyd.pb.h"
+#include "floyd/src/floyd_impl.h"
 
 #include <google/protobuf/text_format.h>
-#include "floyd/src/floyd_impl.h"
+
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_apply.h"
 #include "floyd/src/floyd_client_pool.h"
@@ -10,90 +10,77 @@
 #include "floyd/src/file_log.h"
 #include "floyd/src/logger.h"
 
+#include "floyd/src/floyd.pb.h"
+
 #include "nemo-rocksdb/db_nemo_impl.h"
 #include "slash/include/slash_string.h"
 #include "pink/include/bg_thread.h"
 
 namespace floyd {
 
-static CmdRequest BuildReadRequest(const std::string& key) {
-  CmdRequest cmd;
-  cmd.set_type(Type::Read);
-  CmdRequest_Kv* kv = cmd.mutable_kv();
+static void BuildReadRequest(const std::string& key, CmdRequest* cmd) {
+  cmd->set_type(Type::Read);
+  CmdRequest_Kv* kv = cmd->mutable_kv();
   kv->set_key(key);
-  return cmd;
 }
 
-static CmdResponse BuildReadResponse(const std::string &key,
-    const std::string &value, StatusCode code) {
-  CmdResponse response;
-  response.set_type(Type::Read);
-  response.set_code(code);
-  CmdResponse_Kv* kv = response.mutable_kv();
+static void BuildReadResponse(const std::string &key, const std::string &value,
+                              StatusCode code, CmdResponse* response) {
+  response->set_type(Type::Read);
+  response->set_code(code);
+  CmdResponse_Kv* kv = response->mutable_kv();
   if (code == StatusCode::kOk) {
     kv->set_value(value);
   }
-  return response;
 }
 
-static CmdRequest BuildWriteCmdRequest(const std::string& key,
-    const std::string& value) {
-  CmdRequest cmd;
-  cmd.set_type(Type::Write);
-  CmdRequest_Kv* kv = cmd.mutable_kv();
+static void BuildWriteRequest(const std::string& key,
+    const std::string& value, CmdRequest* cmd) {
+  cmd->set_type(Type::Write);
+  CmdRequest_Kv* kv = cmd->mutable_kv();
   kv->set_key(key);
   kv->set_value(value);
-  return cmd;
 }
 
-static CmdResponse BuildWriteResponse(StatusCode code) {
-  CmdResponse response;
-  response.set_type(Type::Write);
-  response.set_code(code);
-  return response;
+static void BuildWriteResponse(StatusCode code, CmdResponse* response) {
+  response->set_type(Type::Write);
+  response->set_code(code);
 }
 
-static CmdRequest BuildDirtyWriteRequest(const std::string& key,
-    const std::string& value) {
-  CmdRequest cmd;
-  cmd.set_type(Type::DirtyWrite);
-  CmdRequest_Kv* kv = cmd.mutable_kv();
+static void BuildDirtyWriteRequest(const std::string& key,
+    const std::string& value, CmdRequest* cmd) {
+  cmd->set_type(Type::DirtyWrite);
+  CmdRequest_Kv* kv = cmd->mutable_kv();
   kv->set_key(key);
   kv->set_value(value);
-  return cmd;
 }
 
-static CmdRequest BuildDeleteRequest(const std::string& key) {
-  CmdRequest cmd;
-  cmd.set_type(Type::Delete);
-  CmdRequest_Kv* kv = cmd.mutable_kv();
+static void BuildDeleteRequest(const std::string& key,
+                               CmdRequest* cmd) {
+  cmd->set_type(Type::Delete);
+  CmdRequest_Kv* kv = cmd->mutable_kv();
   kv->set_key(key);
-  return cmd;
 }
 
-static CmdResponse BuildDeleteResponse(StatusCode code) {
-  CmdResponse response;
-  response.set_type(Type::Delete);
-  response.set_code(code);
-  return response;
+static void BuildDeleteResponse(StatusCode code, CmdResponse* response) {
+  response->set_type(Type::Delete);
+  response->set_code(code);
 }
 
-static CmdResponse BuildRequestVoteResponse(uint64_t term, bool granted) {
-  CmdResponse response;
-  response.set_type(Type::RequestVote);
-  response.set_code(granted ? StatusCode::kOk : StatusCode::kError);
-  CmdResponse_RequestVote* request_vote = response.mutable_request_vote();
+static void BuildRequestVoteResponse(uint64_t term, bool granted,
+                                     CmdResponse* response) {
+  response->set_type(Type::RequestVote);
+  response->set_code(granted ? StatusCode::kOk : StatusCode::kError);
+  CmdResponse_RequestVote* request_vote = response->mutable_request_vote();
   request_vote->set_term(term);
-  return response;
 }
 
-static CmdResponse BuildAppendEntriesResponse(uint64_t term, bool succ) {
-  CmdResponse response;
-  response.set_type(Type::AppendEntries);
-  response.set_code(succ ? StatusCode::kOk : StatusCode::kError);
-  CmdResponse_AppendEntries* append_entries = response.mutable_append_entries();
+static void BuildAppendEntriesResponse(uint64_t term, bool succ,
+                                       CmdResponse* response) {
+  response->set_type(Type::AppendEntries);
+  response->set_code(succ ? StatusCode::kOk : StatusCode::kError);
+  CmdResponse_AppendEntries* append_entries = response->mutable_append_entries();
   append_entries->set_term(term);
-  return response;
 }
 
 bool FloydImpl::HasLeader() {
@@ -102,25 +89,22 @@ bool FloydImpl::HasLeader() {
       && leader_node.second != 0);
 }
 
-static std::vector<Entry*> BuildLogEntry(const CmdRequest& cmd,
-    uint64_t current_term) {
-  std::vector<Entry*> entries;
-  Entry* entry = new Entry;
+static void BuildLogEntry(const CmdRequest& cmd, uint64_t current_term,
+                          Entry* entry) {
   uint64_t len = cmd.ByteSize();
   char* data = new char[len + 1];
   cmd.SerializeToArray(data, len);
   entry->set_term(current_term);
   entry->set_cmd(data, len);
   delete data;
-  entries.push_back(entry);
-  return entries;
 }
 
 Status FloydImpl::Write(const std::string& key, const std::string& value) {
   if (!HasLeader()) {
     return Status::Incomplete("no leader node!");
   }
-  CmdRequest cmd = BuildWriteCmdRequest(key, value);
+  CmdRequest cmd;
+  BuildWriteRequest(key, value, &cmd);
   CmdResponse response;
   Status s = DoCommand(cmd, &response);
   if (!s.ok()) {
@@ -140,7 +124,8 @@ Status FloydImpl::DirtyWrite(const std::string& key, const std::string& value) {
   }
 
   // Sync to other nodes without response
-  CmdRequest cmd = BuildDirtyWriteRequest(key, value);
+  CmdRequest cmd;
+  BuildDirtyWriteRequest(key, value, &cmd);
 
   CmdResponse response;
   std::string local_server = slash::IpPortString(options_.local_ip, options_.local_port);
@@ -158,14 +143,15 @@ Status FloydImpl::Delete(const std::string& key) {
   if (!HasLeader()) {
     return Status::Incomplete("no leader node!");
   }
-  CmdRequest cmd = BuildDeleteRequest(key);
-  CmdResponse response;
+  CmdRequest cmd;
+  BuildDeleteRequest(key, &cmd);
 
 //#if (LOG_LEVEL != LEVEL_NONE)
 //  std::string text_format;
 //  google::protobuf::TextFormat::PrintToString(cmd, &text_format);
 //  LOG_DEBUG("Delete CmdRequest :\n%s", text_format.c_str());
 //#endif
+  CmdResponse response;
   Status s = DoCommand(cmd, &response);
   if (!s.ok()) {
     return s;
@@ -180,7 +166,8 @@ Status FloydImpl::Read(const std::string& key, std::string& value) {
   if (!HasLeader()) {
     return Status::Incomplete("no leader node!");
   }
-  CmdRequest cmd = BuildReadRequest(key);
+  CmdRequest cmd;
+  BuildReadRequest(key, &cmd);
   CmdResponse response;
   Status s = DoCommand(cmd, &response);
   if (!s.ok()) {
@@ -359,12 +346,11 @@ bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
 Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
     CmdResponse *response) {
   // Append entry local
-  std::vector<Entry*> entry = BuildLogEntry(cmd, context_->current_term());
-  uint64_t last_index = (log_->Append(entry)).second;
-
-  for (auto& iter : entry) {
-    delete iter;
-  }
+  std::vector<Entry*> entries;
+  Entry entry;
+  BuildLogEntry(cmd, context_->current_term(), &entry);
+  entries.push_back(&entry);
+  uint64_t last_index = (log_->Append(entries)).second;
 
   // Notify primary then wait for apply
   primary_->AddTask(kNewCommand);
@@ -379,21 +365,21 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
   rocksdb::Status rs;
   switch (cmd.type()) {
     case Type::Write: {
-      *response = BuildWriteResponse(StatusCode::kOk);
+      BuildWriteResponse(StatusCode::kOk, response);
       break;
     }
     case Type::Delete: {
-      *response = BuildDeleteResponse(StatusCode::kOk);
+      BuildDeleteResponse(StatusCode::kOk, response);
       break;
     }
     case Type::Read: {
       rs = db_->Get(rocksdb::ReadOptions(), cmd.kv().key(), &value);
       if (rs.ok()) {
-        *response = BuildReadResponse(cmd.kv().key(), value, StatusCode::kOk);
+        BuildReadResponse(cmd.kv().key(), value, StatusCode::kOk, response);
       } else if (rs.IsNotFound()) {
-        *response = BuildReadResponse(cmd.kv().key(), value, StatusCode::kNotFound);
+        BuildReadResponse(cmd.kv().key(), value, StatusCode::kNotFound, response);
       } else {
-        *response = BuildReadResponse(cmd.kv().key(), value, StatusCode::kError);
+        BuildReadResponse(cmd.kv().key(), value, StatusCode::kError, response);
       }
       LOG_DEBUG("FloydImpl::ExecuteCommand Read %s, key(%s) value(%s)",
           rs.ToString().c_str(), cmd.kv().key().c_str(), value.c_str());
@@ -421,7 +407,7 @@ void FloydImpl::DoRequestVote(CmdRequest& cmd,
   LOG_DEBUG("FloydImpl::DoRequestVote my_term=%lu rqv.term=%lu",
       my_term, request_vote.term());
   if (request_vote.term() < my_term) {
-    *response = BuildRequestVoteResponse(my_term, granted);
+    BuildRequestVoteResponse(my_term, granted, response);
     return;
   }
   if (request_vote.term() > my_term) {
@@ -435,7 +421,7 @@ void FloydImpl::DoRequestVote(CmdRequest& cmd,
       request_vote.last_log_term(), request_vote.last_log_index(),
       &my_term);
 
-  *response = BuildRequestVoteResponse(my_term, granted);
+  BuildRequestVoteResponse(my_term, granted, response);
 }
 
 void FloydImpl::DoAppendEntries(CmdRequest& cmd,
@@ -445,7 +431,7 @@ void FloydImpl::DoAppendEntries(CmdRequest& cmd,
   uint64_t my_term = context_->current_term();
   CmdRequest_AppendEntries append_entries = cmd.append_entries();
   if (append_entries.term() < my_term) {
-    *response = BuildAppendEntriesResponse(my_term, status);
+    BuildAppendEntriesResponse(my_term, status, response);
     return;
   }
   context_->BecomeFollower(append_entries.term(),
@@ -466,7 +452,7 @@ void FloydImpl::DoAppendEntries(CmdRequest& cmd,
     apply_->ScheduleApply();
   }
 
-  *response = BuildAppendEntriesResponse(my_term, status);
+  BuildAppendEntriesResponse(my_term, status, response);
 }
 
 }  // namespace floyd

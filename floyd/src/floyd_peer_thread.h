@@ -15,13 +15,13 @@ class Peer;
 class FloydContext;
 class FloydPrimary;
 //class FloydApply;
-class FileLog;
+class Log;
 class ClientPool;
 
 class Peer {
  public:
   Peer(std::string server, FloydContext* context, FloydPrimary* primary,
-       FileLog* log, ClientPool* pool);
+       Log* log, ClientPool* pool);
   ~Peer();
 
   int StartThread();
@@ -47,7 +47,7 @@ class Peer {
   std::string server_;
   FloydContext* context_;
   FloydPrimary* primary_;
-  FileLog* log_;
+  Log* log_;
   ClientPool* pool_;
 
   std::atomic<uint64_t> next_index_;

@@ -17,14 +17,14 @@ namespace floyd {
 
 class Iterator;
 class Manifest;
-class Table;
+class LogFile;
 
 // TODO(anan) 
 //    1. we don't remove log files
-class FileLog {
+class Log {
  public:
-  explicit FileLog(const std::string& path);
-  ~FileLog();
+  explicit Log(const std::string& path);
+  ~Log();
 
   std::pair<uint64_t, uint64_t> Append(std::vector<Entry*>& entries);
   //void TruncatePrefix(uint64_t first_index) { first_index = 0; assert(false); }
@@ -45,36 +45,35 @@ class FileLog {
  private:
   std::string path_;
   Manifest *manifest_;
-  Table *last_table_;
+  LogFile *last_table_;
   int cache_size_;
 
   slash::Mutex mu_;
-  std::map<std::string, Table*> tables_;
+  std::map<std::string, LogFile*> files_;
 
   bool Recover();
-  bool GetTable(const std::string &file, Table** table);
+  bool GetLogFile(const std::string &file, LogFile** LogFile);
   void SplitIfNeeded();
 
-  bool TruncateLastTable();
+  bool TruncateLastLogFile();
 
   // No copying allowed
-  FileLog(const FileLog&);
-  void operator=(const FileLog&);
+  Log(const Log&);
+  void operator=(const Log&);
 };
 
 const size_t kIdLength = sizeof(uint64_t);
 const size_t kOffsetLength = sizeof(uint64_t);
-const size_t kTableHeaderLength = 2 * kIdLength + kOffsetLength;
+const size_t kLogFileHeaderLength = 2 * kIdLength + kOffsetLength;
 //const size_t kManifestMetaLength = 4 * kIdLength + 2 * sizeof(uint32_t);
 
 //
-// Manifest structure:
-//  | length(int32)  | FileLogMetaData pb message(length) |
+// Manifest contains Meta
 // 
 class Manifest {
  public:
   struct Meta {
-    // FileLog needed
+    // Log needed
     uint64_t file_num;
     uint64_t entry_start;
     uint64_t entry_end;
@@ -110,20 +109,20 @@ class Manifest {
 };
 
 //
-// Table structure:
+// LogFile structure:
 //    Header :  | entry_start(uint64)  |  entry_end(uint64)  | EOF offset(int32) |
 //    Body   :  | Entry i |  Entry i+1 | ... |
 // Entry structure:
 //    | entry_id(uint64) | length(int32) | pb format msg(length bytes) | begin_offset(int32) |
 //
-class Table {
+class LogFile {
  public:
   struct Header {
     uint64_t entry_start;
     uint64_t entry_end;
     uint64_t filesize;
 
-    Header() : entry_start(1), entry_end(0), filesize(kTableHeaderLength) {}
+    Header() : entry_start(1), entry_end(0), filesize(kLogFileHeaderLength) {}
   };
 
   struct Message {
@@ -133,8 +132,8 @@ class Table {
     int32_t begin_offset;
   };
 
-  //static bool Open(slash::RandomRWFile* file, Table** table);
-  static bool Open(const std::string &filename, Table** table);
+  //static bool Open(slash::RandomRWFile* file, LogFile** LogFile);
+  static bool Open(const std::string &filename, LogFile** LogFile);
   static bool ReadHeader(slash::RandomRWFile* file, Header *header);
 
   int ReadMessage(int offset, Message *msg, bool from_end = false);
@@ -149,7 +148,7 @@ class Table {
   bool Sync();
 
   Iterator* NewIterator();
-  ~Table() {
+  ~LogFile() {
     if (file_ != NULL) {
       //file_->Sync();
       Sync();
@@ -168,7 +167,7 @@ class Table {
   slash::RandomRWFile *file_;
 
  private:
-  Table(slash::RandomRWFile* file, Header *header)
+  LogFile(slash::RandomRWFile* file, Header *header)
       : header_(header),
         file_(file),
         backing_store_(NULL) {}
@@ -180,15 +179,15 @@ class Table {
   char *backing_store_;
 
   // No copying allowed
-  Table(const Table&);
-  void operator=(const Table&);
+  LogFile(const LogFile&);
+  void operator=(const LogFile&);
 };
 
-// Single Table Iterator
+// Single LogFile Iterator
 class Iterator {
  public:
-  Iterator(Table *table)
-      : table_(table),
+  Iterator(LogFile *LogFile)
+      : table_(LogFile),
       file_(table_->file_),
       //header_(header),
       offset_(0), valid_(false) {} 
@@ -199,14 +198,14 @@ class Iterator {
     return valid_;
   }
   void SeekToFirst() {
-    offset_ = kTableHeaderLength;
+    offset_ = kLogFileHeaderLength;
     valid_ =  offset_ < table_->header_->filesize ? true : false;
     Next();
   }
   
   void SeekToLast() {
     offset_ = table_->header_->filesize;
-    valid_ =  offset_ > kTableHeaderLength ? true : false;
+    valid_ =  offset_ > kLogFileHeaderLength ? true : false;
     Prev();
   }
 
@@ -225,7 +224,7 @@ class Iterator {
   }
 
   void Prev() {
-    if (!valid_ || offset_ - kOffsetLength <= kTableHeaderLength) {
+    if (!valid_ || offset_ - kOffsetLength <= kLogFileHeaderLength) {
       valid_ = false;
       return;
     }
@@ -242,13 +241,13 @@ class Iterator {
     table_->TruncateEntry(msg.entry_id, offset_);
   }
 
-  Table::Message msg;
+  LogFile::Message msg;
 
 private:
 
-  Table *table_;
+  LogFile *table_;
   slash::RandomRWFile *file_;
-  //Table::Header* header_;
+  //LogFile::Header* header_;
   uint64_t offset_;
   bool valid_;
 
