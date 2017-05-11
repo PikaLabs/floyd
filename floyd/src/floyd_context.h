@@ -67,6 +67,9 @@ class FloydContext {
   uint64_t append_entries_size_once() {
     return options_.append_entries_size_once;
   }
+  uint64_t append_entries_count_once() {
+    return options_.append_entries_count_once;
+  }
   
   void BecomeFollower(uint64_t new_iterm,
       const std::string leader_ip = "", int port = 0);

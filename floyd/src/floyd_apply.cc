@@ -34,6 +34,8 @@ void FloydApply::ApplyStateMachine(void* arg) {
   // Apply as more entry as possible
   uint64_t len = 0, to_apply = 0;
   to_apply = context->NextApplyIndex(&len);
+  LOG_DEBUG("ApplyStateMachine with %lu entries to apply from to_apply(%lu)",
+            len, to_apply);
   while (len-- > 0) {
     Entry log_entry;
     fapply->log_->GetEntry(to_apply, &log_entry);

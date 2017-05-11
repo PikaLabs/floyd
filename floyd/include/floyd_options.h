@@ -18,6 +18,7 @@ struct Options {
   uint64_t elect_timeout_ms;
   uint64_t heartbeat_us;
   uint64_t append_entries_size_once;
+  uint64_t append_entries_count_once;
 
   void SetMembers(const std::string& cluster_string);
 

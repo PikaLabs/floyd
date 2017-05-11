@@ -49,6 +49,7 @@ class Log {
   int cache_size_;
 
   slash::Mutex mu_;
+  //pthread_rwlock_t rw_;
   std::map<std::string, LogFile*> files_;
 
   bool Recover();

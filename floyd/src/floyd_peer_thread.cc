@@ -56,6 +56,7 @@ void Peer::DoRequestVote(void *arg) {
 
 Status Peer::RequestVote() {
   if (context_->role() != Role::kCandidate) {
+    LOG_DEBUG("Peer(%s) not candidate, skip RequestVote", server_.c_str());
     return Status::OK();
   }
   
@@ -142,6 +143,11 @@ uint64_t Peer::GetMatchIndex() {
 }
 
 Status Peer::AppendEntries() {
+  if (context_->role() != Role::kLeader) {
+    LOG_DEBUG("Peer(%s) not leader anymore, skip AppendEntries", server_.c_str());
+    return Status::OK();
+  }
+
   uint64_t last_log_index = log_->GetLastLogIndex();
   uint64_t prev_log_index = next_index_ - 1;
   if (prev_log_index > last_log_index) {
@@ -169,12 +175,13 @@ Status Peer::AppendEntries() {
     Entry entry;
     log_->GetEntry(index, &entry);
     *append_entries->add_entries() = entry;
-    uint64_t request_size = append_entries->ByteSize();
-    if (request_size < context_->append_entries_size_once() ||
-        num_entries == 0)
-      ++num_entries;
-    else
-      append_entries->mutable_entries()->RemoveLast();
+    ++num_entries;
+    LOG_DEBUG("Peer(%s) AppendEntry add new entry(%lu), now has %lu entries",
+              server_.c_str(), index, num_entries);
+    if (num_entries > context_->append_entries_count_once() 
+        || append_entries->ByteSize() >= context_->append_entries_size_once()) {
+      break;
+    }
   }
   append_entries->set_commit_index(
       std::min(context_->commit_index(), prev_log_index + num_entries));

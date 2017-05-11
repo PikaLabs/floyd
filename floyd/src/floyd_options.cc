@@ -31,14 +31,16 @@ void Options::Dump() {
           "                 log_path : %s\n"
           "         elect_timeout_ms : %ld\n"
           "             heartbeat_us : %ld\n"
-          " append_entries_size_once : %ld\n",
+          " append_entries_size_once : %ld\n"
+          "append_entries_count_once : %lu\n",
             local_ip.c_str(),
             local_port,
             data_path.c_str(),
             log_path.c_str(),
             elect_timeout_ms,
             heartbeat_us,
-            append_entries_size_once);
+            append_entries_size_once,
+            append_entries_count_once);
 }
 
 Options::Options()
@@ -48,7 +50,8 @@ Options::Options()
     log_path("/data/file"),
     elect_timeout_ms(5000),
     heartbeat_us(1000000),
-    append_entries_size_once(1024) {
+    append_entries_size_once(1024),
+    append_entries_count_once(30) {
     }
 
 Options::Options(const std::string& cluster_string,
@@ -61,7 +64,8 @@ Options::Options(const std::string& cluster_string,
     log_path(_log_path),
     elect_timeout_ms(5000),
     heartbeat_us(1000000),
-    append_entries_size_once(1024) {
+    append_entries_size_once(1024),
+    append_entries_count_once(30) {
   split(cluster_string, ',', members);
 }
 

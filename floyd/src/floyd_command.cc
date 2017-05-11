@@ -287,6 +287,7 @@ Status FloydImpl::ExecuteDirtyCommand(const CmdRequest& cmd,
     }
     case Type::ServerStatus: {
       response->set_type(Type::ServerStatus);
+      response->set_code(StatusCode::kOk);
       CmdResponse_ServerStatus* server_status = response->mutable_server_status();
       DoGetServerStatus(server_status);
       LOG_DEBUG("FloydImpl::ExecuteDirtyCommand GetServerStatus");
@@ -399,7 +400,6 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
 
 void FloydImpl::DoRequestVote(CmdRequest& cmd,
     CmdResponse* response) {
-  // Step down by lager term
   bool granted = false;
   uint64_t my_term = context_->current_term();
 
@@ -410,6 +410,8 @@ void FloydImpl::DoRequestVote(CmdRequest& cmd,
     BuildRequestVoteResponse(my_term, granted, response);
     return;
   }
+
+  // Step down by larger term
   if (request_vote.term() > my_term) {
     context_->BecomeFollower(request_vote.term());
     primary_->ResetElectLeaderTimer();
@@ -436,7 +438,6 @@ void FloydImpl::DoAppendEntries(CmdRequest& cmd,
   }
   context_->BecomeFollower(append_entries.term(),
       append_entries.ip(), append_entries.port());
-  primary_->ResetElectLeaderTimer();
   
   std::vector<Entry*> entries;
   for (auto& it : *(cmd.mutable_append_entries()->mutable_entries())) {
@@ -449,9 +450,14 @@ void FloydImpl::DoAppendEntries(CmdRequest& cmd,
 
   // Update log commit index
   if (context_->AdvanceCommitIndex(append_entries.commit_index())) {
+    LOG_DEBUG("FloydImpl::DoAppendEntries after AdvanceCommitIndex %lu",
+              context_->commit_index());
     apply_->ScheduleApply();
   }
 
+  // TODO(anan) ElectLeader timer may timeout because of slow AppendEntries
+  //   we delay reset timer.
+  primary_->ResetElectLeaderTimer();
   BuildAppendEntriesResponse(my_term, status, response);
 }
 
