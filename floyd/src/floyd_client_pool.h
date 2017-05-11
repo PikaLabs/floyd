@@ -12,8 +12,6 @@ namespace floyd {
 
 using slash::Status;
 
-class ClientPool;
-
 class ClientPool {
  public:
   explicit ClientPool(int timeout_ms = 5000, int retry = 1);
