@@ -75,12 +75,13 @@ static void BuildRequestVoteResponse(uint64_t term, bool granted,
   request_vote->set_term(term);
 }
 
-static void BuildAppendEntriesResponse(uint64_t term, bool succ,
+static void BuildAppendEntriesResponse(bool succ, uint64_t term, uint64_t log_index,
                                        CmdResponse* response) {
   response->set_type(Type::AppendEntries);
   response->set_code(succ ? StatusCode::kOk : StatusCode::kError);
   CmdResponse_AppendEntries* append_entries = response->mutable_append_entries();
   append_entries->set_term(term);
+  append_entries->set_last_log_index(log_index);
 }
 
 bool FloydImpl::HasLeader() {
@@ -433,7 +434,7 @@ void FloydImpl::DoAppendEntries(CmdRequest& cmd,
   uint64_t my_term = context_->current_term();
   CmdRequest_AppendEntries append_entries = cmd.append_entries();
   if (append_entries.term() < my_term) {
-    BuildAppendEntriesResponse(my_term, status, response);
+    BuildAppendEntriesResponse(status, my_term, log_->GetLastLogIndex(), response);
     return;
   }
   context_->BecomeFollower(append_entries.term(),
@@ -458,7 +459,7 @@ void FloydImpl::DoAppendEntries(CmdRequest& cmd,
   // TODO(anan) ElectLeader timer may timeout because of slow AppendEntries
   //   we delay reset timer.
   primary_->ResetElectLeaderTimer();
-  BuildAppendEntriesResponse(my_term, status, response);
+  BuildAppendEntriesResponse(status, my_term, log_->GetLastLogIndex(), response);
 }
 
 }  // namespace floyd

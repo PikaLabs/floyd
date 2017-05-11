@@ -1438,17 +1438,27 @@ class CmdResponse_AppendEntries : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 term() const;
   inline void set_term(::google::protobuf::uint64 value);
 
+  // required uint64 last_log_index = 2;
+  inline bool has_last_log_index() const;
+  inline void clear_last_log_index();
+  static const int kLastLogIndexFieldNumber = 2;
+  inline ::google::protobuf::uint64 last_log_index() const;
+  inline void set_last_log_index(::google::protobuf::uint64 value);
+
   // @@protoc_insertion_point(class_scope:floyd.CmdResponse.AppendEntries)
  private:
   inline void set_has_term();
   inline void clear_has_term();
+  inline void set_has_last_log_index();
+  inline void clear_has_last_log_index();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::uint64 term_;
+  ::google::protobuf::uint64 last_log_index_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
 
   friend void  protobuf_AddDesc_floyd_2eproto();
   friend void protobuf_AssignDesc_floyd_2eproto();
@@ -3218,6 +3228,28 @@ inline ::google::protobuf::uint64 CmdResponse_AppendEntries::term() const {
 inline void CmdResponse_AppendEntries::set_term(::google::protobuf::uint64 value) {
   set_has_term();
   term_ = value;
+}
+
+// required uint64 last_log_index = 2;
+inline bool CmdResponse_AppendEntries::has_last_log_index() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void CmdResponse_AppendEntries::set_has_last_log_index() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void CmdResponse_AppendEntries::clear_has_last_log_index() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void CmdResponse_AppendEntries::clear_last_log_index() {
+  last_log_index_ = GOOGLE_ULONGLONG(0);
+  clear_has_last_log_index();
+}
+inline ::google::protobuf::uint64 CmdResponse_AppendEntries::last_log_index() const {
+  return last_log_index_;
+}
+inline void CmdResponse_AppendEntries::set_last_log_index(::google::protobuf::uint64 value) {
+  set_has_last_log_index();
+  last_log_index_ = value;
 }
 
 // -------------------------------------------------------------------

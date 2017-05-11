@@ -207,8 +207,11 @@ bool FloydContext::AppendEntries(uint64_t term,
     my_log_term = entry.term();
   }
   if (pre_log_term != my_log_term) {
-    LOG_DEBUG("FloydContext::AppendEntries: pre_log(%lu, %lu) don't match with local log(%lu).",
-              pre_log_term, pre_log_index, my_log_term);
+    LOG_DEBUG("FloydContext::AppendEntries: pre_log(%lu, %lu) don't match with"
+              " local log(%lu, %lu), truncate suffix from here",
+              pre_log_term, pre_log_index, my_log_term, pre_log_index, pre_log_index);
+    // TruncateSuffix [pre_log_index, last_log_index)
+    log_->TruncateSuffix(pre_log_index - 1);
     return false;
   }
 
@@ -221,7 +224,7 @@ bool FloydContext::AppendEntries(uint64_t term,
               "pre_log(%lu,%lu), last_log(%lu,%lu)",
               pre_log_index + 1, pre_log_term, pre_log_index, last_log_term, last_log_index);
 #endif
-    // TruncateSuffix exclude pre_log_index
+    // TruncateSuffix [pre_log_index + 1, last_log_index)
     log_->TruncateSuffix(pre_log_index);
   }
   if (entries.size() > 0) {

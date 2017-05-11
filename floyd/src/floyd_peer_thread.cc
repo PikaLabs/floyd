@@ -216,7 +216,13 @@ Status Peer::AppendEntries() {
       next_index_ = prev_log_index + num_entries + 1;
       primary_->AddTask(kAdvanceCommitIndex);
     } else {
-      if (next_index_ > 1) --next_index_;
+      uint64_t adjust_index = std::min(res.append_entries().last_log_index() + 1, next_index_ - 1);
+      if (adjust_index > 0) {
+        // Prev log don't match, so we retry with more prev one according to
+        // response
+        next_index_ = adjust_index;
+        AddAppendEntriesTask();
+      }
     }
   }
   return result;
