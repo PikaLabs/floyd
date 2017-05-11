@@ -94,14 +94,22 @@ Status Peer::RequestVote() {
   LOG_DEBUG("Recv RequestVote from %s, message :\n%s", server_.c_str(), text_format.c_str());
 #endif
 
+  // we get term from request vote
   uint64_t res_term = res.request_vote().term();
   if (result.ok() && context_->role() == Role::kCandidate) {
+    // kOk means RequestVote success, opposite vote for me
     if (res.code() == StatusCode::kOk) {    // granted
       LOG_DEBUG("Peer(%s)::RequestVote granted will Vote and check", server_.c_str());
+      // However, we need check whether this vote is vote for old term
+      // we need igore these type of vote
       if (context_->VoteAndCheck(res_term)) {
         primary_->AddTask(kBecomeLeader);  
       }
     } else {
+      // opposite RequestVote fail, maybe opposite has larger term, or opposite has
+      // longer log.
+      // if opposite has larger term, this node will become follower
+      // otherwise we will do nothing
       LOG_DEBUG("Vote request denied by %s, res_term=%lu, current_term=%lu",
                 server_.c_str(), res_term, current_term);
       if (res_term > current_term) {
