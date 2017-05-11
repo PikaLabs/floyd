@@ -481,8 +481,10 @@ void Manifest::Dump() {
           "      current_term  :  %lu\n"
           "      voted_for_ip  :  %u\n"
           "    voted_for_port  :  %u\n",
+          "       apply_index  :  %lu\n",
           meta_.file_num, meta_.entry_start, meta_.entry_end,
-          meta_.current_term, meta_.voted_for_ip, meta_.voted_for_port);
+          meta_.current_term, meta_.voted_for_ip, meta_.voted_for_port,
+          meta_.apply_index);
 }
 
 

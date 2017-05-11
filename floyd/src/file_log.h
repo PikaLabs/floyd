@@ -36,11 +36,14 @@ class Log {
   bool GetLastLogTermAndIndex(uint64_t* last_log_term, uint64_t* last_log_index);
 
   void UpdateMetadata(uint64_t current_term, std::string voted_for_ip,
-                      int32_t voted_for_port);
+                      int32_t voted_for_port, uint64_t apply_index);
 
   uint64_t current_term();
   std::string voted_for_ip();
   uint32_t voted_for_port(); 
+
+  uint64_t apply_index();
+  void set_apply_index(uint64_t apply_index);
 
  private:
   std::string path_;
@@ -83,10 +86,12 @@ class Manifest {
     uint64_t current_term;
     uint32_t voted_for_ip;
     uint32_t voted_for_port;
+    uint64_t apply_index;
     
     Meta()
       : file_num(0LL), entry_start(1LL), entry_end(0LL), 
-        current_term(1), voted_for_ip(0), voted_for_port(0) { }
+        current_term(1), voted_for_ip(0), voted_for_port(0),
+        apply_index(0LL) { }
   };
 
   explicit Manifest(slash::RandomRWFile* file)

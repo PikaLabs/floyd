@@ -160,8 +160,19 @@ std::pair<uint64_t, uint64_t> Log::Append(std::vector<Entry *> &entries) {
   return {start, end}; 
 }
 
-void Log::UpdateMetadata(uint64_t current_term, std::string voted_for_ip, 
-                             int32_t voted_for_port) {
+uint64_t Log::apply_index() {
+  slash::MutexLock l(&mu_);
+  return manifest_->meta_.apply_index;
+}
+
+void Log::set_apply_index(uint64_t apply_index) {
+  slash::MutexLock l(&mu_);
+  manifest_->meta_.apply_index = apply_index;
+  manifest_->Save();
+}
+
+void Log::UpdateMetadata(uint64_t current_term, std::string voted_for_ip,
+                         int32_t voted_for_port, uint64_t apply_index) {
   uint32_t ip = 0;
   if (!voted_for_ip.empty()) {
     struct in_addr in;
@@ -173,6 +184,7 @@ void Log::UpdateMetadata(uint64_t current_term, std::string voted_for_ip,
   manifest_->meta_.current_term = current_term;
   manifest_->meta_.voted_for_ip = ip;
   manifest_->meta_.voted_for_port = voted_for_port;
+  manifest_->meta_.apply_index = apply_index;
   manifest_->Save();
 }
 
@@ -443,8 +455,10 @@ void Manifest::Dump() {
           "      current_term  :  %lu\n"
           "      voted_for_ip  :  %u\n"
           "    voted_for_port  :  %u\n",
+          "       apply_index  :  %lu\n",
           meta_.file_num, meta_.entry_start, meta_.entry_end,
-          meta_.current_term, meta_.voted_for_ip, meta_.voted_for_port);
+          meta_.current_term, meta_.voted_for_ip, meta_.voted_for_port,
+          meta_.apply_index);
 }
 
 

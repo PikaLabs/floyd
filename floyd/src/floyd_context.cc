@@ -34,6 +34,7 @@ void FloydContext::RecoverInit() {
   current_term_ = log_->current_term();
   voted_for_ip_ = log_->voted_for_ip();
   voted_for_port_ = log_->voted_for_port();
+  apply_index_ = log_->apply_index();
   role_ = Role::kFollower;
 }
 
@@ -126,11 +127,28 @@ bool FloydContext::AdvanceCommitIndex(uint64_t new_commit_index) {
   return false;
 }
 
+uint64_t FloydContext::NextApplyIndex(uint64_t* len) {
+  //slash::MutexLock lcommit(&commit_mu_);
+  uint64_t tcommit_index = commit_index();
+  *len = 0;
+  slash::MutexLock lapply(&apply_mu_);
+  if (tcommit_index > apply_index_) {
+    *len = tcommit_index - apply_index_;
+  }
+  return apply_index_ + 1;
+}
+
+void FloydContext::ApplyDone(uint64_t index) {
+  slash::MutexLock lapply(&apply_mu_);
+  apply_index_ = index; 
+  apply_cond_.SignalAll();
+}
+
 void FloydContext::MetaApply() {
   //log_->metadata.set_current_term(current_term_);
   //log_->metadata.set_voted_for_ip(voted_for_ip_);
   //log_->metadata.set_voted_for_port(voted_for_port_);
-  log_->UpdateMetadata(current_term_, voted_for_ip_, voted_for_port_);
+  log_->UpdateMetadata(current_term_, voted_for_ip_, voted_for_port_, apply_index());
 }
 
 bool FloydContext::VoteAndCheck(uint64_t vote_term) {

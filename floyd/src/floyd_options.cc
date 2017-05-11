@@ -51,7 +51,7 @@ Options::Options()
     elect_timeout_ms(5000),
     heartbeat_us(1000000),
     append_entries_size_once(1024),
-    append_entries_count_once(30) {
+    append_entries_count_once(300) {
     }
 
 Options::Options(const std::string& cluster_string,
@@ -65,7 +65,7 @@ Options::Options(const std::string& cluster_string,
     elect_timeout_ms(5000),
     heartbeat_us(1000000),
     append_entries_size_once(1024),
-    append_entries_count_once(30) {
+    append_entries_count_once(300) {
   split(cluster_string, ',', members);
 }
 

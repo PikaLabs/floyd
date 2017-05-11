@@ -50,6 +50,7 @@ void FloydApply::ApplyStateMachine(void* arg) {
     context->ApplyDone(to_apply);
     to_apply++;
   }
+  fapply->log_->set_apply_index(to_apply - 1);
 }
 
 Status FloydApply::Apply(const Entry& log_entry) {
