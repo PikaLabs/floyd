@@ -96,7 +96,7 @@ class Logger {
       struct tm t;
       localtime_r(&seconds, &t);
       p += snprintf(p, limit - p,
-                    "%c%02d%02d %02d:%02d:%02d.%06d %06lld ",
+                    "%c%02d%02d %02d:%02d:%02d.%06d %6lld ",
                     LEVEL_TAG[log_level],
                     t.tm_mon + 1,
                     t.tm_mday,

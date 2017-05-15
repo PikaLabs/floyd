@@ -26,7 +26,7 @@ static void BuildReadRequest(const std::string& key, CmdRequest* cmd) {
 
 static void BuildReadResponse(const std::string &key, const std::string &value,
                               StatusCode code, CmdResponse* response) {
-  response->set_type(Type::Read);
+  //response->set_type(Type::Read);
   response->set_code(code);
   CmdResponse_Kv* kv = response->mutable_kv();
   if (code == StatusCode::kOk) {
@@ -35,36 +35,25 @@ static void BuildReadResponse(const std::string &key, const std::string &value,
 }
 
 static void BuildWriteRequest(const std::string& key,
-    const std::string& value, CmdRequest* cmd) {
+                              const std::string& value, CmdRequest* cmd) {
   cmd->set_type(Type::Write);
   CmdRequest_Kv* kv = cmd->mutable_kv();
   kv->set_key(key);
   kv->set_value(value);
 }
 
-static void BuildWriteResponse(StatusCode code, CmdResponse* response) {
-  response->set_type(Type::Write);
-  response->set_code(code);
-}
-
 static void BuildDirtyWriteRequest(const std::string& key,
-    const std::string& value, CmdRequest* cmd) {
+                                   const std::string& value, CmdRequest* cmd) {
   cmd->set_type(Type::DirtyWrite);
   CmdRequest_Kv* kv = cmd->mutable_kv();
   kv->set_key(key);
   kv->set_value(value);
 }
 
-static void BuildDeleteRequest(const std::string& key,
-                               CmdRequest* cmd) {
+static void BuildDeleteRequest(const std::string& key, CmdRequest* cmd) {
   cmd->set_type(Type::Delete);
   CmdRequest_Kv* kv = cmd->mutable_kv();
   kv->set_key(key);
-}
-
-static void BuildDeleteResponse(StatusCode code, CmdResponse* response) {
-  response->set_type(Type::Delete);
-  response->set_code(code);
 }
 
 static void BuildRequestVoteResponse(uint64_t term, bool granted,
@@ -75,7 +64,8 @@ static void BuildRequestVoteResponse(uint64_t term, bool granted,
   request_vote->set_term(term);
 }
 
-static void BuildAppendEntriesResponse(bool succ, uint64_t term, uint64_t log_index,
+static void BuildAppendEntriesResponse(bool succ, uint64_t term,
+                                       uint64_t log_index,
                                        CmdResponse* response) {
   response->set_type(Type::AppendEntries);
   response->set_code(succ ? StatusCode::kOk : StatusCode::kError);
@@ -87,7 +77,7 @@ static void BuildAppendEntriesResponse(bool succ, uint64_t term, uint64_t log_in
 bool FloydImpl::HasLeader() {
   auto leader_node = context_->leader_node();
   return ((!leader_node.first.empty())
-      && leader_node.second != 0);
+          && leader_node.second != 0);
 }
 
 static void BuildLogEntry(const CmdRequest& cmd, uint64_t current_term,
@@ -134,7 +124,7 @@ Status FloydImpl::DirtyWrite(const std::string& key, const std::string& value) {
     if (iter != local_server) {
       Status s = worker_client_pool_->SendAndRecv(iter, cmd, &response);
       LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::DirtyWrite Send to %s return %s, key(%s) value(%s)",
-                iter.c_str(), s.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
+           iter.c_str(), s.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
     }
   }
   return Status::OK();
@@ -147,7 +137,7 @@ Status FloydImpl::Delete(const std::string& key) {
   CmdRequest cmd;
   BuildDeleteRequest(key, &cmd);
 
-//#if (LOG_LEVEL != LEVEL_NONE)
+//#ifndef NDEBUG
 //  std::string text_format;
 //  google::protobuf::TextFormat::PrintToString(cmd, &text_format);
 //  LOGV(DEBUG_LEVEL, info_log_, "Delete CmdRequest :\n%s", text_format.c_str());
@@ -223,7 +213,7 @@ bool FloydImpl::GetServerStatus(std::string& msg) {
     if (iter != local_server) {
       Status s = worker_client_pool_->SendAndRecv(iter, cmd, &response);
       LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::GetServerStatus Send to %s return %s",
-                iter.c_str(), s.ToString().c_str());
+           iter.c_str(), s.ToString().c_str());
       if (s.ok()) {
         std::string ip;
         int port;
@@ -246,8 +236,7 @@ bool FloydImpl::GetServerStatus(std::string& msg) {
   return true;
 }
 
-Status FloydImpl::DoCommand(const CmdRequest& cmd,
-    CmdResponse *response) {
+Status FloydImpl::DoCommand(const CmdRequest& cmd, CmdResponse *response) {
   // Execute if is leader
   std::pair<std::string, int> leader_node = context_->leader_node();
   if (options_.local_ip == leader_node.first
@@ -261,7 +250,7 @@ Status FloydImpl::DoCommand(const CmdRequest& cmd,
 }
 
 Status FloydImpl::ExecuteDirtyCommand(const CmdRequest& cmd,
-    CmdResponse *response) {
+                                      CmdResponse *response) {
   std::string value;
   rocksdb::Status rs;
   switch (cmd.type()) {
@@ -278,8 +267,8 @@ Status FloydImpl::ExecuteDirtyCommand(const CmdRequest& cmd,
       }
 
       LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteDirtyCommand DirtyWrite %s, key(%s) value(%s)",
-                rs.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
-#if (LOG_LEVEL != LEVEL_NONE)
+           rs.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
+#ifndef NDEBUG
       std::string text_format;
       google::protobuf::TextFormat::PrintToString(*response, &text_format);
       LOGV(DEBUG_LEVEL, info_log_, "DirtyWrite Response :\n%s", text_format.c_str());
@@ -334,7 +323,7 @@ bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
     res->set_voted_for_ip(voted_for_node.first);
   }
   res->set_voted_for_port(voted_for_node.second);
-  
+
   uint64_t last_log_index;
   uint64_t last_log_term;
   log_->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
@@ -346,7 +335,7 @@ bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
 }
 
 Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
-    CmdResponse *response) {
+                                 CmdResponse *response) {
   // Append entry local
   std::vector<Entry*> entries;
   Entry entry;
@@ -361,21 +350,24 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
   // Notify primary then wait for apply
   primary_->AddTask(kNewCommand);
 
+  response->set_type(cmd.type());
+  response->set_code(StatusCode::kError);
+
   Status res = context_->WaitApply(last_index, 1000);
   if (!res.ok()) {
     return res;
   } 
-  
+
   // Complete CmdRequest if needed
   std::string value;
   rocksdb::Status rs;
   switch (cmd.type()) {
     case Type::Write: {
-      BuildWriteResponse(StatusCode::kOk, response);
+      response->set_code(StatusCode::kOk);
       break;
     }
     case Type::Delete: {
-      BuildDeleteResponse(StatusCode::kOk, response);
+      response->set_code(StatusCode::kOk);
       break;
     }
     case Type::Read: {
@@ -388,8 +380,8 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
         BuildReadResponse(cmd.kv().key(), value, StatusCode::kError, response);
       }
       LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteCommand Read %s, key(%s) value(%s)",
-          rs.ToString().c_str(), cmd.kv().key().c_str(), value.c_str());
-#if (LOG_LEVEL != LEVEL_NONE)
+           rs.ToString().c_str(), cmd.kv().key().c_str(), value.c_str());
+#ifndef NDEBUG 
       std::string text_format;
       google::protobuf::TextFormat::PrintToString(*response, &text_format);
       LOGV(DEBUG_LEVEL, info_log_, "ReadResponse :\n%s", text_format.c_str());
@@ -403,14 +395,13 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
   return Status::OK();
 }
 
-void FloydImpl::DoRequestVote(CmdRequest& cmd,
-    CmdResponse* response) {
+void FloydImpl::DoRequestVote(CmdRequest& cmd, CmdResponse* response) {
   bool granted = false;
   uint64_t my_term = context_->current_term();
 
   CmdRequest_RequestVote request_vote = cmd.request_vote();
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::DoRequestVote my_term=%lu rqv.term=%lu",
-      my_term, request_vote.term());
+       my_term, request_vote.term());
   if (request_vote.term() < my_term) {
     BuildRequestVoteResponse(my_term, granted, response);
     return;
@@ -431,8 +422,7 @@ void FloydImpl::DoRequestVote(CmdRequest& cmd,
   BuildRequestVoteResponse(my_term, granted, response);
 }
 
-void FloydImpl::DoAppendEntries(CmdRequest& cmd,
-    CmdResponse* response) {
+void FloydImpl::DoAppendEntries(CmdRequest& cmd, CmdResponse* response) {
   // Ignore stale term
   bool status = false;
   uint64_t my_term = context_->current_term();
@@ -442,21 +432,22 @@ void FloydImpl::DoAppendEntries(CmdRequest& cmd,
     return;
   }
   context_->BecomeFollower(append_entries.term(),
-      append_entries.ip(), append_entries.port());
-  
+                           append_entries.ip(), append_entries.port());
+
   std::vector<Entry*> entries;
   for (auto& it : *(cmd.mutable_append_entries()->mutable_entries())) {
     entries.push_back(&it);
   }
   // Append entries
   status = context_->AppendEntries(append_entries.term(),
-      append_entries.prev_log_term(), append_entries.prev_log_index(),
-      entries, &my_term);
+                                   append_entries.prev_log_term(),
+                                   append_entries.prev_log_index(),
+                                   entries, &my_term);
 
   // Update log commit index
   if (context_->AdvanceCommitIndex(append_entries.commit_index())) {
     LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::DoAppendEntries after AdvanceCommitIndex %lu",
-              context_->commit_index());
+         context_->commit_index());
     apply_->ScheduleApply();
   }
 
