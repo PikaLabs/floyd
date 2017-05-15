@@ -43,6 +43,31 @@ void Options::Dump() {
             append_entries_count_once);
 }
 
+std::string Options::ToString() {
+  char str[1024];
+  int len = 0;
+  for (size_t i = 0; i < members.size(); i++) {
+    len = sprintf (str, "               member %lu : %s\n", i, members[i].c_str());
+  }
+  sprintf (str + len, "                 local_ip : %s\n"
+          "               local_port : %d\n"
+          "                data_path : %s\n"
+          "                 log_path : %s\n"
+          "         elect_timeout_ms : %ld\n"
+          "             heartbeat_us : %ld\n"
+          " append_entries_size_once : %ld\n"
+          "append_entries_count_once : %lu\n",
+            local_ip.c_str(),
+            local_port,
+            data_path.c_str(),
+            log_path.c_str(),
+            elect_timeout_ms,
+            heartbeat_us,
+            append_entries_size_once,
+            append_entries_count_once);
+  return str;
+}
+
 Options::Options()
   : local_ip("127.0.0.1"),
     local_port(10086),

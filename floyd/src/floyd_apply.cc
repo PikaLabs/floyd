@@ -34,14 +34,14 @@ void FloydApply::ApplyStateMachine(void* arg) {
   // Apply as more entry as possible
   uint64_t len = 0, to_apply = 0;
   to_apply = context->NextApplyIndex(&len);
-  LOG_DEBUG("ApplyStateMachine with %lu entries to apply from to_apply(%lu)",
+  LOGV(DEBUG_LEVEL, context->info_log(), "ApplyStateMachine with %lu entries to apply from to_apply(%lu)",
             len, to_apply);
   while (len-- > 0) {
     Entry log_entry;
     fapply->log_->GetEntry(to_apply, &log_entry);
     Status s = fapply->Apply(log_entry);
     if (!s.ok()) {
-      LOG_WARN("Apply log entry failed, at: %d, error: %s",
+      LOGV(WARN_LEVEL, context->info_log(), "Apply log entry failed, at: %d, error: %s",
           to_apply, s.ToString().c_str());
       fapply->ScheduleApply(); // try once more
       usleep(1000);
@@ -57,7 +57,7 @@ Status FloydApply::Apply(const Entry& log_entry) {
   const std::string& data = log_entry.cmd();
   CmdRequest cmd;
   if (!cmd.ParseFromArray(data.c_str(), data.length())) {
-    LOG_WARN("Parse log_entry failed");
+    LOGV(WARN_LEVEL, context_->info_log(), "Parse log_entry failed");
     return Status::IOError("Parse error");
   }
 
@@ -65,7 +65,7 @@ Status FloydApply::Apply(const Entry& log_entry) {
   switch (cmd.type()) {
     case Type::Write:
       ret = db_->Put(rocksdb::WriteOptions(), cmd.kv().key(), cmd.kv().value());
-      LOG_DEBUG("Floyd Apply Write %s, key(%s) value(%s)",
+      LOGV(DEBUG_LEVEL, context_->info_log(), "Floyd Apply Write %s, key(%s) value(%s)",
           ret.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
       break;
     case Type::Delete:

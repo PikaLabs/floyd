@@ -30,7 +30,7 @@ int Peer::StartThread() {
 }
 
 Peer::~Peer() {
-  LOG_INFO("Peer(%s) exit!!!", server_.c_str());
+  LOGV(INFO_LEVEL, context_->info_log(), "Peer(%s) exit!!!", server_.c_str());
 }
 
 void Peer::set_next_index(uint64_t next_index) {
@@ -43,20 +43,26 @@ uint64_t Peer::get_next_index() {
 
 void Peer::AddRequestVoteTask() {
   bg_thread_.Schedule(DoRequestVote, this);
+#ifndef NDEBUG
+  int pri_size, size;
+  bg_thread_.QueueSize(&pri_size, &size);
+  LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s) after AddRequestVote Pri queue size %d, normal queue size is %d",
+           server_.c_str(), pri_size, size);
+#endif
 }
 
 void Peer::DoRequestVote(void *arg) {
   Peer *peer = static_cast<Peer*>(arg);
-  LOG_DEBUG("Peer(%s)::DoRequestVote", peer->server_.c_str());
+  LOGV(DEBUG_LEVEL, peer->context_->info_log(), "Peer(%s)::DoRequestVote", peer->server_.c_str());
   Status result = peer->RequestVote();
   if (!result.ok()) {
-    LOG_ERROR("Peer(%s) failed to RequestVote caz %s.", peer->server_.c_str(), result.ToString().c_str());
+    LOGV(ERROR_LEVEL, peer->context_->info_log(), "Peer(%s) failed to RequestVote caz %s.", peer->server_.c_str(), result.ToString().c_str());
   }
 }
 
 Status Peer::RequestVote() {
   if (context_->role() != Role::kCandidate) {
-    LOG_DEBUG("Peer(%s) not candidate, skip RequestVote", server_.c_str());
+    LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s) not candidate, skip RequestVote", server_.c_str());
     return Status::OK();
   }
   
@@ -75,23 +81,23 @@ Status Peer::RequestVote() {
   request_vote->set_last_log_term(last_log_term);
   request_vote->set_last_log_index(last_log_index);
 
-#if (LOG_LEVEL != LEVEL_NONE)
+#ifndef NDEBUG
   std::string text_format;
   google::protobuf::TextFormat::PrintToString(req, &text_format);
-  LOG_DEBUG("Send RequestVote to %s, message :\n%s", server_.c_str(), text_format.c_str());
+  LOGV(DEBUG_LEVEL, context_->info_log(), "Send RequestVote to %s, message :\n%s", server_.c_str(), text_format.c_str());
 #endif
 
   CmdResponse res;
   Status result = pool_->SendAndRecv(server_, req, &res);
   
   if (!result.ok()) {
-    LOG_DEBUG("RequestVote to %s failed %s", server_.c_str(), result.ToString().c_str());
+    LOGV(DEBUG_LEVEL, context_->info_log(), "RequestVote to %s failed %s", server_.c_str(), result.ToString().c_str());
     return result;
   }
 
-#if (LOG_LEVEL != LEVEL_NONE)
+#ifndef NDEBUG 
   google::protobuf::TextFormat::PrintToString(res, &text_format);
-  LOG_DEBUG("Recv RequestVote from %s, message :\n%s", server_.c_str(), text_format.c_str());
+  LOGV(DEBUG_LEVEL, context_->info_log(), "Recv RequestVote from %s, message :\n%s", server_.c_str(), text_format.c_str());
 #endif
 
   // we get term from request vote
@@ -99,7 +105,7 @@ Status Peer::RequestVote() {
   if (result.ok() && context_->role() == Role::kCandidate) {
     // kOk means RequestVote success, opposite vote for me
     if (res.code() == StatusCode::kOk) {    // granted
-      LOG_DEBUG("Peer(%s)::RequestVote granted will Vote and check", server_.c_str());
+      LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s)::RequestVote granted will Vote and check", server_.c_str());
       // However, we need check whether this vote is vote for old term
       // we need igore these type of vote
       if (context_->VoteAndCheck(res_term)) {
@@ -110,7 +116,7 @@ Status Peer::RequestVote() {
       // longer log.
       // if opposite has larger term, this node will become follower
       // otherwise we will do nothing
-      LOG_DEBUG("Vote request denied by %s, res_term=%lu, current_term=%lu",
+      LOGV(DEBUG_LEVEL, context_->info_log(), "Vote request denied by %s, res_term=%lu, current_term=%lu",
                 server_.c_str(), res_term, current_term);
       if (res_term > current_term) {
         //TODO(anan) maybe combine these 2 steps
@@ -134,15 +140,21 @@ void Peer::AddBecomeLeaderTask() {
 
 void Peer::AddAppendEntriesTask() {
   bg_thread_.Schedule(DoAppendEntries, this);
+#ifndef NDEBUG
+  int pri_size, size;
+  bg_thread_.QueueSize(&pri_size, &size);
+  LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s) after AddAppendEntries Pri queue size %d, normal queue size is %d",
+       server_.c_str(), pri_size, size);
+#endif
 }
 
 
 void Peer::DoAppendEntries(void *arg) {
   Peer* peer = static_cast<Peer*>(arg);
-  LOG_DEBUG("Peer(%s) DoAppendEntries", peer->server_.c_str());
+  LOGV(DEBUG_LEVEL, peer->context_->info_log(), "Peer(%s) DoAppendEntries", peer->server_.c_str());
   Status result = peer->AppendEntries();
   if (!result.ok()) {
-    LOG_ERROR("Peer(%s) failed to AppendEntries caz %s.", peer->server_.c_str(), result.ToString().c_str());
+    LOGV(ERROR_LEVEL, peer->context_->info_log(), "Peer(%s) failed to AppendEntries caz %s.", peer->server_.c_str(), result.ToString().c_str());
   }
 }
 
@@ -152,7 +164,7 @@ uint64_t Peer::GetMatchIndex() {
 
 Status Peer::AppendEntries() {
   if (context_->role() != Role::kLeader) {
-    LOG_DEBUG("Peer(%s) not leader anymore, skip AppendEntries", server_.c_str());
+    LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s) not leader anymore, skip AppendEntries", server_.c_str());
     return Status::OK();
   }
 
@@ -184,7 +196,7 @@ Status Peer::AppendEntries() {
     log_->GetEntry(index, &entry);
     *append_entries->add_entries() = entry;
     ++num_entries;
-    LOG_DEBUG("Peer(%s) AppendEntry add new entry(%lu), now has %lu entries",
+    LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s) AppendEntry add new entry(%lu), now has %lu entries",
               server_.c_str(), index, num_entries);
     if (num_entries > context_->append_entries_count_once() 
         || append_entries->ByteSize() >= context_->append_entries_size_once()) {
@@ -194,22 +206,22 @@ Status Peer::AppendEntries() {
   append_entries->set_commit_index(
       std::min(context_->commit_index(), prev_log_index + num_entries));
 
-#if (LOG_LEVEL != LEVEL_NONE)
+#ifndef NDEBUG
   std::string text_format;
   google::protobuf::TextFormat::PrintToString(req, &text_format);
-  LOG_DEBUG("AppendEntry Send to %s, message :\n%s", server_.c_str(), text_format.c_str());
+  LOGV(DEBUG_LEVEL, context_->info_log(), "AppendEntry Send to %s, message :\n%s", server_.c_str(), text_format.c_str());
 #endif
 
   CmdResponse res;
   Status result = pool_->SendAndRecv(server_, req, &res);
 
   if (!result.ok()) {
-    LOG_DEBUG("AppendEntry to %s failed %s", server_.c_str(), result.ToString().c_str());
+    LOGV(DEBUG_LEVEL, context_->info_log(), "AppendEntry to %s failed %s", server_.c_str(), result.ToString().c_str());
     return result;
   }
-#if (LOG_LEVEL != LEVEL_NONE)
+#ifndef NDEBUG
   google::protobuf::TextFormat::PrintToString(res, &text_format);
-  LOG_DEBUG("AppendEntry Receive from %s, message :\n%s", server_.c_str(), text_format.c_str());
+  LOGV(DEBUG_LEVEL, context_->info_log(), "AppendEntry Receive from %s, message :\n%s", server_.c_str(), text_format.c_str());
 #endif
 
   uint64_t res_term = res.append_entries().term();

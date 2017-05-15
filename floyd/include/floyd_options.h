@@ -23,6 +23,7 @@ struct Options {
   void SetMembers(const std::string& cluster_string);
 
   void Dump();
+  std::string ToString();
 
   Options();
   Options(const std::string& cluster_string,

@@ -19,14 +19,20 @@ enum Role {
   kLeader = 2,
 };
 
+class Logger;
+
 class FloydContext {
  public:
-  FloydContext(const Options& opt, Log* log);
+  FloydContext(const Options& opt, Log* log, Logger* info_log);
   ~FloydContext();
 
   void RecoverInit();
   Log* log() {
     return log_;
+  }
+
+  Logger* info_log() {
+    return info_log_;
   }
 
   /* Role related */
@@ -109,6 +115,9 @@ class FloydContext {
  private:
   Options options_;
   Log* log_;
+  
+  // used to debug
+  Logger* info_log_;
 
   // Role related
   pthread_rwlock_t stat_rw_;

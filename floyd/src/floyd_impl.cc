@@ -35,6 +35,7 @@ FloydImpl::~FloydImpl() {
   delete context_;
   delete peer_client_pool_;
   delete worker_client_pool_;
+  delete info_log_;
 }
 
 bool FloydImpl::IsSelf(const std::string& ip_port) {
@@ -52,23 +53,25 @@ bool FloydImpl::GetLeader(std::string& ip_port) {
 }
 
 Status FloydImpl::Start() {
-  LOG_DEBUG("Start: floyd starting...");
-
   slash::CreatePath(options_.log_path);
   slash::CreatePath(options_.data_path);
+  if (NewLogger(options_.log_path + "/LOG", &info_log_) != 0) {
+    //LOG_ERROR("Open LOG file failed! path: %s", options_.log_path.c_str());
+    return Status::Corruption("Open LOG failed, ", strerror(errno));
+  }
 
   // Create DB
   rocksdb::Options options;
   options.create_if_missing = true;
   rocksdb::Status s = rocksdb::DBNemo::Open(options, options_.data_path, &db_);
   if (!s.ok()) {
-    LOG_ERROR("Open db failed! path: %s", options_.data_path.c_str());
+    LOGV(ERROR_LEVEL, info_log_, "Open db failed! path: %s", options_.data_path.c_str());
     return Status::Corruption("Open DB failed, " + s.ToString());
   }
 
   // Recover Context
-  log_ = new Log(options_.log_path);
-  context_ = new FloydContext(options_, log_);
+  log_ = new Log(options_.log_path, info_log_);
+  context_ = new FloydContext(options_, log_, info_log_);
   context_->RecoverInit();
 
   // Create Apply threads
@@ -91,8 +94,8 @@ Status FloydImpl::Start() {
   int ret;
   for (auto& pt : peers_) {
     if ((ret = pt.second->StartThread()) != 0) {
-      LOG_ERROR("FloydImpl peer thread to %s failed to start, ret is %d",
-          pt.first.c_str(), ret);
+      LOGV(ERROR_LEVEL, info_log_, "FloydImpl peer thread to %s failed to "
+           " start, ret is %d", pt.first.c_str(), ret);
       return Status::Corruption("failed to start peer thread to " + pt.first);
     }
   }
@@ -100,20 +103,21 @@ Status FloydImpl::Start() {
   // Start worker thread after Peers, because WorkerHandle will check peers
   worker_ = new FloydWorker(options_.local_port, 1000, this);
   if ((ret = worker_->Start()) != 0) {
-    LOG_ERROR("FloydImpl worker thread failed to start, ret is %d", ret);
+    LOGV(ERROR_LEVEL, info_log_, "FloydImpl worker thread failed to start, ret is %d", ret);
     return Status::Corruption("failed to start worker, return " + std::to_string(ret));
   }
 
   // Set and Start PrimaryThread
   primary_->SetPeers(&peers_);
   if ((ret = primary_->Start()) != 0) {
-    LOG_ERROR("FloydImpl primary thread failed to start, ret is %d", ret);
+    LOGV(ERROR_LEVEL, info_log_, "FloydImpl primary thread failed to start, ret is %d", ret);
     return Status::Corruption("failed to start primary thread, return " + std::to_string(ret));
   }
   primary_->AddTask(kCheckElectLeader);
 
-  options_.Dump();
-  LOG_DEBUG("FloydImpl started");
+  // test only
+  //options_.Dump();
+  LOGV(INFO_LEVEL, info_log_, "Floyd started!\nOptions\n%s", options_.ToString().c_str());
   return Status::OK();
 }
 

@@ -133,7 +133,7 @@ Status FloydImpl::DirtyWrite(const std::string& key, const std::string& value) {
   for (auto& iter : options_.members) {
     if (iter != local_server) {
       Status s = worker_client_pool_->SendAndRecv(iter, cmd, &response);
-      LOG_DEBUG("FloydImpl::DirtyWrite Send to %s return %s, key(%s) value(%s)",
+      LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::DirtyWrite Send to %s return %s, key(%s) value(%s)",
                 iter.c_str(), s.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
     }
   }
@@ -150,7 +150,7 @@ Status FloydImpl::Delete(const std::string& key) {
 //#if (LOG_LEVEL != LEVEL_NONE)
 //  std::string text_format;
 //  google::protobuf::TextFormat::PrintToString(cmd, &text_format);
-//  LOG_DEBUG("Delete CmdRequest :\n%s", text_format.c_str());
+//  LOGV(DEBUG_LEVEL, info_log_, "Delete CmdRequest :\n%s", text_format.c_str());
 //#endif
   CmdResponse response;
   Status s = DoCommand(cmd, &response);
@@ -195,7 +195,7 @@ Status FloydImpl::DirtyRead(const std::string& key, std::string& value) {
 }
 
 bool FloydImpl::GetServerStatus(std::string& msg) {
-  LOG_DEBUG("FloydImpl::GetServerStatus start");
+  LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::GetServerStatus start");
 
   CmdResponse_ServerStatus server_status;
   DoGetServerStatus(&server_status);
@@ -222,7 +222,7 @@ bool FloydImpl::GetServerStatus(std::string& msg) {
   for (auto& iter : options_.members) {
     if (iter != local_server) {
       Status s = worker_client_pool_->SendAndRecv(iter, cmd, &response);
-      LOG_DEBUG("FloydImpl::GetServerStatus Send to %s return %s",
+      LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::GetServerStatus Send to %s return %s",
                 iter.c_str(), s.ToString().c_str());
       if (s.ok()) {
         std::string ip;
@@ -239,7 +239,7 @@ bool FloydImpl::GetServerStatus(std::string& msg) {
                   server_status.last_log_term(), server_status.last_log_index(),
                   server_status.last_apply_index());
         msg.append(str);
-        LOG_DEBUG("GetServerStatus msg(%s)", str);
+        LOGV(DEBUG_LEVEL, info_log_, "GetServerStatus msg(%s)", str);
       }
     }
   }
@@ -277,12 +277,12 @@ Status FloydImpl::ExecuteDirtyCommand(const CmdRequest& cmd,
         response->set_code(StatusCode::kError);
       }
 
-      LOG_DEBUG("FloydImpl::ExecuteDirtyCommand DirtyWrite %s, key(%s) value(%s)",
+      LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteDirtyCommand DirtyWrite %s, key(%s) value(%s)",
                 rs.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
 #if (LOG_LEVEL != LEVEL_NONE)
       std::string text_format;
       google::protobuf::TextFormat::PrintToString(*response, &text_format);
-      LOG_DEBUG("DirtyWrite Response :\n%s", text_format.c_str());
+      LOGV(DEBUG_LEVEL, info_log_, "DirtyWrite Response :\n%s", text_format.c_str());
 #endif
       break;
     }
@@ -291,7 +291,7 @@ Status FloydImpl::ExecuteDirtyCommand(const CmdRequest& cmd,
       response->set_code(StatusCode::kOk);
       CmdResponse_ServerStatus* server_status = response->mutable_server_status();
       DoGetServerStatus(server_status);
-      LOG_DEBUG("FloydImpl::ExecuteDirtyCommand GetServerStatus");
+      LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteDirtyCommand GetServerStatus");
       break;
     }
     default: {
@@ -352,7 +352,11 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
   Entry entry;
   BuildLogEntry(cmd, context_->current_term(), &entry);
   entries.push_back(&entry);
+
   uint64_t last_index = (log_->Append(entries)).second;
+  if (last_index <= 0) {
+    return Status::IOError("Append Entry failed");
+  }
 
   // Notify primary then wait for apply
   primary_->AddTask(kNewCommand);
@@ -383,12 +387,12 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
       } else {
         BuildReadResponse(cmd.kv().key(), value, StatusCode::kError, response);
       }
-      LOG_DEBUG("FloydImpl::ExecuteCommand Read %s, key(%s) value(%s)",
+      LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteCommand Read %s, key(%s) value(%s)",
           rs.ToString().c_str(), cmd.kv().key().c_str(), value.c_str());
 #if (LOG_LEVEL != LEVEL_NONE)
       std::string text_format;
       google::protobuf::TextFormat::PrintToString(*response, &text_format);
-      LOG_DEBUG("ReadResponse :\n%s", text_format.c_str());
+      LOGV(DEBUG_LEVEL, info_log_, "ReadResponse :\n%s", text_format.c_str());
 #endif
       break;
     }
@@ -405,7 +409,7 @@ void FloydImpl::DoRequestVote(CmdRequest& cmd,
   uint64_t my_term = context_->current_term();
 
   CmdRequest_RequestVote request_vote = cmd.request_vote();
-  LOG_DEBUG("FloydImpl::DoRequestVote my_term=%lu rqv.term=%lu",
+  LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::DoRequestVote my_term=%lu rqv.term=%lu",
       my_term, request_vote.term());
   if (request_vote.term() < my_term) {
     BuildRequestVoteResponse(my_term, granted, response);
@@ -451,7 +455,7 @@ void FloydImpl::DoAppendEntries(CmdRequest& cmd,
 
   // Update log commit index
   if (context_->AdvanceCommitIndex(append_entries.commit_index())) {
-    LOG_DEBUG("FloydImpl::DoAppendEntries after AdvanceCommitIndex %lu",
+    LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::DoAppendEntries after AdvanceCommitIndex %lu",
               context_->commit_index());
     apply_->ScheduleApply();
   }

@@ -3,7 +3,7 @@
 #include <google/protobuf/text_format.h>
 
 #include "client.pb.h"
-#include "floyd/src/logger.h"
+#include "logger.h"
 
 #include "pink/include/server_thread.h"
 

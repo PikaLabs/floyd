@@ -24,6 +24,7 @@ class FloydPrimary;
 class FloydApply;
 class FloydWorker;
 class FloydWorkerConn;
+class Logger;
 class CmdRequest;
 class CmdResponse;
 class CmdResponse_ServerStatus;
@@ -60,7 +61,10 @@ class FloydImpl : public Floyd {
 
   Options options_;
   rocksdb::DBNemo* db_;
+  // raft log
   Log* log_;
+  // debug log used for ouput to file
+  Logger* info_log_;
   FloydContext* context_;
 
   FloydWorker* worker_;

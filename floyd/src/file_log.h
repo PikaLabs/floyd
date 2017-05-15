@@ -15,6 +15,7 @@ using slash::Slice;
 
 namespace floyd {
 
+class Logger;
 class Iterator;
 class Manifest;
 class LogFile;
@@ -23,7 +24,7 @@ class LogFile;
 //    1. we don't remove log files
 class Log {
  public:
-  explicit Log(const std::string& path);
+  Log(const std::string& path, Logger* info_log);
   ~Log();
 
   std::pair<uint64_t, uint64_t> Append(std::vector<Entry*>& entries);
@@ -47,6 +48,7 @@ class Log {
 
  private:
   std::string path_;
+  Logger* info_log_;
   Manifest *manifest_;
   LogFile *last_table_;
   int cache_size_;
@@ -102,6 +104,7 @@ class Manifest {
   bool Save();
   
   void Dump();
+  std::string ToString();
 
   slash::RandomRWFile *file_;
   Meta meta_;

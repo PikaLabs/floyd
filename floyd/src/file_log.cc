@@ -29,8 +29,9 @@ std::string LogFileName(const std::string &name, uint64_t number) {
   return MakeFileName(name, number, kLog.c_str());
 }
 
-Log::Log(const std::string &path)
+Log::Log(const std::string &path, Logger* info_log)
   : path_(path),
+    info_log_(info_log),
     manifest_(NULL),
     last_table_(NULL),
     cache_size_(30000) {
@@ -57,22 +58,25 @@ bool Log::Recover() {
 
   std::string filename = path_ + kManifest;
   if (!slash::FileExists(filename)) {
-    LOG_DEBUG("Log::Recover newly node");
+    LOGV(DEBUG_LEVEL, info_log_, "Log::Recover newly node");
     slash::NewRandomRWFile(filename, &file);
     manifest_ = new Manifest(file);
   } else {
     // manifest recover
     slash::NewRandomRWFile(filename, &file);
     manifest_ = new Manifest(file);
-    manifest_->Recover();
+    if (!manifest_->Recover()) {
+      LOGV(ERROR_LEVEL, info_log_, "manifest recover failed, %s", strerror(errno));
+      return false;
+    }
 
     // log recover
     std::vector<std::string> files;
 
     int ret = slash::GetChildren(path_, files);
     if (ret != 0) {
-      LOG_ERROR("recover failed when open path %s, %s", path_.c_str(),
-              strerror(ret));
+      LOGV(ERROR_LEVEL, info_log_, "recover failed when open path %s, %s",
+           path_.c_str(), strerror(ret));
       return false;
     }
 
@@ -82,10 +86,9 @@ bool Log::Recover() {
       if (files[i].find(kLog) != std::string::npos) {
         LogFile* tmp;
         if (!GetLogFile(path_ + files[i], &tmp)) {
-          fprintf(stderr, "[WARN] (%s:%d) open %s failed\n", __FILE__, __LINE__,
-                  files[i].c_str());
+          LOGV(ERROR_LEVEL, info_log_,  "Log::Recover open %s failed\n", files[i].c_str());
         }
-        LOG_DEBUG("Log::Recover old node with exist file %s", (path_ + files[i]).c_str());
+        LOGV(DEBUG_LEVEL, info_log_, "Log::Recover old node with exist file %s", (path_ + files[i]).c_str());
         last_table_ = tmp;
       }
     }
@@ -94,15 +97,15 @@ bool Log::Recover() {
   if (last_table_ == NULL) {
     filename = LogFileName(path_, ++manifest_->meta_.file_num);
     if (!GetLogFile(filename, &last_table_)) {
-      fprintf(stderr, "[WARN] (%s:%d) open %s failed\n", __FILE__, __LINE__,
-              filename.c_str());
+      LOGV(ERROR_LEVEL, info_log_, "open %s failed, %s",
+           filename.c_str(), strerror(errno));
     }
-    LOG_DEBUG("Log::Recover new last_table_ %s", filename.c_str());
+    LOGV(DEBUG_LEVEL, info_log_, "Log::Recover new last_table_ %s", filename.c_str());
     manifest_->Save();
     last_table_->Sync();
   }
-#if (LOG_LEVEL != LEVEL_NONE)
-  manifest_->Dump();
+#ifndef NDEBUG
+  LOGV(DEBUG_LEVEL, info_log_, "%s", manifest_->ToString().c_str());
 #endif
   return true;
 }
@@ -115,6 +118,8 @@ bool Log::GetLogFile(const std::string &file, LogFile** table) {
 
   if (tmp == files_.end()) {
     if (!LogFile::Open(file, &tb)) {
+      LOGV(ERROR_LEVEL, info_log_, "LogFile open %s failed, %s\n",
+           file.c_str(), strerror(errno));
       return false;
     }
     files_[file] = tb;
@@ -133,7 +138,7 @@ bool Log::GetLogFile(const std::string &file, LogFile** table) {
   if (tb->header_->entry_end > 0          // not new LogFile;
       && (tb->header_->entry_start > manifest_->meta_.entry_end
           || tb->header_->entry_end < manifest_->meta_.entry_start)) {
-    LOG_DEBUG("Log::GetLogFile stale file %s with entry(%lu, %lu), global entry(%lu, %lu)",
+    LOGV(DEBUG_LEVEL, info_log_, "Log::GetLogFile stale file %s with entry(%lu, %lu), global entry(%lu, %lu)",
               file.c_str(), tb->header_->entry_start, tb->header_->entry_end,
               manifest_->meta_.entry_start, manifest_->meta_.entry_end);
     delete tb;
@@ -153,10 +158,18 @@ std::pair<uint64_t, uint64_t> Log::Append(std::vector<Entry *> &entries) {
   for (uint64_t i = start; i <= end; ++i) {
     SplitIfNeeded();
     int nwrite = last_table_->AppendEntry(i, *(entries[i - start]));
+    if (nwrite < 0) {
+      LOGV(ERROR_LEVEL, info_log_, "FileLog %llu append entry %llu failed, %s",
+           manifest_->meta_.file_num, i, strerror(errno));
+      return {0, 0}; 
+    }
   }
 
   manifest_->meta_.entry_end = end;
   manifest_->Save();
+#ifndef NDEBUG
+  LOGV(DEBUG_LEVEL, info_log_, "Update manifest after append\n%s", manifest_->ToString().c_str());
+#endif
   return {start, end}; 
 }
 
@@ -186,6 +199,9 @@ void Log::UpdateMetadata(uint64_t current_term, std::string voted_for_ip,
   manifest_->meta_.voted_for_port = voted_for_port;
   manifest_->meta_.apply_index = apply_index;
   manifest_->Save();
+#ifndef NDEBUG
+  LOGV(DEBUG_LEVEL, info_log_, "Update metadata\n%s", manifest_->ToString().c_str());
+#endif
 }
 
 uint64_t Log::GetStartLogIndex() {
@@ -258,12 +274,12 @@ void Log::SplitIfNeeded() {
     LogFile * tmp;
     std::string filename = LogFileName(path_, ++manifest_->meta_.file_num);
     if (!GetLogFile(filename, &tmp)) {
-      fprintf(stderr, "[WARN] (%s:%d) open %s failed\n", __FILE__, __LINE__,
+      LOGV(ERROR_LEVEL, info_log_, "Split log file open %s failed\n",
               filename.c_str());
     }
     
     uint64_t next = last_table_->header_->entry_end + 1;
-    LOG_DEBUG("Log::SplitIfNeeded create new file %s with entry_start (%lu)",
+    LOGV(DEBUG_LEVEL, info_log_, "Log::SplitIfNeeded create new file %s with entry_start (%lu)",
               filename.c_str(), next);
     last_table_ = tmp;
     last_table_->header_->entry_start = next;
@@ -344,10 +360,9 @@ int LogFile::AppendEntry(uint64_t index, Entry &entry) {
     byte_size = Serialize(index, length, entry, &result, scratch);
   }
 
-//  std::cout << "AppendEntry, id: " << index << std::endl << std::flush;
-
-  LOG_DEBUG("LogFile::AppendEntry index=%lu, length=%d, before file_size=%d, byte_size=%d",
-            index, length, header_->filesize, byte_size);
+  //LOGV(DEBUG_LEVEL, info_log_, "LogFile::AppendEntry index=%lu, length=%d, "
+  //     "before file_size=%d, byte_size=%d",
+  //     index, length, header_->filesize, byte_size);
   Status s = file_->Write(header_->filesize, result);
   if (!s.ok()) {
     return -1;
@@ -361,9 +376,8 @@ int LogFile::AppendEntry(uint64_t index, Entry &entry) {
     return -1;
   }
 
-  LOG_DEBUG("LogFile::AppendEntry header_  filesize=%d, entry_start=%lu, entry_end=%lu",
-            header_->filesize, header_->entry_start, header_->entry_end);
-
+  //LOGV(DEBUG_LEVEL, info_log_, "LogFile::AppendEntry header_  filesize=%d, entry_start=%lu, entry_end=%lu",
+  //          header_->filesize, header_->entry_start, header_->entry_end);
   return byte_size;
 }
 
@@ -405,16 +419,6 @@ int LogFile::Serialize(uint64_t index, int length, Entry &entry,
   return offset;
 }
 
-// TODO we need file size, maybe mmap isnot suiLogFile;
-// bool Log::ReadMetadata() {
-//  char *p = manifest_->GetData();
-//  if (p != NULL) {
-//	  if (!metadata_.ParseFromArray(static_cast<const char*>(data),
-//				static_cast<int>(read_size))) {
-//  }
-//	return true;
-//}
-
 //
 // Mainifest
 //
@@ -422,7 +426,7 @@ bool Manifest::Recover() {
   Slice result;
   Status s = file_->Read(0, sizeof(Meta), &result, scratch);
   if (!s.ok()) {
-    LOG_DEBUG("Manifest::Recover file Write failed, %s", s.ToString().c_str());
+    //LOGV(DEBUG_LEVEL, info_log_, "Manifest::Recover file Read failed, %s", s.ToString().c_str());
     return false;
   }
 
@@ -435,21 +439,15 @@ bool Manifest::Save() {
   Slice buf((char *)&meta_, sizeof(Meta));
   Status s = file_->Write(0, buf);
   if (!s.ok()) {
-    LOG_DEBUG("Manifest::Save file Write failed, %s", s.ToString().c_str());
     return false;
   }
-
-#if (LOG_LEVEL != LEVEL_NONE)
-  LOG_DEBUG("Manifest::Save after save Manifest", s.ToString().c_str());
-  Dump();
-#endif
 
   file_->Sync();
   return true;
 }
 
 void Manifest::Dump() {
-  LOG_INFO ("          file_num  :  %lu\n"
+  printf ("          file_num  :  %lu\n"
           "       entry_start  :  %lu\n"
           "         entry_end  :  %lu\n"
           "      current_term  :  %lu\n"
@@ -461,6 +459,20 @@ void Manifest::Dump() {
           meta_.apply_index);
 }
 
+std::string Manifest::ToString() {
+  char str[512];
+  sprintf (str, "          file_num  :  %lu\n"
+          "       entry_start  :  %lu\n"
+          "         entry_end  :  %lu\n"
+          "      current_term  :  %lu\n"
+          "      voted_for_ip  :  %u\n"
+          "    voted_for_port  :  %u\n",
+          "       apply_index  :  %lu\n",
+          meta_.file_num, meta_.entry_start, meta_.entry_end,
+          meta_.current_term, meta_.voted_for_ip, meta_.voted_for_port,
+          meta_.apply_index);
+  return str;
+}
 
 //
 // LogFile related
@@ -473,8 +485,6 @@ bool LogFile::Open(const std::string &filename, LogFile **table) {
   slash::RandomRWFile *file;
   slash::Status s = slash::NewRandomRWFile(filename, &file);
   if (!s.ok()) {
-    fprintf(stderr, "[WARN] (%s:%d) open %s failed, %s\n", __FILE__, __LINE__,
-            filename.c_str(), s.ToString().c_str());
     return false;
   }
 

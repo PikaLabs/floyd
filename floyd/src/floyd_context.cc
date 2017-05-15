@@ -6,9 +6,10 @@
 namespace floyd {
 
 FloydContext::FloydContext(const floyd::Options& opt,
-    Log* log)
+    Log* log, Logger* info_log)
   : options_(opt),
   log_(log),
+  info_log_(info_log),
   current_term_(0),
   role_(Role::kFollower),
   voted_for_port_(0),
@@ -45,7 +46,7 @@ uint64_t FloydContext::GetElectLeaderTimeout() {
 void FloydContext::BecomeFollower(uint64_t new_term,
       const std::string leader_ip, int leader_port) {
   slash::RWLock(&stat_rw_, true);
-  LOG_DEBUG("BecomeFollower: with current_term_(%lu) and new_term(%lu)"
+  LOGV(DEBUG_LEVEL, info_log_, "BecomeFollower: with current_term_(%lu) and new_term(%lu)"
             " commit_index(%lu)  apply_index(%lu)",
             current_term_, new_term, commit_index(), apply_index());
   //TODO(anan) BecameCandidate will conflict this assert
@@ -71,15 +72,15 @@ void FloydContext::BecomeCandidate() {
   slash::RWLock(&stat_rw_, true);
   switch(role_) {
     case Role::kFollower:
-      LOG_DEBUG("Become Candidate since prev leader timeout, prev term: %lu, prev leader is (%s:%d)",
+      LOGV(INFO_LEVEL, info_log_, "Become Candidate since prev leader timeout, prev term: %lu, prev leader is (%s:%d)",
           current_term_, leader_ip_.c_str(), leader_port_);
       break; 
     case Role::kCandidate:
-      LOG_DEBUG("Become Candidate since prev election timeout, prev term: %lu",
+      LOGV(INFO_LEVEL, info_log_, "Become Candidate since prev election timeout, prev term: %lu",
           current_term_, leader_ip_.c_str(), leader_port_);
       break; 
     default:
-      LOG_DEBUG("Become Candidate, should not be here, role: %d", role_);
+      LOGV(INFO_LEVEL, info_log_, "Become Candidate, should not be here, role: %d", role_);
   }
 
   ++current_term_;
@@ -95,13 +96,13 @@ void FloydContext::BecomeCandidate() {
 void FloydContext::BecomeLeader() {
   slash::RWLock(&stat_rw_, true);
   if (role_ == Role::kLeader) {
-    LOG_DEBUG ("FloydContext::BecomeLeader already Leader!!");
+    LOGV(INFO_LEVEL, info_log_, "FloydContext::BecomeLeader already Leader!!");
     return;
   }
   role_ = Role::kLeader;
   leader_ip_ = options_.local_ip;
   leader_port_ = options_.local_port;
-  LOG_DEBUG ("FloydContext::BecomeLeader I am become Leader!!");
+  LOGV(INFO_LEVEL, info_log_, "FloydContext::BecomeLeader I am become Leader!!");
 }
 
 bool FloydContext::AdvanceCommitIndex(uint64_t new_commit_index) {
@@ -109,7 +110,7 @@ bool FloydContext::AdvanceCommitIndex(uint64_t new_commit_index) {
     return false;
   }
   slash::MutexLock l(&commit_mu_);
-  LOG_DEBUG("FloydContext::AdvanceCommitIndex commit_index=%lu, new commit_index=%lu",
+  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AdvanceCommitIndex commit_index=%lu, new commit_index=%lu",
             commit_index_, new_commit_index);
   if (commit_index_ >= new_commit_index) {
     return false;
@@ -121,7 +122,7 @@ bool FloydContext::AdvanceCommitIndex(uint64_t new_commit_index) {
   log_->GetEntry(new_commit_index, &entry);
   if (entry.term() == current_term_) {
     commit_index_ = new_commit_index;
-    LOG_DEBUG("FloydContext::AdvanceCommitIndex advance commit_index to %ld", new_commit_index);
+    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AdvanceCommitIndex advance commit_index to %ld", new_commit_index);
     return true;
   }
   return false;
@@ -153,7 +154,7 @@ void FloydContext::MetaApply() {
 
 bool FloydContext::VoteAndCheck(uint64_t vote_term) {
   slash::RWLock(&stat_rw_, true);
-  LOG_DEBUG("FloydContext::VoteAndCheck: current_term=%lu vote_term=%lu vote_quorum_=%lu",
+  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::VoteAndCheck: current_term=%lu vote_term=%lu vote_quorum_=%lu",
            current_term_, vote_term, vote_quorum_);
   if (current_term_ != vote_term) {
     return false;
@@ -186,14 +187,14 @@ bool FloydContext::RequestVote(uint64_t term, const std::string ip,
   log_->GetLastLogTermAndIndex(&my_log_term, &my_log_index);
   if (log_term < my_log_term
       || (log_term == my_log_term && log_index < my_log_index)) {
-    LOG_DEBUG("FloydContext::RequestVote: log index not up-to-date, my is %lu:%lu, other is %lu:%lu",
+    LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: log index not up-to-date, my is %lu:%lu, other is %lu:%lu",
               my_log_term, my_log_index, log_term, log_index);
     return false; // log index is not up-to-date as mine
   }
 
   if (!voted_for_ip_.empty()
       && (voted_for_ip_ != ip || voted_for_port_ != port)) {
-    LOG_DEBUG("FloydContext::RequestVote: I have vote for (%s:%d) already.",
+    LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: I have vote for (%s:%d) already.",
               voted_for_ip_.c_str(), voted_for_port_);
     return false; // I have vote someone else
   }
@@ -202,7 +203,7 @@ bool FloydContext::RequestVote(uint64_t term, const std::string ip,
   voted_for_ip_ = ip;
   voted_for_port_ = port;
   MetaApply();
-  LOG_DEBUG("FloydContext::RequestVote: grant vote for (%s:%d), my_term=%lu.",
+  LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: grant vote for (%s:%d), my_term=%lu.",
             voted_for_ip_.c_str(), voted_for_port_, *my_term);
   return true;
 }
@@ -214,7 +215,7 @@ bool FloydContext::AppendEntries(uint64_t term,
   // Check pre_log match local log entry
   uint64_t last_log_index = log_->GetLastLogIndex();
   if (pre_log_index > last_log_index) {
-    LOG_DEBUG("FloydContext::AppendEntries: pre_log(%lu, %lu) > last_log_index(%lu)",
+    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries: pre_log(%lu, %lu) > last_log_index(%lu)",
               pre_log_term, pre_log_index, last_log_index);
     return false;
   }
@@ -225,7 +226,7 @@ bool FloydContext::AppendEntries(uint64_t term,
     my_log_term = entry.term();
   }
   if (pre_log_term != my_log_term) {
-    LOG_DEBUG("FloydContext::AppendEntries: pre_log(%lu, %lu) don't match with"
+    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries: pre_log(%lu, %lu) don't match with"
               " local log(%lu, %lu), truncate suffix from here",
               pre_log_term, pre_log_index, my_log_term, pre_log_index, pre_log_index);
     // TruncateSuffix [pre_log_index, last_log_index)
@@ -238,7 +239,7 @@ bool FloydContext::AppendEntries(uint64_t term,
 #if (LOG_LEVEL != LEVEL_NONE)
     uint64_t last_log_term;
     log_->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
-    LOG_DEBUG("FloydContext::AppendEntries: truncate suffix from %lu, "
+    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries: truncate suffix from %lu, "
               "pre_log(%lu,%lu), last_log(%lu,%lu)",
               pre_log_index + 1, pre_log_term, pre_log_index, last_log_term, last_log_index);
 #endif
@@ -246,7 +247,7 @@ bool FloydContext::AppendEntries(uint64_t term,
     log_->TruncateSuffix(pre_log_index);
   }
   if (entries.size() > 0) {
-    LOG_DEBUG("FloydContext::AppendEntries will append %u entries from "
+    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries will append %u entries from "
               " pre_log_index %lu", entries.size(), pre_log_index + 1);
 
     log_->Append(entries);
