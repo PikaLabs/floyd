@@ -1,3 +1,6 @@
+RPATH = ./output/lib/
+LFLAGS = -Wl,-rpath=$(RPATH)
+
 CXX = g++
 ifeq ($(__REL), 1)
 	CXXFLAGS = -O0 -g -pg -pipe -fPIC -DLOG_LEVEL=LEVEL_DEBUG  -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -D_GNU_SOURCE -std=c++11 -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls
@@ -40,7 +43,7 @@ all: $(OBJECT)
 
 
 floyd_client:  $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LFLAGS) $(LIBS)
 
 
 $(OBJS): %.o : %.cc

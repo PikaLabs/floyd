@@ -251,6 +251,19 @@ Status Peer::AppendEntries() {
     if (res.code() == StatusCode::kOk) {
       next_index_ = prev_log_index + num_entries + 1;
       primary_->AddTask(kAdvanceCommitIndex);
+
+      // If this follower is far behind leader, and there is no more
+      // AppendEntryTask, we should add one
+      if (next_index_ + context_->append_entries_count_once() < last_log_index) {
+        int pri_size, qu_size;
+        bg_thread_.QueueSize(&pri_size, &qu_size);
+        if (qu_size < 1) {
+          LOGV(DEBUG_LEVEL, context_->info_log(), "AppendEntry again "
+               "to catch up next_index(%llu) last_log_index(%llu)",
+               next_index_.load(), last_log_index);
+          AddAppendEntriesTask();
+        }
+      }
     } else {
       uint64_t adjust_index = std::min(res.append_entries().last_log_index() + 1,
                                        next_index_ - 1);

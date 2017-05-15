@@ -1,3 +1,6 @@
+RPATH = ./output/lib/
+LFLAGS = -Wl,-rpath=$(RPATH)
+
 CXX = g++
 ifeq ($(__PERF), 1)
 	CXXFLAGS = -O0 -g -pipe -fPIC -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls
@@ -43,7 +46,7 @@ $(LIBPINK):
 	make -C $(THIRD_PATH)/pink/
 
 $(OBJECT): $(LIBSLASH) $(LIBPINK) $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) -Wl,-Bdynamic $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LFLAGS) -Wl,-Bdynamic $(LIBS)
 
 $(OBJS): %.o : %.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE_PATH) 

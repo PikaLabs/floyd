@@ -22,7 +22,7 @@ FloydPrimary::FloydPrimary(FloydContext* context, FloydApply* apply)
     apply_(apply),
     reset_elect_leader_time_(0),
     reset_leader_heartbeat_time_(0) {
-  srand(time(NULL));
+   srand(time(NULL));
 } 
 int FloydPrimary::Start() {
   bg_thread_.set_thread_name("FloydPrimary");
@@ -35,26 +35,29 @@ FloydPrimary::~FloydPrimary() {
 }
 
 void FloydPrimary::SetPeers(PeersSet* peers) {
-  LOGV(DEBUG_LEVEL, context_->info_log(), "FloydPrimary::SetPeers peers has %d pairs", peers->size());
+  LOGV(DEBUG_LEVEL, context_->info_log(), "FloydPrimary::SetPeers peers "
+       "has %d pairs", peers->size());
   peers_ = peers;
 }
 
 // TODO(anan) We keep 2 Primary Cron in total.
-//    1. one short live Cron for LeaderHeartbeat, which is available as a
-//    leader;
-//    2. another long live Cron for ElectLeaderCheck, which is started when creating Primary;
+//    1. one short live Cron for LeaderHeartbeat, which is available as a leader;
+//    2. another long live Cron for ElectLeaderCheck, which is started when
+//    creating Primary;
 void FloydPrimary::AddTask(TaskType type, void* arg) {
   switch (type) {
     case kLeaderHeartbeat: {
       uint64_t timeout = context_->heartbeat_us();
       if (reset_leader_heartbeat_time_) {
         uint64_t delta = (slash::NowMicros() - reset_leader_heartbeat_time_);
-        LOGV(DEBUG_LEVEL, context_->info_log(), "FloydPrimary::AddTask kLeaderHeartbeat reset_leader_heartbeat_timer old timeout"
-                 " %luus, delta is %luus", timeout, delta);
+        LOGV(DEBUG_LEVEL, context_->info_log(), "FloydPrimary::AddTask "
+             "kLeaderHeartbeat reset_leader_heartbeat_timer old timeout"
+             " %luus, delta is %luus", timeout, delta);
         timeout = (delta < timeout) ? (timeout - delta) : 0;
         reset_leader_heartbeat_time_ = 0;
       }
-      LOGV(DEBUG_LEVEL, context_->info_log(), "FloydPrimary::AddTask kLeaderHeartbeat will in %dms", timeout / 1000LL);
+      LOGV(DEBUG_LEVEL, context_->info_log(), "FloydPrimary::AddTask "
+           "kLeaderHeartbeat will in %dms", timeout / 1000LL);
       bg_thread_.DelaySchedule(timeout / 1000LL, DoLeaderHeartbeat, this);
       break;
     }
@@ -62,12 +65,14 @@ void FloydPrimary::AddTask(TaskType type, void* arg) {
       uint64_t timeout = context_->GetElectLeaderTimeout() * 1000LL;
       if (reset_elect_leader_time_) {
         uint64_t delta = (slash::NowMicros() - reset_elect_leader_time_);
-        LOGV(DEBUG_LEVEL, context_->info_log(), "FloydPrimary::AddTask kCheckElectLeader reset_elect_leader_timer old timeout"
-                 " %luus, delta is %luus", timeout, delta);
+        LOGV(DEBUG_LEVEL, context_->info_log(), "FloydPrimary::AddTask "
+             "kCheckElectLeader reset_elect_leader_timer old timeout"
+             " %luus, delta is %luus", timeout, delta);
         timeout = (delta < timeout) ? (timeout - delta) : 0;
         reset_elect_leader_time_ = 0;
       }
-      LOGV(DEBUG_LEVEL, context_->info_log(), "FloydPrimary::AddTask kCheckElectLeader will in %dms", timeout / 1000LL);
+      LOGV(DEBUG_LEVEL, context_->info_log(), "FloydPrimary::AddTask "
+           "kCheckElectLeader will in %dms", timeout / 1000LL);
       bg_thread_.DelaySchedule(timeout / 1000LL, DoCheckElectLeader, this);
       break;
     }
@@ -92,10 +97,10 @@ void FloydPrimary::AddTask(TaskType type, void* arg) {
   }
 
 #ifndef NDEBUG
-  int pri_size, size;
-  bg_thread_.QueueSize(&pri_size, &size);
-  LOGV(INFO_LEVEL, context_->info_log(), "FloydPrimary Pri queue size %d, "
-       "normal queue size is %d", pri_size, size);
+  //int pri_size, size;
+  //bg_thread_.QueueSize(&pri_size, &size);
+  //LOGV(INFO_LEVEL, context_->info_log(), "FloydPrimary Pri queue size %d, "
+  //     "normal queue size is %d", pri_size, size);
 #endif
 }
 
@@ -103,7 +108,8 @@ void FloydPrimary::DoLeaderHeartbeat(void *arg) {
   FloydPrimary* ptr = static_cast<FloydPrimary*>(arg);
   if (ptr->context_->role() == Role::kLeader) {
     if (ptr->reset_leader_heartbeat_time_ == 0) {
-      LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::DoTimingTask Start LeaderHeartbeat");
+      LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::DoTimingTask"
+           " Start LeaderHeartbeat");
       //ptr->LeaderHeartbeat();
       ptr->NoticePeerTask(kLeaderHeartbeat);
     }
@@ -115,15 +121,18 @@ void FloydPrimary::DoCheckElectLeader(void *arg) {
   FloydPrimary* ptr = static_cast<FloydPrimary*>(arg);
 
   if (ptr->context_->role() == Role::kLeader) {
-    LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::DoCheckElectLeader already Leader skip check");
+    LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::DoCheckElectLeader"
+         " already Leader skip check");
     ptr->AddTask(kCheckElectLeader);
     return;
   }
 
   if (ptr->context_->role() == Role::kFollower && ptr->reset_elect_leader_time_) {
-    LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::DoCheckElectLeader still live");
+    LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::DoCheckElectLeader"
+        " still live");
   } else {
-    LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::DoCheckElectLeader start Elect leader after timeout");
+    LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::DoCheckElectLeader"
+        " start Elect leader after timeout");
     ptr->context_->BecomeCandidate();
     ptr->NoticePeerTask(kCheckElectLeader);
   }
@@ -157,12 +166,13 @@ void FloydPrimary::DoNewCommand(void *arg) {
 void FloydPrimary::DoAdvanceCommitIndex(void *arg) {
   FloydPrimary* ptr = static_cast<FloydPrimary*>(arg);
   if (ptr->context_->role() != Role::kLeader) {
-    LOGV(WARN_LEVEL, ptr->context_->info_log(), "FloydPrimary::kAdvanceCommitIndex not leader");
+    LOGV(WARN_LEVEL, ptr->context_->info_log(), "FloydPrimary::AdvanceCommitIndex not leader");
     return;
   }
 
   uint64_t new_commit_index = ptr->QuorumMatchIndex();
-  LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::AdvanceCommitIndex new_commit_index=%lu", new_commit_index);
+  LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::AdvanceCommitIndex"
+       " new_commit_index=%lu", new_commit_index);
   if (ptr->context_->AdvanceCommitIndex(new_commit_index)) {
     LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::AdvanceCommitIndex ok, ScheduleApply");
     ptr->apply_->ScheduleApply();
@@ -172,20 +182,20 @@ void FloydPrimary::DoAdvanceCommitIndex(void *arg) {
 void FloydPrimary::NoticePeerTask(TaskType type) {
   for (auto& peer : *peers_) {
     switch (type) {
-    case kLeaderHeartbeat:
-      peer.second->AddHeartBeatTask();
-      break;
-    case kCheckElectLeader:
-      peer.second->AddRequestVoteTask();
-      break;
-    case kNewCommand:
-      peer.second->AddAppendEntriesTask();
-      break;
-    case kBecomeLeader:
-      peer.second->AddBecomeLeaderTask();
-      break;
-    default:
-      LOGV(WARN_LEVEL, context_->info_log(), "Error TaskType to notice peer");
+      case kLeaderHeartbeat:
+        peer.second->AddHeartBeatTask();
+        break;
+      case kCheckElectLeader:
+        peer.second->AddRequestVoteTask();
+        break;
+      case kNewCommand:
+        peer.second->AddAppendEntriesTask();
+        break;
+      case kBecomeLeader:
+        peer.second->AddBecomeLeaderTask();
+        break;
+      default:
+        LOGV(WARN_LEVEL, context_->info_log(), "Error TaskType to notice peer");
     }
   }
 }
