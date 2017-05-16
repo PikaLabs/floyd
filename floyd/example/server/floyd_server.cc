@@ -9,11 +9,22 @@
 
 namespace floyd {
 
+
+// FloydServerHandler
+void FloydServerHandler::CronHandle() const {
+  server_->ResetLastSecQueryNum();
+  LOG_INFO ("FloydServer QPS:%llu", server_->last_qps());
+}
+
 FloydServer::FloydServer(int sdk_port, const Options& options)
-  : options_(options) {
+  : options_(options),
+    last_query_num_(0),
+    query_num_(0),
+    last_time_us_(slash::NowMicros()) {
   Floyd::Open(options_, &floyd_);
-  conn_factory_ = new FloydServerConnFactory(floyd_); 
-  server_thread_ = pink::NewHolyThread(sdk_port, conn_factory_);
+  conn_factory_ = new FloydServerConnFactory(floyd_, this); 
+  server_handler_ = new FloydServerHandler(this);
+  server_thread_ = pink::NewHolyThread(sdk_port, conn_factory_, 3000, server_handler_);
   LOG_INFO ("FloydServer will started on port:%d", sdk_port);
   //pthread_rwlock_init(&state_protector_, NULL);
 }
@@ -43,9 +54,10 @@ slash::Status FloydServer::Start() {
 
 ////// ServerConn //////
 FloydServerConn::FloydServerConn(int fd, const std::string &ip_port, pink::Thread *thread,
-                                 Floyd *floyd)
+                                 Floyd *floyd, FloydServer* server)
     : PbConn(fd, ip_port, thread),
-      floyd_(floyd) {
+      floyd_(floyd),
+      server_(server) {
 }
 
 int FloydServerConn::DealMessage() {
@@ -56,6 +68,7 @@ int FloydServerConn::DealMessage() {
   command_res_.Clear();
 
   LOG_INFO ("deal message msg_code:%d\n", command_.type());
+  server_->PlusQueryNum();
 
   set_is_reply(true);
 
