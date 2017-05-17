@@ -78,7 +78,7 @@ class FloydContext {
   bool VoteAndCheck(uint64_t vote_term);
   bool RequestVote(uint64_t term,
       const std::string ip, uint32_t port,
-      uint64_t log_index, uint64_t log_term,
+      uint64_t log_term, uint64_t log_index,
       uint64_t* my_term);
   bool AppendEntries(uint64_t term,
       uint64_t pre_log_term, uint64_t pre_log_index,

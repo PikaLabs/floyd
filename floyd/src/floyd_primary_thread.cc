@@ -63,12 +63,14 @@ void FloydPrimary::AddTask(TaskType type, void* arg) {
     }
     case kCheckElectLeader: {
       uint64_t timeout = context_->GetElectLeaderTimeout() * 1000LL;
+      // Here we enlarge the wait time instead of an accurate one, 
+      // to make the latter node more steady
       if (reset_elect_leader_time_) {
-        uint64_t delta = (slash::NowMicros() - reset_elect_leader_time_);
-        LOGV(DEBUG_LEVEL, context_->info_log(), "FloydPrimary::AddTask "
-             "kCheckElectLeader reset_elect_leader_timer old timeout"
-             " %luus, delta is %luus", timeout, delta);
-        timeout = (delta < timeout) ? (timeout - delta) : 0;
+        //uint64_t delta = (slash::NowMicros() - reset_elect_leader_time_);
+        //LOGV(DEBUG_LEVEL, context_->info_log(), "FloydPrimary::AddTask "
+        //     "kCheckElectLeader reset_elect_leader_timer old timeout"
+        //     " %luus, delta is %luus", timeout, delta);
+        //timeout = (delta < timeout) ? (timeout - delta) : 0;
         reset_elect_leader_time_ = 0;
       }
       LOGV(DEBUG_LEVEL, context_->info_log(), "FloydPrimary::AddTask "

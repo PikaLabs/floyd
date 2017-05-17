@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include "floyd/src/logger.h"
 
+#include "slash/include/env.h"
+
 namespace floyd {
 
 FloydContext::FloydContext(const floyd::Options& opt,
@@ -22,7 +24,10 @@ FloydContext::FloydContext(const floyd::Options& opt,
   pthread_rwlockattr_init(&attr);
   pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
   pthread_rwlock_init(&stat_rw_, &attr);
-  srandom(time(NULL));
+  uint64_t seed = slash::NowMicros() % 100000;
+  LOGV(INFO_LEVEL, info_log_, "ElectLeader srandom with seed %lu", seed);
+  srandom(seed);
+  //srandom(slash::NowMicros());
 }
 
 FloydContext::~FloydContext() {
@@ -186,17 +191,18 @@ Status FloydContext::WaitApply(uint64_t apply_index, uint32_t timeout) {
 
 // Peer ask my vote with it's ip, port, log_term and log_index
 bool FloydContext::RequestVote(uint64_t term, const std::string ip,
-                               uint32_t port, uint64_t log_index, uint64_t log_term,
+                               uint32_t port, uint64_t log_term, uint64_t log_index,
                                uint64_t *my_term) {
   slash::RWLock l(&stat_rw_, true);
   if (term < current_term_) {
     return false; // stale term
   }
-  *my_term = current_term_;
 
   uint64_t my_log_index;
   uint64_t my_log_term;
   log_->GetLastLogTermAndIndex(&my_log_term, &my_log_index);
+  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::RequestVote: my last_log is %lu:%lu, other is %lu:%lu",
+       my_log_term, my_log_index, log_term, log_index);
   if (log_term < my_log_term
       || (log_term == my_log_term && log_index < my_log_index)) {
     LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: log index not up-to-date, my is %lu:%lu, other is %lu:%lu",
@@ -214,9 +220,12 @@ bool FloydContext::RequestVote(uint64_t term, const std::string ip,
   // Got my vote
   voted_for_ip_ = ip;
   voted_for_port_ = port;
+  *my_term = current_term_;
   MetaApply();
-  LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: grant vote for (%s:%d), my_term=%lu.",
-       voted_for_ip_.c_str(), voted_for_port_, *my_term);
+  LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: grant vote for (%s:%d),"
+       " with my_term(%lu), my last_log(%lu:%lu), other log(%lu,%lu).",
+       voted_for_ip_.c_str(), voted_for_port_, *my_term,
+       my_log_term, my_log_index, log_term, log_index);
   return true;
 }
 

@@ -112,7 +112,7 @@ Status Peer::RequestVote() {
   if (result.ok() && context_->role() == Role::kCandidate) {
     // kOk means RequestVote success, opposite vote for me
     if (res.code() == StatusCode::kOk) {    // granted
-      LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s)::RequestVote granted"
+      LOGV(INFO_LEVEL, context_->info_log(), "Peer(%s)::RequestVote granted"
            " will Vote and check", server_.c_str());
       // However, we need check whether this vote is vote for old term
       // we need igore these type of vote

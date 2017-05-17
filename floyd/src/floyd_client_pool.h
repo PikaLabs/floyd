@@ -16,7 +16,7 @@ class Logger;
 
 class ClientPool {
  public:
-  explicit ClientPool(Logger* info_log_, int timeout_ms = 5000, int retry = 1);
+  explicit ClientPool(Logger* info_log_, int timeout_ms = 1000, int retry = 1);
   ~ClientPool();
 
   // Each try consists of Connect, Send and Recv;
