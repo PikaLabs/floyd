@@ -43,8 +43,8 @@ class FloydServerConn : public pink::PbConn {
   virtual int DealMessage();
 
  private:
-  FloydServer* server_;
   Floyd* floyd_;
+  FloydServer* server_;
   client::Request command_;
   client::Response command_res_;
 };
@@ -96,8 +96,8 @@ class FloydServer {
   FloydServerConnFactory* conn_factory_;
   pink::ServerThread* server_thread_;
 
-  std::atomic<uint64_t> query_num_;
   std::atomic<uint64_t> last_query_num_;
+  std::atomic<uint64_t> query_num_;
   std::atomic<uint64_t> last_qps_;
   std::atomic<uint64_t> last_time_us_;
 };

@@ -211,7 +211,7 @@ Status Peer::AppendEntries() {
     *append_entries->add_entries() = entry;
     ++num_entries;
     if (num_entries > context_->append_entries_count_once() 
-        || append_entries->ByteSize() >= context_->append_entries_size_once()) {
+        || (uint64_t)append_entries->ByteSize() >= context_->append_entries_size_once()) {
       break;
     }
   }

@@ -75,9 +75,10 @@ static void BuildAppendEntriesResponse(bool succ, uint64_t term,
 }
 
 bool FloydImpl::HasLeader() {
-  auto leader_node = context_->leader_node();
-  return ((!leader_node.first.empty())
-          && leader_node.second != 0);
+  std::string leader_ip;
+  int leader_port;
+  context_->leader_node(&leader_ip, &leader_port);
+  return (!leader_ip.empty() && leader_port != 0);
 }
 
 static void BuildLogEntry(const CmdRequest& cmd, uint64_t current_term,
@@ -238,14 +239,15 @@ bool FloydImpl::GetServerStatus(std::string& msg) {
 
 Status FloydImpl::DoCommand(const CmdRequest& cmd, CmdResponse *response) {
   // Execute if is leader
-  std::pair<std::string, int> leader_node = context_->leader_node();
-  if (options_.local_ip == leader_node.first
-      && options_.local_port == leader_node.second) {
+  std::string leader_ip;
+  int leader_port;
+  context_->leader_node(&leader_ip, &leader_port);
+  if (options_.local_ip == leader_ip && options_.local_port == leader_port) {
     return ExecuteCommand(cmd, response);
   }
   // Redirect to leader
   return worker_client_pool_->SendAndRecv(
-      slash::IpPortString(leader_node.first, leader_node.second),
+      slash::IpPortString(leader_ip, leader_port),
       cmd, response);
 }
 
@@ -308,21 +310,23 @@ bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
   res->set_commit_index(context_->commit_index());
   res->set_role(role_msg);
 
-  auto leader_node = context_->leader_node();
-  if (leader_node.first.empty()) {
+  std::string ip;
+  int port;
+  context_->leader_node(&ip, &port);
+  if (ip.empty()) {
     res->set_leader_ip("null");
   } else {
-    res->set_leader_ip(leader_node.first);
+    res->set_leader_ip(ip);
   }
-  res->set_leader_port(leader_node.second);
+  res->set_leader_port(port);
 
-  auto voted_for_node = context_->voted_for_node();
-  if (voted_for_node.first.empty()) {
+  context_->voted_for_node(&ip, &port);
+  if (ip.empty()) {
     res->set_voted_for_ip("null");
   } else {
-    res->set_voted_for_ip(voted_for_node.first);
+    res->set_voted_for_ip(ip);
   }
-  res->set_voted_for_port(voted_for_node.second);
+  res->set_voted_for_port(port);
 
   uint64_t last_log_index;
   uint64_t last_log_term;
@@ -433,11 +437,18 @@ void FloydImpl::DoAppendEntries(CmdRequest& cmd, CmdResponse* response) {
   }
   context_->BecomeFollower(append_entries.term(),
                            append_entries.ip(), append_entries.port());
-
   std::vector<Entry*> entries;
   for (auto& it : *(cmd.mutable_append_entries()->mutable_entries())) {
     entries.push_back(&it);
   }
+#ifndef NDEBUG
+  std::string text_format;
+  google::protobuf::TextFormat::PrintToString(cmd, &text_format);
+  LOGV(DEBUG_LEVEL, context_->info_log(), "DoAppendEntry with %llu "
+       "entries, message :\n%s",
+       entries.size(), text_format.c_str());
+#endif
+
   // Append entries
   status = context_->AppendEntries(append_entries.term(),
                                    append_entries.prev_log_term(),

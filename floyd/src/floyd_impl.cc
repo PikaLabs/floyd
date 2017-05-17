@@ -17,10 +17,8 @@ namespace floyd {
 
 FloydImpl::FloydImpl(const Options& options)
   : options_(options),
-  db_(NULL) {
-  // TODO (anan) set timeout and retry
-  peer_client_pool_ = new ClientPool();
-  worker_client_pool_ = new ClientPool();
+    db_(NULL), 
+    info_log_(NULL) {
 }
 
 FloydImpl::~FloydImpl() {
@@ -44,11 +42,13 @@ bool FloydImpl::IsSelf(const std::string& ip_port) {
 }
 
 bool FloydImpl::GetLeader(std::string& ip_port) {
-  auto leader_node = context_->leader_node();
-  if (leader_node.first.empty() || leader_node.second == 0) {
+  std::string ip;
+  int port;
+  context_->leader_node(&ip, &port);
+  if (ip.empty() || port == 0) {
     return false;
   }
-  ip_port = slash::IpPortString(leader_node.first, leader_node.second);
+  ip_port = slash::IpPortString(ip, port);
   return true;
 }
 
@@ -59,6 +59,10 @@ Status FloydImpl::Start() {
     //LOG_ERROR("Open LOG file failed! path: %s", options_.log_path.c_str());
     return Status::Corruption("Open LOG failed, ", strerror(errno));
   }
+
+  // TODO (anan) set timeout and retry
+  peer_client_pool_ = new ClientPool(info_log_);
+  worker_client_pool_ = new ClientPool(info_log_);
 
   // Create DB
   rocksdb::Options options;

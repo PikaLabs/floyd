@@ -125,7 +125,7 @@ bool Log::GetLogFile(const std::string &file, LogFile** table) {
     files_[file] = tb;
 
     // limit cache size to cache_size
-    if (files_.size() > cache_size_) {
+    if (files_.size() > (size_t)cache_size_) {
       LogFile *smallest_LogFile = files_.begin()->second;
       delete smallest_LogFile;
       files_.erase(files_.begin());
@@ -452,7 +452,7 @@ void Manifest::Dump() {
           "         entry_end  :  %lu\n"
           "      current_term  :  %lu\n"
           "      voted_for_ip  :  %u\n"
-          "    voted_for_port  :  %u\n",
+          "    voted_for_port  :  %u\n"
           "       apply_index  :  %lu\n",
           meta_.file_num, meta_.entry_start, meta_.entry_end,
           meta_.current_term, meta_.voted_for_ip, meta_.voted_for_port,
@@ -466,7 +466,7 @@ std::string Manifest::ToString() {
           "         entry_end  :  %lu\n"
           "      current_term  :  %lu\n"
           "      voted_for_ip  :  %u\n"
-          "    voted_for_port  :  %u\n",
+          "    voted_for_port  :  %u\n"
           "       apply_index  :  %lu\n",
           meta_.file_num, meta_.entry_start, meta_.entry_end,
           meta_.current_term, meta_.voted_for_ip, meta_.voted_for_port,

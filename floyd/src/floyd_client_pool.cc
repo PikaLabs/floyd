@@ -1,7 +1,7 @@
 #include "floyd/src/floyd_client_pool.h"
 
 #include <unistd.h>
-//#include "floyd/src/logger.h"
+#include "floyd/src/logger.h"
 
 #include "slash/include/slash_string.h"
 
@@ -9,13 +9,14 @@ namespace floyd {
 
 static std::string CmdType(const CmdRequest& req);
 
-ClientPool::ClientPool(int timeout_ms, int retry)
-  : timeout_ms_(timeout_ms),
+ClientPool::ClientPool(Logger* info_log, int timeout_ms, int retry)
+  : info_log_(info_log),
+    timeout_ms_(timeout_ms),
     retry_(retry) {
 }
 
 Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req, CmdResponse* res) {
-  //LOG_DEBUG("Client::SendAndRecv %s cmd to %s", CmdType(req).c_str(), server.c_str());
+  //LOGV(DEBUG_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s", CmdType(req).c_str(), server.c_str());
   Status ret;
   char stage = 0;
   pink::PinkCli *cli = GetClient(server);
@@ -26,8 +27,8 @@ Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req,
     if ((stage & 0x01) == 0) {
       ret = UpHoldCli(cli);
       if (!ret.ok()) {
-        //LOG_DEBUG("Client::SendAndRecv %s cmd to %s, Connect Failed %s",
-        //          CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
+        LOGV(DEBUG_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s, Connect Failed %s",
+             CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
         cli->Close();
         usleep(5000);
         continue;
@@ -38,8 +39,8 @@ Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req,
     // Stage 1: Need Send
     if ((stage & 0x02) == 0) {
       ret = cli->Send((void*)&req);
-      //LOG_DEBUG("Client::SendAndRecv %s cmd to %s Send return %s", CmdType(req).c_str(), server.c_str(),
-      //          ret.ToString().c_str());
+      LOGV(DEBUG_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s Send return %s",
+           CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
       if (ret.ok()) {
         stage |= 0x02;
       } else if (!ret.IsTimeout()) {
@@ -50,8 +51,8 @@ Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req,
     // Stage 2: Need Recv
     if ((stage & 0x04) == 0) {
       ret = cli->Recv(res);
-      //LOG_WARN("Client::SendAndRecv %s cmd to %s, Recv return %s", CmdType(req).c_str(), server.c_str(),
-      //         ret.ToString().c_str());
+      LOGV(DEBUG_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s, Recv return %s",
+           CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
       if (ret.ok()) {
         break;
       } else if (!ret.IsTimeout()) {

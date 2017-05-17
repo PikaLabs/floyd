@@ -31,12 +31,24 @@ FloydContext::~FloydContext() {
 
 void FloydContext::RecoverInit() {
   assert(log_ != NULL);
-  slash::RWLock(&stat_rw_, true);
+  slash::RWLock l(&stat_rw_, true);
   current_term_ = log_->current_term();
   voted_for_ip_ = log_->voted_for_ip();
   voted_for_port_ = log_->voted_for_port();
   apply_index_ = log_->apply_index();
   role_ = Role::kFollower;
+}
+
+void FloydContext::leader_node(std::string* ip, int* port) {
+  slash::RWLock l(&stat_rw_, false);
+  *ip = leader_ip_;
+  *port = leader_port_;
+}
+
+void FloydContext::voted_for_node(std::string* ip, int* port) {
+  slash::RWLock l(&stat_rw_, false);
+  *ip = voted_for_ip_;
+  *port = voted_for_port_;
 }
 
 uint64_t FloydContext::GetElectLeaderTimeout() {
@@ -45,7 +57,7 @@ uint64_t FloydContext::GetElectLeaderTimeout() {
 
 void FloydContext::BecomeFollower(uint64_t new_term,
                                   const std::string leader_ip, int leader_port) {
-  slash::RWLock(&stat_rw_, true);
+  slash::RWLock l(&stat_rw_, true);
   LOGV(DEBUG_LEVEL, info_log_, "BecomeFollower: with current_term_(%lu) and new_term(%lu)"
        " commit_index(%lu)  apply_index(%lu)",
        current_term_, new_term, commit_index(), apply_index());
@@ -69,7 +81,7 @@ void FloydContext::BecomeFollower(uint64_t new_term,
 
 void FloydContext::BecomeCandidate() {
   assert(role_ == Role::kFollower || role_ == Role::kCandidate);
-  slash::RWLock(&stat_rw_, true);
+  slash::RWLock l(&stat_rw_, true);
   switch(role_) {
     case Role::kFollower:
       LOGV(INFO_LEVEL, info_log_, "Become Candidate since prev leader timeout, prev term: %lu, prev leader is (%s:%d)",
@@ -94,7 +106,7 @@ void FloydContext::BecomeCandidate() {
 }
 
 void FloydContext::BecomeLeader() {
-  slash::RWLock(&stat_rw_, true);
+  slash::RWLock l(&stat_rw_, true);
   if (role_ == Role::kLeader) {
     LOGV(INFO_LEVEL, info_log_, "FloydContext::BecomeLeader already Leader!!");
     return;
@@ -153,7 +165,7 @@ void FloydContext::MetaApply() {
 }
 
 bool FloydContext::VoteAndCheck(uint64_t vote_term) {
-  slash::RWLock(&stat_rw_, true);
+  slash::RWLock l(&stat_rw_, true);
   LOGV(DEBUG_LEVEL, info_log_, "FloydContext::VoteAndCheck: current_term=%lu vote_term=%lu vote_quorum_=%lu",
        current_term_, vote_term, vote_quorum_);
   if (current_term_ != vote_term) {

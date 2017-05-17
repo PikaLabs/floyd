@@ -25,7 +25,7 @@ FloydServer::FloydServer(int sdk_port, const Options& options)
   conn_factory_ = new FloydServerConnFactory(floyd_, this); 
   server_handler_ = new FloydServerHandler(this);
   server_thread_ = pink::NewHolyThread(sdk_port, conn_factory_, 3000, server_handler_);
-  LOG_INFO ("FloydServer will started on port:%d", sdk_port);
+  LOG_DEBUG ("FloydServer will started on port:%d", sdk_port);
   //pthread_rwlock_init(&state_protector_, NULL);
 }
 
@@ -38,7 +38,7 @@ FloydServer::~FloydServer() {
 slash::Status FloydServer::Start() {
   Status result = floyd_->Start();
   if (!result.ok()) {
-    LOG_INFO ("Floyd started failed, %s", result.ToString().c_str());
+    LOG_DEBUG ("Floyd started failed, %s", result.ToString().c_str());
     return result;
   }
 
@@ -46,7 +46,7 @@ slash::Status FloydServer::Start() {
   if (ret != 0) {
     return Status::Corruption("Start server server error");
   }
-  LOG_INFO ("Floyd started on port:%d", options_.local_port);
+  LOG_DEBUG ("Floyd started on port:%d", options_.local_port);
   server_mutex.Lock();
   server_mutex.Lock();
   return Status::OK();
@@ -67,7 +67,7 @@ int FloydServerConn::DealMessage() {
   }
   command_res_.Clear();
 
-  LOG_INFO ("deal message msg_code:%d\n", command_.type());
+  LOG_DEBUG ("deal message msg_code:%d\n", command_.type());
   server_->PlusQueryNum();
 
   set_is_reply(true);
@@ -87,7 +87,7 @@ int FloydServerConn::DealMessage() {
         LOG_ERROR("write failed %s", result.ToString().c_str());
       } else {
         response->set_status(0);
-        LOG_INFO ("write key(%s) ok!", request.key().c_str());
+        LOG_DEBUG ("write key(%s) ok!", request.key().c_str());
       }
       break;
     }
@@ -107,7 +107,7 @@ int FloydServerConn::DealMessage() {
       } else if (result.ok()) {
         response->set_status(0);
         response->set_value(value);
-        LOG_INFO ("read key(%s) ok!", request.key().c_str());
+        LOG_DEBUG ("read key(%s) ok!", request.key().c_str());
       }
 
       std::string text_format;
@@ -128,7 +128,7 @@ int FloydServerConn::DealMessage() {
         LOG_ERROR("Status failed");
       } else {
         response->set_msg(value);
-        LOG_INFO ("Status ok!\n%s", value.c_str());
+        LOG_DEBUG ("Status ok!\n%s", value.c_str());
       }
       break;
     }
@@ -146,7 +146,7 @@ int FloydServerConn::DealMessage() {
         LOG_ERROR("DirtyWrite failed %s", result.ToString().c_str());
       } else {
         response->set_status(0);
-        LOG_INFO ("DirtyWrite key(%s) ok!", request.key().c_str());
+        LOG_DEBUG ("DirtyWrite key(%s) ok!", request.key().c_str());
       }
 
       std::string text_format;
@@ -169,7 +169,7 @@ int FloydServerConn::DealMessage() {
       } else if (result.ok()) {
         response->set_status(0);
         response->set_value(value);
-        LOG_INFO ("DirtyRead key(%s) ok!", request.key().c_str());
+        LOG_DEBUG ("DirtyRead key(%s) ok!", request.key().c_str());
       }
 
       std::string text_format;
@@ -191,7 +191,7 @@ int FloydServerConn::DealMessage() {
         LOG_ERROR("Delete failed %s", result.ToString().c_str());
       } else {
         response->set_status(0);
-        LOG_INFO ("Delete key(%s) ok!", request.key().c_str());
+        LOG_DEBUG ("Delete key(%s) ok!", request.key().c_str());
       }
 
       std::string text_format;
@@ -200,7 +200,7 @@ int FloydServerConn::DealMessage() {
       break;
     }
     default:
-      LOG_INFO ("invalid msg_code %d\n", command_.type());
+      LOG_DEBUG ("invalid msg_code %d\n", command_.type());
       break;
   }
 

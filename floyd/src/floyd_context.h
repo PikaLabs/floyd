@@ -5,6 +5,7 @@
 
 #include "floyd/include/floyd_options.h"
 #include "floyd/src/file_log.h"
+//#include "floyd/src/logger.h"
 
 #include "slash/include/slash_status.h"
 #include "slash/include/slash_mutex.h"
@@ -36,15 +37,8 @@ class FloydContext {
   }
 
   /* Role related */
-  std::pair<std::string, int> leader_node() {
-    slash::RWLock l(&stat_rw_, false);
-    return {leader_ip_, leader_port_};
-  }
-
-  std::pair<std::string, int> voted_for_node() {
-    slash::RWLock l(&stat_rw_, false);
-    return {voted_for_ip_, voted_for_port_};
-  }
+  void leader_node(std::string* ip, int* port);
+  void voted_for_node(std::string* ip, int* port);
 
   uint64_t current_term() {
     slash::RWLock l(&stat_rw_, false);

@@ -55,8 +55,8 @@ class FloydPrimary {
   PeersSet* peers_;
   FloydApply* apply_;
 
-  std::atomic<uint64_t> reset_leader_heartbeat_time_;
   std::atomic<uint64_t> reset_elect_leader_time_;
+  std::atomic<uint64_t> reset_leader_heartbeat_time_;
   pink::BGThread bg_thread_;
 
   // Cron task
