@@ -34,12 +34,21 @@ int NewLogger(const std::string& fname, Logger** result);
 #define LOGV(level, info_log, message, args...) \
   Logv(level, info_log, LOG_FMT message, _FILE, __LINE__, ##args)
 
-#define DEBUG_LEVEL   0x01
-#define INFO_LEVEL    0x02
-#define WARN_LEVEL    0x03
-#define ERROR_LEVEL   0x04
-#define FATAL_LEVEL   0x05
-#define NONE_LEVEL    0x06
+//enum {
+//  DEBUG_LEVEL = 0x01,
+//  INFO_LEVEL  = 0x02,
+//  WARN_LEVEL  = 0x03,
+//  ERROR_LEVEL = 0x04,
+//  FATAL_LEVEL = 0x05,
+//  NONE_LEVEL  = 0x06
+//};
+
+//#define DEBUG_LEVEL   0x01
+//#define INFO_LEVEL    0x02
+//#define WARN_LEVEL    0x03
+//#define ERROR_LEVEL   0x04
+//#define FATAL_LEVEL   0x05
+//#define NONE_LEVEL    0x06
 
 void Logv(const int log_level, Logger* info_log,
          const char* format, ...);

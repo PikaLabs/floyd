@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 #include "floyd/src/logger.h"
+#include "floyd/include/floyd_options.h"
 
 #include "slash/include/slash_string.h"
 

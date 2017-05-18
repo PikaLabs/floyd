@@ -88,10 +88,10 @@ slash::Status Cluster::Write(const std::string& key, const std::string& value) {
   }
 
   //LOG_INFO("Write OK, status is %d, msg is %s\n", response.write().status(), response.write().msg().c_str());
-  if (response.write().status() == 0) {
+  if (response.code() == StatusCode::kOk) {
     return Status::OK();
   } else {
-    return Status::IOError("Write failed with status " + std::to_string(response.write().status()));
+    return Status::IOError("Write failed with status " + response.msg());
   }
 }
 
@@ -126,11 +126,13 @@ slash::Status Cluster::Read(const std::string& key, std::string* value) {
 //  LOG_DEBUG("Read Recv message :\n%s", text_format.c_str());
 
 //  LOG_INFO("Read OK, status is %d, value is %s\n", response.read().status(), response.read().value().c_str());
-  if (response.read().status() == 0) {
+  if (response.code() == StatusCode::kOk) {
     *value = response.read().value();
     return Status::OK();
+  } else if (response.code() == StatusCode::kNotFound) {
+    return Status::IOError("Read not found ");
   } else {
-    return Status::IOError("Read failed with status " + std::to_string(response.read().status()));
+    return Status::IOError("Read failed with status " + response.msg());
   }
 }
 
@@ -167,11 +169,13 @@ slash::Status Cluster::DirtyRead(const std::string& key, std::string* value) {
   *value = response.read().value();
 
 //  LOG_INFO("DirtyRead OK, status is %d, value is %s\n", response.read().status(), response.read().value().c_str());
-  if (response.read().status() == 0) {
+  if (response.code() == StatusCode::kOk) {
     *value = response.read().value();
     return Status::OK();
+  } else if (response.code() == StatusCode::kNotFound) {
+    return Status::IOError("DirtyRead not found ");
   } else {
-    return Status::IOError("DirtyRead failed with status " + std::to_string(response.read().status()));
+    return Status::IOError("DirtyRead failed with status " + response.msg());
   }
 }
 
@@ -236,10 +240,10 @@ slash::Status Cluster::DirtyWrite(const std::string& key, const std::string& val
 //  LOG_DEBUG("DirtyWrite Recv message :\n%s", text_format.c_str());
 
 //  LOG_INFO("DirtyWrite OK, status is %d, msg is %s\n", response.write().status(), response.write().msg().c_str());
-  if (response.write().status() == 0) {
+  if (response.code() == StatusCode::kOk) {
     return Status::OK();
   } else {
-    return Status::IOError("DirtyWrite failed with status " + std::to_string(response.write().status()));
+    return Status::IOError("DirtyWrite failed with status " + response.msg());
   }
 }
 
@@ -273,13 +277,41 @@ slash::Status Cluster::Delete(const std::string& key) {
 //  LOG_DEBUG("Delete Recv message :\n%s", text_format.c_str());
 
 //  LOG_INFO("Delete OK, status is %d, msg is %s\n", response.del().status(), response.del().msg().c_str());
-  if (response.del().status() == 0) {
+  if (response.code() == StatusCode::kOk) {
     return Status::OK();
   } else {
-    return Status::IOError("Delete failed with status " + std::to_string(response.write().status()));
+    return Status::IOError("Del failed with status " + response.msg());
   }
 }
 
+slash::Status Cluster::set_log_level(const int log_level) {
+  Request request;
+  request.set_type(Type::LOGLEVEL);
+  request.set_log_level(log_level);
+
+  if (!pb_cli_->Available()) {
+    if (!Init()) {
+      return Status::IOError("init failed");
+    }
+  }
+  Status result = pb_cli_->Send(&request);
+  if (!result.ok()) {
+    LOG_ERROR("Send error: %s", result.ToString().c_str());
+    return Status::IOError("Send failed, " + result.ToString());
+  }
+
+  Response response;
+  result = pb_cli_->Recv(&response);
+  if (!result.ok()) {
+    LOG_ERROR("Recv error: %s", result.ToString().c_str());
+    return Status::IOError("Recv failed, " + result.ToString());
+  }
+
+//  std::string text_format;
+//  google::protobuf::TextFormat::PrintToString(response, &text_format);
+//  LOG_DEBUG("LOGLEVEL Recv message :\n%s", text_format.c_str());
+  return Status::OK();
+}
 
 } // namespace client
 } // namspace floyd

@@ -9,7 +9,7 @@
 #include <google/protobuf/text_format.h>
 
 #include "floyd/src/logger.h"
-//#include "slash/include/slash_mutex.h"
+#include "floyd/include/floyd_options.h"
 
 namespace floyd {
 

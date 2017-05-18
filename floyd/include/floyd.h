@@ -34,6 +34,9 @@ class Floyd {
   virtual bool GetLeader(std::string& ip_port) = 0;
   virtual bool GetServerStatus(std::string& msg) = 0;
   
+  // log level can be modified
+  virtual void set_log_level(const int log_level) = 0;
+
  private:
   // No coping allowed
   Floyd(const Floyd&);

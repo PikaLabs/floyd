@@ -78,15 +78,14 @@ int FloydServerConn::DealMessage() {
       client::Request_Write request = command_.write();
 
       command_res_.set_type(client::Type::WRITE);
-      client::Response_Write* response = command_res_.mutable_write();
 
       Status result = floyd_->Write(request.key(), request.value());
       if (!result.ok()) {
-        response->set_status(1);
-        response->set_msg(result.ToString());
+        command_res_.set_code(client::StatusCode::kError);
+        command_res_.set_msg(result.ToString());
         LOG_ERROR("write failed %s", result.ToString().c_str());
       } else {
-        response->set_status(0);
+        command_res_.set_code(client::StatusCode::kOk);
         LOG_DEBUG ("write key(%s) ok!", request.key().c_str());
       }
       break;
@@ -101,18 +100,22 @@ int FloydServerConn::DealMessage() {
 
       std::string value;
       Status result = floyd_->Read(request.key(), value);
-      if (!result.ok()) {
-        response->set_status(1);
-        LOG_ERROR("read failed %s", result.ToString().c_str());
-      } else if (result.ok()) {
-        response->set_status(0);
+      if (result.ok()) {
+        command_res_.set_code(client::StatusCode::kOk);
         response->set_value(value);
         LOG_DEBUG ("read key(%s) ok!", request.key().c_str());
+      } else if (result.IsNotFound()) {
+        command_res_.set_code(client::StatusCode::kNotFound);
+        LOG_ERROR("read key(%s) not found %s", request.key().c_str(), result.ToString().c_str());
+      } else {
+        command_res_.set_code(client::StatusCode::kError);
+        LOG_ERROR("read key(%s) failed %s", request.key().c_str(), result.ToString().c_str());
       }
-
+#ifndef NDEBUG
       std::string text_format;
       google::protobuf::TextFormat::PrintToString(command_res_, &text_format);
       LOG_DEBUG("Read res message :\n%s", text_format.c_str());
+#endif
       break;
     }
 
@@ -124,9 +127,11 @@ int FloydServerConn::DealMessage() {
       std::string value;
       bool ret = floyd_->GetServerStatus(value);
       if (!ret) {
+        command_res_.set_code(client::StatusCode::kError);
         response->set_msg("failed to dump status");
         LOG_ERROR("Status failed");
       } else {
+        command_res_.set_code(client::StatusCode::kOk);
         response->set_msg(value);
         LOG_DEBUG ("Status ok!\n%s", value.c_str());
       }
@@ -137,15 +142,13 @@ int FloydServerConn::DealMessage() {
       client::Request_Write request = command_.write();
 
       command_res_.set_type(client::Type::DIRTYWRITE);
-      client::Response_Write* response = command_res_.mutable_write();
-
       Status result = floyd_->DirtyWrite(request.key(), request.value());
       if (!result.ok()) {
-        response->set_status(1);
-        response->set_msg(result.ToString());
+        command_res_.set_code(client::StatusCode::kError);
+        command_res_.set_msg(result.ToString());
         LOG_ERROR("DirtyWrite failed %s", result.ToString().c_str());
       } else {
-        response->set_status(0);
+        command_res_.set_code(client::StatusCode::kOk);
         LOG_DEBUG ("DirtyWrite key(%s) ok!", request.key().c_str());
       }
 
@@ -163,13 +166,16 @@ int FloydServerConn::DealMessage() {
 
       std::string value;
       Status result = floyd_->DirtyRead(request.key(), value);
-      if (!result.ok()) {
-        response->set_status(1);
-        LOG_ERROR("DirtyRead failed %s", result.ToString().c_str());
-      } else if (result.ok()) {
-        response->set_status(0);
+      if (result.ok()) {
+        command_res_.set_code(client::StatusCode::kOk);
         response->set_value(value);
         LOG_DEBUG ("DirtyRead key(%s) ok!", request.key().c_str());
+      } else if (result.IsNotFound()) {
+        command_res_.set_code(client::StatusCode::kNotFound);
+        LOG_ERROR("DirtyRead key(%s) not found %s", request.key().c_str(), result.ToString().c_str());
+      } else {
+        command_res_.set_code(client::StatusCode::kError);
+        LOG_ERROR("DirtyRead key(%s) failed %s", request.key().c_str(), result.ToString().c_str());
       }
 
       std::string text_format;
@@ -182,21 +188,27 @@ int FloydServerConn::DealMessage() {
       client::Request_Delete request = command_.del();
 
       command_res_.set_type(client::Type::DELETE);
-      client::Response_Delete* response = command_res_.mutable_del();
-
       Status result = floyd_->Delete(request.key());
       if (!result.ok()) {
-        response->set_status(1);
-        response->set_msg(result.ToString());
+        command_res_.set_code(client::StatusCode::kError);
+        command_res_.set_msg(result.ToString());
         LOG_ERROR("Delete failed %s", result.ToString().c_str());
       } else {
-        response->set_status(0);
+        command_res_.set_code(client::StatusCode::kOk);
         LOG_DEBUG ("Delete key(%s) ok!", request.key().c_str());
       }
 
       std::string text_format;
       google::protobuf::TextFormat::PrintToString(command_res_, &text_format);
       LOG_DEBUG("Delete res message :\n%s", text_format.c_str());
+      break;
+    }
+    case client::Type::LOGLEVEL: {
+      int log_level = command_.log_level();
+      LOG_DEBUG("ServerConn::DealMessage LogLevel %d", log_level);
+      command_res_.set_type(client::Type::LOGLEVEL);
+      floyd_->set_log_level(log_level);
+      command_res_.set_code(client::StatusCode::kOk);
       break;
     }
     default:

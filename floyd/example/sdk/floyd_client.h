@@ -17,10 +17,6 @@ class Cluster;
 
 using slash::Status;
 
-enum ClientError {
-  kOk = 0,
-};
-
 class Server {
  public:
   std::string ip;
@@ -52,6 +48,16 @@ struct Option {
   Option(const Option& option);
 };
 
+// Logger Level
+enum LogLevel {
+  DEBUG_LEVEL = 0x01,
+  INFO_LEVEL  = 0x02,
+  WARN_LEVEL  = 0x03,
+  ERROR_LEVEL = 0x04,
+  FATAL_LEVEL = 0x05,
+  NONE_LEVEL  = 0x06
+};
+
 class Cluster {
  public:
   Cluster(const Option& option);
@@ -62,6 +68,7 @@ class Cluster {
   Status DirtyRead(const std::string& key, std::string* value);
   Status GetStatus(std::string *msg);
   Status Delete(const std::string& key);
+  Status set_log_level(const int log_level);
 
  private:
   bool Init();

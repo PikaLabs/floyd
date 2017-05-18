@@ -22,7 +22,7 @@ FloydWorkerConn::~FloydWorkerConn() {}
 
 int FloydWorkerConn::DealMessage() {
   if (!request_.ParseFromArray(rbuf_ + 4, header_len_)) {
-    LOGV(DEBUG_LEVEL, floyd_->info_log_, "DealMessage ParseFromArray failed");
+    LOGV(WARN_LEVEL, floyd_->info_log_, "DealMessage ParseFromArray failed");
     return -1;
   }
   response_.Clear();

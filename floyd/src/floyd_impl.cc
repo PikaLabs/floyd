@@ -125,11 +125,18 @@ Status FloydImpl::Start() {
   return Status::OK();
 }
 
+void FloydImpl::set_log_level(const int log_level) {
+  if (info_log_) {
+    info_log_->set_log_level(log_level);
+  }
+}
+
 Status Floyd::Open(const Options& options, Floyd** floyd) {
   *floyd = new FloydImpl(options);
   return Status::OK();
 }
 
 Floyd::~Floyd() { }
+
 
 } // namespace floyd

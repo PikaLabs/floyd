@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
   if (argc < 2) {
     fprintf (stderr, "Usage:\n"
             "  ./client --server ip:port\n"
-            "           --cmd [read | write | delete | status]\n"
+            "           --cmd [read | write | delete | status | debug_on | debug_off]\n"
             "           --begin id0 --end id1\n");
     exit(-1);
   }
@@ -127,6 +127,23 @@ int main(int argc, char* argv[]) {
         fprintf (stderr, "Delete key(%s) ok\n", key.c_str());
       } else {
         fprintf (stderr, "Delete key(%s) failed, %s\n", key.c_str(), result.ToString().c_str());
+      }
+    }
+
+    if (cmd == "debug_on") {
+      result = cluster.set_log_level(floyd::client::DEBUG_LEVEL);
+      if (result.ok()) {
+        fprintf (stderr, "set log_level to debug ok\n");
+      } else {
+        fprintf (stderr, "set log_level to debug failed, %s\n", result.ToString().c_str());
+      }
+    }
+    if (cmd == "debug_off") {
+      result = cluster.set_log_level(floyd::client::INFO_LEVEL);
+      if (result.ok()) {
+        fprintf (stderr, "set log_level to info ok\n");
+      } else {
+        fprintf (stderr, "set log_level to info failed, %s\n", result.ToString().c_str());
       }
     }
   }

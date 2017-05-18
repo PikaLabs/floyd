@@ -52,6 +52,8 @@ class FloydImpl : public Floyd {
   virtual bool GetLeader(std::string& ip_port);
   virtual bool GetServerStatus(std::string& msg);
   
+  // log level can be modified
+  virtual void set_log_level(const int log_level);
 
  private:
   //friend class Floyd;

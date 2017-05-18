@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <assert.h>
+#include "floyd/include/floyd_options.h"
 
 #include "slash/include/env.h"
 

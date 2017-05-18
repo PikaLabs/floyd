@@ -7,6 +7,7 @@ enum Type {
   STATUS = 4;
   DIRTYWRITE = 5;
   DIRTYREAD = 6;
+  LOGLEVEL = 7;
 }
 
 // Write 
@@ -29,31 +30,28 @@ message Request {
     required bytes key = 1;
   }
   optional Delete del = 4;
+
+  optional int32 log_level = 5;
+}
+
+enum StatusCode {
+  kOk = 0;
+  kNotFound = 1;
+  kError = 2;
 }
 
 message Response {
   required Type type = 1;
-
-  message Write {
-    required int32 status = 1;
-    optional bytes msg = 2;
-  }
-  optional Write write = 2;
+  optional StatusCode code = 2;
+  optional bytes msg = 3;
 
   message Read {
-    required int32 status = 1;
-    optional bytes value = 2;
+    optional bytes value = 1;
   }
-  optional Read read = 3;
+  optional Read read = 4;
 
   message ServerStatus {
     required bytes msg = 1;
   }
-  optional ServerStatus server_status = 4;
-
-  message Delete {
-    required int32 status = 1;
-    optional bytes msg = 2;
-  }
-  optional Delete del = 5;
+  optional ServerStatus server_status = 5;
 }
