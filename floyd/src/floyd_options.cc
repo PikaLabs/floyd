@@ -47,7 +47,7 @@ std::string Options::ToString() {
   char str[1024];
   int len = 0;
   for (size_t i = 0; i < members.size(); i++) {
-    len = sprintf (str, "               member %lu : %s\n", i, members[i].c_str());
+    len += sprintf (str + len, "                 member %lu : %s\n", i, members[i].c_str());
   }
   sprintf (str + len, "                 local_ip : %s\n"
           "               local_port : %d\n"
