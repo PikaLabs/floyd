@@ -6,6 +6,16 @@
 
 namespace floyd {
 
+// Logger Level
+enum {
+  DEBUG_LEVEL = 0x01,
+  INFO_LEVEL  = 0x02,
+  WARN_LEVEL  = 0x03,
+  ERROR_LEVEL = 0x04,
+  FATAL_LEVEL = 0x05,
+  NONE_LEVEL  = 0x06
+};
+
 struct Options {
   // cluster members
   // parsed from comma separated ip1:port1,ip2:port2...
