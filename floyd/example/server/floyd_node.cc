@@ -21,6 +21,22 @@ const struct option long_options[] = {
 
 const char* short_options = "s:i:p:d:l:";
 
+floyd::FloydServer *fs;
+
+void IntSigHandle(int sig) {
+  printf ("Catch Signal %d, cleanup...\n", sig);
+  fs->server_mutex.Unlock();
+}
+
+void SignalSetup() {
+  signal(SIGPIPE, SIG_IGN);
+  if (signal(SIGINT, &IntSigHandle) == SIG_ERR) {
+    printf ("Catch SignalInt error\n");
+  }
+  signal(SIGQUIT, &IntSigHandle);
+  signal(SIGTERM, &IntSigHandle);
+}
+
 int main(int argc, char** argv) {
   if (argc < 12) {
     printf ("Usage:\n"
@@ -62,18 +78,18 @@ int main(int argc, char** argv) {
 
   options.Dump();
 
-  signal(SIGPIPE, SIG_IGN);
+  SignalSetup();
 
-  floyd::FloydServer *fs = new floyd::FloydServer(server_port, options);
+  fs = new floyd::FloydServer(server_port, options);
   slash::Status s = fs->Start();
-  
   if (!s.ok()) {
     printf("Start Floyd Server error\n");
     return -1;
   }
 
-  printf ("OK\n");
+  printf ("Will Stop FloydServer...\n");
+  delete fs;
 
-  sleep(1000);
+  sleep(1);
   return 0;
 }

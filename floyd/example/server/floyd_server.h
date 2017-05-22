@@ -86,11 +86,12 @@ class FloydServer {
     last_time_us_ = cur_time_us;
   }
 
+  slash::Mutex server_mutex;
+
  private:
   Options options_;
 
   Floyd* floyd_;
-  slash::Mutex server_mutex;
 
   FloydServerHandler* server_handler_;
   FloydServerConnFactory* conn_factory_;

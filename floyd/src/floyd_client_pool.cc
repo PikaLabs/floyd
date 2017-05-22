@@ -70,6 +70,7 @@ ClientPool::~ClientPool() {
   for (auto& iter : cli_map_) {
     delete iter.second;
   }
+  LOGV(DEBUG_LEVEL, info_log_, "ClientPool dtor");
 }
 
 pink::PinkCli* ClientPool::GetClient(const std::string& server) {

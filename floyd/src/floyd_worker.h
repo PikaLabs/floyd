@@ -53,7 +53,7 @@ class FloydWorker {
   FloydWorker(int port, int cron_interval, FloydImpl* floyd);
 
   ~FloydWorker() {
-    thread_->JoinThread();
+    thread_->StopThread();
     delete thread_;
   }
 

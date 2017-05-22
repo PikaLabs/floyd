@@ -32,6 +32,7 @@ FloydContext::FloydContext(const floyd::Options& opt,
 
 FloydContext::~FloydContext() {
   pthread_rwlock_destroy(&stat_rw_);
+  LOGV(DEBUG_LEVEL, info_log_, "FloydConext dtor");
 }
 
 void FloydContext::RecoverInit() {

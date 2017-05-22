@@ -30,8 +30,10 @@ FloydServer::FloydServer(int sdk_port, const Options& options)
 }
 
 FloydServer::~FloydServer() {
+  server_thread_->StopThread();
   delete server_thread_;
   delete conn_factory_;
+  delete server_handler_;
   delete floyd_;
 }
 
@@ -49,6 +51,7 @@ slash::Status FloydServer::Start() {
   LOG_DEBUG ("Floyd started on port:%d", options_.local_port);
   server_mutex.Lock();
   server_mutex.Lock();
+  server_mutex.Unlock();
   return Status::OK();
 }
 

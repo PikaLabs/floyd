@@ -22,17 +22,19 @@ FloydImpl::FloydImpl(const Options& options)
 }
 
 FloydImpl::~FloydImpl() {
+  // worker will use floyd, delete worker first
+  delete worker_;
   delete primary_;
   delete apply_;
   for (auto& pt : peers_) {
     delete pt.second;
   }
-  delete worker_;
-  delete db_;
-  delete log_;
-  delete context_;
+
   delete peer_client_pool_;
   delete worker_client_pool_;
+  delete context_;
+  delete db_;
+  delete log_;
   delete info_log_;
 }
 
