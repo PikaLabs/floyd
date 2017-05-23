@@ -12,6 +12,7 @@ namespace floyd {
 
 using slash::Status;
 
+class Client;
 class Logger;
 
 class ClientPool {
@@ -23,19 +24,28 @@ class ClientPool {
   Status SendAndRecv(const std::string& server, const CmdRequest& req,
       CmdResponse* res);
 
-  Status UpHoldCli(pink::PinkCli *cli);
+  Status UpHoldCli(Client* client);
 
  private:
   Logger* info_log_;
   int timeout_ms_;
   int retry_;
   slash::Mutex mu_;
-  std::map<std::string, pink::PinkCli*> cli_map_;
+  std::map<std::string, Client*> client_map_;
 
-  pink::PinkCli* GetClient(const std::string& server);
+  Client* GetClient(const std::string& server);
 
   ClientPool(const ClientPool&);
   bool operator=(const ClientPool&);
+};
+
+struct Client {
+  pink::PinkCli* cli;
+  slash::Mutex mu;
+
+  Client(const std::string& ip, int port) {
+    cli = pink::NewPbCli(ip, port);
+  }
 };
 
 } // namespace floyd

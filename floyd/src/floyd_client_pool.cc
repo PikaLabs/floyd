@@ -20,13 +20,15 @@ Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req,
   //LOGV(DEBUG_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s", CmdType(req).c_str(), server.c_str());
   Status ret;
   char stage = 0;
-  pink::PinkCli *cli = GetClient(server);
-  // TODO(anan) PinkCli need SendAndRecv ? 
+  Client *client = GetClient(server);
+  pink::PinkCli* cli = client->cli;
 
+  slash::MutexLock l(&client->mu);
+  // TODO(anan) concurrent by epoll
   for (int i = 0; i < retry_; i++) {
     // Stage 0: Need Connect
     if ((stage & 0x01) == 0) {
-      ret = UpHoldCli(cli);
+      ret = UpHoldCli(client);
       if (!ret.ok()) {
         LOGV(DEBUG_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s, Connect Failed %s",
              CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
@@ -67,33 +69,34 @@ Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req,
 
 ClientPool::~ClientPool() {
   slash::MutexLock l(&mu_);
-  for (auto& iter : cli_map_) {
+  for (auto& iter : client_map_) {
     delete iter.second;
   }
   LOGV(DEBUG_LEVEL, info_log_, "ClientPool dtor");
 }
 
-pink::PinkCli* ClientPool::GetClient(const std::string& server) {
+Client* ClientPool::GetClient(const std::string& server) {
   slash::MutexLock l(&mu_);
-  auto iter = cli_map_.find(server);
-  if (iter == cli_map_.end()) {
+  auto iter = client_map_.find(server);
+  if (iter == client_map_.end()) {
     std::string ip;
     int port;
     slash::ParseIpPortString(server, ip, port);
-    pink::PinkCli* cli = pink::NewPbCli(ip, port);
-    cli_map_[server] = cli;
-    return cli;
+    Client* client = new Client(ip, port);
+    client_map_[server] = client;
+    return client;
   } else {
     return iter->second;
   }
 }
 
-Status ClientPool::UpHoldCli(pink::PinkCli *cli) {
-  if (cli == NULL) {
+Status ClientPool::UpHoldCli(Client *client) {
+  if (client == NULL || client->cli == NULL) {
     return Status::Corruption("null PinkCli");
   }
 
   Status ret;
+  pink::PinkCli* cli = client->cli;
   if (!cli->Available()) {
     ret = cli->Connect();
     if (ret.ok()) {
