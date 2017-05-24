@@ -1,8 +1,6 @@
 #ifndef FLOYD_IMPL_H_
 #define FLOYD_IMPL_H_
 
-#include <string>
-
 #include "floyd/include/floyd.h"
 #include "floyd/include/floyd_options.h"
 
@@ -50,6 +48,8 @@ class FloydImpl : public Floyd {
 
   // return true if leader has been elected
   virtual bool GetLeader(std::string& ip_port);
+  virtual bool GetLeader(std::string* ip, int* port);
+  virtual bool GetAllNodes(std::vector<std::string>& nodes);
   virtual bool GetServerStatus(std::string& msg);
   
   // log level can be modified

@@ -2,6 +2,7 @@
 #define FLOYD_H_
 
 #include <string>
+#include <vector>
 
 #include "floyd/include/floyd_options.h"
 #include "slash/include/slash_status.h"
@@ -32,6 +33,8 @@ class Floyd {
 
   // return true if leader has been elected
   virtual bool GetLeader(std::string& ip_port) = 0;
+  virtual bool GetLeader(std::string* ip, int* port) = 0;
+  virtual bool GetAllNodes(std::vector<std::string>& nodes) = 0;
   virtual bool GetServerStatus(std::string& msg) = 0;
   
   // log level can be modified

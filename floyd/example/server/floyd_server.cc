@@ -43,6 +43,18 @@ slash::Status FloydServer::Start() {
     LOG_DEBUG ("Floyd started failed, %s", result.ToString().c_str());
     return result;
   }
+  
+  // TEST
+  std::vector<std::string> nodes;
+  floyd_->GetAllNodes(nodes);
+  for (auto& it : nodes) {
+    LOG_DEBUG ("nodes: %s", it.c_str());
+  }
+
+  std::string ip;
+  int port;
+  floyd_->GetLeader(&ip, &port);
+  LOG_DEBUG ("Leader: %s %d", ip.c_str(), port);
 
   int ret = server_thread_->StartThread();
   if (ret != 0) {

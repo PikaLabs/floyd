@@ -54,6 +54,16 @@ bool FloydImpl::GetLeader(std::string& ip_port) {
   return true;
 }
 
+bool FloydImpl::GetLeader(std::string* ip, int* port) {
+  context_->leader_node(ip, port);
+  return (!ip->empty() && *port != 0);
+}
+
+bool FloydImpl::GetAllNodes(std::vector<std::string>& nodes) {
+  nodes = options_.members;
+  return true;
+}
+
 Status FloydImpl::Start() {
   slash::CreatePath(options_.log_path);
   slash::CreatePath(options_.data_path);
