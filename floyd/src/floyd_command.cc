@@ -12,7 +12,7 @@
 
 #include "floyd/src/floyd.pb.h"
 
-#include "nemo-rocksdb/db_nemo_impl.h"
+#include "db_nemo_impl.h"
 #include "slash/include/slash_string.h"
 #include "pink/include/bg_thread.h"
 

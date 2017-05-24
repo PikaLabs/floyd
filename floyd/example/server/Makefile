@@ -14,8 +14,7 @@ THIRD_PATH = ../../third
 OUTPUT = ./output
 
 LIB_PATH = -L../../lib/ \
-		   -L$(THIRD_PATH)/nemo-rocksdb/lib/ \
-		   -L$(THIRD_PATH)/nemo-rocksdb/rocksdb/ \
+		   -L$(THIRD_PATH)/nemo-rocksdb/output/lib/ \
 			 -L$(THIRD_PATH)/slash/slash/lib/ \
 			 -L$(THIRD_PATH)/pink/pink/lib/
 

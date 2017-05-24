@@ -25,15 +25,14 @@ LIB_OUTPUT = ./lib
 INCLUDE_PATH = -I../ \
 							 -I$(SLASH_PATH)/ \
 							 -I$(PINK_PATH)/ \
-							 -I$(NEMODB_PATH)/include/ \
+							 -I$(NEMODB_PATH)/output/include/ \
 							 -I$(NEMODB_PATH)/rocksdb/ \
 							 -I$(NEMODB_PATH)/rocksdb/include
 
 LIB_PATH = -L./ \
 		   -L$(SLASH_PATH)/slash/lib/ \
 		   -L$(PINK_PATH)/pink/lib/  \
-		   -L$(NEMODB_PATH)/lib/ \
-		   -L$(NEMODB_PATH)/rocksdb/ 
+		   -L$(NEMODB_PATH)/output/lib/
 
 LIBS = -lpthread \
 	   -lprotobuf \
@@ -52,7 +51,7 @@ OBJS = $(patsubst %.cc,%.o,$(BASE_OBJS))
 
 LIBSLASH = $(SLASH_PATH)/slash/lib/libslash.a
 LIBPINK = $(PINK_PATH)/pink/lib/libpink.a
-LIBNEMODB= $(NEMODB_PATH)/nemo-rocksdb/lib/libnemodb.a
+LIBNEMODB= $(NEMODB_PATH)/nemo-rocksdb/output/lib/libnemodb.a
 
 all: $(LIBRARY)
 	@echo "Success, go, go, go..."

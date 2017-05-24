@@ -5,7 +5,8 @@
 
 #include "slash/include/slash_status.h"
 #include "pink/include/bg_thread.h"
-#include "nemo-rocksdb/db_nemo_impl.h"
+
+#include "db_nemo_impl.h"
 
 
 namespace floyd {
