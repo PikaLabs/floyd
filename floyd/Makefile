@@ -92,7 +92,7 @@ clean:
 	rm -rf $(LIB_OUTPUT)/*
 
 distclean: clean
-	make clean -C $(PINK_PATH)/pink distclean
+	make clean -C $(PINK_PATH)/pink 
 	make clean -C $(SLASH_PATH)/slash
-	make clean -C $(NEMODB_PATH)/ distclean
+	make clean -C $(NEMODB_PATH)/
 
