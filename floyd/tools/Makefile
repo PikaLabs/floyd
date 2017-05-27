@@ -11,14 +11,22 @@ OBJECT = log_parser
 SRC_DIR = ./
 THIRD_PATH = ../third
 
+ifndef SLASH_PATH
+SLASH_PATH = $(realpath $(THIRD_PATH)/slash)
+endif
+
+ifndef PINK_PATH
+PINK_PATH = $(realpath $(THIRD_PATH)/pink)
+endif
+
 
 INCLUDE_PATH = -I./ \
-							 -I$(THIRD_PATH)/slash/ \
-							 -I$(THIRD_PATH)/pink/
+							 -I$(SLASH_PATH) \
+							 -I$(PINK_PATH)
 
 LIB_PATH = -L./ \
-			 -L$(THIRD_PATH)/slash/slash/lib/ \
-			 -L$(THIRD_PATH)/pink/pink/lib/
+			 -L$(SLASH_PATH)/slash/lib/ \
+			 -L$(PINK_PATH)/pink/lib/
 
 LIBS = -lpthread \
 	   -lprotobuf \
@@ -32,18 +40,18 @@ BASE_OBJS += $(wildcard $(SRC_DIR)/*.c)
 BASE_OBJS += $(wildcard $(SRC_DIR)/*.cpp)
 OBJS = $(patsubst %.cc,%.o,$(BASE_OBJS))
 
-LIBSLASH = $(THIRD_PATH)/slash/slash/lib/libslash.a
-LIBPINK = $(THIRD_PATH)/pink/pink/lib/libpink.a
+LIBSLASH = $(SLASH_PATH)/slash/lib/libslash.a
+LIBPINK = $(PINK_PATH)/pink/lib/libpink.a
 
 all: $(OBJECT)
 	@echo " OBJS : $(OBJS)"
 	@echo "Success, go, go, go..."
 
 $(LIBSLASH):
-	make -C $(THIRD_PATH)/slash/
+	make -C $(SLASH_PATH)/slash/
 
 $(LIBPINK):
-	make -C $(THIRD_PATH)/pink/
+	make -C $(PINK_PATH)/pink/
 
 $(OBJECT): $(LIBSLASH) $(LIBPINK) $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LFLAGS) -Wl,-Bdynamic $(LIBS)
