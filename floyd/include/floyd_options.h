@@ -29,6 +29,7 @@ struct Options {
   uint64_t heartbeat_us;
   uint64_t append_entries_size_once;
   uint64_t append_entries_count_once;
+  bool single_mode;
 
   void SetMembers(const std::string& cluster_string);
 

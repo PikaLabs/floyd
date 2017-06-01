@@ -352,7 +352,11 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
   }
 
   // Notify primary then wait for apply
-  primary_->AddTask(kNewCommand);
+  if (options_.single_mode) {
+    primary_->AddTask(kAdvanceCommitIndex);
+  } else {
+    primary_->AddTask(kNewCommand);
+  }
 
   response->set_type(cmd.type());
   response->set_code(StatusCode::kError);

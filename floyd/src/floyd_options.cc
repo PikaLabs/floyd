@@ -19,6 +19,9 @@ void split(const std::string &str, char delim,
 
 void Options::SetMembers(const std::string& cluster_string) {
   split(cluster_string, ',', members);
+  if (members.size() == 1) {
+    single_mode = true;
+  }
 }
 
 void Options::Dump() {
@@ -32,7 +35,8 @@ void Options::Dump() {
           "         elect_timeout_ms : %ld\n"
           "             heartbeat_us : %ld\n"
           " append_entries_size_once : %ld\n"
-          "append_entries_count_once : %lu\n",
+          "append_entries_count_once : %lu\n"
+          "              single_mode : %s\n",
             local_ip.c_str(),
             local_port,
             data_path.c_str(),
@@ -40,7 +44,8 @@ void Options::Dump() {
             elect_timeout_ms,
             heartbeat_us,
             append_entries_size_once,
-            append_entries_count_once);
+            append_entries_count_once,
+            single_mode ? "true" : "false");
 }
 
 std::string Options::ToString() {
@@ -56,7 +61,8 @@ std::string Options::ToString() {
           "         elect_timeout_ms : %ld\n"
           "             heartbeat_us : %ld\n"
           " append_entries_size_once : %ld\n"
-          "append_entries_count_once : %lu\n",
+          "append_entries_count_once : %lu\n"
+          "              single_mode : %s\n",
             local_ip.c_str(),
             local_port,
             data_path.c_str(),
@@ -64,7 +70,8 @@ std::string Options::ToString() {
             elect_timeout_ms,
             heartbeat_us,
             append_entries_size_once,
-            append_entries_count_once);
+            append_entries_count_once,
+            single_mode ? "true" : "false");
   return str;
 }
 
@@ -76,7 +83,8 @@ Options::Options()
     elect_timeout_ms(5000),
     heartbeat_us(1000000),
     append_entries_size_once(1024),
-    append_entries_count_once(24) {
+    append_entries_count_once(24),
+    single_mode(false) {
     }
 
 Options::Options(const std::string& cluster_string,
@@ -90,8 +98,12 @@ Options::Options(const std::string& cluster_string,
     elect_timeout_ms(5000),
     heartbeat_us(1000000),
     append_entries_size_once(1024),
-    append_entries_count_once(24) {
+    append_entries_count_once(24),
+    single_mode(false) {
   split(cluster_string, ',', members);
+  if (members.size() == 1) {
+    single_mode = true;
+  }
 }
 
 } // namespace floyd

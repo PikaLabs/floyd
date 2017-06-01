@@ -129,6 +129,13 @@ void FloydPrimary::DoCheckElectLeader(void *arg) {
     return;
   }
 
+  if (ptr->context_->single_mode()) {
+    ptr->AddTask(kBecomeLeader);
+    LOGV(INFO_LEVEL, ptr->context_->info_log(), "FloydPrimary::DoCheckElectLeader"
+        " single mode just become leader");
+    return;
+  }
+
   if (ptr->context_->role() == Role::kFollower && ptr->reset_elect_leader_time_) {
     LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::DoCheckElectLeader"
         " still live");
@@ -172,7 +179,12 @@ void FloydPrimary::DoAdvanceCommitIndex(void *arg) {
     return;
   }
 
-  uint64_t new_commit_index = ptr->QuorumMatchIndex();
+  uint64_t new_commit_index;
+  if (ptr->context_->single_mode()) {
+    new_commit_index = ptr->context_->log()->GetLastLogIndex();
+  } else {
+    new_commit_index = ptr->QuorumMatchIndex();
+  }
   LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::AdvanceCommitIndex"
        " new_commit_index=%lu", new_commit_index);
   if (ptr->context_->AdvanceCommitIndex(new_commit_index)) {

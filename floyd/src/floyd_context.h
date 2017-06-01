@@ -70,6 +70,10 @@ class FloydContext {
   uint64_t append_entries_count_once() {
     return options_.append_entries_count_once;
   }
+
+  bool single_mode() {
+    return options_.single_mode;
+  }
   
   void BecomeFollower(uint64_t new_iterm,
       const std::string leader_ip = "", int port = 0);
