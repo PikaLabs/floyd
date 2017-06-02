@@ -9,7 +9,7 @@ else
 endif
 OBJECT = log_parser
 SRC_DIR = ./
-THIRD_PATH = ../third
+THIRD_PATH = ../../third
 
 ifndef SLASH_PATH
 SLASH_PATH = $(realpath $(THIRD_PATH)/slash)
