@@ -1,4 +1,4 @@
-## Floyd [中文](https://github.com/Qihoo360/floyd/blob/master/README_CN.md)
+# Floyd [中文](https://github.com/Qihoo360/floyd/blob/master/README_CN.md)
 
 Floyd is an C++ library based on Raft consensus protocol. 
 
@@ -8,12 +8,12 @@ Floyd is an C++ library based on Raft consensus protocol.
 * Also we support direct access to data without consistency: DirtyRead/DirtyWrite;
 * Also some query and debug managment APIs： GetLeader/GetServerStatus/set_log_level
 
-### Users
+## Users
 
 * Floyd has provided high available store for Meta cluster of [Zeppelin](https://github.com/Qihoo360/zeppelin) , which is a huge distributed key-value storage.
 * The list will goes on.
 
-### Why do we prefer a library to a service?
+## Why do we prefer a library to a service?
 
 When we want to coordinate services, ZooKeeper is always a good choice. 
 * But we have to maintain another service.
@@ -22,7 +22,7 @@ When we want to coordinate services, ZooKeeper is always a good choice.
 In our opion, a single service is much more simple than two services. As a result, an embeded library could be a better choice.   
 
 
-### Floyd's Features and APIs
+## Floyd's Features and APIs
 
 * APIs and [usage](https://github.com/Qihoo360/floyd/wiki/API%E4%BB%8B%E7%BB%8D%E4%B8%8E%E4%BD%BF%E7%94%A8)
 
@@ -47,7 +47,7 @@ In our opion, a single service is much more simple than two services. As a resul
 | C++ | Yes | No | No |
 
 
-### Compile and Have a Try
+## Compile and Have a Try
 
 * Dependencies
     - gcc version 4.8+ to support C++11.
@@ -90,10 +90,10 @@ Usage:
 # ./floyd_client --server 127.0.0.1:8901 --cmd status --begin 0 --end 1
 ```
 
-### Documents
+## Documents
 * [Wikis](https://github.com/Qihoo360/floyd/wiki)
 
-### Contant us
+## Contant us
 
 * email: g-infra-bada@360.cn
 * QQ Group: 294254078
