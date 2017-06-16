@@ -1,4 +1,4 @@
-## Floyd 中文
+# Floyd 中文
 
 Floyd是一个C++实现的Raft一致性协议库。 
 
@@ -8,12 +8,12 @@ Floyd是一个C++实现的Raft一致性协议库。
 * 同时也支持非一致性的本地数据访问接口: DirtyRead/DirtyWrite;
 * 以及查询、管理接口：GetLeader/GetServerStatus/set_log_level
 
-### 用户
+## 用户
 
 * Floyd 目前应用在[Zeppelin](https://github.com/Qihoo360/zeppelin)中，为其Meta集群提供一致性的存储；Zeppeli是一个大容量的分布式key-value存储；
 * 陆续会有新的项目在使用；
 
-### 我们为什么倾向于库，而不是一个服务?
+## 我们为什么倾向于库，而不是一个服务?
 
 当我们在有服务发现、协调和管理的需求时，ZooKeeper是一个很好的选择，但是有一定成本. 
 * 我们必须维护一套新的ZooKeeper的服务；
@@ -22,7 +22,7 @@ Floyd是一个C++实现的Raft一致性协议库。
 我们认为，一个集成、单一的服务通常会比多个服务更加可控、简单. 所以，作为一个库来使用，能够简化整体的架构.  
 
 
-### Floyd功能和API
+## Floyd功能和API
 
 * API和[具体使用](https://github.com/Qihoo360/floyd/wiki/API%E4%BB%8B%E7%BB%8D%E4%B8%8E%E4%BD%BF%E7%94%A8)
 
@@ -47,7 +47,7 @@ Floyd是一个C++实现的Raft一致性协议库。
 | C++ | Yes | No | No |
 
 
-### 编译运行
+## 编译运行
 
 * 依赖
     - gcc 版本4.8+，以支持C++11.
@@ -92,10 +92,10 @@ Usage:
 # ./floyd_client --server 127.0.0.1:8901 --cmd status --begin 0 --end 1
 ```
 
-### 文档
+## 文档
 * [Wikis](https://github.com/Qihoo360/floyd/wiki)
 
-### 联系我们
+## 联系我们
 
 * email: g-infra-bada@360.cn
 * QQ Group: 294254078
