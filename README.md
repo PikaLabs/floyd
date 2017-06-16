@@ -1,4 +1,4 @@
-## Floyd 中文
+## Floyd [中文](https://github.com/Qihoo360/floyd/blob/master/README_CN.md)
 
 Floyd is an C++ library based on Raft consensus protocol. 
 
@@ -6,6 +6,7 @@ Floyd is an C++ library based on Raft consensus protocol.
 * Floyd is an **library** that could be easily embeded into users' application; 
 * Floyd support consistency between cluster nodes by APIs like Read/Write/Delete; 
 * Also we support direct access to data without consistency: DirtyRead/DirtyWrite;
+* Also some query and debug managment APIs： GetLeader/GetServerStatus/set_log_level
 
 ### Users
 
