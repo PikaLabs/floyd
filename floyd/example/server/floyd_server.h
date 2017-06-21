@@ -35,7 +35,7 @@ class FloydServerHandler : public pink::ServerHandle {
 
 class FloydServerConn : public pink::PbConn {
  public:
-  FloydServerConn(int fd, const std::string& ip_port, pink::Thread* thread,
+  FloydServerConn(int fd, const std::string& ip_port, pink::ServerThread* thread,
                   Floyd* floyd, FloydServer* server);
   virtual ~FloydServerConn() {}
 
@@ -56,8 +56,10 @@ class FloydServerConnFactory : public pink::ConnFactory {
       server_(server) { }
 
   virtual pink::PinkConn *NewPinkConn(int connfd,
-      const std::string &ip_port, pink::Thread *thread) const override {
-    return new FloydServerConn(connfd, ip_port, thread, floyd_, server_);
+                                      const std::string &ip_port,
+                                      pink::ServerThread *server_thread,
+                                      void* worker_private_data) const override {
+    return new FloydServerConn(connfd, ip_port, server_thread, floyd_, server_);
   }
 
  private:

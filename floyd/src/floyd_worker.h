@@ -15,7 +15,7 @@ class FloydWorkerHandle;
 class FloydWorkerConn : public pink::PbConn {
  public:
   FloydWorkerConn(int fd, const std::string& ip_port,
-      pink::Thread* thread, FloydImpl* floyd);
+      pink::ServerThread* thread, FloydImpl* floyd);
   virtual ~FloydWorkerConn();
 
   virtual int DealMessage();
@@ -32,8 +32,11 @@ class FloydWorkerConnFactory : public pink::ConnFactory {
     : floyd_(floyd) {}
 
   virtual pink::PinkConn *NewPinkConn(int connfd,
-      const std::string &ip_port, pink::Thread *thread) const override {
-    return new FloydWorkerConn(connfd, ip_port, thread, floyd_);
+                                      const std::string &ip_port,
+                                      pink::ServerThread *server_thread,
+                                      void* worker_private_data)
+      const override {
+    return new FloydWorkerConn(connfd, ip_port, server_thread, floyd_);
   }
 
  private:
