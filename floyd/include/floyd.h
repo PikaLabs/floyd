@@ -18,18 +18,11 @@ class Floyd {
   Floyd() { }
   virtual ~Floyd();
 
-  // TODO(anan) maybe remove 
-  virtual Status Start() = 0;
-
   virtual Status Write(const std::string& key, const std::string& value) = 0;
   virtual Status DirtyWrite(const std::string& key, const std::string& value) = 0;
   virtual Status Delete(const std::string& key) = 0;
   virtual Status Read(const std::string& key, std::string& value) = 0;
   virtual Status DirtyRead(const std::string& key, std::string& value) = 0;
-  //Status ReadAll(std::map<std::string, std::string>& kvMap);
-  //Status DirtyReadAll(std::map<std::string, std::string>& kvMap);
-  //Status TryLock(const std::string& key);
-  //Status UnLock(const std::string& key);
 
   // return true if leader has been elected
   virtual bool GetLeader(std::string& ip_port) = 0;

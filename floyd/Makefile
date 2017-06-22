@@ -17,7 +17,6 @@ ifndef NEMODB_PATH
 NEMODB_PATH = $(realpath ./third/nemo-rocksdb)
 endif
 
-OBJECT = floyd
 SRC_DIR = ./src
 LIB_OUTPUT = ./lib
 
@@ -77,9 +76,6 @@ $(LIBRARY): $(LIBSLASH) $(LIBPINK) $(LIBNEMODB) $(LIBOBJS) $(OBJS)
 	rm -rf $@
 	ar -rcs $@ $(OBJS)
 	mv $@ $(LIB_OUTPUT)/
-
-$(OBJECT): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) -Wl,-Bdynamic $(LIBS)
 
 $(OBJS): %.o : %.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE_PATH) 

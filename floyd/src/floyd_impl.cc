@@ -64,7 +64,14 @@ bool FloydImpl::GetAllNodes(std::vector<std::string>& nodes) {
   return true;
 }
 
-Status FloydImpl::Start() {
+void FloydImpl::set_log_level(const int log_level) {
+  if (info_log_) {
+    info_log_->set_log_level(log_level);
+  }
+}
+
+Status Floyd::Open(const Options& options, Floyd** floyd) {
+  *floyd = new FloydImpl(options);
   slash::CreatePath(options_.log_path);
   slash::CreatePath(options_.data_path);
   if (NewLogger(options_.log_path + "/LOG", &info_log_) != 0) {
@@ -135,16 +142,6 @@ Status FloydImpl::Start() {
   //options_.Dump();
   LOGV(INFO_LEVEL, info_log_, "Floyd started!\nOptions\n%s", options_.ToString().c_str());
   return Status::OK();
-}
-
-void FloydImpl::set_log_level(const int log_level) {
-  if (info_log_) {
-    info_log_->set_log_level(log_level);
-  }
-}
-
-Status Floyd::Open(const Options& options, Floyd** floyd) {
-  *floyd = new FloydImpl(options);
   return Status::OK();
 }
 

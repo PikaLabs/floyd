@@ -34,17 +34,11 @@ class FloydImpl : public Floyd {
   FloydImpl(const Options& options);
   virtual ~FloydImpl();
 
-  virtual Status Start();
-
   virtual Status Write(const std::string& key, const std::string& value);
   virtual Status DirtyWrite(const std::string& key, const std::string& value);
   virtual Status Delete(const std::string& key);
   virtual Status Read(const std::string& key, std::string& value);
   virtual Status DirtyRead(const std::string& key, std::string& value);
-  //Status ReadAll(std::map<std::string, std::string>& kvMap);
-  //Status DirtyReadAll(std::map<std::string, std::string>& kvMap);
-  //Status TryLock(const std::string& key);
-  //Status UnLock(const std::string& key);
 
   // return true if leader has been elected
   virtual bool GetLeader(std::string& ip_port);

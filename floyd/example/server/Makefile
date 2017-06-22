@@ -38,7 +38,6 @@ INCLUDE_PATH = -I../../../ \
 							 -I$(THIRD_PATH)/slash/ \
 							 -I$(THIRD_PATH)/pink/
 
-LIBRARY = libfloyd.a
 .PHONY: all clean version
 
 
