@@ -21,6 +21,8 @@ LIB_PATH = -L../../lib/ \
 
 LIBS = -lfloyd \
 			 -lpink \
+			 -lssl \
+			 -lcrypto \
 			 -lslash \
 			 -lnemodb \
 			 -lrocksdb \
