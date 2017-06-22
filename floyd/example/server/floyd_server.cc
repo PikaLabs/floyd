@@ -68,7 +68,8 @@ slash::Status FloydServer::Start() {
 }
 
 ////// ServerConn //////
-FloydServerConn::FloydServerConn(int fd, const std::string &ip_port, pink::Thread *thread,
+FloydServerConn::FloydServerConn(int fd, const std::string &ip_port,
+                                 pink::ServerThread *thread,
                                  Floyd *floyd, FloydServer* server)
     : PbConn(fd, ip_port, thread),
       floyd_(floyd),

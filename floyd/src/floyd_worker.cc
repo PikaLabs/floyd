@@ -13,7 +13,7 @@ FloydWorker::FloydWorker(int port, int cron_interval, FloydImpl* floyd)
 }
 
 FloydWorkerConn::FloydWorkerConn(int fd, const std::string& ip_port,
-    pink::Thread* thread, FloydImpl* floyd)
+    pink::ServerThread* thread, FloydImpl* floyd)
   : PbConn(fd, ip_port, thread),
   floyd_(floyd){
   }
