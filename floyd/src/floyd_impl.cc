@@ -139,13 +139,13 @@ Status Floyd::Open(const Options& options, Floyd** floyd) {
   primary_->AddTask(kCheckElectLeader);
 
   // test only
-  //options_.Dump();
+  // options_.Dump();
   LOGV(INFO_LEVEL, info_log_, "Floyd started!\nOptions\n%s", options_.ToString().c_str());
-  return Status::OK();
   return Status::OK();
 }
 
-Floyd::~Floyd() { }
+Floyd::~Floyd() { 
+}
 
 
 } // namespace floyd
