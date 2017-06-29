@@ -30,8 +30,7 @@ void Options::Dump() {
   }
   printf ("                 local_ip : %s\n"
           "               local_port : %d\n"
-          "                data_path : %s\n"
-          "                 log_path : %s\n"
+          "                     path : %s\n"
           "         elect_timeout_ms : %ld\n"
           "             heartbeat_us : %ld\n"
           " append_entries_size_once : %ld\n"
@@ -39,8 +38,7 @@ void Options::Dump() {
           "              single_mode : %s\n",
             local_ip.c_str(),
             local_port,
-            data_path.c_str(),
-            log_path.c_str(),
+            path.c_str(),
             elect_timeout_ms,
             heartbeat_us,
             append_entries_size_once,
@@ -56,8 +54,7 @@ std::string Options::ToString() {
   }
   sprintf (str + len, "                 local_ip : %s\n"
           "               local_port : %d\n"
-          "                data_path : %s\n"
-          "                 log_path : %s\n"
+          "                     path : %s\n"
           "         elect_timeout_ms : %ld\n"
           "             heartbeat_us : %ld\n"
           " append_entries_size_once : %ld\n"
@@ -65,8 +62,7 @@ std::string Options::ToString() {
           "              single_mode : %s\n",
             local_ip.c_str(),
             local_port,
-            data_path.c_str(),
-            log_path.c_str(),
+            path.c_str(),
             elect_timeout_ms,
             heartbeat_us,
             append_entries_size_once,
@@ -78,8 +74,7 @@ std::string Options::ToString() {
 Options::Options()
   : local_ip("127.0.0.1"),
     local_port(10086),
-    data_path("/data/data"),
-    log_path("/data/file"),
+    path("/data/floyd"),
     elect_timeout_ms(5000),
     heartbeat_us(1000000),
     append_entries_size_once(1024),
@@ -89,12 +84,10 @@ Options::Options()
 
 Options::Options(const std::string& cluster_string,
                  const std::string& _local_ip, int _local_port,
-                 const std::string& _data_path,
-                 const std::string& _log_path)
+                 const std::string& _path)
   : local_ip(_local_ip),
     local_port(_local_port),
-    data_path(_data_path),
-    log_path(_log_path),
+    path(_path),
     elect_timeout_ms(5000),
     heartbeat_us(1000000),
     append_entries_size_once(1024),

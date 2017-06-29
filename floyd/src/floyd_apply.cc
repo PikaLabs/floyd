@@ -7,10 +7,10 @@
 
 namespace floyd {
 
-FloydApply::FloydApply(FloydContext* context, rocksdb::DBNemo* db, Log* log)
+FloydApply::FloydApply(FloydContext* context, rocksdb::DB* db, RaftLog* raft_log)
   : context_(context),
     db_(db),
-    log_(log) {
+    raft_log_(raft_log) {
   bg_thread_ = new pink::BGThread();
   bg_thread_->set_thread_name("FloydApply");
 }
@@ -38,7 +38,7 @@ void FloydApply::ApplyStateMachine(void* arg) {
             len, to_apply);
   while (len-- > 0) {
     Entry log_entry;
-    fapply->log_->GetEntry(to_apply, &log_entry);
+    fapply->raft_log_->GetEntry(to_apply, &log_entry);
     Status s = fapply->Apply(log_entry);
     if (!s.ok()) {
       LOGV(WARN_LEVEL, context->info_log(), "Apply log entry failed, at: %d, error: %s",
@@ -50,7 +50,7 @@ void FloydApply::ApplyStateMachine(void* arg) {
     context->ApplyDone(to_apply);
     to_apply++;
   }
-  fapply->log_->set_apply_index(to_apply - 1);
+  fapply->raft_log_->set_apply_index(to_apply - 1);
 }
 
 Status FloydApply::Apply(const Entry& log_entry) {

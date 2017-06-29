@@ -5,7 +5,7 @@
 #include "floyd/src/floyd_primary_thread.h"
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_client_pool.h"
-#include "floyd/src/file_log.h"
+#include "floyd/src/raft_log.h"
 #include "floyd/src/floyd.pb.h"
 #include "floyd/src/logger.h"
 
@@ -15,11 +15,11 @@
 namespace floyd {
 
 Peer::Peer(std::string server, FloydContext* context, FloydPrimary* primary,
-           Log* log, ClientPool* pool)
+           RaftLog* raft_log, ClientPool* pool)
   : server_(server),
     context_(context),
     primary_(primary),
-    log_(log),
+    raft_log_(raft_log),
     pool_(pool),
     next_index_(1) {
 }
@@ -43,13 +43,6 @@ uint64_t Peer::get_next_index() {
 
 void Peer::AddRequestVoteTask() {
   bg_thread_.Schedule(DoRequestVote, this);
-#ifndef NDEBUG
-  //int pri_size, size;
-  //bg_thread_.QueueSize(&pri_size, &size);
-  //LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s) after AddRequestVote Pri queue size %d,"
-  //     " normal queue size is %d",
-  //     server_.c_str(), pri_size, size);
-#endif
 }
 
 void Peer::DoRequestVote(void *arg) {
@@ -73,7 +66,7 @@ Status Peer::RequestVote() {
   // TODO (anan) log->getEntry() need lock
   uint64_t last_log_term;
   uint64_t last_log_index;
-  context_->log()->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
+  context_->raft_log()->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
   uint64_t current_term = context_->current_term();
 
   CmdRequest req;
@@ -143,19 +136,12 @@ void Peer::AddHeartBeatTask() {
 }
 
 void Peer::AddBecomeLeaderTask() {
-  next_index_ = log_->GetLastLogIndex() + 1;
+  next_index_ = raft_log_->GetLastLogIndex() + 1;
   AddAppendEntriesTask();
 }
 
 void Peer::AddAppendEntriesTask() {
   bg_thread_.Schedule(DoAppendEntries, this);
-#ifndef NDEBUG
-  //int pri_size, size;
-  //bg_thread_.QueueSize(&pri_size, &size);
-  //LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s) after AddAppendEntries"
-  //     " Pri queue size %d, normal queue size is %d",
-  //     server_.c_str(), pri_size, size);
-#endif
 }
 
 
@@ -182,7 +168,7 @@ Status Peer::AppendEntries() {
     return Status::OK();
   }
 
-  uint64_t last_log_index = log_->GetLastLogIndex();
+  uint64_t last_log_index = raft_log_->GetLastLogIndex();
   uint64_t prev_log_index = next_index_ - 1;
   if (prev_log_index > last_log_index) {
     return Status::InvalidArgument("prev_Log_index > last_log_index");
@@ -191,7 +177,7 @@ Status Peer::AppendEntries() {
   uint64_t prev_log_term = 0;
   if (prev_log_index != 0) {
     Entry entry;
-    log_->GetEntry(prev_log_index, &entry);
+    raft_log_->GetEntry(prev_log_index, &entry);
     prev_log_term = entry.term();
   }
 
@@ -205,11 +191,10 @@ Status Peer::AppendEntries() {
   append_entries->set_prev_log_term(prev_log_term);
 
   uint64_t num_entries = 0;
-  for (uint64_t index = next_index_; index <= last_log_index; ++index) {
-    Entry entry;
-    log_->GetEntry(index, &entry);
-    *append_entries->add_entries() = entry;
-    ++num_entries;
+  for (uint64_t index = next_index_; index <= last_log_index; index++) {
+    Entry *entry = append_entries->add_entries();
+    raft_log_->GetEntry(index, entry);
+    num_entries++;
     if (num_entries > context_->append_entries_count_once() 
         || (uint64_t)append_entries->ByteSize() >= context_->append_entries_size_once()) {
       break;
@@ -217,15 +202,6 @@ Status Peer::AppendEntries() {
   }
   append_entries->set_commit_index(
       std::min(context_->commit_index(), prev_log_index + num_entries));
-
-#ifndef NDEBUG
-  std::string text_format;
-  google::protobuf::TextFormat::PrintToString(req, &text_format);
-  LOGV(DEBUG_LEVEL, context_->info_log(), "AppendEntry Send to %s with %llu "
-       "entries, message :\n%s",
-       server_.c_str(), num_entries, text_format.c_str());
-#endif
-
   CmdResponse res;
   Status result = pool_->SendAndRecv(server_, req, &res);
 
@@ -234,15 +210,9 @@ Status Peer::AppendEntries() {
          server_.c_str(), result.ToString().c_str());
     return result;
   }
-#ifndef NDEBUG
-  google::protobuf::TextFormat::PrintToString(res, &text_format);
-  LOGV(DEBUG_LEVEL, context_->info_log(), "AppendEntry Receive from %s,"
-       "message :\n%s", server_.c_str(), text_format.c_str());
-#endif
-
   uint64_t res_term = res.append_entries().term();
   if (result.ok() && res_term > context_->current_term()) {
-    //TODO(anan) maybe combine these 2 steps
+    // TODO(anan) maybe combine these 2 steps
     context_->BecomeFollower(res_term);
     primary_->ResetElectLeaderTimer();
   }

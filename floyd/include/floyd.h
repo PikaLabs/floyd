@@ -28,6 +28,8 @@ class Floyd {
   virtual bool GetLeader(std::string& ip_port) = 0;
   virtual bool GetLeader(std::string* ip, int* port) = 0;
   virtual bool GetAllNodes(std::vector<std::string>& nodes) = 0;
+
+  // used for debug
   virtual bool GetServerStatus(std::string& msg) = 0;
   
   // log level can be modified

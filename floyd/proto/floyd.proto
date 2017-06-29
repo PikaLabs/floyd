@@ -113,15 +113,3 @@ message CmdResponse {
 
   optional AppendEntries append_entries = 8;
 }
-
-// Not used
-//message FileLogMetaData {
-//  // Raft usage 
-//  required uint64 current_term = 1;
-//  required bytes voted_for_ip = 2;
-//  required int32 voted_for_port = 3;
-//  // FileLog usage
-//  required uint64 file_number = 4 [default = 0];
-//  optional uint64 entries_start = 5 [default = 1];
-//  optional uint64 entries_end = 6 [default = 0];
-//}

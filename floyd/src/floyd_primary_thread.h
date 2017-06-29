@@ -47,7 +47,7 @@ class FloydPrimary {
     reset_leader_heartbeat_time_ = slash::NowMicros();
   }
 
-  void SetPeers(PeersSet* peers);
+  void set_peers(PeersSet* peers);
 
  private:
 

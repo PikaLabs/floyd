@@ -4,13 +4,14 @@
 #include "floyd/src/logger.h"
 
 #include "slash/include/env.h"
+#include "floyd/src/floyd.pb.h"
 
 namespace floyd {
 
 FloydContext::FloydContext(const floyd::Options& opt,
-                           Log* log, Logger* info_log)
+                           RaftLog* raft_log, Logger* info_log)
   : options_(opt),
-    log_(log),
+    raft_log_(raft_log),
     info_log_(info_log),
     current_term_(0),
     role_(Role::kFollower),
@@ -36,12 +37,12 @@ FloydContext::~FloydContext() {
 }
 
 void FloydContext::RecoverInit() {
-  assert(log_ != NULL);
+  assert(raft_log_ != NULL);
   slash::RWLock l(&stat_rw_, true);
-  current_term_ = log_->current_term();
-  voted_for_ip_ = log_->voted_for_ip();
-  voted_for_port_ = log_->voted_for_port();
-  apply_index_ = log_->apply_index();
+  current_term_ = raft_log_->current_term();
+  voted_for_ip_ = raft_log_->voted_for_ip();
+  voted_for_port_ = raft_log_->voted_for_port();
+  apply_index_ = raft_log_->apply_index();
   role_ = Role::kFollower;
 }
 
@@ -134,10 +135,10 @@ bool FloydContext::AdvanceCommitIndex(uint64_t new_commit_index) {
     return false;
   }
 
-  uint64_t last_log_index = log_->GetLastLogIndex();
+  uint64_t last_log_index = raft_log_->GetLastLogIndex();
   new_commit_index = std::min(last_log_index, new_commit_index);
   Entry entry;
-  log_->GetEntry(new_commit_index, &entry);
+  raft_log_->GetEntry(new_commit_index, &entry);
   if (entry.term() == current_term_) {
     commit_index_ = new_commit_index;
     LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AdvanceCommitIndex advance commit_index to %ld", new_commit_index);
@@ -164,10 +165,7 @@ void FloydContext::ApplyDone(uint64_t index) {
 }
 
 void FloydContext::MetaApply() {
-  //log_->metadata.set_current_term(current_term_);
-  //log_->metadata.set_voted_for_ip(voted_for_ip_);
-  //log_->metadata.set_voted_for_port(voted_for_port_);
-  log_->UpdateMetadata(current_term_, voted_for_ip_, voted_for_port_, apply_index());
+  raft_log_->UpdateMetadata(current_term_, voted_for_ip_, voted_for_port_, apply_index());
 }
 
 bool FloydContext::VoteAndCheck(uint64_t vote_term) {
@@ -201,7 +199,7 @@ bool FloydContext::RequestVote(uint64_t term, const std::string ip,
 
   uint64_t my_log_index;
   uint64_t my_log_term;
-  log_->GetLastLogTermAndIndex(&my_log_term, &my_log_index);
+  raft_log_->GetLastLogTermAndIndex(&my_log_term, &my_log_index);
   LOGV(DEBUG_LEVEL, info_log_, "FloydContext::RequestVote: my last_log is %lu:%lu, other is %lu:%lu",
        my_log_term, my_log_index, log_term, log_index);
   if (log_term < my_log_term
@@ -235,7 +233,7 @@ bool FloydContext::AppendEntries(uint64_t term,
                                  std::vector<Entry*>& entries, uint64_t* my_term) {
   slash::RWLock l(&stat_rw_, true);
   // Check pre_log match local log entry
-  uint64_t last_log_index = log_->GetLastLogIndex();
+  uint64_t last_log_index = raft_log_->GetLastLogIndex();
   if (pre_log_index > last_log_index) {
     LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries: pre_log(%lu, %lu) > last_log_index(%lu)",
          pre_log_term, pre_log_index, last_log_index);
@@ -244,7 +242,7 @@ bool FloydContext::AppendEntries(uint64_t term,
 
   uint64_t my_log_term = 0;
   Entry entry;
-  if (log_->GetEntry(pre_log_index, &entry)) {
+  if (raft_log_->GetEntry(pre_log_index, &entry)) {
     my_log_term = entry.term();
   }
   if (pre_log_term != my_log_term) {
@@ -252,7 +250,7 @@ bool FloydContext::AppendEntries(uint64_t term,
          " local log(%lu, %lu), truncate suffix from here",
          pre_log_term, pre_log_index, my_log_term, pre_log_index, pre_log_index);
     // TruncateSuffix [pre_log_index, last_log_index)
-    log_->TruncateSuffix(pre_log_index - 1);
+    // raft_log_->TruncateSuffix(pre_log_index - 1);
     return false;
   }
 
@@ -260,19 +258,19 @@ bool FloydContext::AppendEntries(uint64_t term,
   if (pre_log_index < last_log_index) {
 #ifndef NDEBUG
     uint64_t last_log_term;
-    log_->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
+    raft_log_->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
     LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries: truncate suffix from %lu, "
          "pre_log(%lu,%lu), last_log(%lu,%lu)",
          pre_log_index + 1, pre_log_term, pre_log_index, last_log_term, last_log_index);
 #endif
     // TruncateSuffix [pre_log_index + 1, last_log_index)
-    log_->TruncateSuffix(pre_log_index);
+    // raft_log_->TruncateSuffix(pre_log_index);
   }
   *my_term = current_term_;
   if (entries.size() > 0) {
     LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries will append %u entries from "
          " pre_log_index %lu", entries.size(), pre_log_index + 1);
-    if ((log_->Append(entries)).second <= 0) {
+    if (raft_log_->Append(entries) <= 0) {
       return false;
     }
   }

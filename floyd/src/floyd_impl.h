@@ -1,15 +1,17 @@
 #ifndef FLOYD_IMPL_H_
 #define FLOYD_IMPL_H_
 
-#include "floyd/include/floyd.h"
-#include "floyd/include/floyd_options.h"
+#include <string>
+#include <map>
 
 #include "slash/include/slash_mutex.h"
 #include "slash/include/slash_status.h"
-
 #include "pink/include/bg_thread.h"
 
-#include "db_nemo_impl.h"
+#include "floyd/include/floyd.h"
+#include "floyd/include/floyd_options.h"
+#include "floyd/src/raft_log.h"
+
 
 namespace floyd {
 using slash::Status;
@@ -34,6 +36,8 @@ class FloydImpl : public Floyd {
   FloydImpl(const Options& options);
   virtual ~FloydImpl();
 
+  Status Init();
+
   virtual Status Write(const std::string& key, const std::string& value);
   virtual Status DirtyWrite(const std::string& key, const std::string& value);
   virtual Status Delete(const std::string& key);
@@ -56,9 +60,9 @@ class FloydImpl : public Floyd {
   friend class Peer;
 
   Options options_;
-  rocksdb::DBNemo* db_;
+  rocksdb::DB* db_;
   // raft log
-  Log* log_;
+  RaftLog* raft_log_;
   // debug log used for ouput to file
   Logger* info_log_;
   FloydContext* context_;
@@ -73,6 +77,7 @@ class FloydImpl : public Floyd {
   bool IsSelf(const std::string& ip_port);
   bool HasLeader();
 
+
   Status DoCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
   Status ExecuteCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
   Status ExecuteDirtyCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
@@ -83,7 +88,7 @@ class FloydImpl : public Floyd {
   // No coping allowed
   FloydImpl(const FloydImpl&);
   void operator=(const FloydImpl&);
-};
+}; // FloydImpl
 
 } // namespace floyd
-#endif
+#endif  // 

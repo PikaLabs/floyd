@@ -4,8 +4,7 @@
 #include <pthread.h>
 
 #include "floyd/include/floyd_options.h"
-#include "floyd/src/file_log.h"
-//#include "floyd/src/logger.h"
+#include "floyd/src/raft_log.h"
 
 #include "slash/include/slash_status.h"
 #include "slash/include/slash_mutex.h"
@@ -21,15 +20,16 @@ enum Role {
 };
 
 class Logger;
+class RaftLog;
 
 class FloydContext {
  public:
-  FloydContext(const Options& opt, Log* log, Logger* info_log);
+  FloydContext(const Options& opt, RaftLog* raft_log, Logger* info_log);
   ~FloydContext();
 
   void RecoverInit();
-  Log* log() {
-    return log_;
+  RaftLog* raft_log() {
+    return raft_log_;
   }
 
   Logger* info_log() {
@@ -112,7 +112,7 @@ class FloydContext {
   
  private:
   Options options_;
-  Log* log_;
+  RaftLog* raft_log_;
   
   // used to debug
   Logger* info_log_;

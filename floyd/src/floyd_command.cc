@@ -7,12 +7,11 @@
 #include "floyd/src/floyd_client_pool.h"
 #include "floyd/src/floyd_primary_thread.h"
 #include "floyd/src/floyd_peer_thread.h"
-#include "floyd/src/file_log.h"
+#include "floyd/src/raft_log.h"
 #include "floyd/src/logger.h"
 
 #include "floyd/src/floyd.pb.h"
 
-#include "db_nemo_impl.h"
 #include "slash/include/slash_string.h"
 #include "pink/include/bg_thread.h"
 
@@ -138,11 +137,6 @@ Status FloydImpl::Delete(const std::string& key) {
   CmdRequest cmd;
   BuildDeleteRequest(key, &cmd);
 
-//#ifndef NDEBUG
-//  std::string text_format;
-//  google::protobuf::TextFormat::PrintToString(cmd, &text_format);
-//  LOGV(DEBUG_LEVEL, info_log_, "Delete CmdRequest :\n%s", text_format.c_str());
-//#endif
   CmdResponse response;
   Status s = DoCommand(cmd, &response);
   if (!s.ok()) {
@@ -330,7 +324,7 @@ bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
 
   uint64_t last_log_index;
   uint64_t last_log_term;
-  log_->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
+  raft_log_->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
 
   res->set_last_log_term(last_log_term);
   res->set_last_log_index(last_log_index);
@@ -346,7 +340,7 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
   BuildLogEntry(cmd, context_->current_term(), &entry);
   entries.push_back(&entry);
 
-  uint64_t last_index = (log_->Append(entries)).second;
+  uint64_t last_index = raft_log_->Append(entries);
   if (last_index <= 0) {
     return Status::IOError("Append Entry failed");
   }
@@ -436,7 +430,7 @@ void FloydImpl::DoAppendEntries(CmdRequest& cmd, CmdResponse* response) {
   uint64_t my_term = context_->current_term();
   CmdRequest_AppendEntries append_entries = cmd.append_entries();
   if (append_entries.term() < my_term) {
-    BuildAppendEntriesResponse(status, my_term, log_->GetLastLogIndex(), response);
+    BuildAppendEntriesResponse(status, my_term, raft_log_->GetLastLogIndex(), response);
     return;
   }
   context_->BecomeFollower(append_entries.term(),
@@ -469,7 +463,7 @@ void FloydImpl::DoAppendEntries(CmdRequest& cmd, CmdResponse* response) {
   // TODO(anan) ElectLeader timer may timeout because of slow AppendEntries
   //   we delay reset timer.
   primary_->ResetElectLeaderTimer();
-  BuildAppendEntriesResponse(status, my_term, log_->GetLastLogIndex(), response);
+  BuildAppendEntriesResponse(status, my_term, raft_log_->GetLastLogIndex(), response);
 }
 
 }  // namespace floyd

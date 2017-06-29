@@ -14,7 +14,7 @@ void Usage() {
           "  ./parse -i ./log/path/ -o output/path/ -r index        ---- parse specific index entry\n");
 }
 
-rocksdb::DBNemo* db;
+rocksdb::DB* db;
 
 int main(int argc, char* argv[]) {
   if (argc != 5 && argc != 7) {
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
   // Create DB
   rocksdb::Options options;
   options.create_if_missing = true;
-  rocksdb::Status s = rocksdb::DBNemo::Open(options, output_path, &db);
+  rocksdb::Status s = rocksdb::DB::Open(options, output_path, &db);
   if (!s.ok()) {
     printf ("Open db failed! output path: %s", output_path.c_str());
     return -1; 
