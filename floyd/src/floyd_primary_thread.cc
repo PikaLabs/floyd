@@ -196,20 +196,20 @@ void FloydPrimary::DoAdvanceCommitIndex(void *arg) {
 void FloydPrimary::NoticePeerTask(TaskType type) {
   for (auto& peer : *peers_) {
     switch (type) {
-      case kLeaderHeartbeat:
-        peer.second->AddHeartBeatTask();
-        break;
-      case kCheckElectLeader:
-        peer.second->AddRequestVoteTask();
-        break;
-      case kNewCommand:
-        peer.second->AddAppendEntriesTask();
-        break;
-      case kBecomeLeader:
-        peer.second->AddBecomeLeaderTask();
-        break;
-      default:
-        LOGV(WARN_LEVEL, context_->info_log(), "Error TaskType to notice peer");
+    case kLeaderHeartbeat:
+      peer.second->AddHeartBeatTask();
+      break;
+    case kCheckElectLeader:
+      peer.second->AddRequestVoteTask();
+      break;
+    case kNewCommand:
+      peer.second->AddAppendEntriesTask();
+      break;
+    case kBecomeLeader:
+      peer.second->AddBecomeLeaderTask();
+      break;
+    default:
+      LOGV(WARN_LEVEL, context_->info_log(), "Error TaskType to notice peer");
     }
   }
 }

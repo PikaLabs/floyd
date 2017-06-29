@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include "floyd/src/logger.h"
 #include "floyd/src/floyd.pb.h"
+#include "slash/include/xdebug.h"
 
 
 namespace floyd {
@@ -39,6 +40,7 @@ void FloydApply::ApplyStateMachine(void* arg) {
   while (len-- > 0) {
     Entry log_entry;
     fapply->raft_log_->GetEntry(to_apply, &log_entry);
+    log_info("to_apply %lld\n", to_apply);
     Status s = fapply->Apply(log_entry);
     if (!s.ok()) {
       LOGV(WARN_LEVEL, context->info_log(), "Apply log entry failed, at: %d, error: %s",

@@ -38,12 +38,6 @@ FloydServer::~FloydServer() {
 }
 
 slash::Status FloydServer::Start() {
-  Status result = floyd_->Start();
-  if (!result.ok()) {
-    LOG_DEBUG ("Floyd started failed, %s", result.ToString().c_str());
-    return result;
-  }
-  
   // TEST
   std::vector<std::string> nodes;
   floyd_->GetAllNodes(nodes);

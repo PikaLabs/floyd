@@ -384,8 +384,8 @@ void protobuf_AddDesc_floyd_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\013floyd.proto\022\005floyd\"\"\n\005Entry\022\014\n\004term\030\002 "
-    "\002(\004\022\013\n\003cmd\030\003 \001(\014\"\252\005\n\nCmdRequest\022\031\n\004type\030"
+    "\n\013floyd.proto\022\005floyd\"\"\n\005Entry\022\014\n\004term\030\001 "
+    "\002(\004\022\013\n\003cmd\030\002 \001(\014\"\252\005\n\nCmdRequest\022\031\n\004type\030"
     "\001 \002(\0162\013.floyd.Type\022 \n\002kv\030\002 \001(\0132\024.floyd.C"
     "mdRequest.Kv\022$\n\004user\030\003 \001(\0132\026.floyd.CmdRe"
     "quest.User\0223\n\014request_vote\030\004 \001(\0132\035.floyd"
@@ -582,8 +582,8 @@ bool Entry::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required uint64 term = 2;
-      case 2: {
+      // required uint64 term = 1;
+      case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
@@ -593,12 +593,12 @@ bool Entry::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(26)) goto parse_cmd;
+        if (input->ExpectTag(18)) goto parse_cmd;
         break;
       }
 
-      // optional bytes cmd = 3;
-      case 3: {
+      // optional bytes cmd = 2;
+      case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_cmd:
@@ -629,15 +629,15 @@ bool Entry::MergePartialFromCodedStream(
 
 void Entry::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // required uint64 term = 2;
+  // required uint64 term = 1;
   if (has_term()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt64(2, this->term(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(1, this->term(), output);
   }
 
-  // optional bytes cmd = 3;
+  // optional bytes cmd = 2;
   if (has_cmd()) {
     ::google::protobuf::internal::WireFormatLite::WriteBytes(
-      3, this->cmd(), output);
+      2, this->cmd(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -648,16 +648,16 @@ void Entry::SerializeWithCachedSizes(
 
 ::google::protobuf::uint8* Entry::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // required uint64 term = 2;
+  // required uint64 term = 1;
   if (has_term()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(2, this->term(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(1, this->term(), target);
   }
 
-  // optional bytes cmd = 3;
+  // optional bytes cmd = 2;
   if (has_cmd()) {
     target =
       ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-        3, this->cmd(), target);
+        2, this->cmd(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -671,14 +671,14 @@ int Entry::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required uint64 term = 2;
+    // required uint64 term = 1;
     if (has_term()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::UInt64Size(
           this->term());
     }
 
-    // optional bytes cmd = 3;
+    // optional bytes cmd = 2;
     if (has_cmd()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::BytesSize(

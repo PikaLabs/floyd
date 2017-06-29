@@ -122,7 +122,7 @@ class FloydContext {
   uint64_t current_term_;
   Role role_;
   std::string voted_for_ip_;
-  uint64_t voted_for_port_;
+  int voted_for_port_;
   std::string leader_ip_;
   uint64_t leader_port_;
   uint64_t vote_quorum_;

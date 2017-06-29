@@ -18,8 +18,8 @@ enum Type {
 }
 
 message Entry {
-  required uint64 term = 2;
-  optional bytes cmd = 3;
+  required uint64 term = 1;
+  optional bytes cmd = 2;
 }
 
 message CmdRequest {

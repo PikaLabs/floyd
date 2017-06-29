@@ -11,6 +11,7 @@
 
 #include "slash/include/env.h"
 #include "slash/include/slash_mutex.h"
+#include "slash/include/xdebug.h"
 
 namespace floyd {
 
@@ -191,9 +192,14 @@ Status Peer::AppendEntries() {
   append_entries->set_prev_log_term(prev_log_term);
 
   uint64_t num_entries = 0;
+  LOGV(DEBUG_LEVEL, context_->info_log(), "next_index_ %lld, last_log_index %lld", next_index_.load(), last_log_index);
   for (uint64_t index = next_index_; index <= last_log_index; index++) {
-    Entry *entry = append_entries->add_entries();
-    raft_log_->GetEntry(index, entry);
+    // Entry *entry = append_entries->add_entries();
+    // raft_log_->GetEntry(index, entry);
+
+    Entry entry;
+    raft_log_->GetEntry(index, &entry);
+    *append_entries->add_entries() = entry;
     num_entries++;
     if (num_entries > context_->append_entries_count_once() 
         || (uint64_t)append_entries->ByteSize() >= context_->append_entries_size_once()) {
@@ -202,6 +208,13 @@ Status Peer::AppendEntries() {
   }
   append_entries->set_commit_index(
       std::min(context_->commit_index(), prev_log_index + num_entries));
+
+  std::string text_format;
+  google::protobuf::TextFormat::PrintToString(req, &text_format);
+  LOGV(DEBUG_LEVEL, context_->info_log(), "AppendEntry Send to %s with %llu "
+      "entries, message :\n%s",
+      server_.c_str(), num_entries, text_format.c_str());
+
   CmdResponse res;
   Status result = pool_->SendAndRecv(server_, req, &res);
 
@@ -220,6 +233,7 @@ Status Peer::AppendEntries() {
   if (result.ok() && context_->role() == Role::kLeader) {
     if (res.code() == StatusCode::kOk) {
       next_index_ = prev_log_index + num_entries + 1;
+      LOGV(DEBUG_LEVEL, context_->info_log(), "next_index_ %lld prev_log_index %lld num_entries %lld", next_index_.load(), prev_log_index, num_entries);
       primary_->AddTask(kAdvanceCommitIndex);
 
       // If this follower is far behind leader, and there is no more
@@ -241,6 +255,7 @@ Status Peer::AppendEntries() {
         // Prev log don't match, so we retry with more prev one according to
         // response
         next_index_ = adjust_index;
+        LOGV(DEBUG_LEVEL, context_->info_log(), "update next_index_ %lld", next_index_.load());
         AddAppendEntriesTask();
       }
     }

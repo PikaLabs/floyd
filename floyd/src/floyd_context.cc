@@ -3,8 +3,10 @@
 #include <stdlib.h>
 #include "floyd/src/logger.h"
 
+
 #include "slash/include/env.h"
 #include "floyd/src/floyd.pb.h"
+#include "slash/include/xdebug.h"
 
 namespace floyd {
 
@@ -90,19 +92,19 @@ void FloydContext::BecomeCandidate() {
   assert(role_ == Role::kFollower || role_ == Role::kCandidate);
   slash::RWLock l(&stat_rw_, true);
   switch(role_) {
-    case Role::kFollower:
-      LOGV(INFO_LEVEL, info_log_, "Become Candidate since prev leader timeout, prev term: %lu, prev leader is (%s:%d)",
-           current_term_, leader_ip_.c_str(), leader_port_);
-      break; 
-    case Role::kCandidate:
-      LOGV(INFO_LEVEL, info_log_, "Become Candidate since prev election timeout, prev term: %lu",
-           current_term_, leader_ip_.c_str(), leader_port_);
-      break; 
-    default:
-      LOGV(INFO_LEVEL, info_log_, "Become Candidate, should not be here, role: %d", role_);
+  case Role::kFollower:
+    LOGV(INFO_LEVEL, info_log_, "Become Candidate since prev leader timeout, prev term: %lu, prev leader is (%s:%d)",
+         current_term_, leader_ip_.c_str(), leader_port_);
+    break; 
+  case Role::kCandidate:
+    LOGV(INFO_LEVEL, info_log_, "Become Candidate since prev election timeout, prev term: %lu",
+         current_term_, leader_ip_.c_str(), leader_port_);
+    break; 
+  default:
+    LOGV(INFO_LEVEL, info_log_, "Become Candidate, should not be here, role: %d", role_);
   }
 
-  ++current_term_;
+  current_term_++;
   role_ = Role::kCandidate;
   leader_ip_.clear();
   leader_port_ = 0;
@@ -242,17 +244,22 @@ bool FloydContext::AppendEntries(uint64_t term,
 
   uint64_t my_log_term = 0;
   Entry entry;
+  log_info("FloydContext::AppendEntries %lld\n", pre_log_index);
   if (raft_log_->GetEntry(pre_log_index, &entry)) {
-    my_log_term = entry.term();
+    if (pre_log_index == 0) {
+      my_log_term = current_term_;
+    } else {
+      my_log_term = entry.term();
+    }
   }
-  if (pre_log_term != my_log_term) {
-    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries: pre_log(%lu, %lu) don't match with"
-         " local log(%lu, %lu), truncate suffix from here",
-         pre_log_term, pre_log_index, my_log_term, pre_log_index, pre_log_index);
-    // TruncateSuffix [pre_log_index, last_log_index)
-    // raft_log_->TruncateSuffix(pre_log_index - 1);
-    return false;
-  }
+  // if (pre_log_term != my_log_term && pre_log_index != 0) {
+  //   LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries: pre_log(%lu, %lu) don't match with"
+  //        " local log(%lu, %lu), truncate suffix from here",
+  //        pre_log_term, pre_log_index, my_log_term, pre_log_index);
+  //   // TruncateSuffix [pre_log_index, last_log_index)
+  //   // raft_log_->TruncateSuffix(pre_log_index - 1);
+  //   return false;
+  // }
 
   // Append entry
   if (pre_log_index < last_log_index) {

@@ -152,17 +152,17 @@ class Entry : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required uint64 term = 2;
+  // required uint64 term = 1;
   inline bool has_term() const;
   inline void clear_term();
-  static const int kTermFieldNumber = 2;
+  static const int kTermFieldNumber = 1;
   inline ::google::protobuf::uint64 term() const;
   inline void set_term(::google::protobuf::uint64 value);
 
-  // optional bytes cmd = 3;
+  // optional bytes cmd = 2;
   inline bool has_cmd() const;
   inline void clear_cmd();
-  static const int kCmdFieldNumber = 3;
+  static const int kCmdFieldNumber = 2;
   inline const ::std::string& cmd() const;
   inline void set_cmd(const ::std::string& value);
   inline void set_cmd(const char* value);
@@ -1647,7 +1647,7 @@ class CmdResponse : public ::google::protobuf::Message {
 
 // Entry
 
-// required uint64 term = 2;
+// required uint64 term = 1;
 inline bool Entry::has_term() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1669,7 +1669,7 @@ inline void Entry::set_term(::google::protobuf::uint64 value) {
   term_ = value;
 }
 
-// optional bytes cmd = 3;
+// optional bytes cmd = 2;
 inline bool Entry::has_cmd() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }

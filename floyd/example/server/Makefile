@@ -14,7 +14,6 @@ THIRD_PATH = ../../third
 OUTPUT = ./output
 
 LIB_PATH = -L../../lib/ \
-		   -L$(THIRD_PATH)/nemo-rocksdb/output/lib/ \
 			 -L$(THIRD_PATH)/slash/slash/lib/ \
 			 -L$(THIRD_PATH)/pink/pink/lib/
 
@@ -24,7 +23,6 @@ LIBS = -lfloyd \
 			 -lssl \
 			 -lcrypto \
 			 -lslash \
-			 -lnemodb \
 			 -lrocksdb \
 			 -lsnappy \
 			 -lprotobuf \
@@ -34,9 +32,6 @@ LIBS = -lfloyd \
 			 -lpthread
 
 INCLUDE_PATH = -I../../../ \
-							 -I$(THIRD_PATH)/nemo-rocksdb/include/ \
-							 -I$(THIRD_PATH)/nemo-rocksdb/rocksdb/ \
-							 -I$(THIRD_PATH)/nemo-rocksdb/rocksdb/include/ \
 							 -I$(THIRD_PATH)/slash/ \
 							 -I$(THIRD_PATH)/pink/
 

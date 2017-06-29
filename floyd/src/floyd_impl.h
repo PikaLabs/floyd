@@ -77,7 +77,6 @@ class FloydImpl : public Floyd {
   bool IsSelf(const std::string& ip_port);
   bool HasLeader();
 
-
   Status DoCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
   Status ExecuteCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
   Status ExecuteDirtyCommand(const CmdRequest& cmd, CmdResponse *cmd_res);

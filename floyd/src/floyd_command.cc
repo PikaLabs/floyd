@@ -67,7 +67,8 @@ static void BuildAppendEntriesResponse(bool succ, uint64_t term,
                                        uint64_t log_index,
                                        CmdResponse* response) {
   response->set_type(Type::AppendEntries);
-  response->set_code(succ ? StatusCode::kOk : StatusCode::kError);
+  // response->set_code(succ ? StatusCode::kOk : StatusCode::kError);
+  response->set_code(StatusCode::kOk);
   CmdResponse_AppendEntries* append_entries = response->mutable_append_entries();
   append_entries->set_term(term);
   append_entries->set_last_log_index(log_index);
@@ -439,13 +440,12 @@ void FloydImpl::DoAppendEntries(CmdRequest& cmd, CmdResponse* response) {
   for (auto& it : *(cmd.mutable_append_entries()->mutable_entries())) {
     entries.push_back(&it);
   }
-#ifndef NDEBUG
+
   std::string text_format;
   google::protobuf::TextFormat::PrintToString(cmd, &text_format);
   LOGV(DEBUG_LEVEL, context_->info_log(), "DoAppendEntry with %llu "
        "entries, message :\n%s",
        entries.size(), text_format.c_str());
-#endif
 
   // Append entries
   status = context_->AppendEntries(append_entries.term(),
