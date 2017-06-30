@@ -24,14 +24,14 @@ FloydImpl::FloydImpl(const Options& options)
 FloydImpl::~FloydImpl() {
   // worker will use floyd, delete worker first
   delete worker_;
+  delete worker_client_pool_;
+  delete peer_client_pool_;
   delete primary_;
   delete apply_;
   for (auto& pt : peers_) {
     delete pt.second;
   }
 
-  delete peer_client_pool_;
-  delete worker_client_pool_;
   delete context_;
   delete db_;
   delete raft_log_;
@@ -90,7 +90,7 @@ Status FloydImpl::Init() {
   }
 
   // Recover Context
-  raft_log_ = new RaftLog(options_.path + "/log/");
+  raft_log_ = new RaftLog(options_.path + "/log/", info_log_);
   context_ = new FloydContext(options_, raft_log_, info_log_);
   context_->RecoverInit();
 

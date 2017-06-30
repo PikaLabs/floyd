@@ -81,7 +81,7 @@ class FloydContext {
   void BecomeLeader();
   bool VoteAndCheck(uint64_t vote_term);
   bool RequestVote(uint64_t term,
-      const std::string ip, uint32_t port,
+      const std::string ip, int port,
       uint64_t log_term, uint64_t log_index,
       uint64_t* my_term);
   bool AppendEntries(uint64_t term,
@@ -124,8 +124,8 @@ class FloydContext {
   std::string voted_for_ip_;
   int voted_for_port_;
   std::string leader_ip_;
-  uint64_t leader_port_;
-  uint64_t vote_quorum_;
+  int leader_port_;
+  int vote_quorum_;
 
   // Commit related
   slash::Mutex commit_mu_;

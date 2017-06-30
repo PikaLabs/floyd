@@ -5,9 +5,11 @@
 
 #include "rocksdb/db.h"
 #include <google/protobuf/text_format.h>
+#include "slash/include/xdebug.h"
 
 #include "floyd/src/floyd.pb.h"
-#include "slash/include/xdebug.h"
+#include "floyd/src/logger.h"
+#include "floyd/include/floyd_options.h"
 
 namespace floyd {
 
@@ -16,7 +18,8 @@ static const std::string kVoteForIp = ".VOTEFORIP";
 static const std::string kVoteForPort = ".VOTEFORPORT";
 static const std::string kApplyIndex = ".APPLYINDEX";
 
-RaftLog::RaftLog(const std::string &path) : 
+RaftLog::RaftLog(const std::string &path, Logger *info_log) : 
+  info_log_(info_log),
   index_(0), 
   apply_index_(0) {
   rocksdb::Options options;
@@ -24,6 +27,10 @@ RaftLog::RaftLog(const std::string &path) :
   rocksdb::Status status = rocksdb::DB::Open(options, path, &log_db_);
   assert(status.ok());
   // TODO(ba0tiao) add seek to max to initialize index_
+}
+
+RaftLog::~RaftLog() {
+  delete log_db_;
 }
 
 extern std::string UintToBitStr(const uint64_t num) {
@@ -42,17 +49,10 @@ extern uint64_t BitStrToUint(const std::string &str) {
 uint64_t RaftLog::Append(const std::vector<Entry *> &entries) {
   std::string buf;
   rocksdb::Status s;
-
-
-  // pint(entries.size());
-  log_info("entries.size %lld", entries.size());
+  LOGV(DEBUG_LEVEL, info_log_, "entries.size %lld", entries.size());
   for (int i = 0; i < entries.size(); i++) {
     entries[i]->SerializeToString(&buf);
     index_++;
-
-    // std::string text_format;
-    // google::protobuf::TextFormat::PrintToString(*entries[i], &text_format);
-    // printf("Send RequestVote to , message :\n%s \n", text_format.c_str());
     s = log_db_->Put(rocksdb::WriteOptions(), UintToBitStr(index_), buf);
     if (!s.ok()) {
       printf("RaftLog::Append false\n");
@@ -83,8 +83,9 @@ uint64_t RaftLog::current_term() {
   std::string buf;
   uint64_t ans;
   rocksdb::Status s = log_db_->Get(rocksdb::ReadOptions(), kCurrentTerm, &buf);
+  printf("status %s\n", s.getState());
   if (s.IsNotFound()) {
-    return 1;
+    return 0;
   }
   memcpy(&ans, buf.data(), sizeof(uint64_t));
   return ans;

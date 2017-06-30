@@ -14,7 +14,6 @@ class Peer;
 
 class FloydContext;
 class FloydPrimary;
-//class FloydApply;
 class RaftLog;
 class ClientPool;
 

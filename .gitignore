@@ -26,5 +26,4 @@
 *.exe
 *.out
 *.app
-
-floyd/third/nemo-rocks
+gmon.out

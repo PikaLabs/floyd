@@ -9,11 +9,13 @@
 
 namespace floyd {
 
+class Logger;
 class Entry;
 
 class RaftLog {
  public:
-  RaftLog(const std::string &path);
+  RaftLog(const std::string &path, Logger* info_log);
+  ~RaftLog();
   uint64_t Append(const std::vector<Entry *> &entries);
 
   uint64_t GetLastLogIndex();
@@ -37,12 +39,14 @@ class RaftLog {
   void set_apply_index(uint64_t apply_index) {
     apply_index_ = apply_index;
   }
+
  private:
   std::string path_;
   std::atomic<uint64_t> index_;
   uint64_t apply_index_;
   rocksdb::DB* log_db_;
 
+  Logger* info_log_;
   RaftLog(const RaftLog&);
   void operator=(const RaftLog&);
 };  // RaftLog

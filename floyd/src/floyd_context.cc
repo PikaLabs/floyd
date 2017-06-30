@@ -172,7 +172,7 @@ void FloydContext::MetaApply() {
 
 bool FloydContext::VoteAndCheck(uint64_t vote_term) {
   slash::RWLock l(&stat_rw_, true);
-  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::VoteAndCheck: current_term=%lu vote_term=%lu vote_quorum_=%lu",
+  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::VoteAndCheck: current_term=%lu vote_term=%lu vote_quorum_=%d",
        current_term_, vote_term, vote_quorum_);
   if (current_term_ != vote_term) {
     return false;
@@ -192,7 +192,7 @@ Status FloydContext::WaitApply(uint64_t apply_index, uint32_t timeout) {
 
 // Peer ask my vote with it's ip, port, log_term and log_index
 bool FloydContext::RequestVote(uint64_t term, const std::string ip,
-                               uint32_t port, uint64_t log_term, uint64_t log_index,
+                               int port, uint64_t log_term, uint64_t log_index,
                                uint64_t *my_term) {
   slash::RWLock l(&stat_rw_, true);
   if (term < current_term_) {
