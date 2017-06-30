@@ -44,8 +44,8 @@ uint64_t RaftLog::Append(const std::vector<Entry *> &entries) {
   rocksdb::Status s;
 
 
-  pint(entries.size());
-  // log_info("entries.size %lld", entries.size());
+  // pint(entries.size());
+  log_info("entries.size %lld", entries.size());
   for (int i = 0; i < entries.size(); i++) {
     entries[i]->SerializeToString(&buf);
     index_++;
@@ -76,7 +76,7 @@ int RaftLog::GetEntry(uint64_t index, Entry *entry) {
     return 0;
   }
   entry->ParseFromString(res);
-  return 0;
+  return 1;
 }
 
 uint64_t RaftLog::current_term() {

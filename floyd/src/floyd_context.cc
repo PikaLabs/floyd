@@ -246,20 +246,16 @@ bool FloydContext::AppendEntries(uint64_t term,
   Entry entry;
   log_info("FloydContext::AppendEntries %lld\n", pre_log_index);
   if (raft_log_->GetEntry(pre_log_index, &entry)) {
-    if (pre_log_index == 0) {
-      my_log_term = current_term_;
-    } else {
-      my_log_term = entry.term();
-    }
+    my_log_term = entry.term();
   }
-  // if (pre_log_term != my_log_term && pre_log_index != 0) {
-  //   LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries: pre_log(%lu, %lu) don't match with"
-  //        " local log(%lu, %lu), truncate suffix from here",
-  //        pre_log_term, pre_log_index, my_log_term, pre_log_index);
-  //   // TruncateSuffix [pre_log_index, last_log_index)
-  //   // raft_log_->TruncateSuffix(pre_log_index - 1);
-  //   return false;
-  // }
+  if (pre_log_term != my_log_term) {
+    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries: pre_log(%lu, %lu) don't match with"
+         " local log(%lu, %lu), truncate suffix from here",
+         pre_log_term, pre_log_index, my_log_term, last_log_index);
+    // TruncateSuffix [pre_log_index, last_log_index)
+    // raft_log_->TruncateSuffix(pre_log_index - 1);
+    return false;
+  }
 
   // Append entry
   if (pre_log_index < last_log_index) {

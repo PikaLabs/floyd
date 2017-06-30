@@ -67,8 +67,8 @@ static void BuildAppendEntriesResponse(bool succ, uint64_t term,
                                        uint64_t log_index,
                                        CmdResponse* response) {
   response->set_type(Type::AppendEntries);
-  // response->set_code(succ ? StatusCode::kOk : StatusCode::kError);
-  response->set_code(StatusCode::kOk);
+  response->set_code(succ ? StatusCode::kOk : StatusCode::kError);
+  // response->set_code(StatusCode::kOk);
   CmdResponse_AppendEntries* append_entries = response->mutable_append_entries();
   append_entries->set_term(term);
   append_entries->set_last_log_index(log_index);

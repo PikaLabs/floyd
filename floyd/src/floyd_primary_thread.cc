@@ -3,7 +3,11 @@
 #include <climits>
 #include <stdlib.h>
 #include <time.h>
+
+#include "slash/include/env.h"
+#include "slash/include/slash_mutex.h"
 #include <google/protobuf/text_format.h>
+
 #include "floyd/src/floyd_peer_thread.h"
 #include "floyd/src/floyd_apply.h"
 #include "floyd/src/floyd_context.h"
@@ -12,8 +16,6 @@
 #include "floyd/src/floyd.pb.h"
 #include "floyd/src/logger.h"
 
-#include "slash/include/env.h"
-#include "slash/include/slash_mutex.h"
 
 namespace floyd {
 
@@ -98,12 +100,6 @@ void FloydPrimary::AddTask(TaskType type, void* arg) {
   }
   }
 
-#ifndef NDEBUG
-  //int pri_size, size;
-  //bg_thread_.QueueSize(&pri_size, &size);
-  //LOGV(INFO_LEVEL, context_->info_log(), "FloydPrimary Pri queue size %d, "
-  //     "normal queue size is %d", pri_size, size);
-#endif
 }
 
 void FloydPrimary::DoLeaderHeartbeat(void *arg) {
