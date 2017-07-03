@@ -1,3 +1,8 @@
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
 #include "floyd/src/floyd_impl.h"
 
 #include <google/protobuf/text_format.h>
@@ -72,13 +77,6 @@ static void BuildAppendEntriesResponse(bool succ, uint64_t term,
   CmdResponse_AppendEntries* append_entries = response->mutable_append_entries();
   append_entries->set_term(term);
   append_entries->set_last_log_index(log_index);
-}
-
-bool FloydImpl::HasLeader() {
-  std::string leader_ip;
-  int leader_port;
-  context_->leader_node(&leader_ip, &leader_port);
-  return (!leader_ip.empty() && leader_port != 0);
 }
 
 static void BuildLogEntry(const CmdRequest& cmd, uint64_t current_term,
@@ -196,7 +194,7 @@ bool FloydImpl::GetServerStatus(std::string& msg) {
             server_status.leader_ip().c_str(), server_status.leader_port(),
             server_status.voted_for_ip().c_str(), server_status.voted_for_port(),
             server_status.last_log_term(), server_status.last_log_index(),
-            server_status.last_apply_index());
+            server_status.last_applied());
 
   msg.clear();
   msg.append(str);
@@ -223,7 +221,7 @@ bool FloydImpl::GetServerStatus(std::string& msg) {
                   server_status.leader_ip().c_str(), server_status.leader_port(),
                   server_status.voted_for_ip().c_str(), server_status.voted_for_port(),
                   server_status.last_log_term(), server_status.last_log_index(),
-                  server_status.last_apply_index());
+                  server_status.last_applied());
         msg.append(str);
         LOGV(DEBUG_LEVEL, info_log_, "GetServerStatus msg(%s)", str);
       }
@@ -329,7 +327,7 @@ bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
 
   res->set_last_log_term(last_log_term);
   res->set_last_log_index(last_log_index);
-  res->set_last_apply_index(context_->apply_index());
+  res->set_last_applied(context_->last_applied());
   return true;
 }
 

@@ -64,31 +64,6 @@ int main()
     // printf("write 10000 cost time microsecond(us) %lld, qps %lld\n", ed - st, 10000 * 1000000LL / (ed - st));
   }
 
-/*
- *   delete f1;
- * 
- *   i = 5;
- *   while (i--) {
- *     sleep(3);
- *     f2->GetServerStatus(msg);
- *     for (int j = 0; j < 100; j++) {
- *       f2->Write("zz2" + char(j), "value2" + char(j));
- *     }
- *     printf("%s\n", msg.c_str());
- *   }
- * 
- *   s = Floyd::Open(op, &f1);
- *   i = 5;
- *   while (i--) {
- *     sleep(3);
- *     f2->GetServerStatus(msg);
- *     for (int j = 0; j < 100; j++) {
- *       f1->Write("zz3" + char(j), "value3" + char(j));
- *     }
- *     printf("%s\n", msg.c_str());
- *   }
- */
-
   getchar();
   return 0;
 }

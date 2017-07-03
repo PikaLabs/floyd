@@ -25,7 +25,7 @@ class RaftLog {
   bool GetLastLogTermAndIndex(uint64_t* last_log_term, uint64_t* last_log_index);
 
   void UpdateMetadata(uint64_t current_term, std::string voted_for_ip,
-                      int32_t voted_for_port, uint64_t apply_index);
+                      int32_t voted_for_port, uint64_t last_applied);
 
 
   // return persistent state from zeppelin
@@ -33,17 +33,15 @@ class RaftLog {
   std::string voted_for_ip();
   int voted_for_port(); 
 
-  uint64_t apply_index() {
-    return apply_index_;
+  uint64_t last_applied() {
+    return last_applied_;
   }
-  void set_apply_index(uint64_t apply_index) {
-    apply_index_ = apply_index;
-  }
+  void UpdateLastApplied(uint64_t last_applied);
 
  private:
   std::string path_;
-  std::atomic<uint64_t> index_;
-  uint64_t apply_index_;
+  std::atomic<uint64_t> last_log_index_;
+  uint64_t last_applied_;
   rocksdb::DB* log_db_;
 
   Logger* info_log_;

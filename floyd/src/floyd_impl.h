@@ -1,5 +1,10 @@
-#ifndef FLOYD_IMPL_H_
-#define FLOYD_IMPL_H_
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
+#ifndef FLOYD_SRC_FLOYD_IMPL_H_
+#define FLOYD_SRC_FLOYD_IMPL_H_
 
 #include <string>
 #include <map>
@@ -45,7 +50,8 @@ class FloydImpl : public Floyd {
   virtual Status DirtyRead(const std::string& key, std::string& value);
 
   // return true if leader has been elected
-  virtual bool GetLeader(std::string& ip_port);
+  virtual bool GetLeader(std::string* ip_port);
+  virtual bool HasLeader();
   virtual bool GetLeader(std::string* ip, int* port);
   virtual bool GetAllNodes(std::vector<std::string>& nodes);
   virtual bool GetServerStatus(std::string& msg);
@@ -75,7 +81,6 @@ class FloydImpl : public Floyd {
   ClientPool* worker_client_pool_;
 
   bool IsSelf(const std::string& ip_port);
-  bool HasLeader();
 
   Status DoCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
   Status ExecuteCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
@@ -90,4 +95,4 @@ class FloydImpl : public Floyd {
 }; // FloydImpl
 
 } // namespace floyd
-#endif  // 
+#endif  // FLOYD_SRC_FLOYD_IMPL_H_

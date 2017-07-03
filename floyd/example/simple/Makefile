@@ -5,12 +5,12 @@ else
 	CXXFLAGS = -pg -O2 -ggdb3 -pipe -fPIC -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls -Wno-unused-variable -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX 
 endif
 
-OBJECT = t read_rock read_floyd
+OBJECT = t read_rock read_floyd t1 t2
 SRC_DIR = ./
-THIRD_PATH = ../third
+THIRD_PATH = ../../third
 OUTPUT = ./output
 
-LIB_PATH = -L../lib/ \
+LIB_PATH = -L../../lib/ \
 			 -L$(THIRD_PATH)/slash/slash/lib/ \
 			 -L$(THIRD_PATH)/rocksdb/ \
 			 -L$(THIRD_PATH)/pink/pink/lib/
@@ -29,7 +29,7 @@ LIBS = -lfloyd \
 			 -lcrypto \
 			 -lpthread
 
-INCLUDE_PATH = -I../../ \
+INCLUDE_PATH = -I../../../ \
 							 -I$(THIRD_PATH)/rocksdb/include \
 							 -I$(THIRD_PATH)/slash/ \
 							 -I$(THIRD_PATH)/pink/
@@ -60,6 +60,9 @@ read_floyd: read_floyd.cc
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
 
 t1: t1.cc
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
+
+t2: t2.cc
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
 $(OBJS): %.o : %.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE_PATH) 

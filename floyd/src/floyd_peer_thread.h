@@ -1,10 +1,19 @@
-#ifndef FLOYD_PEER_THREAD_H_
-#define FLOYD_PEER_THREAD_H_
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
 
-#include "floyd/src/floyd_context.h"
+#ifndef FLOYD_SRC_FLOYD_PEER_THREAD_H_
+#define FLOYD_SRC_FLOYD_PEER_THREAD_H_
+
+
+#include <string>
 
 #include "slash/include/slash_status.h"
 #include "pink/include/bg_thread.h"
+
+#include "floyd/src/floyd_context.h"
+
 
 namespace floyd {
 
@@ -59,4 +68,4 @@ class Peer {
 };
 
 } // namespace floyd
-#endif
+#endif   // FLOYD_SRC_FLOYD_PEER_THREAD_H_

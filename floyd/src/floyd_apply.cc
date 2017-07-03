@@ -1,9 +1,19 @@
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
 #include "floyd/src/floyd_apply.h"
 
 #include <unistd.h>
+#include <string>
+
+#include "slash/include/xdebug.h"
+#include <google/protobuf/text_format.h>
+
+
 #include "floyd/src/logger.h"
 #include "floyd/src/floyd.pb.h"
-#include "slash/include/xdebug.h"
 
 
 namespace floyd {
@@ -35,30 +45,33 @@ void FloydApply::ApplyStateMachine(void* arg) {
   // Apply as more entry as possible
   uint64_t len = 0, to_apply = 0;
   to_apply = context->NextApplyIndex(&len);
+
   LOGV(DEBUG_LEVEL, context->info_log(), "ApplyStateMachine with %lu entries to apply from to_apply(%lu)",
             len, to_apply);
   while (len-- > 0) {
     Entry log_entry;
     fapply->raft_log_->GetEntry(to_apply, &log_entry);
-    log_info("to_apply %lld\n", to_apply);
     Status s = fapply->Apply(log_entry);
     if (!s.ok()) {
       LOGV(WARN_LEVEL, context->info_log(), "Apply log entry failed, at: %d, error: %s",
           to_apply, s.ToString().c_str());
-      fapply->ScheduleApply(); // try once more
-      usleep(1000);
+      fapply->ScheduleApply();  // try once more
+      usleep(1000000);
       return;
     }
     context->ApplyDone(to_apply);
     to_apply++;
   }
-  fapply->raft_log_->set_apply_index(to_apply - 1);
+  fapply->raft_log_->UpdateLastApplied(to_apply - 1);
 }
 
 Status FloydApply::Apply(const Entry& log_entry) {
   const std::string& data = log_entry.cmd();
   CmdRequest cmd;
   if (!cmd.ParseFromArray(data.c_str(), data.length())) {
+    std::string text_format;
+    google::protobuf::TextFormat::PrintToString(cmd, &text_format);
+    LOGV(WARN_LEVEL, context_->info_log(), "FloydApply:Apply :\n%s \n", text_format.c_str());
     LOGV(WARN_LEVEL, context_->info_log(), "Parse log_entry failed");
     return Status::IOError("Parse error");
   }

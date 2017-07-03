@@ -1,3 +1,8 @@
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
 #include "floyd/src/floyd_context.h"
 
 #include <stdlib.h>
@@ -22,7 +27,7 @@ FloydContext::FloydContext(const floyd::Options& opt,
     vote_quorum_(0),
     commit_index_(0),
     apply_cond_(&apply_mu_),
-    apply_index_(0) {
+    last_applied_(0) {
   pthread_rwlockattr_t attr;
   pthread_rwlockattr_init(&attr);
   pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
@@ -44,8 +49,15 @@ void FloydContext::RecoverInit() {
   current_term_ = raft_log_->current_term();
   voted_for_ip_ = raft_log_->voted_for_ip();
   voted_for_port_ = raft_log_->voted_for_port();
-  apply_index_ = raft_log_->apply_index();
+  last_applied_ = raft_log_->last_applied();
   role_ = Role::kFollower;
+}
+
+bool FloydContext::HasLeader() {
+  if (leader_ip_ == "" || leader_port_ == 0) {
+    return false;
+  }
+  return true;
 }
 
 void FloydContext::leader_node(std::string* ip, int* port) {
@@ -68,8 +80,8 @@ void FloydContext::BecomeFollower(uint64_t new_term,
                                   const std::string leader_ip, int leader_port) {
   slash::RWLock l(&stat_rw_, true);
   LOGV(DEBUG_LEVEL, info_log_, "BecomeFollower: with current_term_(%lu) and new_term(%lu)"
-       " commit_index(%lu)  apply_index(%lu)",
-       current_term_, new_term, commit_index(), apply_index());
+       " commit_index(%lu)  last_applied(%lu)",
+       current_term_, new_term, commit_index(), last_applied());
   //TODO(anan) BecameCandidate will conflict this assert
   //assert(current_term_ <= new_term);
   if (current_term_ > new_term) {
@@ -154,20 +166,20 @@ uint64_t FloydContext::NextApplyIndex(uint64_t* len) {
   uint64_t tcommit_index = commit_index();
   *len = 0;
   slash::MutexLock lapply(&apply_mu_);
-  if (tcommit_index > apply_index_) {
-    *len = tcommit_index - apply_index_;
+  if (tcommit_index > last_applied_) {
+    *len = tcommit_index - last_applied_;
   }
-  return apply_index_ + 1;
+  return last_applied_ + 1;
 }
 
 void FloydContext::ApplyDone(uint64_t index) {
   slash::MutexLock lapply(&apply_mu_);
-  apply_index_ = index; 
+  last_applied_ = index; 
   apply_cond_.SignalAll();
 }
 
 void FloydContext::MetaApply() {
-  raft_log_->UpdateMetadata(current_term_, voted_for_ip_, voted_for_port_, apply_index());
+  raft_log_->UpdateMetadata(current_term_, voted_for_ip_, voted_for_port_, last_applied());
 }
 
 bool FloydContext::VoteAndCheck(uint64_t vote_term) {
@@ -180,9 +192,9 @@ bool FloydContext::VoteAndCheck(uint64_t vote_term) {
   return (++vote_quorum_) > (options_.members.size() / 2);
 }
 
-Status FloydContext::WaitApply(uint64_t apply_index, uint32_t timeout) { 
+Status FloydContext::WaitApply(uint64_t last_applied, uint32_t timeout) { 
   slash::MutexLock lapply(&apply_mu_);
-  while (apply_index_ < apply_index) {
+  while (last_applied_ < last_applied) {
     if (!apply_cond_.TimedWait(timeout)) {
       return Status::Timeout("apply timeout");
     }
@@ -245,7 +257,7 @@ bool FloydContext::AppendEntries(uint64_t term,
   uint64_t my_log_term = 0;
   Entry entry;
   log_info("FloydContext::AppendEntries %lld\n", pre_log_index);
-  if (raft_log_->GetEntry(pre_log_index, &entry)) {
+  if (raft_log_->GetEntry(pre_log_index, &entry) == 0) {
     my_log_term = entry.term();
   }
   if (pre_log_term != my_log_term) {

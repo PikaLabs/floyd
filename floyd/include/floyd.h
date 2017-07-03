@@ -25,7 +25,8 @@ class Floyd {
   virtual Status DirtyRead(const std::string& key, std::string& value) = 0;
 
   // return true if leader has been elected
-  virtual bool GetLeader(std::string& ip_port) = 0;
+  virtual bool GetLeader(std::string* ip_port) = 0;
+  virtual bool HasLeader() = 0;
   virtual bool GetLeader(std::string* ip, int* port) = 0;
   virtual bool GetAllNodes(std::vector<std::string>& nodes) = 0;
 

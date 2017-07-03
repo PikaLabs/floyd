@@ -48,27 +48,31 @@ int main()
   for (int i = 0; i < 10000; i++) {
     mystr[i] = slash::RandomString(10);
   }
+
   sleep(10);
-  /*
-   * while (i--) {
-   *   sleep(2);
-   *   // f1->GetServerStatus(msg);
-   *   // printf("%s\n", msg.c_str());
-   *   st = NowMicros();
-   *   for (int j = 0; j < 10000; j++) {
-   *     f1->Write(mystr[j], mystr[j]);
-   *     // f1->Write("zz", "zz");
-   *   }
-   *   ed = NowMicros();
-   *   printf("write 10000 cost time microsecond(us) %lld, qps %lld\n", ed - st, 10000 * 1000000LL / (ed - st));
-   * }
-   */
+  while (1) {
+    if (f1->HasLeader()) {
+      break;
+    }
+    sleep(2);
+  }
+
+  while (i--) {
+    // f1->GetServerStatus(msg);
+    // printf("%s\n", msg.c_str());
+    st = NowMicros();
+    for (int j = 0; j < 10000; j++) {
+      f1->Write(mystr[j], mystr[j]);
+      // f1->Write("zz", "zz");
+    }
+    ed = NowMicros();
+    printf("write 10000 cost time microsecond(us) %lld, qps %lld\n", ed - st, 10000 * 1000000LL / (ed - st));
+  }
 
   delete f1;
 
   i = 5;
   while (i--) {
-    sleep(3);
     f2->GetServerStatus(msg);
     for (int j = 0; j < 100; j++) {
       f2->Write("zz2" + char(j), "value2" + char(j));
@@ -82,7 +86,6 @@ int main()
   }
   i = 5;
   while (i--) {
-    sleep(3);
     f2->GetServerStatus(msg);
     for (int j = 0; j < 100; j++) {
       f1->Write("zz3" + char(j), "value3" + char(j));

@@ -1,5 +1,10 @@
-#ifndef FLOYD_CONTEXT_H_
-#define FLOYD_CONTEXT_H_
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
+#ifndef FLOYD_SRC_FLOYD_CONTEXT_H_
+#define FLOYD_SRC_FLOYD_CONTEXT_H_
 
 #include <pthread.h>
 
@@ -40,6 +45,8 @@ class FloydContext {
   void leader_node(std::string* ip, int* port);
   void voted_for_node(std::string* ip, int* port);
 
+  bool HasLeader();
+
   uint64_t current_term() {
     slash::RWLock l(&stat_rw_, false);
     return current_term_;
@@ -79,6 +86,7 @@ class FloydContext {
       const std::string leader_ip = "", int port = 0);
   void BecomeCandidate();
   void BecomeLeader();
+
   bool VoteAndCheck(uint64_t vote_term);
   bool RequestVote(uint64_t term,
       const std::string ip, int port,
@@ -97,15 +105,15 @@ class FloydContext {
   
   /* Apply related */
   // Return false if timeout
-  Status WaitApply(uint64_t apply_index, uint32_t timeout);
+  Status WaitApply(uint64_t last_applied, uint32_t timeout);
   
   // commit index may be smaller than apply index,
   // so we should check len first;
   uint64_t NextApplyIndex(uint64_t* len);
 
-  uint64_t apply_index() {
+  uint64_t last_applied() {
     slash::MutexLock lapply(&apply_mu_);
-    return apply_index_;
+    return last_applied_;
   }
 
   void ApplyDone(uint64_t index);
@@ -134,10 +142,10 @@ class FloydContext {
   // Apply related
   slash::Mutex apply_mu_;
   slash::CondVar apply_cond_;
-  uint64_t apply_index_;
+  uint64_t last_applied_;
 
   void MetaApply();
 };
 
 } // namespace floyd
-#endif
+#endif  // FLOYD_SRC_FLOYD_CONTEXT_H_

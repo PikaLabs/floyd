@@ -1,3 +1,8 @@
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
 #include "floyd/include/floyd_options.h"
 
 namespace floyd {
@@ -78,7 +83,7 @@ Options::Options()
     elect_timeout_ms(5000),
     heartbeat_us(1000000),
     append_entries_size_once(1024),
-    append_entries_count_once(24),
+    append_entries_count_once(1),
     single_mode(false) {
     }
 

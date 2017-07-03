@@ -1,3 +1,7 @@
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -22,7 +26,6 @@ std::string mystr[10010];
 void *fun(void *arg) {
   int i = 1;
   while (i--) {
-    // sleep(2);
     for (int j = 0; j < 10000; j++) {
       f1->Write(mystr[j], mystr[j]);
     }
@@ -62,43 +65,24 @@ int main()
   for (int i = 0; i < 10000; i++) {
     mystr[i] = slash::RandomString(10);
   }
-  sleep(20);
+  while (1) {
+    if (f1->HasLeader()) {
+      break;
+    }
+    sleep(2);
+  }
 
-  pthread_t pid[10];
+  pthread_t pid[24];
   st = NowMicros();
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 24; i++) {
     pthread_create(&pid[i], NULL, fun, NULL);
   } 
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 24; i++) {
     pthread_join(pid[i], NULL);
   }
   ed = NowMicros();
-  printf("write 10000 cost time microsecond(us) %lld, qps %lld\n", ed - st, 10000 * 10 * 1000000LL / (ed - st));
+  printf("write 10000 cost time microsecond(us) %lld, qps %lld\n", ed - st, 10000 * 24 * 1000000LL / (ed - st));
 
-/*
- *   delete f1;
- * 
- *   i = 5;
- *   while (i--) {
- *     sleep(3);
- *     f2->GetServerStatus(msg);
- *     for (int j = 0; j < 100; j++) {
- *       f2->Write("zz2" + char(j), "value2" + char(j));
- *     }
- *     printf("%s\n", msg.c_str());
- *   }
- * 
- *   s = Floyd::Open(op, &f1);
- *   i = 5;
- *   while (i--) {
- *     sleep(3);
- *     f2->GetServerStatus(msg);
- *     for (int j = 0; j < 100; j++) {
- *       f1->Write("zz3" + char(j), "value3" + char(j));
- *     }
- *     printf("%s\n", msg.c_str());
- *   }
- */
 
   getchar();
   return 0;

@@ -1,5 +1,16 @@
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
 #include "floyd/src/floyd_impl.h"
 
+#include <utility>
+#include <vector>
+
+#include "slash/include/env.h"
+
+#include "slash/include/slash_string.h"
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_apply.h"
 #include "floyd/src/floyd_worker.h"
@@ -9,15 +20,11 @@
 #include "floyd/src/floyd_client_pool.h"
 #include "floyd/src/logger.h"
 
-
-#include "slash/include/env.h"
-#include "slash/include/slash_string.h"
-
 namespace floyd {
 
 FloydImpl::FloydImpl(const Options& options)
   : options_(options),
-    db_(NULL), 
+    db_(NULL),
     info_log_(NULL) {
 }
 
@@ -39,24 +46,29 @@ FloydImpl::~FloydImpl() {
 }
 
 bool FloydImpl::IsSelf(const std::string& ip_port) {
-  return (ip_port == 
+  return (ip_port ==
     slash::IpPortString(options_.local_ip, options_.local_port));
 }
 
-bool FloydImpl::GetLeader(std::string& ip_port) {
+bool FloydImpl::GetLeader(std::string *ip_port) {
   std::string ip;
   int port;
   context_->leader_node(&ip, &port);
   if (ip.empty() || port == 0) {
     return false;
   }
-  ip_port = slash::IpPortString(ip, port);
+  *ip_port = slash::IpPortString(ip, port);
   return true;
 }
 
+// TODO (baotiao): this function is wrong
 bool FloydImpl::GetLeader(std::string* ip, int* port) {
   context_->leader_node(ip, port);
   return (!ip->empty() && *port != 0);
+}
+
+bool FloydImpl::HasLeader() {
+  return context_->HasLeader();
 }
 
 bool FloydImpl::GetAllNodes(std::vector<std::string>& nodes) {
@@ -109,7 +121,7 @@ Status FloydImpl::Init() {
       peers_.insert(std::pair<std::string, Peer*>(*iter, pt));
     }
   }
-  
+
   // Start peer thread
   int ret;
   for (auto& pt : peers_) {
@@ -155,8 +167,7 @@ Status Floyd::Open(const Options& options, Floyd** floyd) {
   return s;
 }
 
-Floyd::~Floyd() { 
+Floyd::~Floyd() {
 }
-
 
 } // namespace floyd

@@ -1,8 +1,14 @@
-#ifndef FLOYD_WORKER_H_
-#define FLOYD_WORKER_H_
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
+#ifndef FLOYD_SRC_FLOYD_WORKER_H_
+#define FLOYD_SRC_FLOYD_WORKER_H_
+
+#include <string>
 
 #include "floyd/src/floyd.pb.h"
-
 #include "pink/include/server_thread.h"
 #include "pink/include/pb_conn.h"
 
@@ -45,7 +51,7 @@ class FloydWorkerConnFactory : public pink::ConnFactory {
 
 class FloydWorkerHandle : public pink::ServerHandle {
 public:
-  FloydWorkerHandle(FloydImpl* f);
+  explicit FloydWorkerHandle(FloydImpl* f);
   virtual bool AccessHandle(std::string& ip) const override;
 private:
   FloydImpl* floyd_;
@@ -71,6 +77,5 @@ class FloydWorker {
   pink::ServerThread* thread_;
 };
 
-
-} // namspace floyd
-#endif
+}  // namespace floyd
+#endif  // FLOYD_SRC_FLOYD_WORKER_H_

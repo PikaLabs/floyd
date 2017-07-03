@@ -1,3 +1,8 @@
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
 #include "floyd/src/floyd_peer_thread.h"
 
 #include <climits>
@@ -58,6 +63,10 @@ void Peer::DoRequestVote(void *arg) {
 }
 
 Status Peer::RequestVote() {
+  /*
+   * 这里为什么需要判断一下是否是 candidate, 如果保证调用requestvote 之前就肯定是candidate
+   * 就不需要这个保证了吧
+   */
   if (context_->role() != Role::kCandidate) {
     LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s) not candidate,"
          "skip RequestVote", server_.c_str());
@@ -192,28 +201,35 @@ Status Peer::AppendEntries() {
   append_entries->set_prev_log_term(prev_log_term);
 
   uint64_t num_entries = 0;
+  Entry *tmp_entry = new Entry();
   LOGV(DEBUG_LEVEL, context_->info_log(), "next_index_ %lld, last_log_index %lld", next_index_.load(), last_log_index);
   for (uint64_t index = next_index_; index <= last_log_index; index++) {
-    // Entry *entry = append_entries->add_entries();
-    // raft_log_->GetEntry(index, entry);
+    if (raft_log_->GetEntry(index, tmp_entry) == 0) {
+      // TODO how to avoid memory copy here
+      Entry *entry = append_entries->add_entries();
+      *entry = *tmp_entry;
+    } else {
+      LOGV(WARN_LEVEL, context_->info_log(), "FloydPeerThread::AppendEntries: can't get Entry from raft_log, index %lld", index);
+      break;
+    }
 
-    Entry entry;
-    raft_log_->GetEntry(index, &entry);
-    *append_entries->add_entries() = entry;
     num_entries++;
-    if (num_entries > context_->append_entries_count_once() 
+    if (num_entries >= context_->append_entries_count_once() 
         || (uint64_t)append_entries->ByteSize() >= context_->append_entries_size_once()) {
       break;
     }
   }
+  delete tmp_entry;
   append_entries->set_commit_index(
       std::min(context_->commit_index(), prev_log_index + num_entries));
 
-  std::string text_format;
-  google::protobuf::TextFormat::PrintToString(req, &text_format);
-  LOGV(DEBUG_LEVEL, context_->info_log(), "AppendEntry Send to %s with %llu "
-      "entries, message :\n%s",
-      server_.c_str(), num_entries, text_format.c_str());
+  /*
+   * std::string text_format;
+   * google::protobuf::TextFormat::PrintToString(req, &text_format);
+   * LOGV(DEBUG_LEVEL, context_->info_log(), "AppendEntry Send to %s with %llu "
+   *     "entries, message :\n%s",
+   *     server_.c_str(), num_entries, text_format.c_str());
+   */
 
   CmdResponse res;
   Status result = pool_->SendAndRecv(server_, req, &res);
