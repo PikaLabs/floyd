@@ -30,7 +30,6 @@ void *fun(void *arg) {
       f1->Write(mystr[j], mystr[j]);
     }
   }
-
 }
 
 int main()
@@ -74,10 +73,10 @@ int main()
 
   pthread_t pid[24];
   st = NowMicros();
-  for (int i = 0; i < 24; i++) {
+  for (int i = 0; i < 10; i++) {
     pthread_create(&pid[i], NULL, fun, NULL);
   } 
-  for (int i = 0; i < 24; i++) {
+  for (int i = 0; i < 10; i++) {
     pthread_join(pid[i], NULL);
   }
   ed = NowMicros();

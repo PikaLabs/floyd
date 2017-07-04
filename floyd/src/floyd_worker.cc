@@ -54,12 +54,12 @@ int FloydWorkerConn::DealMessage() {
     }
     case Type::RequestVote: {
       LOGV(DEBUG_LEVEL, floyd_->info_log_, "WorkerConn::DealMessage RequestVote");
-      floyd_->DoRequestVote(request_, &response_);
+      floyd_->ResponseRequestVote(request_, &response_);
       break;
     }
     case Type::AppendEntries: {
       LOGV(DEBUG_LEVEL, floyd_->info_log_, "WorkerConn::DealMessage AppendEntries");
-      floyd_->DoAppendEntries(request_, &response_);
+      floyd_->ResponseAppendEntries(request_, &response_);
       break;
     }
     default:

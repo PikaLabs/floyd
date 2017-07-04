@@ -83,7 +83,7 @@ Options::Options()
     elect_timeout_ms(5000),
     heartbeat_us(1000000),
     append_entries_size_once(1024),
-    append_entries_count_once(1),
+    append_entries_count_once(24),
     single_mode(false) {
     }
 

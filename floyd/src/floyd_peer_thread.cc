@@ -55,14 +55,14 @@ void Peer::DoRequestVote(void *arg) {
   Peer *peer = static_cast<Peer*>(arg);
   LOGV(DEBUG_LEVEL, peer->context_->info_log(), "Peer(%s)::DoRequestVote",
        peer->server_.c_str());
-  Status result = peer->RequestVote();
+  Status result = peer->RequestVoteRPC();
   if (!result.ok()) {
     LOGV(ERROR_LEVEL, peer->context_->info_log(), "Peer(%s) failed to "
          "RequestVote caz %s.", peer->server_.c_str(), result.ToString().c_str());
   }
 }
 
-Status Peer::RequestVote() {
+Status Peer::RequestVoteRPC() {
   /*
    * 这里为什么需要判断一下是否是 candidate, 如果保证调用requestvote 之前就肯定是candidate
    * 就不需要这个保证了吧
@@ -159,7 +159,7 @@ void Peer::DoAppendEntries(void *arg) {
   Peer* peer = static_cast<Peer*>(arg);
   LOGV(DEBUG_LEVEL, peer->context_->info_log(), "Peer(%s) DoAppendEntries",
        peer->server_.c_str());
-  Status result = peer->AppendEntries();
+  Status result = peer->AppendEntriesRPC();
   if (!result.ok()) {
     LOGV(ERROR_LEVEL, peer->context_->info_log(), "Peer(%s) failed to "
          "AppendEntries caz %s.",
@@ -171,7 +171,7 @@ uint64_t Peer::GetMatchIndex() {
   return (next_index_ - 1);
 }
 
-Status Peer::AppendEntries() {
+Status Peer::AppendEntriesRPC() {
   if (context_->role() != Role::kLeader) {
     LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s) not leader anymore,"
          "skip AppendEntries", server_.c_str());

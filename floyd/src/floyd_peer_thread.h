@@ -34,16 +34,22 @@ class Peer {
 
   int StartThread();
 
+  /*
+   * the two main RPC call in raft consensus protocol is here
+   * AppendEntriesRPC
+   * RequestVoteRPC
+   * the response to these two RPC at floyd_impl.h
+   */
   // Apend Entries
   void AddAppendEntriesTask();
   void AddHeartBeatTask();
   void AddBecomeLeaderTask();
   static void DoAppendEntries(void *arg);
-  Status AppendEntries();
+  Status AppendEntriesRPC();
 
   // Request Vote
   void AddRequestVoteTask();
-  Status RequestVote();
+  Status RequestVoteRPC();
   static void DoRequestVote(void *arg);
 
   uint64_t GetMatchIndex();

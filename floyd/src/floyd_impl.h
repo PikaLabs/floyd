@@ -85,9 +85,13 @@ class FloydImpl : public Floyd {
   Status DoCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
   Status ExecuteCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
   Status ExecuteDirtyCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
-  void DoRequestVote(CmdRequest& cmd, CmdResponse* cmd_res);
-  void DoAppendEntries(CmdRequest& cmd, CmdResponse* cmd_res);
   bool DoGetServerStatus(CmdResponse_ServerStatus* res);
+
+  /*
+   * these two are the response to the request and appendentries
+   */
+  void ResponseRequestVote(const CmdRequest& cmd, CmdResponse* cmd_res);
+  void ResponseAppendEntries(CmdRequest& cmd, CmdResponse* cmd_res);
   
   // No coping allowed
   FloydImpl(const FloydImpl&);

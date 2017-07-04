@@ -396,7 +396,7 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
   return Status::OK();
 }
 
-void FloydImpl::DoRequestVote(CmdRequest& cmd, CmdResponse* response) {
+void FloydImpl::ResponseRequestVote(const CmdRequest& cmd, CmdResponse* response) {
   bool granted = false;
   uint64_t my_term = context_->current_term();
 
@@ -423,7 +423,7 @@ void FloydImpl::DoRequestVote(CmdRequest& cmd, CmdResponse* response) {
   BuildRequestVoteResponse(my_term, granted, response);
 }
 
-void FloydImpl::DoAppendEntries(CmdRequest& cmd, CmdResponse* response) {
+void FloydImpl::ResponseAppendEntries(CmdRequest& cmd, CmdResponse* response) {
   // Ignore stale term
   bool status = false;
   uint64_t my_term = context_->current_term();
