@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <pthread.h>
 
 #include <iostream>
 #include <string>
@@ -21,40 +22,43 @@ uint64_t NowMicros() {
 }
 
 Floyd *f1;
-std::string mystr[10010];
+std::string mystr[100100];
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 void *fun(void *arg) {
   int i = 1;
   while (i--) {
     for (int j = 0; j < 10000; j++) {
+      // pthread_mutex_lock(&lock);
       f1->Write(mystr[j], mystr[j]);
+      // pthread_mutex_unlock(&lock);
     }
   }
 }
 
 int main()
 {
-  // Options op("127.0.0.1:8901", "127.0.0.1", 8901, "./data1/");
-  Options op("127.0.0.1:8901,127.0.0.1:8902,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905", "127.0.0.1", 8901, "./data1/");
+  // Options op("127.0.0.1:8907", "127.0.0.1", 8907, "./data1/");
+  Options op("127.0.0.1:8907,127.0.0.1:8908,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905", "127.0.0.1", 8907, "./data1/");
   Floyd *f2, *f3, *f4, *f5;
   op.Dump();
 
   slash::Status s = Floyd::Open(op, &f1);
   printf("%s\n", s.ToString().c_str());
 
-  Options op2("127.0.0.1:8901,127.0.0.1:8902,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905", "127.0.0.1", 8902, "./data2/");
+  Options op2("127.0.0.1:8907,127.0.0.1:8908,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905", "127.0.0.1", 8908, "./data2/");
   s = Floyd::Open(op2, &f2);
   printf("%s\n", s.ToString().c_str());
 
-  Options op3("127.0.0.1:8901,127.0.0.1:8902,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905", "127.0.0.1", 8903, "./data3/");
+  Options op3("127.0.0.1:8907,127.0.0.1:8908,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905", "127.0.0.1", 8903, "./data3/");
   s = Floyd::Open(op3, &f3);
   printf("%s\n", s.ToString().c_str());
 
-  Options op4("127.0.0.1:8901,127.0.0.1:8902,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905", "127.0.0.1", 8904, "./data4/");
+  Options op4("127.0.0.1:8907,127.0.0.1:8908,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905", "127.0.0.1", 8904, "./data4/");
   s = Floyd::Open(op4, &f4);
   printf("%s\n", s.ToString().c_str());
 
-  Options op5("127.0.0.1:8901,127.0.0.1:8902,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905", "127.0.0.1", 8905, "./data5/");
+  Options op5("127.0.0.1:8907,127.0.0.1:8908,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905", "127.0.0.1", 8905, "./data5/");
   s = Floyd::Open(op5, &f5);
   printf("%s\n", s.ToString().c_str());
 
@@ -73,14 +77,14 @@ int main()
 
   pthread_t pid[24];
   st = NowMicros();
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 8; i++) {
     pthread_create(&pid[i], NULL, fun, NULL);
   } 
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 8; i++) {
     pthread_join(pid[i], NULL);
   }
   ed = NowMicros();
-  printf("write 10000 cost time microsecond(us) %lld, qps %lld\n", ed - st, 10000 * 24 * 1000000LL / (ed - st));
+  printf("write 10000 cost time microsecond(us) %llu, qps %llu\n", ed - st, 10000 * 8 * 1000000LL / (ed - st));
 
 
   getchar();

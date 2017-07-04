@@ -1,11 +1,17 @@
-#ifndef FLOYD_RAFT_LOG_H_
-#define FLOYD_RAFT_LOG_H_
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
+#ifndef FLOYD_SRC_RAFT_LOG_H_
+#define FLOYD_SRC_RAFT_LOG_H_
 
 #include <string>
 #include <stdint.h>
 #include <atomic>
 
 #include "rocksdb/db.h"
+#include "slash/include/slash_mutex.h"
 
 namespace floyd {
 
@@ -40,7 +46,12 @@ class RaftLog {
 
  private:
   std::string path_;
-  std::atomic<uint64_t> last_log_index_;
+
+  /*
+   * mutex for last_log_index_
+   */
+  slash::Mutex lli_mutex_;
+  uint64_t last_log_index_;
   uint64_t last_applied_;
   rocksdb::DB* log_db_;
 

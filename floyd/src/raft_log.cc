@@ -66,6 +66,7 @@ RaftLog::~RaftLog() {
 }
 
 uint64_t RaftLog::Append(const std::vector<Entry *> &entries) {
+  slash::MutexLock l(&lli_mutex_);
   std::string buf;
   rocksdb::Status s;
   LOGV(DEBUG_LEVEL, info_log_, "entries.size %lld", entries.size());
@@ -77,7 +78,6 @@ uint64_t RaftLog::Append(const std::vector<Entry *> &entries) {
       LOGV(ERROR_LEVEL, info_log_, "RaftLog::Append false\n");
     }
   }
-  log_info("RaftLog::Append %lld", last_log_index_.load());
   return last_log_index_;
 }
 
@@ -86,6 +86,7 @@ uint64_t RaftLog::GetLastLogIndex() {
 }
 
 int RaftLog::GetEntry(const uint64_t index, Entry *entry) {
+  slash::MutexLock l(&lli_mutex_);
   std::string buf = UintToBitStr(index);
   std::string res;
   rocksdb::Status s = log_db_->Get(rocksdb::ReadOptions(), buf, &res);
@@ -130,6 +131,7 @@ int RaftLog::voted_for_port() {
 }
 
 bool RaftLog::GetLastLogTermAndIndex(uint64_t* last_log_term, uint64_t* last_log_index) {
+  slash::MutexLock l(&lli_mutex_);
   if (last_log_index_ == 0) {
     *last_log_index = 0;
     *last_log_term = 0;

@@ -1,12 +1,20 @@
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
 #include "floyd/src/floyd_primary_thread.h"
 
-#include <climits>
 #include <stdlib.h>
 #include <time.h>
+#include <google/protobuf/text_format.h>
+
+#include <climits>
+#include <algorithm>
+#include <vector>
 
 #include "slash/include/env.h"
 #include "slash/include/slash_mutex.h"
-#include <google/protobuf/text_format.h>
 
 #include "floyd/src/floyd_peer_thread.h"
 #include "floyd/src/floyd_apply.h"
@@ -16,7 +24,6 @@
 #include "floyd/src/floyd.pb.h"
 #include "floyd/src/logger.h"
 
-
 namespace floyd {
 
 FloydPrimary::FloydPrimary(FloydContext* context, FloydApply* apply)
@@ -25,7 +32,8 @@ FloydPrimary::FloydPrimary(FloydContext* context, FloydApply* apply)
     reset_elect_leader_time_(0),
     reset_leader_heartbeat_time_(0) {
    srand(time(NULL));
-} 
+}
+
 int FloydPrimary::Start() {
   bg_thread_.set_thread_name("FloydPrimary");
   return bg_thread_.StartThread();
@@ -33,7 +41,6 @@ int FloydPrimary::Start() {
 
 FloydPrimary::~FloydPrimary() {
   LOGV(INFO_LEVEL, context_->info_log(), "FloydPrimary exit!!!");
-  //bg_thread_.set_runing(false);
 }
 
 void FloydPrimary::set_peers(PeersSet* peers) {
@@ -65,7 +72,7 @@ void FloydPrimary::AddTask(TaskType type, void* arg) {
   }
   case kCheckElectLeader: {
     uint64_t timeout = context_->GetElectLeaderTimeout() * 1000LL;
-    // Here we enlarge the wait time instead of an accurate one, 
+    // Here we enlarge the wait time instead of an accurate one,
     // to make the latter node more steady
     if (reset_elect_leader_time_) {
       // uint64_t delta = (slash::NowMicros() - reset_elect_leader_time_);
@@ -99,7 +106,6 @@ void FloydPrimary::AddTask(TaskType type, void* arg) {
     LOGV(WARN_LEVEL, context_->info_log(), "FloydPrimary:: unknown task type %d", type);
   }
   }
-
 }
 
 void FloydPrimary::DoLeaderHeartbeat(void *arg) {
@@ -108,7 +114,7 @@ void FloydPrimary::DoLeaderHeartbeat(void *arg) {
     if (ptr->reset_leader_heartbeat_time_ == 0) {
       LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::DoTimingTask"
            " Start LeaderHeartbeat");
-      //ptr->LeaderHeartbeat();
+      // ptr->LeaderHeartbeat();
       ptr->NoticePeerTask(kLeaderHeartbeat);
     }
     ptr->AddTask(kLeaderHeartbeat);
@@ -218,6 +224,4 @@ uint64_t FloydPrimary::QuorumMatchIndex() {
   std::sort(values.begin(), values.end());
   return values.at(values.size() / 2);
 }
-
-
 } // namespace floyd

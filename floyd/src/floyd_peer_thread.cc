@@ -173,7 +173,7 @@ uint64_t Peer::GetMatchIndex() {
 
 Status Peer::AppendEntriesRPC() {
   if (context_->role() != Role::kLeader) {
-    LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s) not leader anymore,"
+    LOGV(WARN_LEVEL, context_->info_log(), "Peer(%s) not leader anymore,"
          "skip AppendEntries", server_.c_str());
     return Status::OK();
   }
@@ -205,7 +205,7 @@ Status Peer::AppendEntriesRPC() {
   LOGV(DEBUG_LEVEL, context_->info_log(), "next_index_ %lld, last_log_index %lld", next_index_.load(), last_log_index);
   for (uint64_t index = next_index_; index <= last_log_index; index++) {
     if (raft_log_->GetEntry(index, tmp_entry) == 0) {
-      // TODO how to avoid memory copy here
+      // TODO(baotiao) how to avoid memory copy here
       Entry *entry = append_entries->add_entries();
       *entry = *tmp_entry;
     } else {
