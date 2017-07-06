@@ -48,10 +48,10 @@ uint64_t Peer::get_next_index() {
 }
 
 void Peer::AddRequestVoteTask() {
-  bg_thread_.Schedule(DoRequestVote, this);
+  bg_thread_.Schedule(RequestVoteRPCWrapper, this);
 }
 
-void Peer::DoRequestVote(void *arg) {
+void Peer::RequestVoteRPCWrapper(void *arg) {
   Peer *peer = static_cast<Peer*>(arg);
   LOGV(DEBUG_LEVEL, peer->context_->info_log(), "Peer(%s)::DoRequestVote",
        peer->server_.c_str());
@@ -151,11 +151,14 @@ void Peer::AddBecomeLeaderTask() {
 }
 
 void Peer::AddAppendEntriesTask() {
-  bg_thread_.Schedule(DoAppendEntries, this);
+  bg_thread_.Schedule(AppendEntriesRPCWrapper, this);
 }
 
+uint64_t Peer::GetMatchIndex() {
+  return (next_index_ - 1);
+}
 
-void Peer::DoAppendEntries(void *arg) {
+void Peer::AppendEntriesRPCWrapper(void *arg) {
   Peer* peer = static_cast<Peer*>(arg);
   LOGV(DEBUG_LEVEL, peer->context_->info_log(), "Peer(%s) DoAppendEntries",
        peer->server_.c_str());
@@ -165,10 +168,6 @@ void Peer::DoAppendEntries(void *arg) {
          "AppendEntries caz %s.",
          peer->server_.c_str(), result.ToString().c_str());
   }
-}
-
-uint64_t Peer::GetMatchIndex() {
-  return (next_index_ - 1);
 }
 
 Status Peer::AppendEntriesRPC() {
@@ -187,8 +186,12 @@ Status Peer::AppendEntriesRPC() {
   uint64_t prev_log_term = 0;
   if (prev_log_index != 0) {
     Entry entry;
-    raft_log_->GetEntry(prev_log_index, &entry);
-    prev_log_term = entry.term();
+    if (raft_log_->GetEntry(prev_log_index, &entry) != 0) {
+      LOGV(WARN_LEVEL, context_->info_log(), "Peer::AppendEntriesRPC:GetEntry index %llu "
+          "not found", prev_log_index);
+    } else {
+      prev_log_term = entry.term();
+    }
   }
 
   CmdRequest req;

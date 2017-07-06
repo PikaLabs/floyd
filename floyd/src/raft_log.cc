@@ -46,11 +46,11 @@ RaftLog::RaftLog(const std::string &path, Logger *info_log) :
   rocksdb::Iterator *it = log_db_->NewIterator(rocksdb::ReadOptions());
   // skip currentterm, voteforip, voteforport, applyindex
   it->SeekToLast();
-  it->Prev();
-  it->Prev();
-  it->Prev();
-  it->Prev();
-  if (s.ok()) {
+  if (it->Valid()) {
+    it->Prev();
+    it->Prev();
+    it->Prev();
+    it->Prev();
     last_log_index_ = BitStrToUint(it->key().ToString());
   }
 

@@ -88,11 +88,11 @@ class FloydContext {
   void BecomeLeader();
 
   bool VoteAndCheck(uint64_t vote_term);
-  bool RequestVote(uint64_t term,
+  bool ReceiverDoRequestVote(uint64_t term,
       const std::string ip, int port,
       uint64_t log_term, uint64_t log_index,
       uint64_t* my_term);
-  bool AppendEntries(uint64_t term,
+  bool ReceiverDoAppendEntries(uint64_t term,
       uint64_t pre_log_term, uint64_t pre_log_index,
       std::vector<Entry*>& entries, uint64_t* my_term);
 

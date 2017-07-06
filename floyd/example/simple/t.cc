@@ -45,10 +45,6 @@ int main()
   std::string msg;
   int i = 100;
   uint64_t st = NowMicros(), ed;
-  std::string mystr[10010];
-  for (int i = 0; i < 10000; i++) {
-    mystr[i] = slash::RandomString(10);
-  }
 
   sleep(10);
   while (1) {
@@ -59,15 +55,19 @@ int main()
   }
 
   while (i--) {
+  std::string mystr[100100];
+  for (int i = 0; i < 100000; i++) {
+    mystr[i] = slash::RandomString(100);
+  }
     // f1->GetServerStatus(msg);
     // printf("%s\n", msg.c_str());
     st = NowMicros();
-    for (int j = 0; j < 10000; j++) {
+    for (int j = 0; j < 100000; j++) {
       f1->Write(mystr[j], mystr[j]);
       // f1->Write("zz", "zz");
     }
     ed = NowMicros();
-    printf("write 10000 cost time microsecond(us) %llu, qps %llu\n", ed - st, 10000 * 1000000LL / (ed - st));
+    printf("write 10000 cost time microsecond(us) %ld, qps %llu\n", ed - st, 100000 * 1000000LL / (ed - st));
   }
 
   delete f1;

@@ -49,17 +49,17 @@ int FloydWorkerConn::DealMessage() {
     case Type::DirtyWrite:
     case Type::ServerStatus: {
       LOGV(DEBUG_LEVEL, floyd_->info_log_, "WorkerConn::DealMessage DirtyWrite/ServerStatus");
-      floyd_->ExecuteDirtyCommand(request_, &response_);
+      floyd_->ReplyExecuteDirtyCommand(request_, &response_);
       break;
     }
     case Type::RequestVote: {
       LOGV(DEBUG_LEVEL, floyd_->info_log_, "WorkerConn::DealMessage RequestVote");
-      floyd_->ResponseRequestVote(request_, &response_);
+      floyd_->ReplyRequestVote(request_, &response_);
       break;
     }
     case Type::AppendEntries: {
       LOGV(DEBUG_LEVEL, floyd_->info_log_, "WorkerConn::DealMessage AppendEntries");
-      floyd_->ResponseAppendEntries(request_, &response_);
+      floyd_->ReplyAppendEntries(request_, &response_);
       break;
     }
     default:

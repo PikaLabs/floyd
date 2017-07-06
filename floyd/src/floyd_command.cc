@@ -244,7 +244,7 @@ Status FloydImpl::DoCommand(const CmdRequest& cmd, CmdResponse *response) {
       cmd, response);
 }
 
-Status FloydImpl::ExecuteDirtyCommand(const CmdRequest& cmd,
+Status FloydImpl::ReplyExecuteDirtyCommand(const CmdRequest& cmd,
                                       CmdResponse *response) {
   std::string value;
   rocksdb::Status rs;
@@ -396,7 +396,7 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
   return Status::OK();
 }
 
-void FloydImpl::ResponseRequestVote(const CmdRequest& cmd, CmdResponse* response) {
+void FloydImpl::ReplyRequestVote(const CmdRequest& cmd, CmdResponse* response) {
   bool granted = false;
   uint64_t my_term = context_->current_term();
 
@@ -415,7 +415,7 @@ void FloydImpl::ResponseRequestVote(const CmdRequest& cmd, CmdResponse* response
   }
 
   // Try to get my vote
-  granted = context_->RequestVote(
+  granted = context_->ReceiverDoRequestVote(
       request_vote.term(), request_vote.ip(), request_vote.port(),
       request_vote.last_log_term(), request_vote.last_log_index(),
       &my_term);
@@ -423,7 +423,7 @@ void FloydImpl::ResponseRequestVote(const CmdRequest& cmd, CmdResponse* response
   BuildRequestVoteResponse(my_term, granted, response);
 }
 
-void FloydImpl::ResponseAppendEntries(CmdRequest& cmd, CmdResponse* response) {
+void FloydImpl::ReplyAppendEntries(CmdRequest& cmd, CmdResponse* response) {
   // Ignore stale term
   bool status = false;
   uint64_t my_term = context_->current_term();
@@ -446,7 +446,7 @@ void FloydImpl::ResponseAppendEntries(CmdRequest& cmd, CmdResponse* response) {
        entries.size(), text_format.c_str());
 
   // Append entries
-  status = context_->AppendEntries(append_entries.term(),
+  status = context_->ReceiverDoAppendEntries(append_entries.term(),
                                    append_entries.prev_log_term(),
                                    append_entries.prev_log_index(),
                                    entries, &my_term);

@@ -1,13 +1,21 @@
-#ifndef FLOYD_PRIMARY_THREAD_H_
-#define FLOYD_PRIMARY_THREAD_H_
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
 
-#include "floyd/src/floyd_context.h"
+#ifndef FLOYD_SRC_FLOYD_PRIMARY_THREAD_H_
+#define FLOYD_SRC_FLOYD_PRIMARY_THREAD_H_
+
+#include <string>
+#include <vector>
+
 
 #include "slash/include/env.h"
 #include "slash/include/slash_status.h"
 #include "slash/include/slash_mutex.h"
-
 #include "pink/include/bg_thread.h"
+
+#include "floyd/src/floyd_context.h"
 
 namespace floyd {
 
@@ -59,15 +67,17 @@ class FloydPrimary {
   std::atomic<uint64_t> reset_leader_heartbeat_time_;
   pink::BGThread bg_thread_;
 
+  // The Launch* work is done by floyd_peer_thread
   // Cron task
-  static void DoLeaderHeartbeat(void *arg);
-  static void DoCheckElectLeader(void *arg);
-  //void LeaderHeartbeat();
-  //void CheckElectLeader();
+  static void LaunchLeaderHeartbeat(void *arg);
+  static void LaunchCheckElectLeader(void *arg);
 
-  static void DoBecomeLeader(void *arg);
-  static void DoNewCommand(void *arg);
-  static void DoAdvanceCommitIndex(void *arg);
+  // void LeaderHeartbeat();
+  // void CheckElectLeader();
+
+  static void LaunchBecomeLeader(void *arg);
+  static void LaunchNewCommand(void *arg);
+  static void LaunchAdvanceCommitIndex(void *arg);
 
   void NoticePeerTask(TaskType type);
   uint64_t QuorumMatchIndex();
@@ -78,4 +88,4 @@ class FloydPrimary {
 };
 
 } // namespace floyd
-#endif
+#endif  // FLOYD_SRC_FLOYD_PRIMARY_THREAD_H_

@@ -44,13 +44,13 @@ class Peer {
   void AddAppendEntriesTask();
   void AddHeartBeatTask();
   void AddBecomeLeaderTask();
-  static void DoAppendEntries(void *arg);
-  Status AppendEntriesRPC();
-
-  // Request Vote
   void AddRequestVoteTask();
+
+  static void AppendEntriesRPCWrapper(void *arg);
+  Status AppendEntriesRPC();
+  // Request Vote
+  static void RequestVoteRPCWrapper(void *arg);
   Status RequestVoteRPC();
-  static void DoRequestVote(void *arg);
 
   uint64_t GetMatchIndex();
   void set_next_index(uint64_t next_index);
