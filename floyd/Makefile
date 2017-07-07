@@ -47,7 +47,7 @@ OBJS = $(patsubst %.cc,%.o,$(BASE_OBJS))
 
 LIBSLASH = $(SLASH_PATH)/slash/lib/libslash.a
 LIBPINK = $(PINK_PATH)/pink/lib/libpink.a
-LIBROCKSDB= $(ROCKSDB_PATH)/rocksdb/librocksdb.a
+LIBROCKSDB= $(ROCKSDB_PATH)/librocksdb.a
 
 all: $(LIBRARY)
 	@echo "Success, go, go, go..."
