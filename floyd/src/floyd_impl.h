@@ -1,15 +1,22 @@
-#ifndef FLOYD_IMPL_H_
-#define FLOYD_IMPL_H_
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
 
-#include "floyd/include/floyd.h"
-#include "floyd/include/floyd_options.h"
+#ifndef FLOYD_SRC_FLOYD_IMPL_H_
+#define FLOYD_SRC_FLOYD_IMPL_H_
+
+#include <string>
+#include <map>
 
 #include "slash/include/slash_mutex.h"
 #include "slash/include/slash_status.h"
-
 #include "pink/include/bg_thread.h"
 
-#include "db_nemo_impl.h"
+#include "floyd/include/floyd.h"
+#include "floyd/include/floyd_options.h"
+#include "floyd/src/raft_log.h"
+
 
 namespace floyd {
 using slash::Status;
@@ -34,20 +41,17 @@ class FloydImpl : public Floyd {
   FloydImpl(const Options& options);
   virtual ~FloydImpl();
 
-  virtual Status Start();
+  Status Init();
 
   virtual Status Write(const std::string& key, const std::string& value);
   virtual Status DirtyWrite(const std::string& key, const std::string& value);
   virtual Status Delete(const std::string& key);
   virtual Status Read(const std::string& key, std::string& value);
   virtual Status DirtyRead(const std::string& key, std::string& value);
-  //Status ReadAll(std::map<std::string, std::string>& kvMap);
-  //Status DirtyReadAll(std::map<std::string, std::string>& kvMap);
-  //Status TryLock(const std::string& key);
-  //Status UnLock(const std::string& key);
 
   // return true if leader has been elected
-  virtual bool GetLeader(std::string& ip_port);
+  virtual bool GetLeader(std::string* ip_port);
+  virtual bool HasLeader();
   virtual bool GetLeader(std::string* ip, int* port);
   virtual bool GetAllNodes(std::vector<std::string>& nodes);
   virtual bool GetServerStatus(std::string& msg);
@@ -62,9 +66,9 @@ class FloydImpl : public Floyd {
   friend class Peer;
 
   Options options_;
-  rocksdb::DBNemo* db_;
+  rocksdb::DB* db_;
   // raft log
-  Log* log_;
+  RaftLog* raft_log_;
   // debug log used for ouput to file
   Logger* info_log_;
   FloydContext* context_;
@@ -77,19 +81,22 @@ class FloydImpl : public Floyd {
   ClientPool* worker_client_pool_;
 
   bool IsSelf(const std::string& ip_port);
-  bool HasLeader();
 
   Status DoCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
   Status ExecuteCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
-  Status ExecuteDirtyCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
-  void DoRequestVote(CmdRequest& cmd, CmdResponse* cmd_res);
-  void DoAppendEntries(CmdRequest& cmd, CmdResponse* cmd_res);
+  Status ReplyExecuteDirtyCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
   bool DoGetServerStatus(CmdResponse_ServerStatus* res);
+
+  /*
+   * these two are the response to the request and appendentries
+   */
+  void ReplyRequestVote(const CmdRequest& cmd, CmdResponse* cmd_res);
+  void ReplyAppendEntries(CmdRequest& cmd, CmdResponse* cmd_res);
   
   // No coping allowed
   FloydImpl(const FloydImpl&);
   void operator=(const FloydImpl&);
-};
+}; // FloydImpl
 
 } // namespace floyd
-#endif
+#endif  // FLOYD_SRC_FLOYD_IMPL_H_

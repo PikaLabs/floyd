@@ -1,3 +1,8 @@
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
 #include "floyd/src/floyd_client_pool.h"
 
 #include <unistd.h>
@@ -17,7 +22,7 @@ ClientPool::ClientPool(Logger* info_log, int timeout_ms, int retry)
 }
 
 Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req, CmdResponse* res) {
-  //LOGV(DEBUG_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s", CmdType(req).c_str(), server.c_str());
+  // LOGV(DEBUG_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s", CmdType(req).c_str(), server.c_str());
   Status ret;
   char stage = 0;
   Client *client = GetClient(server);
@@ -30,7 +35,7 @@ Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req,
     if ((stage & 0x01) == 0) {
       ret = UpHoldCli(client);
       if (!ret.ok()) {
-        LOGV(DEBUG_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s, Connect Failed %s",
+        LOGV(WARN_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s, Connect Failed %s",
              CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
         cli->Close();
         usleep(5000);

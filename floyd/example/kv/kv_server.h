@@ -1,9 +1,8 @@
-#ifndef FLOYD_SERVER_H
-#define FLOYD_SERVER_H
+#ifndef KV_KV_SERVER_H_
+#define KV_KV_SERVER_H_
 
 #include <atomic>
-#include "floyd/include/floyd.h"
-#include "client.pb.h"
+#include "sdk.pb.h"
 
 #include "pink/include/pb_conn.h"
 #include "pink/include/server_thread.h"
@@ -11,18 +10,19 @@
 #include "slash/include/env.h"
 #include "slash/include/slash_mutex.h"
 #include "slash/include/slash_status.h"
+#include "floyd/include/floyd.h"
 
 namespace floyd {
 
-class FloydServer;
-class FloydServerConn;
-class FloydServerConnFactory;
+class KvServer;
+class KvServerConn;
+class KvServerConnFactory;
 
-class FloydServerHandler : public pink::ServerHandle {
+class KvServerHandler : public pink::ServerHandle {
  public:
-  explicit FloydServerHandler(FloydServer* server)
+  explicit KvServerHandler(KvServer* server)
     : server_(server) { }
-  virtual ~FloydServerHandler() {}
+  virtual ~KvServerHandler() {}
 
   virtual void CronHandle() const;
   virtual bool AccessHandle(std::string& ip) const {
@@ -30,28 +30,28 @@ class FloydServerHandler : public pink::ServerHandle {
   }
 
  private:
-  FloydServer* server_;
+  KvServer* server_;
 };
 
-class FloydServerConn : public pink::PbConn {
+class KvServerConn : public pink::PbConn {
  public:
-  FloydServerConn(int fd, const std::string& ip_port, pink::ServerThread* thread,
-                  Floyd* floyd, FloydServer* server);
-  virtual ~FloydServerConn() {}
+  KvServerConn(int fd, const std::string& ip_port, pink::ServerThread* thread,
+                  Floyd* floyd, KvServer* server);
+  virtual ~KvServerConn() {}
 
   //virtual pink::Status BuildObuf();
   virtual int DealMessage();
 
  private:
   Floyd* floyd_;
-  FloydServer* server_;
+  KvServer* server_;
   client::Request command_;
   client::Response command_res_;
 };
 
-class FloydServerConnFactory : public pink::ConnFactory {
+class KvServerConnFactory : public pink::ConnFactory {
  public:
-  explicit FloydServerConnFactory(Floyd* floyd, FloydServer* server)
+  explicit KvServerConnFactory(Floyd* floyd, KvServer* server)
     : floyd_(floyd),
       server_(server) { }
 
@@ -59,18 +59,18 @@ class FloydServerConnFactory : public pink::ConnFactory {
                                       const std::string &ip_port,
                                       pink::ServerThread *server_thread,
                                       void* worker_private_data) const override {
-    return new FloydServerConn(connfd, ip_port, server_thread, floyd_, server_);
+    return new KvServerConn(connfd, ip_port, server_thread, floyd_, server_);
   }
 
  private:
   Floyd* floyd_;
-  FloydServer* server_;
+  KvServer* server_;
 };
 
-class FloydServer {
+class KvServer {
  public:
-  explicit FloydServer(int sdk_port, const Options& option);
-  virtual ~FloydServer();
+  explicit KvServer(int sdk_port, const Options& option);
+  virtual ~KvServer();
   slash::Status Start();
 
   uint64_t last_qps() {
@@ -95,8 +95,8 @@ class FloydServer {
 
   Floyd* floyd_;
 
-  FloydServerHandler* server_handler_;
-  FloydServerConnFactory* conn_factory_;
+  KvServerHandler* server_handler_;
+  KvServerConnFactory* conn_factory_;
   pink::ServerThread* server_thread_;
 
   std::atomic<uint64_t> last_query_num_;

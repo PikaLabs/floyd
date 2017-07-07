@@ -66,10 +66,7 @@ int main(int argc, char** argv) {
         server_port = atoi(optarg);
         break;
       case 'd':
-        options.data_path = optarg;
-        break;
-      case 'l':
-        options.log_path = optarg;
+        options.path = optarg;
         break;
       default:
         break;

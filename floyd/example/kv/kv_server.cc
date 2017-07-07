@@ -1,9 +1,9 @@
-#include "floyd_server.h"
+#include "kv_server.h"
 
 #include <google/protobuf/text_format.h>
 
-#include "client.pb.h"
-#include "logger.h"
+#include "./sdk.pb.h"
+#include "./logger.h"
 
 #include "pink/include/server_thread.h"
 
@@ -11,25 +11,25 @@ namespace floyd {
 
 
 // FloydServerHandler
-void FloydServerHandler::CronHandle() const {
+void KvServerHandler::CronHandle() const {
   server_->ResetLastSecQueryNum();
   LOG_INFO ("FloydServer QPS:%llu", server_->last_qps());
 }
 
-FloydServer::FloydServer(int sdk_port, const Options& options)
+KvServer::KvServer(int sdk_port, const Options& options)
   : options_(options),
     last_query_num_(0),
     query_num_(0),
     last_time_us_(slash::NowMicros()) {
   Floyd::Open(options_, &floyd_);
-  conn_factory_ = new FloydServerConnFactory(floyd_, this); 
-  server_handler_ = new FloydServerHandler(this);
+  conn_factory_ = new KvServerConnFactory(floyd_, this); 
+  server_handler_ = new KvServerHandler(this);
   server_thread_ = pink::NewHolyThread(sdk_port, conn_factory_, 3000, server_handler_);
-  LOG_DEBUG ("FloydServer will started on port:%d", sdk_port);
+  LOG_DEBUG ("KvServer will started on port:%d", sdk_port);
   //pthread_rwlock_init(&state_protector_, NULL);
 }
 
-FloydServer::~FloydServer() {
+KvServer::~KvServer() {
   server_thread_->StopThread();
   delete server_thread_;
   delete conn_factory_;
@@ -37,13 +37,7 @@ FloydServer::~FloydServer() {
   delete floyd_;
 }
 
-slash::Status FloydServer::Start() {
-  Status result = floyd_->Start();
-  if (!result.ok()) {
-    LOG_DEBUG ("Floyd started failed, %s", result.ToString().c_str());
-    return result;
-  }
-  
+slash::Status KvServer::Start() {
   // TEST
   std::vector<std::string> nodes;
   floyd_->GetAllNodes(nodes);
@@ -60,7 +54,7 @@ slash::Status FloydServer::Start() {
   if (ret != 0) {
     return Status::Corruption("Start server server error");
   }
-  LOG_DEBUG ("Floyd started on port:%d", options_.local_port);
+  LOG_DEBUG ("Kv started on port:%d", options_.local_port);
   server_mutex.Lock();
   server_mutex.Lock();
   server_mutex.Unlock();
@@ -68,15 +62,15 @@ slash::Status FloydServer::Start() {
 }
 
 ////// ServerConn //////
-FloydServerConn::FloydServerConn(int fd, const std::string &ip_port,
+KvServerConn::KvServerConn(int fd, const std::string &ip_port,
                                  pink::ServerThread *thread,
-                                 Floyd *floyd, FloydServer* server)
+                                 Floyd *floyd, KvServer* server)
     : PbConn(fd, ip_port, thread),
       floyd_(floyd),
       server_(server) {
 }
 
-int FloydServerConn::DealMessage() {
+int KvServerConn::DealMessage() {
   if (!command_.ParseFromArray(rbuf_ + 4, header_len_)) {
     LOG_DEBUG("WorkerConn::DealMessage ParseFromArray failed");
     return -1;

@@ -24,7 +24,7 @@ class Iterator;
 class Manifest;
 class Table;
 
-void ReplayEntry(rocksdb::DBNemo* db, Entry& entry); 
+void ReplayEntry(rocksdb::DB* db, Entry& entry); 
 
 class FileLog : public Log {
   class Sync : public Log::Sync {
@@ -54,7 +54,7 @@ class FileLog : public Log {
   void UpdateMetadata();
 
   void DumpSingleFile(const std::string& filename);
-  void ReplaySingleFile(rocksdb::DBNemo* db, const std::string& filename);
+  void ReplaySingleFile(rocksdb::DB* db, const std::string& filename);
 
 // protected:
   MemoryLog memory_log_;

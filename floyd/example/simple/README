@@ -1,0 +1,8 @@
+the simple example will run the Floyd:write the get performance of floyd in a simple machine
+
+
+t is a single thread wirte tool to get performance
+t1 is multi thread program to get performance
+
+read_floyd is the tool to read floyd log
+read_rock is the tool to read rocksdb data

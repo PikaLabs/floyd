@@ -79,5 +79,6 @@ class Cluster {
 };
 
 } // namespace client
+
 } // namespace floyd
 #endif

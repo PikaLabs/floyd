@@ -18,8 +18,8 @@ enum Type {
 }
 
 message Entry {
-  required uint64 term = 2;
-  optional bytes cmd = 3;
+  required uint64 term = 1;
+  optional bytes cmd = 2;
 }
 
 message CmdRequest {
@@ -97,7 +97,7 @@ message CmdResponse {
     optional int32 voted_for_port = 7;
     optional uint64 last_log_term = 8;
     optional uint64 last_log_index = 9;
-    optional uint64 last_apply_index = 10;
+    optional uint64 last_applied = 10;
   }
   optional ServerStatus server_status = 6;
 
@@ -113,15 +113,3 @@ message CmdResponse {
 
   optional AppendEntries append_entries = 8;
 }
-
-// Not used
-//message FileLogMetaData {
-//  // Raft usage 
-//  required uint64 current_term = 1;
-//  required bytes voted_for_ip = 2;
-//  required int32 voted_for_port = 3;
-//  // FileLog usage
-//  required uint64 file_number = 4 [default = 0];
-//  optional uint64 entries_start = 5 [default = 1];
-//  optional uint64 entries_end = 6 [default = 0];
-//}

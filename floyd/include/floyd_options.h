@@ -1,5 +1,10 @@
-#ifndef FLOYD_OPTIONS_H_
-#define FLOYD_OPTIONS_H_
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
+#ifndef FLOYD_SRC_FLOYD_OPTIONS_H_
+#define FLOYD_SRC_FLOYD_OPTIONS_H_
 
 #include <string>
 #include <vector>
@@ -23,8 +28,7 @@ struct Options {
 
   std::string local_ip;
   int local_port;
-  std::string data_path;
-  std::string log_path;
+  std::string path;
   uint64_t elect_timeout_ms;
   uint64_t heartbeat_us;
   uint64_t append_entries_size_once;
@@ -39,9 +43,8 @@ struct Options {
   Options();
   Options(const std::string& cluster_string,
           const std::string& _local_ip, int _local_port,
-          const std::string& _data_path,
-          const std::string& _log_path);
+          const std::string& _path);
 };
 
 } // namespace floyd
-#endif
+#endif  // FLOYD_INCLUDE_FLOYD_OPTIONS_

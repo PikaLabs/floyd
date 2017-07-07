@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #####################
-# client.proto
+# sdk.proto
 ###################
 FILE3="client"
 protoc -I=./ --cpp_out=./ ./$FILE3.proto

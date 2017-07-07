@@ -1,10 +1,19 @@
-#ifndef FLOYD_PEER_THREAD_H_
-#define FLOYD_PEER_THREAD_H_
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
 
-#include "floyd/src/floyd_context.h"
+#ifndef FLOYD_SRC_FLOYD_PEER_THREAD_H_
+#define FLOYD_SRC_FLOYD_PEER_THREAD_H_
+
+
+#include <string>
 
 #include "slash/include/slash_status.h"
 #include "pink/include/bg_thread.h"
+
+#include "floyd/src/floyd_context.h"
+
 
 namespace floyd {
 
@@ -14,29 +23,34 @@ class Peer;
 
 class FloydContext;
 class FloydPrimary;
-//class FloydApply;
-class Log;
+class RaftLog;
 class ClientPool;
 
 class Peer {
  public:
   Peer(std::string server, FloydContext* context, FloydPrimary* primary,
-       Log* log, ClientPool* pool);
+       RaftLog* raft_log, ClientPool* pool);
   ~Peer();
 
   int StartThread();
 
+  /*
+   * the two main RPC call in raft consensus protocol is here
+   * AppendEntriesRPC
+   * RequestVoteRPC
+   * the response to these two RPC at floyd_impl.h
+   */
   // Apend Entries
   void AddAppendEntriesTask();
   void AddHeartBeatTask();
   void AddBecomeLeaderTask();
-  static void DoAppendEntries(void *arg);
-  Status AppendEntries();
-
-  // Request Vote
   void AddRequestVoteTask();
-  Status RequestVote();
-  static void DoRequestVote(void *arg);
+
+  static void AppendEntriesRPCWrapper(void *arg);
+  Status AppendEntriesRPC();
+  // Request Vote
+  static void RequestVoteRPCWrapper(void *arg);
+  Status RequestVoteRPC();
 
   uint64_t GetMatchIndex();
   void set_next_index(uint64_t next_index);
@@ -47,7 +61,7 @@ class Peer {
   std::string server_;
   FloydContext* context_;
   FloydPrimary* primary_;
-  Log* log_;
+  RaftLog* raft_log_;
   ClientPool* pool_;
 
   std::atomic<uint64_t> next_index_;
@@ -60,4 +74,4 @@ class Peer {
 };
 
 } // namespace floyd
-#endif
+#endif   // FLOYD_SRC_FLOYD_PEER_THREAD_H_

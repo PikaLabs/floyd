@@ -12,7 +12,7 @@ namespace raft {
 const std::string kManifest = "manifest";
 const std::string kLog = "floyd.log";
 
-void ReplayEntry(rocksdb::DBNemo* db, Entry& entry) {
+void ReplayEntry(rocksdb::DB* db, Entry& entry) {
   if (entry.type() == Entry_Type::Entry_Type_DATA) {
     command::Command cmd;
     rocksdb::Status ret;
@@ -211,7 +211,7 @@ void Manifest::Dump() {
 
 
 
-void FileLog::ReplaySingleFile(rocksdb::DBNemo* db, const std::string& filename) {
+void FileLog::ReplaySingleFile(rocksdb::DB* db, const std::string& filename) {
   Table *table;
   if (!Table::Open(filename, &table)) {
     return ;

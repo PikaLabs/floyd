@@ -1,10 +1,17 @@
-#ifndef FLOYD_CLIENT_POOL_H_
-#define FLOYD_CLIENT_POOL_H_
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
+#ifndef FLOYD_SRC_FLOYD_CLIENT_POOL_H_
+#define FLOYD_SRC_FLOYD_CLIENT_POOL_H_
 
 #include "floyd/src/floyd.pb.h"
 
-#include "pink/include/pink_cli.h"
+#include <vector>
+#include <string>
 
+#include "pink/include/pink_cli.h"
 #include "slash/include/slash_status.h"
 #include "slash/include/slash_mutex.h"
 
@@ -12,9 +19,16 @@ namespace floyd {
 
 using slash::Status;
 
-class Client;
 class Logger;
 
+struct Client {
+  pink::PinkCli* cli;
+  slash::Mutex mu;
+
+  Client(const std::string& ip, int port) {
+    cli = pink::NewPbCli(ip, port);
+  }
+};
 class ClientPool {
  public:
   explicit ClientPool(Logger* info_log_, int timeout_ms = 1000, int retry = 1);
@@ -39,14 +53,6 @@ class ClientPool {
   bool operator=(const ClientPool&);
 };
 
-struct Client {
-  pink::PinkCli* cli;
-  slash::Mutex mu;
-
-  Client(const std::string& ip, int port) {
-    cli = pink::NewPbCli(ip, port);
-  }
-};
 
 } // namespace floyd
-#endif
+#endif  // FLOYD_SRC_FLOYD_CLIENT_POOL_H_

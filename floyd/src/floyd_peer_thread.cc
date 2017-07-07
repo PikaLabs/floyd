@@ -1,3 +1,8 @@
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
 #include "floyd/src/floyd_peer_thread.h"
 
 #include <climits>
@@ -5,21 +10,22 @@
 #include "floyd/src/floyd_primary_thread.h"
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_client_pool.h"
-#include "floyd/src/file_log.h"
+#include "floyd/src/raft_log.h"
 #include "floyd/src/floyd.pb.h"
 #include "floyd/src/logger.h"
 
 #include "slash/include/env.h"
 #include "slash/include/slash_mutex.h"
+#include "slash/include/xdebug.h"
 
 namespace floyd {
 
 Peer::Peer(std::string server, FloydContext* context, FloydPrimary* primary,
-           Log* log, ClientPool* pool)
+           RaftLog* raft_log, ClientPool* pool)
   : server_(server),
     context_(context),
     primary_(primary),
-    log_(log),
+    raft_log_(raft_log),
     pool_(pool),
     next_index_(1) {
 }
@@ -42,28 +48,25 @@ uint64_t Peer::get_next_index() {
 }
 
 void Peer::AddRequestVoteTask() {
-  bg_thread_.Schedule(DoRequestVote, this);
-#ifndef NDEBUG
-  //int pri_size, size;
-  //bg_thread_.QueueSize(&pri_size, &size);
-  //LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s) after AddRequestVote Pri queue size %d,"
-  //     " normal queue size is %d",
-  //     server_.c_str(), pri_size, size);
-#endif
+  bg_thread_.Schedule(RequestVoteRPCWrapper, this);
 }
 
-void Peer::DoRequestVote(void *arg) {
+void Peer::RequestVoteRPCWrapper(void *arg) {
   Peer *peer = static_cast<Peer*>(arg);
   LOGV(DEBUG_LEVEL, peer->context_->info_log(), "Peer(%s)::DoRequestVote",
        peer->server_.c_str());
-  Status result = peer->RequestVote();
+  Status result = peer->RequestVoteRPC();
   if (!result.ok()) {
     LOGV(ERROR_LEVEL, peer->context_->info_log(), "Peer(%s) failed to "
          "RequestVote caz %s.", peer->server_.c_str(), result.ToString().c_str());
   }
 }
 
-Status Peer::RequestVote() {
+Status Peer::RequestVoteRPC() {
+  /*
+   * 这里为什么需要判断一下是否是 candidate, 如果保证调用requestvote 之前就肯定是candidate
+   * 就不需要这个保证了吧
+   */
   if (context_->role() != Role::kCandidate) {
     LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s) not candidate,"
          "skip RequestVote", server_.c_str());
@@ -73,7 +76,7 @@ Status Peer::RequestVote() {
   // TODO (anan) log->getEntry() need lock
   uint64_t last_log_term;
   uint64_t last_log_index;
-  context_->log()->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
+  context_->raft_log()->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
   uint64_t current_term = context_->current_term();
 
   CmdRequest req;
@@ -143,27 +146,23 @@ void Peer::AddHeartBeatTask() {
 }
 
 void Peer::AddBecomeLeaderTask() {
-  next_index_ = log_->GetLastLogIndex() + 1;
+  next_index_ = raft_log_->GetLastLogIndex() + 1;
   AddAppendEntriesTask();
 }
 
 void Peer::AddAppendEntriesTask() {
-  bg_thread_.Schedule(DoAppendEntries, this);
-#ifndef NDEBUG
-  //int pri_size, size;
-  //bg_thread_.QueueSize(&pri_size, &size);
-  //LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s) after AddAppendEntries"
-  //     " Pri queue size %d, normal queue size is %d",
-  //     server_.c_str(), pri_size, size);
-#endif
+  bg_thread_.Schedule(AppendEntriesRPCWrapper, this);
 }
 
+uint64_t Peer::GetMatchIndex() {
+  return (next_index_ - 1);
+}
 
-void Peer::DoAppendEntries(void *arg) {
+void Peer::AppendEntriesRPCWrapper(void *arg) {
   Peer* peer = static_cast<Peer*>(arg);
   LOGV(DEBUG_LEVEL, peer->context_->info_log(), "Peer(%s) DoAppendEntries",
        peer->server_.c_str());
-  Status result = peer->AppendEntries();
+  Status result = peer->AppendEntriesRPC();
   if (!result.ok()) {
     LOGV(ERROR_LEVEL, peer->context_->info_log(), "Peer(%s) failed to "
          "AppendEntries caz %s.",
@@ -171,18 +170,14 @@ void Peer::DoAppendEntries(void *arg) {
   }
 }
 
-uint64_t Peer::GetMatchIndex() {
-  return (next_index_ - 1);
-}
-
-Status Peer::AppendEntries() {
+Status Peer::AppendEntriesRPC() {
   if (context_->role() != Role::kLeader) {
-    LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s) not leader anymore,"
+    LOGV(WARN_LEVEL, context_->info_log(), "Peer(%s) not leader anymore,"
          "skip AppendEntries", server_.c_str());
     return Status::OK();
   }
 
-  uint64_t last_log_index = log_->GetLastLogIndex();
+  uint64_t last_log_index = raft_log_->GetLastLogIndex();
   uint64_t prev_log_index = next_index_ - 1;
   if (prev_log_index > last_log_index) {
     return Status::InvalidArgument("prev_Log_index > last_log_index");
@@ -191,8 +186,12 @@ Status Peer::AppendEntries() {
   uint64_t prev_log_term = 0;
   if (prev_log_index != 0) {
     Entry entry;
-    log_->GetEntry(prev_log_index, &entry);
-    prev_log_term = entry.term();
+    if (raft_log_->GetEntry(prev_log_index, &entry) != 0) {
+      LOGV(WARN_LEVEL, context_->info_log(), "Peer::AppendEntriesRPC:GetEntry index %llu "
+          "not found", prev_log_index);
+    } else {
+      prev_log_term = entry.term();
+    }
   }
 
   CmdRequest req;
@@ -203,28 +202,32 @@ Status Peer::AppendEntries() {
   append_entries->set_term(context_->current_term());
   append_entries->set_prev_log_index(prev_log_index);
   append_entries->set_prev_log_term(prev_log_term);
+  if (prev_log_index == 0) {
+    LOGV(WARN_LEVEL, context_->info_log(), "FloydPeerThread::AppendEntries: prev_log_index is 0");
+  }
 
   uint64_t num_entries = 0;
-  for (uint64_t index = next_index_; index <= last_log_index; ++index) {
-    Entry entry;
-    log_->GetEntry(index, &entry);
-    *append_entries->add_entries() = entry;
-    ++num_entries;
-    if (num_entries > context_->append_entries_count_once() 
+  Entry *tmp_entry = new Entry();
+  LOGV(DEBUG_LEVEL, context_->info_log(), "next_index_ %llu, last_log_index %llu", next_index_.load(), last_log_index);
+  for (uint64_t index = next_index_; index <= last_log_index; index++) {
+    if (raft_log_->GetEntry(index, tmp_entry) == 0) {
+      // TODO(baotiao) how to avoid memory copy here
+      Entry *entry = append_entries->add_entries();
+      *entry = *tmp_entry;
+    } else {
+      LOGV(WARN_LEVEL, context_->info_log(), "FloydPeerThread::AppendEntries: can't get Entry from raft_log, index %lld", index);
+      break;
+    }
+
+    num_entries++;
+    if (num_entries >= context_->append_entries_count_once() 
         || (uint64_t)append_entries->ByteSize() >= context_->append_entries_size_once()) {
       break;
     }
   }
+  delete tmp_entry;
   append_entries->set_commit_index(
       std::min(context_->commit_index(), prev_log_index + num_entries));
-
-#ifndef NDEBUG
-  std::string text_format;
-  google::protobuf::TextFormat::PrintToString(req, &text_format);
-  LOGV(DEBUG_LEVEL, context_->info_log(), "AppendEntry Send to %s with %llu "
-       "entries, message :\n%s",
-       server_.c_str(), num_entries, text_format.c_str());
-#endif
 
   CmdResponse res;
   Status result = pool_->SendAndRecv(server_, req, &res);
@@ -234,15 +237,9 @@ Status Peer::AppendEntries() {
          server_.c_str(), result.ToString().c_str());
     return result;
   }
-#ifndef NDEBUG
-  google::protobuf::TextFormat::PrintToString(res, &text_format);
-  LOGV(DEBUG_LEVEL, context_->info_log(), "AppendEntry Receive from %s,"
-       "message :\n%s", server_.c_str(), text_format.c_str());
-#endif
-
   uint64_t res_term = res.append_entries().term();
   if (result.ok() && res_term > context_->current_term()) {
-    //TODO(anan) maybe combine these 2 steps
+    // TODO(anan) maybe combine these 2 steps
     context_->BecomeFollower(res_term);
     primary_->ResetElectLeaderTimer();
   }
@@ -250,6 +247,8 @@ Status Peer::AppendEntries() {
   if (result.ok() && context_->role() == Role::kLeader) {
     if (res.code() == StatusCode::kOk) {
       next_index_ = prev_log_index + num_entries + 1;
+      LOGV(DEBUG_LEVEL, context_->info_log(), "next_index_ %lld prev_log_index \
+          %lld num_entries %lld", next_index_.load(), prev_log_index, num_entries);
       primary_->AddTask(kAdvanceCommitIndex);
 
       // If this follower is far behind leader, and there is no more
@@ -271,6 +270,7 @@ Status Peer::AppendEntries() {
         // Prev log don't match, so we retry with more prev one according to
         // response
         next_index_ = adjust_index;
+        LOGV(DEBUG_LEVEL, context_->info_log(), "update next_index_ %lld", next_index_.load());
         AddAppendEntriesTask();
       }
     }

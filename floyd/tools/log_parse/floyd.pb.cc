@@ -260,7 +260,7 @@ void protobuf_AssignDesc_floyd_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdResponse_ServerStatus, voted_for_port_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdResponse_ServerStatus, last_log_term_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdResponse_ServerStatus, last_log_index_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdResponse_ServerStatus, last_apply_index_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdResponse_ServerStatus, last_applied_),
   };
   CmdResponse_ServerStatus_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -384,8 +384,8 @@ void protobuf_AddDesc_floyd_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\013floyd.proto\022\005floyd\"\"\n\005Entry\022\014\n\004term\030\002 "
-    "\002(\004\022\013\n\003cmd\030\003 \001(\014\"\252\005\n\nCmdRequest\022\031\n\004type\030"
+    "\n\013floyd.proto\022\005floyd\"\"\n\005Entry\022\014\n\004term\030\001 "
+    "\002(\004\022\013\n\003cmd\030\002 \001(\014\"\252\005\n\nCmdRequest\022\031\n\004type\030"
     "\001 \002(\0162\013.floyd.Type\022 \n\002kv\030\002 \001(\0132\024.floyd.C"
     "mdRequest.Kv\022$\n\004user\030\003 \001(\0132\026.floyd.CmdRe"
     "quest.User\0223\n\014request_vote\030\004 \001(\0132\035.floyd"
@@ -402,7 +402,7 @@ void protobuf_AddDesc_floyd_2eproto() {
     "term\030\005 \002(\004\022\024\n\014commit_index\030\006 \002(\004\022\035\n\007entr"
     "ies\030\007 \003(\0132\014.floyd.Entry\032L\n\014ServerStatus\022"
     "\014\n\004term\030\001 \002(\003\022\024\n\014commit_index\030\002 \002(\003\022\n\n\002i"
-    "p\030\003 \001(\014\022\014\n\004port\030\004 \001(\005\"\273\005\n\013CmdResponse\022\031\n"
+    "p\030\003 \001(\014\022\014\n\004port\030\004 \001(\005\"\267\005\n\013CmdResponse\022\031\n"
     "\004type\030\001 \002(\0162\013.floyd.Type\022\037\n\004code\030\002 \002(\0162\021"
     ".floyd.StatusCode\022\013\n\003msg\030\003 \001(\014\022!\n\002kv\030\004 \001"
     "(\0132\025.floyd.CmdResponse.Kv\022#\n\003kvs\030\005 \001(\0132\026"
@@ -412,20 +412,20 @@ void protobuf_AddDesc_floyd_2eproto() {
     ".RequestVote\0228\n\016append_entries\030\010 \001(\0132 .f"
     "loyd.CmdResponse.AppendEntries\032\023\n\002Kv\022\r\n\005"
     "value\030\001 \001(\014\032(\n\003Kvs\022!\n\002kv\030\001 \003(\0132\025.floyd.C"
-    "mdResponse.Kv\032\337\001\n\014ServerStatus\022\014\n\004term\030\001"
+    "mdResponse.Kv\032\333\001\n\014ServerStatus\022\014\n\004term\030\001"
     " \002(\004\022\024\n\014commit_index\030\002 \002(\004\022\014\n\004role\030\003 \002(\014"
     "\022\021\n\tleader_ip\030\004 \001(\014\022\023\n\013leader_port\030\005 \001(\005"
     "\022\024\n\014voted_for_ip\030\006 \001(\014\022\026\n\016voted_for_port"
     "\030\007 \001(\005\022\025\n\rlast_log_term\030\010 \001(\004\022\026\n\016last_lo"
-    "g_index\030\t \001(\004\022\030\n\020last_apply_index\030\n \001(\004\032"
-    "\033\n\013RequestVote\022\014\n\004term\030\001 \002(\004\0325\n\rAppendEn"
-    "tries\022\014\n\004term\030\001 \002(\004\022\026\n\016last_log_index\030\002 "
-    "\002(\004*\243\001\n\004Type\022\010\n\004Read\020\000\022\013\n\007ReadAll\020\001\022\016\n\nD"
-    "irtyWrite\020\002\022\t\n\005Write\020\003\022\n\n\006Delete\020\004\022\013\n\007Tr"
-    "yLock\020\005\022\n\n\006UnLock\020\006\022\016\n\nDeleteUser\020\007\022\017\n\013R"
-    "equestVote\020\010\022\021\n\rAppendEntries\020\t\022\020\n\014Serve"
-    "rStatus\020\n*0\n\nStatusCode\022\007\n\003kOk\020\000\022\r\n\tkNot"
-    "Found\020\001\022\n\n\006kError\020\002", 1659);
+    "g_index\030\t \001(\004\022\024\n\014last_applied\030\n \001(\004\032\033\n\013R"
+    "equestVote\022\014\n\004term\030\001 \002(\004\0325\n\rAppendEntrie"
+    "s\022\014\n\004term\030\001 \002(\004\022\026\n\016last_log_index\030\002 \002(\004*"
+    "\243\001\n\004Type\022\010\n\004Read\020\000\022\013\n\007ReadAll\020\001\022\016\n\nDirty"
+    "Write\020\002\022\t\n\005Write\020\003\022\n\n\006Delete\020\004\022\013\n\007TryLoc"
+    "k\020\005\022\n\n\006UnLock\020\006\022\016\n\nDeleteUser\020\007\022\017\n\013Reque"
+    "stVote\020\010\022\021\n\rAppendEntries\020\t\022\020\n\014ServerSta"
+    "tus\020\n*0\n\nStatusCode\022\007\n\003kOk\020\000\022\r\n\tkNotFoun"
+    "d\020\001\022\n\n\006kError\020\002", 1655);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "floyd.proto", &protobuf_RegisterTypes);
   Entry::default_instance_ = new Entry();
@@ -582,8 +582,8 @@ bool Entry::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required uint64 term = 2;
-      case 2: {
+      // required uint64 term = 1;
+      case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
@@ -593,12 +593,12 @@ bool Entry::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(26)) goto parse_cmd;
+        if (input->ExpectTag(18)) goto parse_cmd;
         break;
       }
 
-      // optional bytes cmd = 3;
-      case 3: {
+      // optional bytes cmd = 2;
+      case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_cmd:
@@ -629,15 +629,15 @@ bool Entry::MergePartialFromCodedStream(
 
 void Entry::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // required uint64 term = 2;
+  // required uint64 term = 1;
   if (has_term()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt64(2, this->term(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(1, this->term(), output);
   }
 
-  // optional bytes cmd = 3;
+  // optional bytes cmd = 2;
   if (has_cmd()) {
     ::google::protobuf::internal::WireFormatLite::WriteBytes(
-      3, this->cmd(), output);
+      2, this->cmd(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -648,16 +648,16 @@ void Entry::SerializeWithCachedSizes(
 
 ::google::protobuf::uint8* Entry::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // required uint64 term = 2;
+  // required uint64 term = 1;
   if (has_term()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(2, this->term(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(1, this->term(), target);
   }
 
-  // optional bytes cmd = 3;
+  // optional bytes cmd = 2;
   if (has_cmd()) {
     target =
       ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-        3, this->cmd(), target);
+        2, this->cmd(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -671,14 +671,14 @@ int Entry::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required uint64 term = 2;
+    // required uint64 term = 1;
     if (has_term()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::UInt64Size(
           this->term());
     }
 
-    // optional bytes cmd = 3;
+    // optional bytes cmd = 2;
     if (has_cmd()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::BytesSize(
@@ -3341,7 +3341,7 @@ const int CmdResponse_ServerStatus::kVotedForIpFieldNumber;
 const int CmdResponse_ServerStatus::kVotedForPortFieldNumber;
 const int CmdResponse_ServerStatus::kLastLogTermFieldNumber;
 const int CmdResponse_ServerStatus::kLastLogIndexFieldNumber;
-const int CmdResponse_ServerStatus::kLastApplyIndexFieldNumber;
+const int CmdResponse_ServerStatus::kLastAppliedFieldNumber;
 #endif  // !_MSC_VER
 
 CmdResponse_ServerStatus::CmdResponse_ServerStatus()
@@ -3369,7 +3369,7 @@ void CmdResponse_ServerStatus::SharedCtor() {
   voted_for_port_ = 0;
   last_log_term_ = GOOGLE_ULONGLONG(0);
   last_log_index_ = GOOGLE_ULONGLONG(0);
-  last_apply_index_ = GOOGLE_ULONGLONG(0);
+  last_applied_ = GOOGLE_ULONGLONG(0);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -3437,7 +3437,7 @@ void CmdResponse_ServerStatus::Clear() {
   }
   if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
     last_log_index_ = GOOGLE_ULONGLONG(0);
-    last_apply_index_ = GOOGLE_ULONGLONG(0);
+    last_applied_ = GOOGLE_ULONGLONG(0);
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
@@ -3582,19 +3582,19 @@ bool CmdResponse_ServerStatus::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(80)) goto parse_last_apply_index;
+        if (input->ExpectTag(80)) goto parse_last_applied;
         break;
       }
 
-      // optional uint64 last_apply_index = 10;
+      // optional uint64 last_applied = 10;
       case 10: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_last_apply_index:
+         parse_last_applied:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
-                 input, &last_apply_index_)));
-          set_has_last_apply_index();
+                 input, &last_applied_)));
+          set_has_last_applied();
         } else {
           goto handle_uninterpreted;
         }
@@ -3668,9 +3668,9 @@ void CmdResponse_ServerStatus::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt64(9, this->last_log_index(), output);
   }
 
-  // optional uint64 last_apply_index = 10;
-  if (has_last_apply_index()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt64(10, this->last_apply_index(), output);
+  // optional uint64 last_applied = 10;
+  if (has_last_applied()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(10, this->last_applied(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -3732,9 +3732,9 @@ void CmdResponse_ServerStatus::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(9, this->last_log_index(), target);
   }
 
-  // optional uint64 last_apply_index = 10;
-  if (has_last_apply_index()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(10, this->last_apply_index(), target);
+  // optional uint64 last_applied = 10;
+  if (has_last_applied()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(10, this->last_applied(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -3813,11 +3813,11 @@ int CmdResponse_ServerStatus::ByteSize() const {
           this->last_log_index());
     }
 
-    // optional uint64 last_apply_index = 10;
-    if (has_last_apply_index()) {
+    // optional uint64 last_applied = 10;
+    if (has_last_applied()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::UInt64Size(
-          this->last_apply_index());
+          this->last_applied());
     }
 
   }
@@ -3876,8 +3876,8 @@ void CmdResponse_ServerStatus::MergeFrom(const CmdResponse_ServerStatus& from) {
     if (from.has_last_log_index()) {
       set_last_log_index(from.last_log_index());
     }
-    if (from.has_last_apply_index()) {
-      set_last_apply_index(from.last_apply_index());
+    if (from.has_last_applied()) {
+      set_last_applied(from.last_applied());
     }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
@@ -3912,7 +3912,7 @@ void CmdResponse_ServerStatus::Swap(CmdResponse_ServerStatus* other) {
     std::swap(voted_for_port_, other->voted_for_port_);
     std::swap(last_log_term_, other->last_log_term_);
     std::swap(last_log_index_, other->last_log_index_);
-    std::swap(last_apply_index_, other->last_apply_index_);
+    std::swap(last_applied_, other->last_applied_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

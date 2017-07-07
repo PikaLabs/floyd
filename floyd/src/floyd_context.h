@@ -1,11 +1,15 @@
-#ifndef FLOYD_CONTEXT_H_
-#define FLOYD_CONTEXT_H_
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
+#ifndef FLOYD_SRC_FLOYD_CONTEXT_H_
+#define FLOYD_SRC_FLOYD_CONTEXT_H_
 
 #include <pthread.h>
 
 #include "floyd/include/floyd_options.h"
-#include "floyd/src/file_log.h"
-//#include "floyd/src/logger.h"
+#include "floyd/src/raft_log.h"
 
 #include "slash/include/slash_status.h"
 #include "slash/include/slash_mutex.h"
@@ -21,15 +25,16 @@ enum Role {
 };
 
 class Logger;
+class RaftLog;
 
 class FloydContext {
  public:
-  FloydContext(const Options& opt, Log* log, Logger* info_log);
+  FloydContext(const Options& opt, RaftLog* raft_log, Logger* info_log);
   ~FloydContext();
 
   void RecoverInit();
-  Log* log() {
-    return log_;
+  RaftLog* raft_log() {
+    return raft_log_;
   }
 
   Logger* info_log() {
@@ -39,6 +44,8 @@ class FloydContext {
   /* Role related */
   void leader_node(std::string* ip, int* port);
   void voted_for_node(std::string* ip, int* port);
+
+  bool HasLeader();
 
   uint64_t current_term() {
     slash::RWLock l(&stat_rw_, false);
@@ -79,12 +86,13 @@ class FloydContext {
       const std::string leader_ip = "", int port = 0);
   void BecomeCandidate();
   void BecomeLeader();
+
   bool VoteAndCheck(uint64_t vote_term);
-  bool RequestVote(uint64_t term,
-      const std::string ip, uint32_t port,
+  bool ReceiverDoRequestVote(uint64_t term,
+      const std::string ip, int port,
       uint64_t log_term, uint64_t log_index,
       uint64_t* my_term);
-  bool AppendEntries(uint64_t term,
+  bool ReceiverDoAppendEntries(uint64_t term,
       uint64_t pre_log_term, uint64_t pre_log_index,
       std::vector<Entry*>& entries, uint64_t* my_term);
 
@@ -97,22 +105,22 @@ class FloydContext {
   
   /* Apply related */
   // Return false if timeout
-  Status WaitApply(uint64_t apply_index, uint32_t timeout);
+  Status WaitApply(uint64_t last_applied, uint32_t timeout);
   
   // commit index may be smaller than apply index,
   // so we should check len first;
   uint64_t NextApplyIndex(uint64_t* len);
 
-  uint64_t apply_index() {
+  uint64_t last_applied() {
     slash::MutexLock lapply(&apply_mu_);
-    return apply_index_;
+    return last_applied_;
   }
 
   void ApplyDone(uint64_t index);
   
  private:
   Options options_;
-  Log* log_;
+  RaftLog* raft_log_;
   
   // used to debug
   Logger* info_log_;
@@ -122,10 +130,10 @@ class FloydContext {
   uint64_t current_term_;
   Role role_;
   std::string voted_for_ip_;
-  uint64_t voted_for_port_;
+  int voted_for_port_;
   std::string leader_ip_;
-  uint64_t leader_port_;
-  uint64_t vote_quorum_;
+  int leader_port_;
+  uint32_t vote_quorum_;
 
   // Commit related
   slash::Mutex commit_mu_;
@@ -134,10 +142,10 @@ class FloydContext {
   // Apply related
   slash::Mutex apply_mu_;
   slash::CondVar apply_cond_;
-  uint64_t apply_index_;
+  uint64_t last_applied_;
 
   void MetaApply();
 };
 
 } // namespace floyd
-#endif
+#endif  // FLOYD_SRC_FLOYD_CONTEXT_H_

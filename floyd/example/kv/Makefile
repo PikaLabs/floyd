@@ -8,14 +8,14 @@ else
 	CXXFLAGS = -pg -O0 -ggdb3 -pipe -fPIC -W -DLOG_LEVEL=LEVEL_DEBUG -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls -Wno-unused-variable -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX 
 endif
 
-OBJECT = floyd_node
+OBJECT = srv cli
 SRC_DIR = ./
 THIRD_PATH = ../../third
 OUTPUT = ./output
 
 LIB_PATH = -L../../lib/ \
-		   -L$(THIRD_PATH)/nemo-rocksdb/output/lib/ \
 			 -L$(THIRD_PATH)/slash/slash/lib/ \
+			 -L$(THIRD_PATH)/rocksdb/ \
 			 -L$(THIRD_PATH)/pink/pink/lib/
 
 
@@ -24,7 +24,6 @@ LIBS = -lfloyd \
 			 -lssl \
 			 -lcrypto \
 			 -lslash \
-			 -lnemodb \
 			 -lrocksdb \
 			 -lsnappy \
 			 -lprotobuf \
@@ -34,13 +33,10 @@ LIBS = -lfloyd \
 			 -lpthread
 
 INCLUDE_PATH = -I../../../ \
-							 -I$(THIRD_PATH)/nemo-rocksdb/include/ \
-							 -I$(THIRD_PATH)/nemo-rocksdb/rocksdb/ \
-							 -I$(THIRD_PATH)/nemo-rocksdb/rocksdb/include/ \
+							 -I$(THIRD_PATH)/rocksdb/include \
 							 -I$(THIRD_PATH)/slash/ \
 							 -I$(THIRD_PATH)/pink/
 
-LIBRARY = libfloyd.a
 .PHONY: all clean version
 
 
@@ -58,9 +54,11 @@ all: $(OBJECT)
 	rm -rf $(OBJECT)
 	@echo "Success, go, go, go..."
 
-floyd_node:  $(OBJS)
+srv: kv_server.o srv.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LFLAGS) $(LIBS)
 
+srv: kv_cli.o cli.o
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LFLAGS) $(LIBS)
 
 $(OBJS): %.o : %.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE_PATH) 

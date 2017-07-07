@@ -152,17 +152,17 @@ class Entry : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required uint64 term = 2;
+  // required uint64 term = 1;
   inline bool has_term() const;
   inline void clear_term();
-  static const int kTermFieldNumber = 2;
+  static const int kTermFieldNumber = 1;
   inline ::google::protobuf::uint64 term() const;
   inline void set_term(::google::protobuf::uint64 value);
 
-  // optional bytes cmd = 3;
+  // optional bytes cmd = 2;
   inline bool has_cmd() const;
   inline void clear_cmd();
-  static const int kCmdFieldNumber = 3;
+  static const int kCmdFieldNumber = 2;
   inline const ::std::string& cmd() const;
   inline void set_cmd(const ::std::string& value);
   inline void set_cmd(const char* value);
@@ -1240,12 +1240,12 @@ class CmdResponse_ServerStatus : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 last_log_index() const;
   inline void set_last_log_index(::google::protobuf::uint64 value);
 
-  // optional uint64 last_apply_index = 10;
-  inline bool has_last_apply_index() const;
-  inline void clear_last_apply_index();
-  static const int kLastApplyIndexFieldNumber = 10;
-  inline ::google::protobuf::uint64 last_apply_index() const;
-  inline void set_last_apply_index(::google::protobuf::uint64 value);
+  // optional uint64 last_applied = 10;
+  inline bool has_last_applied() const;
+  inline void clear_last_applied();
+  static const int kLastAppliedFieldNumber = 10;
+  inline ::google::protobuf::uint64 last_applied() const;
+  inline void set_last_applied(::google::protobuf::uint64 value);
 
   // @@protoc_insertion_point(class_scope:floyd.CmdResponse.ServerStatus)
  private:
@@ -1267,8 +1267,8 @@ class CmdResponse_ServerStatus : public ::google::protobuf::Message {
   inline void clear_has_last_log_term();
   inline void set_has_last_log_index();
   inline void clear_has_last_log_index();
-  inline void set_has_last_apply_index();
-  inline void clear_has_last_apply_index();
+  inline void set_has_last_applied();
+  inline void clear_has_last_applied();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -1281,7 +1281,7 @@ class CmdResponse_ServerStatus : public ::google::protobuf::Message {
   ::google::protobuf::int32 voted_for_port_;
   ::google::protobuf::uint64 last_log_term_;
   ::google::protobuf::uint64 last_log_index_;
-  ::google::protobuf::uint64 last_apply_index_;
+  ::google::protobuf::uint64 last_applied_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(10 + 31) / 32];
@@ -1647,7 +1647,7 @@ class CmdResponse : public ::google::protobuf::Message {
 
 // Entry
 
-// required uint64 term = 2;
+// required uint64 term = 1;
 inline bool Entry::has_term() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -1669,7 +1669,7 @@ inline void Entry::set_term(::google::protobuf::uint64 value) {
   term_ = value;
 }
 
-// optional bytes cmd = 3;
+// optional bytes cmd = 2;
 inline bool Entry::has_cmd() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
@@ -3156,26 +3156,26 @@ inline void CmdResponse_ServerStatus::set_last_log_index(::google::protobuf::uin
   last_log_index_ = value;
 }
 
-// optional uint64 last_apply_index = 10;
-inline bool CmdResponse_ServerStatus::has_last_apply_index() const {
+// optional uint64 last_applied = 10;
+inline bool CmdResponse_ServerStatus::has_last_applied() const {
   return (_has_bits_[0] & 0x00000200u) != 0;
 }
-inline void CmdResponse_ServerStatus::set_has_last_apply_index() {
+inline void CmdResponse_ServerStatus::set_has_last_applied() {
   _has_bits_[0] |= 0x00000200u;
 }
-inline void CmdResponse_ServerStatus::clear_has_last_apply_index() {
+inline void CmdResponse_ServerStatus::clear_has_last_applied() {
   _has_bits_[0] &= ~0x00000200u;
 }
-inline void CmdResponse_ServerStatus::clear_last_apply_index() {
-  last_apply_index_ = GOOGLE_ULONGLONG(0);
-  clear_has_last_apply_index();
+inline void CmdResponse_ServerStatus::clear_last_applied() {
+  last_applied_ = GOOGLE_ULONGLONG(0);
+  clear_has_last_applied();
 }
-inline ::google::protobuf::uint64 CmdResponse_ServerStatus::last_apply_index() const {
-  return last_apply_index_;
+inline ::google::protobuf::uint64 CmdResponse_ServerStatus::last_applied() const {
+  return last_applied_;
 }
-inline void CmdResponse_ServerStatus::set_last_apply_index(::google::protobuf::uint64 value) {
-  set_has_last_apply_index();
-  last_apply_index_ = value;
+inline void CmdResponse_ServerStatus::set_last_applied(::google::protobuf::uint64 value) {
+  set_has_last_applied();
+  last_applied_ = value;
 }
 
 // -------------------------------------------------------------------
