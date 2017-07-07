@@ -214,11 +214,11 @@ bool FloydContext::ReceiverDoRequestVote(uint64_t term, const std::string ip,
   uint64_t my_log_index;
   uint64_t my_log_term;
   raft_log_->GetLastLogTermAndIndex(&my_log_term, &my_log_index);
-  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::RequestVote: my last_log is %lu:%lu, other is %lu:%lu",
+  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::RequestVote: my last_log is %lu:%lu, sponsor is %lu:%lu",
        my_log_term, my_log_index, log_term, log_index);
   if (log_term < my_log_term
       || (log_term == my_log_term && log_index < my_log_index)) {
-    LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: log index not up-to-date, my is %lu:%lu, other is %lu:%lu",
+    LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: log index not up-to-date, my is %lu:%lu, sponsor is %lu:%lu",
          my_log_term, my_log_index, log_term, log_index);
     return false; // log index is not up-to-date as mine
   }
@@ -236,7 +236,7 @@ bool FloydContext::ReceiverDoRequestVote(uint64_t term, const std::string ip,
   *my_term = current_term_;
   MetaApply();
   LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: grant vote for (%s:%d),"
-       " with my_term(%lu), my last_log(%lu:%lu), other log(%lu,%lu).",
+       " with my_term(%lu), my last_log(%lu:%lu), sponsor log(%lu,%lu).",
        voted_for_ip_.c_str(), voted_for_port_, *my_term,
        my_log_term, my_log_index, log_term, log_index);
   return true;
@@ -249,19 +249,21 @@ bool FloydContext::ReceiverDoAppendEntries(uint64_t term,
   // Check pre_log match local log entry
   uint64_t last_log_index = raft_log_->GetLastLogIndex();
   if (pre_log_index > last_log_index) {
-    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries: pre_log(%lu, %lu) > last_log_index(%lu)",
+    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::ReceiverDoAppendEntries: pre_log(%lu, %lu) > last_log_index(%lu)",
          pre_log_term, pre_log_index, last_log_index);
     return false;
   }
 
   uint64_t my_log_term = 0;
   Entry entry;
-  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries %llu\n", pre_log_index);
+  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::ReceiverDoAppendEntries %llu pre_log_index: \n", pre_log_index);
   if (raft_log_->GetEntry(pre_log_index, &entry) == 0) {
     my_log_term = entry.term();
+  } else {
+    LOGV(WARN_LEVEL, info_log_, "FloydContext::ReceiverDoAppendEntries: can't get Entry from raft_log pre_log_index %llu", pre_log_index);
   }
   if (pre_log_term != my_log_term) {
-    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries: pre_log(%lu, %lu) don't match with"
+    LOGV(WARN_LEVEL, info_log_, "FloydContext::AppendEntries: pre_log(%lu, %lu) don't match with"
          " local log(%lu, %lu), truncate suffix from here",
          pre_log_term, pre_log_index, my_log_term, last_log_index);
     // TruncateSuffix [pre_log_index, last_log_index)

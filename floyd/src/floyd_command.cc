@@ -339,8 +339,8 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
   BuildLogEntry(cmd, context_->current_term(), &entry);
   entries.push_back(&entry);
 
-  uint64_t last_index = raft_log_->Append(entries);
-  if (last_index <= 0) {
+  uint64_t last_log_index = raft_log_->Append(entries);
+  if (last_log_index <= 0) {
     return Status::IOError("Append Entry failed");
   }
 
@@ -354,7 +354,7 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
   response->set_type(cmd.type());
   response->set_code(StatusCode::kError);
 
-  Status res = context_->WaitApply(last_index, 1000);
+  Status res = context_->WaitApply(last_log_index, 1000);
   if (!res.ok()) {
     return res;
   } 
@@ -363,35 +363,35 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
   std::string value;
   rocksdb::Status rs;
   switch (cmd.type()) {
-    case Type::Write: {
-      response->set_code(StatusCode::kOk);
-      break;
+  case Type::Write: {
+    response->set_code(StatusCode::kOk);
+    break;
+  }
+  case Type::Delete: {
+    response->set_code(StatusCode::kOk);
+    break;
+  }
+  case Type::Read: {
+    rs = db_->Get(rocksdb::ReadOptions(), cmd.kv().key(), &value);
+    if (rs.ok()) {
+      BuildReadResponse(cmd.kv().key(), value, StatusCode::kOk, response);
+    } else if (rs.IsNotFound()) {
+      BuildReadResponse(cmd.kv().key(), value, StatusCode::kNotFound, response);
+    } else {
+      BuildReadResponse(cmd.kv().key(), value, StatusCode::kError, response);
     }
-    case Type::Delete: {
-      response->set_code(StatusCode::kOk);
-      break;
-    }
-    case Type::Read: {
-      rs = db_->Get(rocksdb::ReadOptions(), cmd.kv().key(), &value);
-      if (rs.ok()) {
-        BuildReadResponse(cmd.kv().key(), value, StatusCode::kOk, response);
-      } else if (rs.IsNotFound()) {
-        BuildReadResponse(cmd.kv().key(), value, StatusCode::kNotFound, response);
-      } else {
-        BuildReadResponse(cmd.kv().key(), value, StatusCode::kError, response);
-      }
-      LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteCommand Read %s, key(%s) value(%s)",
-           rs.ToString().c_str(), cmd.kv().key().c_str(), value.c_str());
+    LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteCommand Read %s, key(%s) value(%s)",
+         rs.ToString().c_str(), cmd.kv().key().c_str(), value.c_str());
 #ifndef NDEBUG 
-      std::string text_format;
-      google::protobuf::TextFormat::PrintToString(*response, &text_format);
-      LOGV(DEBUG_LEVEL, info_log_, "ReadResponse :\n%s", text_format.c_str());
+    std::string text_format;
+    google::protobuf::TextFormat::PrintToString(*response, &text_format);
+    LOGV(DEBUG_LEVEL, info_log_, "ReadResponse :\n%s", text_format.c_str());
 #endif
-      break;
-    }
-    default: {
-      return Status::Corruption("Unknown cmd type");
-    }
+    break;
+  }
+  default: {
+    return Status::Corruption("Unknown cmd type");
+  }
   }
   return Status::OK();
 }
@@ -439,11 +439,13 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& cmd, CmdResponse* response) {
     entries.push_back(&it);
   }
 
-  std::string text_format;
-  google::protobuf::TextFormat::PrintToString(cmd, &text_format);
-  LOGV(DEBUG_LEVEL, context_->info_log(), "DoAppendEntry with %llu "
-       "entries, message :\n%s",
-       entries.size(), text_format.c_str());
+  /*
+   * std::string text_format;
+   * google::protobuf::TextFormat::PrintToString(cmd, &text_format);
+   * LOGV(DEBUG_LEVEL, context_->info_log(), "FloydImpl::ReplyAppendEntries with %llu "
+   *      "entries, message :\n%s",
+   *      entries.size(), text_format.c_str());
+   */
 
   // Append entries
   status = context_->ReceiverDoAppendEntries(append_entries.term(),
@@ -453,7 +455,7 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& cmd, CmdResponse* response) {
 
   // Update log commit index
   if (context_->AdvanceCommitIndex(append_entries.commit_index())) {
-    LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::DoAppendEntries after AdvanceCommitIndex %lu",
+    LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries after AdvanceCommitIndex %lu",
          context_->commit_index());
     apply_->ScheduleApply();
   }

@@ -1,0 +1,57 @@
+package floyd.client;
+
+enum Type {
+  WRITE = 1;
+  READ = 2;
+  DELETE = 3;
+  STATUS = 4;
+  DIRTYWRITE = 5;
+  DIRTYREAD = 6;
+  LOGLEVEL = 7;
+}
+
+// Write 
+message Request {
+  required Type type = 1;
+
+  message Write {
+    required bytes key = 1;
+    required bytes value = 2;
+    optional bytes uuid = 3;
+  }
+  optional Write write = 2;
+
+  message Read {
+    required bytes key = 1;
+  }
+  optional Read read = 3;
+
+  message Delete {
+    required bytes key = 1;
+  }
+  optional Delete del = 4;
+
+  optional int32 log_level = 5;
+}
+
+enum StatusCode {
+  kOk = 0;
+  kNotFound = 1;
+  kError = 2;
+}
+
+message Response {
+  required Type type = 1;
+  optional StatusCode code = 2;
+  optional bytes msg = 3;
+
+  message Read {
+    optional bytes value = 1;
+  }
+  optional Read read = 4;
+
+  message ServerStatus {
+    required bytes msg = 1;
+  }
+  optional ServerStatus server_status = 5;
+}

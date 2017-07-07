@@ -22,7 +22,7 @@ ClientPool::ClientPool(Logger* info_log, int timeout_ms, int retry)
 }
 
 Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req, CmdResponse* res) {
-  //LOGV(DEBUG_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s", CmdType(req).c_str(), server.c_str());
+  // LOGV(DEBUG_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s", CmdType(req).c_str(), server.c_str());
   Status ret;
   char stage = 0;
   Client *client = GetClient(server);

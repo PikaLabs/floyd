@@ -202,10 +202,13 @@ Status Peer::AppendEntriesRPC() {
   append_entries->set_term(context_->current_term());
   append_entries->set_prev_log_index(prev_log_index);
   append_entries->set_prev_log_term(prev_log_term);
+  if (prev_log_index == 0) {
+    LOGV(WARN_LEVEL, context_->info_log(), "FloydPeerThread::AppendEntries: prev_log_index is 0");
+  }
 
   uint64_t num_entries = 0;
   Entry *tmp_entry = new Entry();
-  LOGV(DEBUG_LEVEL, context_->info_log(), "next_index_ %lld, last_log_index %lld", next_index_.load(), last_log_index);
+  LOGV(DEBUG_LEVEL, context_->info_log(), "next_index_ %llu, last_log_index %llu", next_index_.load(), last_log_index);
   for (uint64_t index = next_index_; index <= last_log_index; index++) {
     if (raft_log_->GetEntry(index, tmp_entry) == 0) {
       // TODO(baotiao) how to avoid memory copy here
@@ -226,14 +229,6 @@ Status Peer::AppendEntriesRPC() {
   append_entries->set_commit_index(
       std::min(context_->commit_index(), prev_log_index + num_entries));
 
-  /*
-   * std::string text_format;
-   * google::protobuf::TextFormat::PrintToString(req, &text_format);
-   * LOGV(DEBUG_LEVEL, context_->info_log(), "AppendEntry Send to %s with %llu "
-   *     "entries, message :\n%s",
-   *     server_.c_str(), num_entries, text_format.c_str());
-   */
-
   CmdResponse res;
   Status result = pool_->SendAndRecv(server_, req, &res);
 
@@ -252,7 +247,8 @@ Status Peer::AppendEntriesRPC() {
   if (result.ok() && context_->role() == Role::kLeader) {
     if (res.code() == StatusCode::kOk) {
       next_index_ = prev_log_index + num_entries + 1;
-      LOGV(DEBUG_LEVEL, context_->info_log(), "next_index_ %lld prev_log_index %lld num_entries %lld", next_index_.load(), prev_log_index, num_entries);
+      LOGV(DEBUG_LEVEL, context_->info_log(), "next_index_ %lld prev_log_index \
+          %lld num_entries %lld", next_index_.load(), prev_log_index, num_entries);
       primary_->AddTask(kAdvanceCommitIndex);
 
       // If this follower is far behind leader, and there is no more

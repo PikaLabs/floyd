@@ -75,11 +75,6 @@ void FloydPrimary::AddTask(TaskType type, void* arg) {
     // Here we enlarge the wait time instead of an accurate one,
     // to make the latter node more steady
     if (reset_elect_leader_time_) {
-      // uint64_t delta = (slash::NowMicros() - reset_elect_leader_time_);
-      // LOGV(DEBUG_LEVEL, context_->info_log(), "FloydPrimary::AddTask "
-      //     "kCheckElectLeader reset_elect_leader_timer old timeout"
-      //     " %luus, delta is %luus", timeout, delta);
-      // timeout = (delta < timeout) ? (timeout - delta) : 0;
       reset_elect_leader_time_ = 0;
     }
     LOGV(DEBUG_LEVEL, context_->info_log(), "FloydPrimary::AddTask "
@@ -167,7 +162,7 @@ void FloydPrimary::LaunchNewCommand(void *arg) {
   FloydPrimary* ptr = static_cast<FloydPrimary*>(arg);
   LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::LaunchNewCommand");
   if (ptr->context_->role() != Role::kLeader) {
-    LOGV(WARN_LEVEL, ptr->context_->info_log(), "FloydPrimary::NewCommand, Not leader yet");
+    LOGV(WARN_LEVEL, ptr->context_->info_log(), "FloydPrimary::LaunchNewCommand, Not leader yet");
     return;
   }
   ptr->NoticePeerTask(kNewCommand);
@@ -188,7 +183,7 @@ void FloydPrimary::LaunchAdvanceCommitIndex(void *arg) {
     new_commit_index = ptr->QuorumMatchIndex();
   }
   LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::AdvanceCommitIndex"
-       " new_commit_index=%lu", new_commit_index);
+       " new_commit_index=%llu", new_commit_index);
   if (ptr->context_->AdvanceCommitIndex(new_commit_index)) {
     LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::AdvanceCommitIndex ok, ScheduleApply");
     ptr->apply_->ScheduleApply();

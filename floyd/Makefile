@@ -2,7 +2,7 @@ CXX = g++
 ifeq ($(__PERF), 1)
 	CXXFLAGS = -O0 -ggdb3 -pg -pipe -fPIC -D__XDEBUG__ -DLOG_LEVEL=LEVEL_DEBUG -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -D_GNU_SOURCE -std=c++11 -D__STDC_FORMAT_MACROS -std=c++11 -Wno-redundant-decls -Wno-unused-variable -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX
 else
-	CXXFLAGS = -O2 -g -pipe -fPIC -DNDEBUG -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls -Wno-unused-variable -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX
+	CXXFLAGS = -O2 -g -pipe -fPIC -DNDEBUG -W -DLOG_LEVEL=LEVEL_INFO -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls -Wno-unused-variable -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX
 endif
 
 ifndef SLASH_PATH
