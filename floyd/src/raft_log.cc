@@ -34,9 +34,9 @@ extern uint64_t BitStrToUint(const std::string &str) {
 
 
 RaftLog::RaftLog(const std::string &path, Logger *info_log) : 
-  info_log_(info_log),
   last_log_index_(0), 
-  last_applied_(0) {
+  last_applied_(0),
+  info_log_(info_log) {
   rocksdb::Options options;
   options.create_if_missing = true;
   rocksdb::Status s = rocksdb::DB::Open(options, path, &log_db_);
@@ -70,7 +70,7 @@ uint64_t RaftLog::Append(const std::vector<Entry *> &entries) {
   std::string buf;
   rocksdb::Status s;
   LOGV(DEBUG_LEVEL, info_log_, "entries.size %lld", entries.size());
-  for (int i = 0; i < entries.size(); i++) {
+  for (size_t i = 0; i < entries.size(); i++) {
     entries[i]->SerializeToString(&buf);
     last_log_index_++;
     s = log_db_->Put(rocksdb::WriteOptions(), UintToBitStr(last_log_index_), buf);

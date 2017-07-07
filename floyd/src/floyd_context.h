@@ -133,7 +133,7 @@ class FloydContext {
   int voted_for_port_;
   std::string leader_ip_;
   int leader_port_;
-  int vote_quorum_;
+  uint32_t vote_quorum_;
 
   // Commit related
   slash::Mutex commit_mu_;
