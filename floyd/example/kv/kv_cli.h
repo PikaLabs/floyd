@@ -9,7 +9,6 @@
 
 
 namespace floyd {
-namespace client {
 
 struct Option;
 class Server;
@@ -77,8 +76,6 @@ class Cluster {
 
   pink::PinkCli *pb_cli_;
 };
-
-} // namespace client
 
 } // namespace floyd
 #endif

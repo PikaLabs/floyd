@@ -1,16 +1,15 @@
-#include "floyd_client.h"
+#include "kv_cli.h"
 
 #include <algorithm>
 #include <google/protobuf/text_format.h>
 
 #include "logger.h"
-#include "client.pb.h"
+#include "sdk.pb.h"
 
 #include "slash/include/slash_status.h"
 
 
 namespace floyd {
-namespace client {
 
 void Tokenize(const std::string& str, std::vector<std::string>& tokens, const char& delimiter = ' ') {
   size_t prev_pos = str.find_first_not_of(delimiter, 0);
@@ -313,5 +312,4 @@ slash::Status Cluster::set_log_level(const int log_level) {
   return Status::OK();
 }
 
-} // namespace client
 } // namspace floyd

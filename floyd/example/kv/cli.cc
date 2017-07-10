@@ -8,7 +8,7 @@
 
 #include "slash/include/slash_status.h"
 
-#include "floyd_client.h"
+#include "kv_cli.h"
 
 using namespace std;
 

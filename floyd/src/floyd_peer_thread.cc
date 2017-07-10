@@ -31,7 +31,7 @@ Peer::Peer(std::string server, FloydContext* context, FloydPrimary* primary,
 }
 
 int Peer::StartThread() {
-  bg_thread_.set_thread_name("FloydPr" + server_.substr(server_.find(':')));
+  bg_thread_.set_thread_name("FloydPeer" + server_.substr(server_.find(':')));
   return bg_thread_.StartThread();
 }
 
