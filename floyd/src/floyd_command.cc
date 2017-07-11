@@ -63,20 +63,19 @@ static void BuildDeleteRequest(const std::string& key, CmdRequest* cmd) {
 static void BuildRequestVoteResponse(uint64_t term, bool granted,
                                      CmdResponse* response) {
   response->set_type(Type::RequestVote);
-  response->set_code(granted ? StatusCode::kOk : StatusCode::kError);
-  CmdResponse_RequestVote* request_vote = response->mutable_request_vote();
-  request_vote->set_term(term);
+  CmdResponse_RequestVoteResponse* request_vote_res = response->mutable_request_vote_res();
+  request_vote_res->set_term(term);
+  request_vote_res->set_vote_granted(granted);
 }
 
 static void BuildAppendEntriesResponse(bool succ, uint64_t term,
                                        uint64_t log_index,
                                        CmdResponse* response) {
   response->set_type(Type::AppendEntries);
-  response->set_code(succ ? StatusCode::kOk : StatusCode::kError);
-  // response->set_code(StatusCode::kOk);
-  CmdResponse_AppendEntries* append_entries = response->mutable_append_entries();
-  append_entries->set_term(term);
-  append_entries->set_last_log_index(log_index);
+  CmdResponse_AppendEntriesResponse* append_entries_res = response->mutable_append_entries_res();
+  append_entries_res->set_term(term);
+  append_entries_res->set_last_log_index(log_index);
+  append_entries_res->set_success(succ);
 }
 
 static void BuildLogEntry(const CmdRequest& cmd, uint64_t current_term,
@@ -403,6 +402,7 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& cmd, CmdResponse* response) {
   CmdRequest_RequestVote request_vote = cmd.request_vote();
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::DoRequestVote my_term=%lu rqv.term=%lu",
        my_term, request_vote.term());
+  // if caller's term smaller than my term, then I will notice him
   if (request_vote.term() < my_term) {
     BuildRequestVoteResponse(my_term, granted, response);
     return;
@@ -428,16 +428,20 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& cmd, CmdResponse* response) {
   bool status = false;
   uint64_t my_term = context_->current_term();
   CmdRequest_AppendEntries append_entries = cmd.append_entries();
+  // if the append entries term is smaller then my_term, then the caller must an older leader
   if (append_entries.term() < my_term) {
     BuildAppendEntriesResponse(status, my_term, raft_log_->GetLastLogIndex(), response);
     return;
   }
+  // TODO(ba0tiao) why we need become follower, maybe we have been follower before
   context_->BecomeFollower(append_entries.term(),
                            append_entries.ip(), append_entries.port());
+
   std::vector<Entry*> entries;
   for (auto& it : *(cmd.mutable_append_entries()->mutable_entries())) {
     entries.push_back(&it);
   }
+  // TODO(ba0tiao) do consistency check here
 
   /*
    * std::string text_format;

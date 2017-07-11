@@ -1,4 +1,7 @@
-this is a consensus store used floyd
+this is a simple consensus store used floyd
+
 it includes two part:
 1. server
 2. client
+
+you can use it to test the performance of floyd

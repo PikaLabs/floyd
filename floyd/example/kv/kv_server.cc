@@ -1,11 +1,12 @@
-#include "kv_server.h"
+#include "./kv_server.h"
 
 #include <google/protobuf/text_format.h>
+
+#include "pink/include/server_thread.h"
 
 #include "./sdk.pb.h"
 #include "./logger.h"
 
-#include "pink/include/server_thread.h"
 
 namespace floyd {
 

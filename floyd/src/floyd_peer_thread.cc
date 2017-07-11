@@ -28,10 +28,11 @@ Peer::Peer(std::string server, FloydContext* context, FloydPrimary* primary,
     raft_log_(raft_log),
     pool_(pool),
     next_index_(1) {
+      next_index_ = raft_log_->last_log_index() + 1;
 }
 
 int Peer::StartThread() {
-  bg_thread_.set_thread_name("FloydPr" + server_.substr(server_.find(':')));
+  bg_thread_.set_thread_name("FloydPeer" + server_.substr(server_.find(':')));
   return bg_thread_.StartThread();
 }
 
@@ -111,10 +112,10 @@ Status Peer::RequestVoteRPC() {
 #endif
 
   // we get term from request vote
-  uint64_t res_term = res.request_vote().term();
+  uint64_t res_term = res.request_vote_res().term();
   if (result.ok() && context_->role() == Role::kCandidate) {
     // kOk means RequestVote success, opposite vote for me
-    if (res.code() == StatusCode::kOk) {    // granted
+    if (res.request_vote_res().vote_granted() == true) {    // granted
       LOGV(INFO_LEVEL, context_->info_log(), "Peer(%s)::RequestVote granted"
            " will Vote and check", server_.c_str());
       // However, we need check whether this vote is vote for old term
@@ -171,6 +172,9 @@ void Peer::AppendEntriesRPCWrapper(void *arg) {
 }
 
 Status Peer::AppendEntriesRPC() {
+  // 这里想的是如果我不是Leader 我就不应该走下面这个逻辑, 但是实际上及时
+  // 这个判断完成以后, 接下来还是有可能last_log_index 获取的时候是leader
+  //
   if (context_->role() != Role::kLeader) {
     LOGV(WARN_LEVEL, context_->info_log(), "Peer(%s) not leader anymore,"
          "skip AppendEntries", server_.c_str());
@@ -202,16 +206,13 @@ Status Peer::AppendEntriesRPC() {
   append_entries->set_term(context_->current_term());
   append_entries->set_prev_log_index(prev_log_index);
   append_entries->set_prev_log_term(prev_log_term);
-  if (prev_log_index == 0) {
-    LOGV(WARN_LEVEL, context_->info_log(), "FloydPeerThread::AppendEntries: prev_log_index is 0");
-  }
 
   uint64_t num_entries = 0;
   Entry *tmp_entry = new Entry();
   LOGV(DEBUG_LEVEL, context_->info_log(), "next_index_ %llu, last_log_index %llu", next_index_.load(), last_log_index);
   for (uint64_t index = next_index_; index <= last_log_index; index++) {
     if (raft_log_->GetEntry(index, tmp_entry) == 0) {
-      // TODO(baotiao) how to avoid memory copy here
+      // TODO(ba0tiao) how to avoid memory copy here
       Entry *entry = append_entries->add_entries();
       *entry = *tmp_entry;
     } else {
@@ -226,6 +227,10 @@ Status Peer::AppendEntriesRPC() {
     }
   }
   delete tmp_entry;
+  /*
+   * commit_index should be min of follower log and leader's commit_index
+   * if follower's commit index larger than follower log, it conflict 
+   */
   append_entries->set_commit_index(
       std::min(context_->commit_index(), prev_log_index + num_entries));
 
@@ -233,19 +238,24 @@ Status Peer::AppendEntriesRPC() {
   Status result = pool_->SendAndRecv(server_, req, &res);
 
   if (!result.ok()) {
-    LOGV(DEBUG_LEVEL, context_->info_log(), "AppendEntry to %s failed %s",
+    LOGV(WARN_LEVEL, context_->info_log(), "FloydPeerThread::AppendEntries: AppendEntry to %s failed %s",
          server_.c_str(), result.ToString().c_str());
     return result;
   }
-  uint64_t res_term = res.append_entries().term();
+  uint64_t res_term = res.append_entries_res().term();
+  /*
+   * receiver has higer term than myself, so turn from candidate to follower
+   */
   if (result.ok() && res_term > context_->current_term()) {
     // TODO(anan) maybe combine these 2 steps
     context_->BecomeFollower(res_term);
     primary_->ResetElectLeaderTimer();
   }
 
+  // TODO(ba0tiao) 这里是否需要判断Leader, 如果担心在执行sendandrecv 过程中角色
+  // 发生了变化, 那么这个时候该如何处理
   if (result.ok() && context_->role() == Role::kLeader) {
-    if (res.code() == StatusCode::kOk) {
+    if (res.append_entries_res().success() == true) {
       next_index_ = prev_log_index + num_entries + 1;
       LOGV(DEBUG_LEVEL, context_->info_log(), "next_index_ %lld prev_log_index \
           %lld num_entries %lld", next_index_.load(), prev_log_index, num_entries);
@@ -264,13 +274,13 @@ Status Peer::AppendEntriesRPC() {
         }
       }
     } else {
-      uint64_t adjust_index = std::min(res.append_entries().last_log_index() + 1,
+      uint64_t adjust_index = std::min(res.append_entries_res().last_log_index() + 1,
                                        next_index_ - 1);
       if (adjust_index > 0) {
         // Prev log don't match, so we retry with more prev one according to
         // response
         next_index_ = adjust_index;
-        LOGV(DEBUG_LEVEL, context_->info_log(), "update next_index_ %lld", next_index_.load());
+        LOGV(INFO_LEVEL, context_->info_log(), "update next_index_ %lld", next_index_.load());
         AddAppendEntriesTask();
       }
     }
