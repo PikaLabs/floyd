@@ -207,18 +207,25 @@ bool FloydContext::ReceiverDoRequestVote(uint64_t term, const std::string ip,
                                int port, uint64_t log_term, uint64_t log_index,
                                uint64_t *my_term) {
   slash::RWLock l(&stat_rw_, true);
-  if (term < current_term_) {
-    return false; // stale term
-  }
+  // TODO we don't need judge here, since before coming here, we have make sure 
+  // that term > current_term_
+  // if there is some call between the judge and here, the problem is floyd not 
+  // thread safe, add judge can't solve the problem. the right way to solve the
+  // problem is make the library thread safe
+  /*
+   * if (term < current_term_) {
+   *   return false; // stale term
+   * }
+   */
 
   uint64_t my_log_index;
   uint64_t my_log_term;
   raft_log_->GetLastLogTermAndIndex(&my_log_term, &my_log_index);
-  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::RequestVote: my last_log is %lu:%lu, sponsor is %lu:%lu",
+  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::RequestVote: my last_log is %lu:%lu, caller is %lu:%lu",
        my_log_term, my_log_index, log_term, log_index);
   if (log_term < my_log_term
       || (log_term == my_log_term && log_index < my_log_index)) {
-    LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: log index not up-to-date, my is %lu:%lu, sponsor is %lu:%lu",
+    LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: log index not up-to-date, my is %lu:%lu, caller is %lu:%lu",
          my_log_term, my_log_index, log_term, log_index);
     return false; // log index is not up-to-date as mine
   }
@@ -236,7 +243,7 @@ bool FloydContext::ReceiverDoRequestVote(uint64_t term, const std::string ip,
   *my_term = current_term_;
   MetaApply();
   LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: grant vote for (%s:%d),"
-       " with my_term(%lu), my last_log(%lu:%lu), sponsor log(%lu,%lu).",
+       " with my_term(%lu), my last_log(%lu:%lu), caller log(%lu,%lu).",
        voted_for_ip_.c_str(), voted_for_port_, *my_term,
        my_log_term, my_log_index, log_term, log_index);
   return true;
@@ -262,12 +269,13 @@ bool FloydContext::ReceiverDoAppendEntries(uint64_t term,
   } else {
     LOGV(WARN_LEVEL, info_log_, "FloydContext::ReceiverDoAppendEntries: can't get Entry from raft_log pre_log_index %llu", pre_log_index);
   }
+
   if (pre_log_term != my_log_term) {
-    LOGV(WARN_LEVEL, info_log_, "FloydContext::AppendEntries: pre_log(%lu, %lu) don't match with"
+    LOGV(WARN_LEVEL, info_log_, "FloydContext::ReceiverDoAppendEntries: pre_log(%lu, %lu) don't match with"
          " local log(%lu, %lu), truncate suffix from here",
          pre_log_term, pre_log_index, my_log_term, last_log_index);
     // TruncateSuffix [pre_log_index, last_log_index)
-    // raft_log_->TruncateSuffix(pre_log_index - 1);
+    raft_log_->TruncateSuffix(pre_log_index);
     return false;
   }
 
@@ -276,16 +284,17 @@ bool FloydContext::ReceiverDoAppendEntries(uint64_t term,
 #ifndef NDEBUG
     uint64_t last_log_term;
     raft_log_->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
-    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries: truncate suffix from %lu, "
+    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::ReceiverDoAppendEntries: truncate suffix from %lu, "
          "pre_log(%lu,%lu), last_log(%lu,%lu)",
          pre_log_index + 1, pre_log_term, pre_log_index, last_log_term, last_log_index);
 #endif
     // TruncateSuffix [pre_log_index + 1, last_log_index)
-    // raft_log_->TruncateSuffix(pre_log_index);
+    raft_log_->TruncateSuffix(pre_log_index + 1);
   }
+
   *my_term = current_term_;
   if (entries.size() > 0) {
-    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AppendEntries will append %u entries from "
+    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::ReceiverDoAppendEntries: will append %u entries from "
          " pre_log_index %lu", entries.size(), pre_log_index + 1);
     if (raft_log_->Append(entries) <= 0) {
       return false;

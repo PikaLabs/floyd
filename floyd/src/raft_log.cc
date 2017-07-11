@@ -42,7 +42,6 @@ RaftLog::RaftLog(const std::string &path, Logger *info_log) :
   rocksdb::Status s = rocksdb::DB::Open(options, path, &log_db_);
   assert(s.ok());
   
-  // TODO(ba0tiao) add seek to max to initialize last_log_index_
   rocksdb::Iterator *it = log_db_->NewIterator(rocksdb::ReadOptions());
   // skip currentterm, voteforip, voteforport, applyindex
   it->SeekToLast();
@@ -166,6 +165,16 @@ void RaftLog::UpdateLastApplied(uint64_t last_applied) {
   char buf[8];
   memcpy(buf, &last_applied, sizeof(uint64_t));
   log_db_->Put(rocksdb::WriteOptions(), kApplyIndex, std::string(buf, 8));
+}
+
+int RaftLog::TruncateSuffix(uint64_t index) {
+  // here we need to delete the unnecessary entry, since we don't store
+  // last_log_index in rocksdb
+  for (uint64_t i = index; i <= last_log_index_; i++) {
+    log_db_->Delete(rocksdb::WriteOptions(), UintToBitStr(i));
+  }
+  last_log_index_ = index;
+  return 0;
 }
 
 }

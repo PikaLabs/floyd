@@ -44,9 +44,9 @@ class CmdRequest_ServerStatus;
 class CmdResponse;
 class CmdResponse_Kv;
 class CmdResponse_Kvs;
+class CmdResponse_RequestVoteResponse;
+class CmdResponse_AppendEntriesResponse;
 class CmdResponse_ServerStatus;
-class CmdResponse_RequestVote;
-class CmdResponse_AppendEntries;
 
 enum Type {
   Read = 0,
@@ -1108,6 +1108,200 @@ class CmdResponse_Kvs : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
+class CmdResponse_RequestVoteResponse : public ::google::protobuf::Message {
+ public:
+  CmdResponse_RequestVoteResponse();
+  virtual ~CmdResponse_RequestVoteResponse();
+
+  CmdResponse_RequestVoteResponse(const CmdResponse_RequestVoteResponse& from);
+
+  inline CmdResponse_RequestVoteResponse& operator=(const CmdResponse_RequestVoteResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const CmdResponse_RequestVoteResponse& default_instance();
+
+  void Swap(CmdResponse_RequestVoteResponse* other);
+
+  // implements Message ----------------------------------------------
+
+  CmdResponse_RequestVoteResponse* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const CmdResponse_RequestVoteResponse& from);
+  void MergeFrom(const CmdResponse_RequestVoteResponse& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // required uint64 term = 1;
+  inline bool has_term() const;
+  inline void clear_term();
+  static const int kTermFieldNumber = 1;
+  inline ::google::protobuf::uint64 term() const;
+  inline void set_term(::google::protobuf::uint64 value);
+
+  // required bool vote_granted = 2;
+  inline bool has_vote_granted() const;
+  inline void clear_vote_granted();
+  static const int kVoteGrantedFieldNumber = 2;
+  inline bool vote_granted() const;
+  inline void set_vote_granted(bool value);
+
+  // @@protoc_insertion_point(class_scope:floyd.CmdResponse.RequestVoteResponse)
+ private:
+  inline void set_has_term();
+  inline void clear_has_term();
+  inline void set_has_vote_granted();
+  inline void clear_has_vote_granted();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint64 term_;
+  bool vote_granted_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_floyd_2eproto();
+  friend void protobuf_AssignDesc_floyd_2eproto();
+  friend void protobuf_ShutdownFile_floyd_2eproto();
+
+  void InitAsDefaultInstance();
+  static CmdResponse_RequestVoteResponse* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class CmdResponse_AppendEntriesResponse : public ::google::protobuf::Message {
+ public:
+  CmdResponse_AppendEntriesResponse();
+  virtual ~CmdResponse_AppendEntriesResponse();
+
+  CmdResponse_AppendEntriesResponse(const CmdResponse_AppendEntriesResponse& from);
+
+  inline CmdResponse_AppendEntriesResponse& operator=(const CmdResponse_AppendEntriesResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const CmdResponse_AppendEntriesResponse& default_instance();
+
+  void Swap(CmdResponse_AppendEntriesResponse* other);
+
+  // implements Message ----------------------------------------------
+
+  CmdResponse_AppendEntriesResponse* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const CmdResponse_AppendEntriesResponse& from);
+  void MergeFrom(const CmdResponse_AppendEntriesResponse& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // required uint64 term = 1;
+  inline bool has_term() const;
+  inline void clear_term();
+  static const int kTermFieldNumber = 1;
+  inline ::google::protobuf::uint64 term() const;
+  inline void set_term(::google::protobuf::uint64 value);
+
+  // required bool success = 2;
+  inline bool has_success() const;
+  inline void clear_success();
+  static const int kSuccessFieldNumber = 2;
+  inline bool success() const;
+  inline void set_success(bool value);
+
+  // optional uint64 last_log_index = 3;
+  inline bool has_last_log_index() const;
+  inline void clear_last_log_index();
+  static const int kLastLogIndexFieldNumber = 3;
+  inline ::google::protobuf::uint64 last_log_index() const;
+  inline void set_last_log_index(::google::protobuf::uint64 value);
+
+  // @@protoc_insertion_point(class_scope:floyd.CmdResponse.AppendEntriesResponse)
+ private:
+  inline void set_has_term();
+  inline void clear_has_term();
+  inline void set_has_success();
+  inline void clear_has_success();
+  inline void set_has_last_log_index();
+  inline void clear_has_last_log_index();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint64 term_;
+  ::google::protobuf::uint64 last_log_index_;
+  bool success_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_floyd_2eproto();
+  friend void protobuf_AssignDesc_floyd_2eproto();
+  friend void protobuf_ShutdownFile_floyd_2eproto();
+
+  void InitAsDefaultInstance();
+  static CmdResponse_AppendEntriesResponse* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class CmdResponse_ServerStatus : public ::google::protobuf::Message {
  public:
   CmdResponse_ServerStatus();
@@ -1295,180 +1489,6 @@ class CmdResponse_ServerStatus : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
-class CmdResponse_RequestVote : public ::google::protobuf::Message {
- public:
-  CmdResponse_RequestVote();
-  virtual ~CmdResponse_RequestVote();
-
-  CmdResponse_RequestVote(const CmdResponse_RequestVote& from);
-
-  inline CmdResponse_RequestVote& operator=(const CmdResponse_RequestVote& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const CmdResponse_RequestVote& default_instance();
-
-  void Swap(CmdResponse_RequestVote* other);
-
-  // implements Message ----------------------------------------------
-
-  CmdResponse_RequestVote* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const CmdResponse_RequestVote& from);
-  void MergeFrom(const CmdResponse_RequestVote& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // required uint64 term = 1;
-  inline bool has_term() const;
-  inline void clear_term();
-  static const int kTermFieldNumber = 1;
-  inline ::google::protobuf::uint64 term() const;
-  inline void set_term(::google::protobuf::uint64 value);
-
-  // @@protoc_insertion_point(class_scope:floyd.CmdResponse.RequestVote)
- private:
-  inline void set_has_term();
-  inline void clear_has_term();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::google::protobuf::uint64 term_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
-
-  friend void  protobuf_AddDesc_floyd_2eproto();
-  friend void protobuf_AssignDesc_floyd_2eproto();
-  friend void protobuf_ShutdownFile_floyd_2eproto();
-
-  void InitAsDefaultInstance();
-  static CmdResponse_RequestVote* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class CmdResponse_AppendEntries : public ::google::protobuf::Message {
- public:
-  CmdResponse_AppendEntries();
-  virtual ~CmdResponse_AppendEntries();
-
-  CmdResponse_AppendEntries(const CmdResponse_AppendEntries& from);
-
-  inline CmdResponse_AppendEntries& operator=(const CmdResponse_AppendEntries& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const CmdResponse_AppendEntries& default_instance();
-
-  void Swap(CmdResponse_AppendEntries* other);
-
-  // implements Message ----------------------------------------------
-
-  CmdResponse_AppendEntries* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const CmdResponse_AppendEntries& from);
-  void MergeFrom(const CmdResponse_AppendEntries& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // required uint64 term = 1;
-  inline bool has_term() const;
-  inline void clear_term();
-  static const int kTermFieldNumber = 1;
-  inline ::google::protobuf::uint64 term() const;
-  inline void set_term(::google::protobuf::uint64 value);
-
-  // required uint64 last_log_index = 2;
-  inline bool has_last_log_index() const;
-  inline void clear_last_log_index();
-  static const int kLastLogIndexFieldNumber = 2;
-  inline ::google::protobuf::uint64 last_log_index() const;
-  inline void set_last_log_index(::google::protobuf::uint64 value);
-
-  // @@protoc_insertion_point(class_scope:floyd.CmdResponse.AppendEntries)
- private:
-  inline void set_has_term();
-  inline void clear_has_term();
-  inline void set_has_last_log_index();
-  inline void clear_has_last_log_index();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::google::protobuf::uint64 term_;
-  ::google::protobuf::uint64 last_log_index_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
-
-  friend void  protobuf_AddDesc_floyd_2eproto();
-  friend void protobuf_AssignDesc_floyd_2eproto();
-  friend void protobuf_ShutdownFile_floyd_2eproto();
-
-  void InitAsDefaultInstance();
-  static CmdResponse_AppendEntries* default_instance_;
-};
-// -------------------------------------------------------------------
-
 class CmdResponse : public ::google::protobuf::Message {
  public:
   CmdResponse();
@@ -1523,9 +1543,9 @@ class CmdResponse : public ::google::protobuf::Message {
 
   typedef CmdResponse_Kv Kv;
   typedef CmdResponse_Kvs Kvs;
+  typedef CmdResponse_RequestVoteResponse RequestVoteResponse;
+  typedef CmdResponse_AppendEntriesResponse AppendEntriesResponse;
   typedef CmdResponse_ServerStatus ServerStatus;
-  typedef CmdResponse_RequestVote RequestVote;
-  typedef CmdResponse_AppendEntries AppendEntries;
 
   // accessors -------------------------------------------------------
 
@@ -1536,7 +1556,7 @@ class CmdResponse : public ::google::protobuf::Message {
   inline ::floyd::Type type() const;
   inline void set_type(::floyd::Type value);
 
-  // required .floyd.StatusCode code = 2;
+  // optional .floyd.StatusCode code = 2;
   inline bool has_code() const;
   inline void clear_code();
   static const int kCodeFieldNumber = 2;
@@ -1573,32 +1593,32 @@ class CmdResponse : public ::google::protobuf::Message {
   inline ::floyd::CmdResponse_Kvs* release_kvs();
   inline void set_allocated_kvs(::floyd::CmdResponse_Kvs* kvs);
 
-  // optional .floyd.CmdResponse.ServerStatus server_status = 6;
+  // optional .floyd.CmdResponse.RequestVoteResponse request_vote_res = 6;
+  inline bool has_request_vote_res() const;
+  inline void clear_request_vote_res();
+  static const int kRequestVoteResFieldNumber = 6;
+  inline const ::floyd::CmdResponse_RequestVoteResponse& request_vote_res() const;
+  inline ::floyd::CmdResponse_RequestVoteResponse* mutable_request_vote_res();
+  inline ::floyd::CmdResponse_RequestVoteResponse* release_request_vote_res();
+  inline void set_allocated_request_vote_res(::floyd::CmdResponse_RequestVoteResponse* request_vote_res);
+
+  // optional .floyd.CmdResponse.AppendEntriesResponse append_entries_res = 7;
+  inline bool has_append_entries_res() const;
+  inline void clear_append_entries_res();
+  static const int kAppendEntriesResFieldNumber = 7;
+  inline const ::floyd::CmdResponse_AppendEntriesResponse& append_entries_res() const;
+  inline ::floyd::CmdResponse_AppendEntriesResponse* mutable_append_entries_res();
+  inline ::floyd::CmdResponse_AppendEntriesResponse* release_append_entries_res();
+  inline void set_allocated_append_entries_res(::floyd::CmdResponse_AppendEntriesResponse* append_entries_res);
+
+  // optional .floyd.CmdResponse.ServerStatus server_status = 8;
   inline bool has_server_status() const;
   inline void clear_server_status();
-  static const int kServerStatusFieldNumber = 6;
+  static const int kServerStatusFieldNumber = 8;
   inline const ::floyd::CmdResponse_ServerStatus& server_status() const;
   inline ::floyd::CmdResponse_ServerStatus* mutable_server_status();
   inline ::floyd::CmdResponse_ServerStatus* release_server_status();
   inline void set_allocated_server_status(::floyd::CmdResponse_ServerStatus* server_status);
-
-  // optional .floyd.CmdResponse.RequestVote request_vote = 7;
-  inline bool has_request_vote() const;
-  inline void clear_request_vote();
-  static const int kRequestVoteFieldNumber = 7;
-  inline const ::floyd::CmdResponse_RequestVote& request_vote() const;
-  inline ::floyd::CmdResponse_RequestVote* mutable_request_vote();
-  inline ::floyd::CmdResponse_RequestVote* release_request_vote();
-  inline void set_allocated_request_vote(::floyd::CmdResponse_RequestVote* request_vote);
-
-  // optional .floyd.CmdResponse.AppendEntries append_entries = 8;
-  inline bool has_append_entries() const;
-  inline void clear_append_entries();
-  static const int kAppendEntriesFieldNumber = 8;
-  inline const ::floyd::CmdResponse_AppendEntries& append_entries() const;
-  inline ::floyd::CmdResponse_AppendEntries* mutable_append_entries();
-  inline ::floyd::CmdResponse_AppendEntries* release_append_entries();
-  inline void set_allocated_append_entries(::floyd::CmdResponse_AppendEntries* append_entries);
 
   // @@protoc_insertion_point(class_scope:floyd.CmdResponse)
  private:
@@ -1612,12 +1632,12 @@ class CmdResponse : public ::google::protobuf::Message {
   inline void clear_has_kv();
   inline void set_has_kvs();
   inline void clear_has_kvs();
+  inline void set_has_request_vote_res();
+  inline void clear_has_request_vote_res();
+  inline void set_has_append_entries_res();
+  inline void clear_has_append_entries_res();
   inline void set_has_server_status();
   inline void clear_has_server_status();
-  inline void set_has_request_vote();
-  inline void clear_has_request_vote();
-  inline void set_has_append_entries();
-  inline void clear_has_append_entries();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -1626,9 +1646,9 @@ class CmdResponse : public ::google::protobuf::Message {
   ::std::string* msg_;
   ::floyd::CmdResponse_Kv* kv_;
   ::floyd::CmdResponse_Kvs* kvs_;
+  ::floyd::CmdResponse_RequestVoteResponse* request_vote_res_;
+  ::floyd::CmdResponse_AppendEntriesResponse* append_entries_res_;
   ::floyd::CmdResponse_ServerStatus* server_status_;
-  ::floyd::CmdResponse_RequestVote* request_vote_;
-  ::floyd::CmdResponse_AppendEntries* append_entries_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
@@ -2812,6 +2832,124 @@ CmdResponse_Kvs::mutable_kv() {
 
 // -------------------------------------------------------------------
 
+// CmdResponse_RequestVoteResponse
+
+// required uint64 term = 1;
+inline bool CmdResponse_RequestVoteResponse::has_term() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void CmdResponse_RequestVoteResponse::set_has_term() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void CmdResponse_RequestVoteResponse::clear_has_term() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void CmdResponse_RequestVoteResponse::clear_term() {
+  term_ = GOOGLE_ULONGLONG(0);
+  clear_has_term();
+}
+inline ::google::protobuf::uint64 CmdResponse_RequestVoteResponse::term() const {
+  return term_;
+}
+inline void CmdResponse_RequestVoteResponse::set_term(::google::protobuf::uint64 value) {
+  set_has_term();
+  term_ = value;
+}
+
+// required bool vote_granted = 2;
+inline bool CmdResponse_RequestVoteResponse::has_vote_granted() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void CmdResponse_RequestVoteResponse::set_has_vote_granted() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void CmdResponse_RequestVoteResponse::clear_has_vote_granted() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void CmdResponse_RequestVoteResponse::clear_vote_granted() {
+  vote_granted_ = false;
+  clear_has_vote_granted();
+}
+inline bool CmdResponse_RequestVoteResponse::vote_granted() const {
+  return vote_granted_;
+}
+inline void CmdResponse_RequestVoteResponse::set_vote_granted(bool value) {
+  set_has_vote_granted();
+  vote_granted_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// CmdResponse_AppendEntriesResponse
+
+// required uint64 term = 1;
+inline bool CmdResponse_AppendEntriesResponse::has_term() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void CmdResponse_AppendEntriesResponse::set_has_term() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void CmdResponse_AppendEntriesResponse::clear_has_term() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void CmdResponse_AppendEntriesResponse::clear_term() {
+  term_ = GOOGLE_ULONGLONG(0);
+  clear_has_term();
+}
+inline ::google::protobuf::uint64 CmdResponse_AppendEntriesResponse::term() const {
+  return term_;
+}
+inline void CmdResponse_AppendEntriesResponse::set_term(::google::protobuf::uint64 value) {
+  set_has_term();
+  term_ = value;
+}
+
+// required bool success = 2;
+inline bool CmdResponse_AppendEntriesResponse::has_success() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void CmdResponse_AppendEntriesResponse::set_has_success() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void CmdResponse_AppendEntriesResponse::clear_has_success() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void CmdResponse_AppendEntriesResponse::clear_success() {
+  success_ = false;
+  clear_has_success();
+}
+inline bool CmdResponse_AppendEntriesResponse::success() const {
+  return success_;
+}
+inline void CmdResponse_AppendEntriesResponse::set_success(bool value) {
+  set_has_success();
+  success_ = value;
+}
+
+// optional uint64 last_log_index = 3;
+inline bool CmdResponse_AppendEntriesResponse::has_last_log_index() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void CmdResponse_AppendEntriesResponse::set_has_last_log_index() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void CmdResponse_AppendEntriesResponse::clear_has_last_log_index() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void CmdResponse_AppendEntriesResponse::clear_last_log_index() {
+  last_log_index_ = GOOGLE_ULONGLONG(0);
+  clear_has_last_log_index();
+}
+inline ::google::protobuf::uint64 CmdResponse_AppendEntriesResponse::last_log_index() const {
+  return last_log_index_;
+}
+inline void CmdResponse_AppendEntriesResponse::set_last_log_index(::google::protobuf::uint64 value) {
+  set_has_last_log_index();
+  last_log_index_ = value;
+}
+
+// -------------------------------------------------------------------
+
 // CmdResponse_ServerStatus
 
 // required uint64 term = 1;
@@ -3180,80 +3318,6 @@ inline void CmdResponse_ServerStatus::set_last_applied(::google::protobuf::uint6
 
 // -------------------------------------------------------------------
 
-// CmdResponse_RequestVote
-
-// required uint64 term = 1;
-inline bool CmdResponse_RequestVote::has_term() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void CmdResponse_RequestVote::set_has_term() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void CmdResponse_RequestVote::clear_has_term() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void CmdResponse_RequestVote::clear_term() {
-  term_ = GOOGLE_ULONGLONG(0);
-  clear_has_term();
-}
-inline ::google::protobuf::uint64 CmdResponse_RequestVote::term() const {
-  return term_;
-}
-inline void CmdResponse_RequestVote::set_term(::google::protobuf::uint64 value) {
-  set_has_term();
-  term_ = value;
-}
-
-// -------------------------------------------------------------------
-
-// CmdResponse_AppendEntries
-
-// required uint64 term = 1;
-inline bool CmdResponse_AppendEntries::has_term() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void CmdResponse_AppendEntries::set_has_term() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void CmdResponse_AppendEntries::clear_has_term() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void CmdResponse_AppendEntries::clear_term() {
-  term_ = GOOGLE_ULONGLONG(0);
-  clear_has_term();
-}
-inline ::google::protobuf::uint64 CmdResponse_AppendEntries::term() const {
-  return term_;
-}
-inline void CmdResponse_AppendEntries::set_term(::google::protobuf::uint64 value) {
-  set_has_term();
-  term_ = value;
-}
-
-// required uint64 last_log_index = 2;
-inline bool CmdResponse_AppendEntries::has_last_log_index() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void CmdResponse_AppendEntries::set_has_last_log_index() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void CmdResponse_AppendEntries::clear_has_last_log_index() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void CmdResponse_AppendEntries::clear_last_log_index() {
-  last_log_index_ = GOOGLE_ULONGLONG(0);
-  clear_has_last_log_index();
-}
-inline ::google::protobuf::uint64 CmdResponse_AppendEntries::last_log_index() const {
-  return last_log_index_;
-}
-inline void CmdResponse_AppendEntries::set_last_log_index(::google::protobuf::uint64 value) {
-  set_has_last_log_index();
-  last_log_index_ = value;
-}
-
-// -------------------------------------------------------------------
-
 // CmdResponse
 
 // required .floyd.Type type = 1;
@@ -3279,7 +3343,7 @@ inline void CmdResponse::set_type(::floyd::Type value) {
   type_ = value;
 }
 
-// required .floyd.StatusCode code = 2;
+// optional .floyd.StatusCode code = 2;
 inline bool CmdResponse::has_code() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
@@ -3448,15 +3512,91 @@ inline void CmdResponse::set_allocated_kvs(::floyd::CmdResponse_Kvs* kvs) {
   }
 }
 
-// optional .floyd.CmdResponse.ServerStatus server_status = 6;
-inline bool CmdResponse::has_server_status() const {
+// optional .floyd.CmdResponse.RequestVoteResponse request_vote_res = 6;
+inline bool CmdResponse::has_request_vote_res() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void CmdResponse::set_has_server_status() {
+inline void CmdResponse::set_has_request_vote_res() {
   _has_bits_[0] |= 0x00000020u;
 }
-inline void CmdResponse::clear_has_server_status() {
+inline void CmdResponse::clear_has_request_vote_res() {
   _has_bits_[0] &= ~0x00000020u;
+}
+inline void CmdResponse::clear_request_vote_res() {
+  if (request_vote_res_ != NULL) request_vote_res_->::floyd::CmdResponse_RequestVoteResponse::Clear();
+  clear_has_request_vote_res();
+}
+inline const ::floyd::CmdResponse_RequestVoteResponse& CmdResponse::request_vote_res() const {
+  return request_vote_res_ != NULL ? *request_vote_res_ : *default_instance_->request_vote_res_;
+}
+inline ::floyd::CmdResponse_RequestVoteResponse* CmdResponse::mutable_request_vote_res() {
+  set_has_request_vote_res();
+  if (request_vote_res_ == NULL) request_vote_res_ = new ::floyd::CmdResponse_RequestVoteResponse;
+  return request_vote_res_;
+}
+inline ::floyd::CmdResponse_RequestVoteResponse* CmdResponse::release_request_vote_res() {
+  clear_has_request_vote_res();
+  ::floyd::CmdResponse_RequestVoteResponse* temp = request_vote_res_;
+  request_vote_res_ = NULL;
+  return temp;
+}
+inline void CmdResponse::set_allocated_request_vote_res(::floyd::CmdResponse_RequestVoteResponse* request_vote_res) {
+  delete request_vote_res_;
+  request_vote_res_ = request_vote_res;
+  if (request_vote_res) {
+    set_has_request_vote_res();
+  } else {
+    clear_has_request_vote_res();
+  }
+}
+
+// optional .floyd.CmdResponse.AppendEntriesResponse append_entries_res = 7;
+inline bool CmdResponse::has_append_entries_res() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void CmdResponse::set_has_append_entries_res() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void CmdResponse::clear_has_append_entries_res() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void CmdResponse::clear_append_entries_res() {
+  if (append_entries_res_ != NULL) append_entries_res_->::floyd::CmdResponse_AppendEntriesResponse::Clear();
+  clear_has_append_entries_res();
+}
+inline const ::floyd::CmdResponse_AppendEntriesResponse& CmdResponse::append_entries_res() const {
+  return append_entries_res_ != NULL ? *append_entries_res_ : *default_instance_->append_entries_res_;
+}
+inline ::floyd::CmdResponse_AppendEntriesResponse* CmdResponse::mutable_append_entries_res() {
+  set_has_append_entries_res();
+  if (append_entries_res_ == NULL) append_entries_res_ = new ::floyd::CmdResponse_AppendEntriesResponse;
+  return append_entries_res_;
+}
+inline ::floyd::CmdResponse_AppendEntriesResponse* CmdResponse::release_append_entries_res() {
+  clear_has_append_entries_res();
+  ::floyd::CmdResponse_AppendEntriesResponse* temp = append_entries_res_;
+  append_entries_res_ = NULL;
+  return temp;
+}
+inline void CmdResponse::set_allocated_append_entries_res(::floyd::CmdResponse_AppendEntriesResponse* append_entries_res) {
+  delete append_entries_res_;
+  append_entries_res_ = append_entries_res;
+  if (append_entries_res) {
+    set_has_append_entries_res();
+  } else {
+    clear_has_append_entries_res();
+  }
+}
+
+// optional .floyd.CmdResponse.ServerStatus server_status = 8;
+inline bool CmdResponse::has_server_status() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void CmdResponse::set_has_server_status() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void CmdResponse::clear_has_server_status() {
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void CmdResponse::clear_server_status() {
   if (server_status_ != NULL) server_status_->::floyd::CmdResponse_ServerStatus::Clear();
@@ -3483,82 +3623,6 @@ inline void CmdResponse::set_allocated_server_status(::floyd::CmdResponse_Server
     set_has_server_status();
   } else {
     clear_has_server_status();
-  }
-}
-
-// optional .floyd.CmdResponse.RequestVote request_vote = 7;
-inline bool CmdResponse::has_request_vote() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
-}
-inline void CmdResponse::set_has_request_vote() {
-  _has_bits_[0] |= 0x00000040u;
-}
-inline void CmdResponse::clear_has_request_vote() {
-  _has_bits_[0] &= ~0x00000040u;
-}
-inline void CmdResponse::clear_request_vote() {
-  if (request_vote_ != NULL) request_vote_->::floyd::CmdResponse_RequestVote::Clear();
-  clear_has_request_vote();
-}
-inline const ::floyd::CmdResponse_RequestVote& CmdResponse::request_vote() const {
-  return request_vote_ != NULL ? *request_vote_ : *default_instance_->request_vote_;
-}
-inline ::floyd::CmdResponse_RequestVote* CmdResponse::mutable_request_vote() {
-  set_has_request_vote();
-  if (request_vote_ == NULL) request_vote_ = new ::floyd::CmdResponse_RequestVote;
-  return request_vote_;
-}
-inline ::floyd::CmdResponse_RequestVote* CmdResponse::release_request_vote() {
-  clear_has_request_vote();
-  ::floyd::CmdResponse_RequestVote* temp = request_vote_;
-  request_vote_ = NULL;
-  return temp;
-}
-inline void CmdResponse::set_allocated_request_vote(::floyd::CmdResponse_RequestVote* request_vote) {
-  delete request_vote_;
-  request_vote_ = request_vote;
-  if (request_vote) {
-    set_has_request_vote();
-  } else {
-    clear_has_request_vote();
-  }
-}
-
-// optional .floyd.CmdResponse.AppendEntries append_entries = 8;
-inline bool CmdResponse::has_append_entries() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
-}
-inline void CmdResponse::set_has_append_entries() {
-  _has_bits_[0] |= 0x00000080u;
-}
-inline void CmdResponse::clear_has_append_entries() {
-  _has_bits_[0] &= ~0x00000080u;
-}
-inline void CmdResponse::clear_append_entries() {
-  if (append_entries_ != NULL) append_entries_->::floyd::CmdResponse_AppendEntries::Clear();
-  clear_has_append_entries();
-}
-inline const ::floyd::CmdResponse_AppendEntries& CmdResponse::append_entries() const {
-  return append_entries_ != NULL ? *append_entries_ : *default_instance_->append_entries_;
-}
-inline ::floyd::CmdResponse_AppendEntries* CmdResponse::mutable_append_entries() {
-  set_has_append_entries();
-  if (append_entries_ == NULL) append_entries_ = new ::floyd::CmdResponse_AppendEntries;
-  return append_entries_;
-}
-inline ::floyd::CmdResponse_AppendEntries* CmdResponse::release_append_entries() {
-  clear_has_append_entries();
-  ::floyd::CmdResponse_AppendEntries* temp = append_entries_;
-  append_entries_ = NULL;
-  return temp;
-}
-inline void CmdResponse::set_allocated_append_entries(::floyd::CmdResponse_AppendEntries* append_entries) {
-  delete append_entries_;
-  append_entries_ = append_entries;
-  if (append_entries) {
-    set_has_append_entries();
-  } else {
-    clear_has_append_entries();
   }
 }
 
