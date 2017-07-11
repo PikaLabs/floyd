@@ -6,7 +6,7 @@
 #include "log_meta.pb.h"
 #include "command.pb.h"
 
-#include "db_nemo_impl.h"
+#include "rocksdb/db.h"
 
 #include "slash/include/env.h"
 #include "slash/include/slash_slice.h"

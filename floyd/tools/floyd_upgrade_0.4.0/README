@@ -1,0 +1,8 @@
+## Update tool from zp 0.4.0 to newer version
+* zp0.4.0 use file_log;  while new version used rocksdb as log;
+
+## Compile
+* need ../../third/nemo-rocksdb and ../../third/rocksdb
+
+## Usage
+* ./update -i input_nemo_rocksdb/path -o output_rocksdb/path

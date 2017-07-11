@@ -2,16 +2,17 @@
 #include <google/protobuf/text_format.h>
 #include "file_log.h"
 
-#include "db_nemo_impl.h"
+#include "rocksdb/db.h"
+#include "rocksdb/options.h"
 
 using namespace std;
 
 void Usage() {
   printf ("Usage:\n"
-          "  ./parse -i ./log/path/ -o output/path/                 ---- parse all files \n"
-          "  ./parse -i ./log/path/ -o output/path/ -c cnt          ---- parse the first cnt files \n"
-          "  ./parse -i ./log/path/ -o output/path/ -f pecific_file ---- parse single file\n"
-          "  ./parse -i ./log/path/ -o output/path/ -r index        ---- parse specific index entry\n");
+          "  ./update -i ./log/path/ -o output/path/                 ---- parse all files \n"
+          "  ./update -i ./log/path/ -o output/path/ -c cnt          ---- parse the first cnt files \n"
+          "  ./update -i ./log/path/ -o output/path/ -f pecific_file ---- parse single file\n"
+          "  ./update -i ./log/path/ -o output/path/ -r index        ---- parse specific index entry\n");
 }
 
 rocksdb::DB* db;

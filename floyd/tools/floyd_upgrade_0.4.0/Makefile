@@ -19,6 +19,10 @@ ifndef PINK_PATH
 PINK_PATH = $(realpath $(THIRD_PATH)/pink)
 endif
 
+ifndef NEMODB_PATH
+NEMODB_PATH = $(realpath $(THIRD_PATH)/nemo-rocksdb)
+endif
+
 ifndef ROCKSDB_PATH
 ROCKSDB_PATH = $(realpath $(THIRD_PATH)/rocksdb)
 endif
@@ -27,18 +31,23 @@ endif
 INCLUDE_PATH = -I./ \
 							 -I$(SLASH_PATH) \
 							 -I$(PINK_PATH) \
+							 -I$(NEMODB_PATH)/output/include/ \
+							 -I$(NEMODB_PATH)/rocksdb/ \
+							 -I$(NEMODB_PATH)/rocksdb/include \
 							 -I$(ROCKSDB_PATH)/ \
 							 -I$(ROCKSDB_PATH)/include
 
 LIB_PATH = -L./ \
 					 -L$(SLASH_PATH)/slash/lib/ \
 					 -L$(PINK_PATH)/pink/lib/  \
+					 -L$(NEMODB_PATH)/output/lib/ \
 					 -L$(ROCKSDB_PATH)/
 
 LIBS = -lpthread \
 			 -lprotobuf \
 			 -lslash \
 			 -lpink \
+			 -lnemodb \
 			 -lrocksdb \
 			 -lslash \
 			 -lrocksdb \
@@ -57,6 +66,7 @@ OBJS = $(patsubst %.cc,%.o,$(BASE_OBJS))
 LIBSLASH = $(SLASH_PATH)/slash/lib/libslash.a
 LIBPINK = $(PINK_PATH)/pink/lib/libpink.a
 LIBROCKSDB= $(ROCKSDB_PATH)/librocksdb.a
+LIBNEMODB= $(NEMODB_PATH)/nemo-rocksdb/output/lib/libnemodb.a
 
 all: $(OBJECT)
 	@echo " OBJS : $(OBJS)"
@@ -67,6 +77,9 @@ $(LIBSLASH):
 
 $(LIBPINK):
 	make -C $(PINK_PATH)/pink/
+
+$(LIBNEMODB): 
+		make -C $(NEMODB_PATH)/ __PERF=$(__PERF)
 
 $(LIBROCKSDB): 
 	make -C $(ROCKSDB_PATH)/ __PERF=$(__PERF)
