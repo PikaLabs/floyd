@@ -34,14 +34,8 @@ int main(int argc, char**  argv)
       continue;
     }
     entry.ParseFromString(iter->value().ToString());
-    floyd::CmdRequest cmd_request;
-    cmd_request.ParseFromString(entry.cmd());
     uint64_t num = BitStrToUint(iter->key().ToString());
-    std::string text_format;
-    google::protobuf::TextFormat::PrintToString(cmd_request, &text_format);
-    printf("cmd_request :\n%s \n", text_format.c_str());
-
-    printf("key %lu entry term: %lu key %s value %s\n", num, entry.term(), cmd_request.kv().key().c_str(), cmd_request.kv().value().c_str());
+    printf("key %lu entry term: %lu key %s value %s\n", num, entry.term(), entry.key().c_str(), entry.value().c_str());
     // std::cout << "res " << iter->key().ToString() << ": " << iter->value().ToString() << std::endl;
   }
   printf("cnt %d\n", cnt);

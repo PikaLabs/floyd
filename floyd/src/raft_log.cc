@@ -68,7 +68,7 @@ uint64_t RaftLog::Append(const std::vector<Entry *> &entries) {
   slash::MutexLock l(&lli_mutex_);
   std::string buf;
   rocksdb::Status s;
-  LOGV(DEBUG_LEVEL, info_log_, "entries.size %lld", entries.size());
+  LOGV(DEBUG_LEVEL, info_log_, "RaftLog::Append: entries.size %lld", entries.size());
   for (size_t i = 0; i < entries.size(); i++) {
     entries[i]->SerializeToString(&buf);
     last_log_index_++;

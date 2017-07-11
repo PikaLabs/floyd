@@ -48,22 +48,38 @@ class CmdResponse_RequestVoteResponse;
 class CmdResponse_AppendEntriesResponse;
 class CmdResponse_ServerStatus;
 
+enum Entry_OpType {
+  Entry_OpType_kRead = 0,
+  Entry_OpType_kWrite = 1,
+  Entry_OpType_kDelete = 2
+};
+bool Entry_OpType_IsValid(int value);
+const Entry_OpType Entry_OpType_OpType_MIN = Entry_OpType_kRead;
+const Entry_OpType Entry_OpType_OpType_MAX = Entry_OpType_kDelete;
+const int Entry_OpType_OpType_ARRAYSIZE = Entry_OpType_OpType_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* Entry_OpType_descriptor();
+inline const ::std::string& Entry_OpType_Name(Entry_OpType value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    Entry_OpType_descriptor(), value);
+}
+inline bool Entry_OpType_Parse(
+    const ::std::string& name, Entry_OpType* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<Entry_OpType>(
+    Entry_OpType_descriptor(), name, value);
+}
 enum Type {
-  Read = 0,
-  ReadAll = 1,
-  DirtyWrite = 2,
-  Write = 3,
-  Delete = 4,
-  TryLock = 5,
-  UnLock = 6,
-  DeleteUser = 7,
-  RequestVote = 8,
-  AppendEntries = 9,
-  ServerStatus = 10
+  kRead = 0,
+  kWrite = 1,
+  kDirtyWrite = 2,
+  kDelete = 3,
+  kRequestVote = 8,
+  kAppendEntries = 9,
+  kServerStatus = 10
 };
 bool Type_IsValid(int value);
-const Type Type_MIN = Read;
-const Type Type_MAX = ServerStatus;
+const Type Type_MIN = kRead;
+const Type Type_MAX = kServerStatus;
 const int Type_ARRAYSIZE = Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* Type_descriptor();
@@ -150,6 +166,31 @@ class Entry : public ::google::protobuf::Message {
 
   // nested types ----------------------------------------------------
 
+  typedef Entry_OpType OpType;
+  static const OpType kRead = Entry_OpType_kRead;
+  static const OpType kWrite = Entry_OpType_kWrite;
+  static const OpType kDelete = Entry_OpType_kDelete;
+  static inline bool OpType_IsValid(int value) {
+    return Entry_OpType_IsValid(value);
+  }
+  static const OpType OpType_MIN =
+    Entry_OpType_OpType_MIN;
+  static const OpType OpType_MAX =
+    Entry_OpType_OpType_MAX;
+  static const int OpType_ARRAYSIZE =
+    Entry_OpType_OpType_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  OpType_descriptor() {
+    return Entry_OpType_descriptor();
+  }
+  static inline const ::std::string& OpType_Name(OpType value) {
+    return Entry_OpType_Name(value);
+  }
+  static inline bool OpType_Parse(const ::std::string& name,
+      OpType* value) {
+    return Entry_OpType_Parse(name, value);
+  }
+
   // accessors -------------------------------------------------------
 
   // required uint64 term = 1;
@@ -159,32 +200,57 @@ class Entry : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 term() const;
   inline void set_term(::google::protobuf::uint64 value);
 
-  // optional bytes cmd = 2;
-  inline bool has_cmd() const;
-  inline void clear_cmd();
-  static const int kCmdFieldNumber = 2;
-  inline const ::std::string& cmd() const;
-  inline void set_cmd(const ::std::string& value);
-  inline void set_cmd(const char* value);
-  inline void set_cmd(const void* value, size_t size);
-  inline ::std::string* mutable_cmd();
-  inline ::std::string* release_cmd();
-  inline void set_allocated_cmd(::std::string* cmd);
+  // required string key = 2;
+  inline bool has_key() const;
+  inline void clear_key();
+  static const int kKeyFieldNumber = 2;
+  inline const ::std::string& key() const;
+  inline void set_key(const ::std::string& value);
+  inline void set_key(const char* value);
+  inline void set_key(const char* value, size_t size);
+  inline ::std::string* mutable_key();
+  inline ::std::string* release_key();
+  inline void set_allocated_key(::std::string* key);
+
+  // optional bytes value = 3;
+  inline bool has_value() const;
+  inline void clear_value();
+  static const int kValueFieldNumber = 3;
+  inline const ::std::string& value() const;
+  inline void set_value(const ::std::string& value);
+  inline void set_value(const char* value);
+  inline void set_value(const void* value, size_t size);
+  inline ::std::string* mutable_value();
+  inline ::std::string* release_value();
+  inline void set_allocated_value(::std::string* value);
+
+  // required .floyd.Entry.OpType optype = 4;
+  inline bool has_optype() const;
+  inline void clear_optype();
+  static const int kOptypeFieldNumber = 4;
+  inline ::floyd::Entry_OpType optype() const;
+  inline void set_optype(::floyd::Entry_OpType value);
 
   // @@protoc_insertion_point(class_scope:floyd.Entry)
  private:
   inline void set_has_term();
   inline void clear_has_term();
-  inline void set_has_cmd();
-  inline void clear_has_cmd();
+  inline void set_has_key();
+  inline void clear_has_key();
+  inline void set_has_value();
+  inline void clear_has_value();
+  inline void set_has_optype();
+  inline void clear_has_optype();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::uint64 term_;
-  ::std::string* cmd_;
+  ::std::string* key_;
+  ::std::string* value_;
+  int optype_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_floyd_2eproto();
   friend void protobuf_AssignDesc_floyd_2eproto();
@@ -615,12 +681,12 @@ class CmdRequest_AppendEntries : public ::google::protobuf::Message {
   inline ::google::protobuf::uint64 prev_log_term() const;
   inline void set_prev_log_term(::google::protobuf::uint64 value);
 
-  // required uint64 commit_index = 6;
-  inline bool has_commit_index() const;
-  inline void clear_commit_index();
-  static const int kCommitIndexFieldNumber = 6;
-  inline ::google::protobuf::uint64 commit_index() const;
-  inline void set_commit_index(::google::protobuf::uint64 value);
+  // required uint64 leader_commit = 6;
+  inline bool has_leader_commit() const;
+  inline void clear_leader_commit();
+  static const int kLeaderCommitFieldNumber = 6;
+  inline ::google::protobuf::uint64 leader_commit() const;
+  inline void set_leader_commit(::google::protobuf::uint64 value);
 
   // repeated .floyd.Entry entries = 7;
   inline int entries_size() const;
@@ -646,8 +712,8 @@ class CmdRequest_AppendEntries : public ::google::protobuf::Message {
   inline void clear_has_prev_log_index();
   inline void set_has_prev_log_term();
   inline void clear_has_prev_log_term();
-  inline void set_has_commit_index();
-  inline void clear_has_commit_index();
+  inline void set_has_leader_commit();
+  inline void clear_has_leader_commit();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -655,7 +721,7 @@ class CmdRequest_AppendEntries : public ::google::protobuf::Message {
   ::google::protobuf::uint64 term_;
   ::google::protobuf::uint64 prev_log_index_;
   ::google::protobuf::uint64 prev_log_term_;
-  ::google::protobuf::uint64 commit_index_;
+  ::google::protobuf::uint64 leader_commit_;
   ::google::protobuf::RepeatedPtrField< ::floyd::Entry > entries_;
   ::google::protobuf::int32 port_;
 
@@ -1689,74 +1755,167 @@ inline void Entry::set_term(::google::protobuf::uint64 value) {
   term_ = value;
 }
 
-// optional bytes cmd = 2;
-inline bool Entry::has_cmd() const {
+// required string key = 2;
+inline bool Entry::has_key() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void Entry::set_has_cmd() {
+inline void Entry::set_has_key() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void Entry::clear_has_cmd() {
+inline void Entry::clear_has_key() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void Entry::clear_cmd() {
-  if (cmd_ != &::google::protobuf::internal::kEmptyString) {
-    cmd_->clear();
+inline void Entry::clear_key() {
+  if (key_ != &::google::protobuf::internal::kEmptyString) {
+    key_->clear();
   }
-  clear_has_cmd();
+  clear_has_key();
 }
-inline const ::std::string& Entry::cmd() const {
-  return *cmd_;
+inline const ::std::string& Entry::key() const {
+  return *key_;
 }
-inline void Entry::set_cmd(const ::std::string& value) {
-  set_has_cmd();
-  if (cmd_ == &::google::protobuf::internal::kEmptyString) {
-    cmd_ = new ::std::string;
+inline void Entry::set_key(const ::std::string& value) {
+  set_has_key();
+  if (key_ == &::google::protobuf::internal::kEmptyString) {
+    key_ = new ::std::string;
   }
-  cmd_->assign(value);
+  key_->assign(value);
 }
-inline void Entry::set_cmd(const char* value) {
-  set_has_cmd();
-  if (cmd_ == &::google::protobuf::internal::kEmptyString) {
-    cmd_ = new ::std::string;
+inline void Entry::set_key(const char* value) {
+  set_has_key();
+  if (key_ == &::google::protobuf::internal::kEmptyString) {
+    key_ = new ::std::string;
   }
-  cmd_->assign(value);
+  key_->assign(value);
 }
-inline void Entry::set_cmd(const void* value, size_t size) {
-  set_has_cmd();
-  if (cmd_ == &::google::protobuf::internal::kEmptyString) {
-    cmd_ = new ::std::string;
+inline void Entry::set_key(const char* value, size_t size) {
+  set_has_key();
+  if (key_ == &::google::protobuf::internal::kEmptyString) {
+    key_ = new ::std::string;
   }
-  cmd_->assign(reinterpret_cast<const char*>(value), size);
+  key_->assign(reinterpret_cast<const char*>(value), size);
 }
-inline ::std::string* Entry::mutable_cmd() {
-  set_has_cmd();
-  if (cmd_ == &::google::protobuf::internal::kEmptyString) {
-    cmd_ = new ::std::string;
+inline ::std::string* Entry::mutable_key() {
+  set_has_key();
+  if (key_ == &::google::protobuf::internal::kEmptyString) {
+    key_ = new ::std::string;
   }
-  return cmd_;
+  return key_;
 }
-inline ::std::string* Entry::release_cmd() {
-  clear_has_cmd();
-  if (cmd_ == &::google::protobuf::internal::kEmptyString) {
+inline ::std::string* Entry::release_key() {
+  clear_has_key();
+  if (key_ == &::google::protobuf::internal::kEmptyString) {
     return NULL;
   } else {
-    ::std::string* temp = cmd_;
-    cmd_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    ::std::string* temp = key_;
+    key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
     return temp;
   }
 }
-inline void Entry::set_allocated_cmd(::std::string* cmd) {
-  if (cmd_ != &::google::protobuf::internal::kEmptyString) {
-    delete cmd_;
+inline void Entry::set_allocated_key(::std::string* key) {
+  if (key_ != &::google::protobuf::internal::kEmptyString) {
+    delete key_;
   }
-  if (cmd) {
-    set_has_cmd();
-    cmd_ = cmd;
+  if (key) {
+    set_has_key();
+    key_ = key;
   } else {
-    clear_has_cmd();
-    cmd_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    clear_has_key();
+    key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
+}
+
+// optional bytes value = 3;
+inline bool Entry::has_value() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void Entry::set_has_value() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void Entry::clear_has_value() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void Entry::clear_value() {
+  if (value_ != &::google::protobuf::internal::kEmptyString) {
+    value_->clear();
+  }
+  clear_has_value();
+}
+inline const ::std::string& Entry::value() const {
+  return *value_;
+}
+inline void Entry::set_value(const ::std::string& value) {
+  set_has_value();
+  if (value_ == &::google::protobuf::internal::kEmptyString) {
+    value_ = new ::std::string;
+  }
+  value_->assign(value);
+}
+inline void Entry::set_value(const char* value) {
+  set_has_value();
+  if (value_ == &::google::protobuf::internal::kEmptyString) {
+    value_ = new ::std::string;
+  }
+  value_->assign(value);
+}
+inline void Entry::set_value(const void* value, size_t size) {
+  set_has_value();
+  if (value_ == &::google::protobuf::internal::kEmptyString) {
+    value_ = new ::std::string;
+  }
+  value_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Entry::mutable_value() {
+  set_has_value();
+  if (value_ == &::google::protobuf::internal::kEmptyString) {
+    value_ = new ::std::string;
+  }
+  return value_;
+}
+inline ::std::string* Entry::release_value() {
+  clear_has_value();
+  if (value_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = value_;
+    value_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Entry::set_allocated_value(::std::string* value) {
+  if (value_ != &::google::protobuf::internal::kEmptyString) {
+    delete value_;
+  }
+  if (value) {
+    set_has_value();
+    value_ = value;
+  } else {
+    clear_has_value();
+    value_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// required .floyd.Entry.OpType optype = 4;
+inline bool Entry::has_optype() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void Entry::set_has_optype() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void Entry::clear_has_optype() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void Entry::clear_optype() {
+  optype_ = 0;
+  clear_has_optype();
+}
+inline ::floyd::Entry_OpType Entry::optype() const {
+  return static_cast< ::floyd::Entry_OpType >(optype_);
+}
+inline void Entry::set_optype(::floyd::Entry_OpType value) {
+  assert(::floyd::Entry_OpType_IsValid(value));
+  set_has_optype();
+  optype_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -2323,26 +2482,26 @@ inline void CmdRequest_AppendEntries::set_prev_log_term(::google::protobuf::uint
   prev_log_term_ = value;
 }
 
-// required uint64 commit_index = 6;
-inline bool CmdRequest_AppendEntries::has_commit_index() const {
+// required uint64 leader_commit = 6;
+inline bool CmdRequest_AppendEntries::has_leader_commit() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
-inline void CmdRequest_AppendEntries::set_has_commit_index() {
+inline void CmdRequest_AppendEntries::set_has_leader_commit() {
   _has_bits_[0] |= 0x00000020u;
 }
-inline void CmdRequest_AppendEntries::clear_has_commit_index() {
+inline void CmdRequest_AppendEntries::clear_has_leader_commit() {
   _has_bits_[0] &= ~0x00000020u;
 }
-inline void CmdRequest_AppendEntries::clear_commit_index() {
-  commit_index_ = GOOGLE_ULONGLONG(0);
-  clear_has_commit_index();
+inline void CmdRequest_AppendEntries::clear_leader_commit() {
+  leader_commit_ = GOOGLE_ULONGLONG(0);
+  clear_has_leader_commit();
 }
-inline ::google::protobuf::uint64 CmdRequest_AppendEntries::commit_index() const {
-  return commit_index_;
+inline ::google::protobuf::uint64 CmdRequest_AppendEntries::leader_commit() const {
+  return leader_commit_;
 }
-inline void CmdRequest_AppendEntries::set_commit_index(::google::protobuf::uint64 value) {
-  set_has_commit_index();
-  commit_index_ = value;
+inline void CmdRequest_AppendEntries::set_leader_commit(::google::protobuf::uint64 value) {
+  set_has_leader_commit();
+  leader_commit_ = value;
 }
 
 // repeated .floyd.Entry entries = 7;
@@ -3635,6 +3794,10 @@ inline void CmdResponse::set_allocated_server_status(::floyd::CmdResponse_Server
 namespace google {
 namespace protobuf {
 
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::floyd::Entry_OpType>() {
+  return ::floyd::Entry_OpType_descriptor();
+}
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::floyd::Type>() {
   return ::floyd::Type_descriptor();

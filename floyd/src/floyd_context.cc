@@ -139,26 +139,30 @@ void FloydContext::BecomeLeader() {
 }
 
 bool FloydContext::AdvanceCommitIndex(uint64_t new_commit_index) {
-  if (new_commit_index == 0) {
-    return false;
-  }
-  slash::MutexLock l(&commit_mu_);
-  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AdvanceCommitIndex commit_index=%lu, new commit_index=%lu",
-       commit_index_, new_commit_index);
-  if (commit_index_ >= new_commit_index) {
-    return false;
-  }
-
-  uint64_t last_log_index = raft_log_->GetLastLogIndex();
-  new_commit_index = std::min(last_log_index, new_commit_index);
-  Entry entry;
-  raft_log_->GetEntry(new_commit_index, &entry);
-  if (entry.term() == current_term_) {
-    commit_index_ = new_commit_index;
-    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AdvanceCommitIndex advance commit_index to %ld", new_commit_index);
-    return true;
-  }
-  return false;
+  commit_index_ = new_commit_index;
+  return true;
+/*
+ *   if (new_commit_index == 0) {
+ *     return false;
+ *   }
+ *   slash::MutexLock l(&commit_mu_);
+ *   LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AdvanceCommitIndex commit_index=%lu, new commit_index=%lu",
+ *        commit_index_, new_commit_index);
+ *   if (commit_index_ >= new_commit_index) {
+ *     return false;
+ *   }
+ * 
+ *   uint64_t last_log_index = raft_log_->GetLastLogIndex();
+ *   new_commit_index = std::min(last_log_index, new_commit_index);
+ *   Entry entry;
+ *   raft_log_->GetEntry(new_commit_index, &entry);
+ *   if (entry.term() == current_term_) {
+ *     commit_index_ = new_commit_index;
+ *     LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AdvanceCommitIndex advance commit_index to %ld", new_commit_index);
+ *     return true;
+ *   }
+ *   return false;
+ */
 }
 
 uint64_t FloydContext::NextApplyIndex(uint64_t* len) {
@@ -207,7 +211,7 @@ bool FloydContext::ReceiverDoRequestVote(uint64_t term, const std::string ip,
                                int port, uint64_t log_term, uint64_t log_index,
                                uint64_t *my_term) {
   slash::RWLock l(&stat_rw_, true);
-  // TODO we don't need judge here, since before coming here, we have make sure 
+  // TODO(ba0tiao) we don't need judge here, since before coming here, we have make sure 
   // that term > current_term_
   // if there is some call between the judge and here, the problem is floyd not 
   // thread safe, add judge can't solve the problem. the right way to solve the
@@ -263,7 +267,7 @@ bool FloydContext::ReceiverDoAppendEntries(uint64_t term,
 
   uint64_t my_log_term = 0;
   Entry entry;
-  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::ReceiverDoAppendEntries %llu pre_log_index: \n", pre_log_index);
+  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::ReceiverDoAppendEntries pre_log_index: %llu\n", pre_log_index);
   if (raft_log_->GetEntry(pre_log_index, &entry) == 0) {
     my_log_term = entry.term();
   } else {

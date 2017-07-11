@@ -23,14 +23,13 @@
 namespace floyd {
 
 static void BuildReadRequest(const std::string& key, CmdRequest* cmd) {
-  cmd->set_type(Type::Read);
+  cmd->set_type(Type::kRead);
   CmdRequest_Kv* kv = cmd->mutable_kv();
   kv->set_key(key);
 }
 
 static void BuildReadResponse(const std::string &key, const std::string &value,
                               StatusCode code, CmdResponse* response) {
-  //response->set_type(Type::Read);
   response->set_code(code);
   CmdResponse_Kv* kv = response->mutable_kv();
   if (code == StatusCode::kOk) {
@@ -40,7 +39,7 @@ static void BuildReadResponse(const std::string &key, const std::string &value,
 
 static void BuildWriteRequest(const std::string& key,
                               const std::string& value, CmdRequest* cmd) {
-  cmd->set_type(Type::Write);
+  cmd->set_type(Type::kWrite);
   CmdRequest_Kv* kv = cmd->mutable_kv();
   kv->set_key(key);
   kv->set_value(value);
@@ -48,21 +47,21 @@ static void BuildWriteRequest(const std::string& key,
 
 static void BuildDirtyWriteRequest(const std::string& key,
                                    const std::string& value, CmdRequest* cmd) {
-  cmd->set_type(Type::DirtyWrite);
+  cmd->set_type(Type::kDirtyWrite);
   CmdRequest_Kv* kv = cmd->mutable_kv();
   kv->set_key(key);
   kv->set_value(value);
 }
 
 static void BuildDeleteRequest(const std::string& key, CmdRequest* cmd) {
-  cmd->set_type(Type::Delete);
+  cmd->set_type(Type::kDelete);
   CmdRequest_Kv* kv = cmd->mutable_kv();
   kv->set_key(key);
 }
 
 static void BuildRequestVoteResponse(uint64_t term, bool granted,
                                      CmdResponse* response) {
-  response->set_type(Type::RequestVote);
+  response->set_type(Type::kRequestVote);
   CmdResponse_RequestVoteResponse* request_vote_res = response->mutable_request_vote_res();
   request_vote_res->set_term(term);
   request_vote_res->set_vote_granted(granted);
@@ -71,21 +70,24 @@ static void BuildRequestVoteResponse(uint64_t term, bool granted,
 static void BuildAppendEntriesResponse(bool succ, uint64_t term,
                                        uint64_t log_index,
                                        CmdResponse* response) {
-  response->set_type(Type::AppendEntries);
+  response->set_type(Type::kAppendEntries);
   CmdResponse_AppendEntriesResponse* append_entries_res = response->mutable_append_entries_res();
   append_entries_res->set_term(term);
   append_entries_res->set_last_log_index(log_index);
   append_entries_res->set_success(succ);
 }
 
-static void BuildLogEntry(const CmdRequest& cmd, uint64_t current_term,
-                          Entry* entry) {
-  uint64_t len = cmd.ByteSize();
-  char* data = new char[len + 1];
-  cmd.SerializeToArray(data, len);
-  entry->set_term(current_term);
-  entry->set_cmd(data, len);
-  delete data;
+static void BuildLogEntry(const CmdRequest& cmd, Entry* entry) {
+  entry->set_term(cmd.append_entries().term());
+  entry->set_key(cmd.kv().key());
+  entry->set_value(cmd.kv().value());
+  if (cmd.type() == Type::kRead) {
+    entry->set_optype(Entry_OpType_kRead);
+  } else if (cmd.type() == Type::kWrite || cmd.type() == Type::kDirtyWrite) {
+    entry->set_optype(Entry_OpType_kWrite);
+  } else if (cmd.type() == Type::kDelete) {
+    entry->set_optype(Entry_OpType_kDelete);
+  }
 }
 
 Status FloydImpl::Write(const std::string& key, const std::string& value) {
@@ -199,7 +201,7 @@ bool FloydImpl::GetServerStatus(std::string& msg) {
   msg.append(str);
 
   CmdRequest cmd;
-  cmd.set_type(Type::ServerStatus);
+  cmd.set_type(Type::kServerStatus);
   CmdResponse response;
   std::string local_server = slash::IpPortString(options_.local_ip, options_.local_port);
   for (auto& iter : options_.members) {
@@ -248,11 +250,11 @@ Status FloydImpl::ReplyExecuteDirtyCommand(const CmdRequest& cmd,
   std::string value;
   rocksdb::Status rs;
   switch (cmd.type()) {
-    case Type::DirtyWrite: {
+    case Type::kDirtyWrite: {
       rs = db_->Put(rocksdb::WriteOptions(), cmd.kv().key(), cmd.kv().value());
       //TODO(anan) add response type or reorganize proto
       //response->set_type(CmdResponse::DirtyWrite);
-      response->set_type(Type::Write);
+      response->set_type(Type::kWrite);
       CmdResponse_Kv* kv = response->mutable_kv();
       if (rs.ok()) {
         response->set_code(StatusCode::kOk);
@@ -269,8 +271,8 @@ Status FloydImpl::ReplyExecuteDirtyCommand(const CmdRequest& cmd,
 #endif
       break;
     }
-    case Type::ServerStatus: {
-      response->set_type(Type::ServerStatus);
+    case Type::kServerStatus: {
+      response->set_type(Type::kServerStatus);
       response->set_code(StatusCode::kOk);
       CmdResponse_ServerStatus* server_status = response->mutable_server_status();
       DoGetServerStatus(server_status);
@@ -335,7 +337,7 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
   // Append entry local
   std::vector<Entry*> entries;
   Entry entry;
-  BuildLogEntry(cmd, context_->current_term(), &entry);
+  BuildLogEntry(cmd, &entry);
   entries.push_back(&entry);
 
   uint64_t last_log_index = raft_log_->Append(entries);
@@ -362,15 +364,15 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
   std::string value;
   rocksdb::Status rs;
   switch (cmd.type()) {
-  case Type::Write: {
+  case Type::kWrite: {
     response->set_code(StatusCode::kOk);
     break;
   }
-  case Type::Delete: {
+  case Type::kDelete: {
     response->set_code(StatusCode::kOk);
     break;
   }
-  case Type::Read: {
+  case Type::kRead: {
     rs = db_->Get(rocksdb::ReadOptions(), cmd.kv().key(), &value);
     if (rs.ok()) {
       BuildReadResponse(cmd.kv().key(), value, StatusCode::kOk, response);
@@ -458,7 +460,7 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& cmd, CmdResponse* response) {
                                    entries, &my_term);
 
   // Update log commit index
-  if (context_->AdvanceCommitIndex(append_entries.commit_index())) {
+  if (context_->AdvanceCommitIndex(append_entries.leader_commit())) {
     LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries after AdvanceCommitIndex %lu",
          context_->commit_index());
     apply_->ScheduleApply();

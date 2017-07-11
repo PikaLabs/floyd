@@ -65,32 +65,22 @@ void FloydApply::ApplyStateMachine(void* arg) {
   fapply->raft_log_->UpdateLastApplied(to_apply - 1);
 }
 
-Status FloydApply::Apply(const Entry& log_entry) {
-  const std::string& data = log_entry.cmd();
-  CmdRequest cmd;
-  if (!cmd.ParseFromArray(data.c_str(), data.length())) {
-    std::string text_format;
-    google::protobuf::TextFormat::PrintToString(cmd, &text_format);
-    LOGV(WARN_LEVEL, context_->info_log(), "FloydApply:Apply :\n%s \n", text_format.c_str());
-    LOGV(WARN_LEVEL, context_->info_log(), "Parse log_entry failed");
-    return Status::IOError("Parse error");
-  }
-
+Status FloydApply::Apply(const Entry& entry) {
   rocksdb::Status ret;
-  switch (cmd.type()) {
-    case Type::Write:
-      ret = db_->Put(rocksdb::WriteOptions(), cmd.kv().key(), cmd.kv().value());
-      LOGV(DEBUG_LEVEL, context_->info_log(), "Floyd Apply Write %s, key(%s) value(%s)",
-          ret.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
+  switch (entry.optype()) {
+    case Entry_OpType_kWrite:
+      ret = db_->Put(rocksdb::WriteOptions(), entry.key(), entry.value());
+      LOGV(DEBUG_LEVEL, context_->info_log(), "FloydApply::Apply %s, key(%s) value(%s)",
+          ret.ToString().c_str(), entry.key().c_str(), entry.value().c_str());
       break;
-    case Type::Delete:
-      ret = db_->Delete(rocksdb::WriteOptions(), cmd.kv().key());
+    case Entry_OpType_kDelete:
+      ret = db_->Delete(rocksdb::WriteOptions(), entry.key());
       break;
-    case Type::Read:
+    case Entry_OpType_kRead:
       ret = rocksdb::Status::OK();
       break;
     default:
-      ret = rocksdb::Status::Corruption("Unknown cmd type");
+      ret = rocksdb::Status::Corruption("Unknown entry type");
   }
   if (!ret.ok()) {
     return Status::Corruption(ret.ToString());

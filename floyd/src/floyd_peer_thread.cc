@@ -81,7 +81,7 @@ Status Peer::RequestVoteRPC() {
   uint64_t current_term = context_->current_term();
 
   CmdRequest req;
-  req.set_type(Type::RequestVote);
+  req.set_type(Type::kRequestVote);
   CmdRequest_RequestVote* request_vote = req.mutable_request_vote();
   request_vote->set_ip(context_->local_ip());
   request_vote->set_port(context_->local_port());
@@ -200,7 +200,7 @@ Status Peer::AppendEntriesRPC() {
 
   CmdRequest req;
   CmdRequest_AppendEntries* append_entries = req.mutable_append_entries();
-  req.set_type(Type::AppendEntries);
+  req.set_type(Type::kAppendEntries);
   append_entries->set_ip(context_->local_ip());
   append_entries->set_port(context_->local_port());
   append_entries->set_term(context_->current_term());
@@ -231,7 +231,7 @@ Status Peer::AppendEntriesRPC() {
    * commit_index should be min of follower log and leader's commit_index
    * if follower's commit index larger than follower log, it conflict 
    */
-  append_entries->set_commit_index(
+  append_entries->set_leader_commit(
       std::min(context_->commit_index(), prev_log_index + num_entries));
 
   CmdResponse res;
