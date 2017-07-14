@@ -1,0 +1,4 @@
+#include "floyd/src/build_version.h"
+const char* floyd_build_git_sha = "floyd_build_git_sha:@@GIT_SHA@@";
+const char* floyd_build_git_date = "floyd_build_git_date:@@GIT_DATE_TIME@@";
+const char* floyd_build_compile_date = __DATE__;

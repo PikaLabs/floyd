@@ -27,3 +27,5 @@
 *.out
 *.app
 gmon.out
+
+make_config.mk
