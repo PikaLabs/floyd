@@ -101,7 +101,11 @@ class FloydContext {
     slash::MutexLock l(&commit_mu_);
     return commit_index_;
   }
-  bool AdvanceCommitIndex(uint64_t commit_index);
+  void set_commit_index(uint64_t commit_index) {
+    commit_index_ = commit_index;
+  }
+  bool AdvanceLeaderCommitIndex(uint64_t leader_commit);
+  bool AdvanceFollowerCommitIndex(uint64_t leader_commit);
   
   /* Apply related */
   // Return false if timeout
@@ -128,6 +132,7 @@ class FloydContext {
   // Role related
   pthread_rwlock_t stat_rw_;
   uint64_t current_term_;
+
   Role role_;
   std::string voted_for_ip_;
   int voted_for_port_;

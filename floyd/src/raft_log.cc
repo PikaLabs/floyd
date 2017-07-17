@@ -17,7 +17,8 @@ namespace floyd {
 static const std::string kCurrentTerm = "CURRENTTERM";
 static const std::string kVoteForIp = "VOTEFORIP";
 static const std::string kVoteForPort = "VOTEFORPORT";
-static const std::string kApplyIndex = "APPLYINDEX";
+static const std::string kCommitIndex = "COMMITINDEX";
+static const std::string kLastApplied = "LASTAPPLIED";
 
 extern std::string UintToBitStr(const uint64_t num) {
   char buf[8];
@@ -34,9 +35,10 @@ extern uint64_t BitStrToUint(const std::string &str) {
 
 
 RaftLog::RaftLog(const std::string &path, Logger *info_log) : 
+  info_log_(info_log),
   last_log_index_(0), 
-  last_applied_(0),
-  info_log_(info_log) {
+  commit_index_(0),
+  last_applied_(0) {
   rocksdb::Options options;
   options.create_if_missing = true;
   rocksdb::Status s = rocksdb::DB::Open(options, path, &log_db_);
@@ -50,13 +52,18 @@ RaftLog::RaftLog(const std::string &path, Logger *info_log) :
     it->Prev();
     it->Prev();
     it->Prev();
+    it->Prev();
     last_log_index_ = BitStrToUint(it->key().ToString());
   }
 
   std::string res;
-  s = log_db_->Get(rocksdb::ReadOptions(), kApplyIndex, &res);
+  s = log_db_->Get(rocksdb::ReadOptions(), kLastApplied, &res);
   if (s.ok()) {
     memcpy(&last_applied_, res.data(), sizeof(uint64_t));
+  }
+  s = log_db_->Get(rocksdb::ReadOptions(), kCommitIndex, &res);
+  if (s.ok()) {
+    memcpy(&commit_index_, res.data(), sizeof(uint64_t));
   }
 }
 
@@ -151,7 +158,7 @@ bool RaftLog::GetLastLogTermAndIndex(uint64_t* last_log_term, uint64_t* last_log
 }
 
 void RaftLog::UpdateMetadata(uint64_t current_term, std::string voted_for_ip,
-                      int32_t voted_for_port, uint64_t last_applied) {
+                      int32_t voted_for_port) {
   char buf[8];
   memcpy(buf, &current_term, sizeof(uint64_t));
   log_db_->Put(rocksdb::WriteOptions(), kCurrentTerm, std::string(buf, 8));
@@ -164,7 +171,14 @@ void RaftLog::UpdateLastApplied(uint64_t last_applied) {
   last_applied_ = last_applied;
   char buf[8];
   memcpy(buf, &last_applied, sizeof(uint64_t));
-  log_db_->Put(rocksdb::WriteOptions(), kApplyIndex, std::string(buf, 8));
+  log_db_->Put(rocksdb::WriteOptions(), kLastApplied, std::string(buf, 8));
+}
+
+void RaftLog::UpdateCommitIndex(uint64_t commit_index) {
+  commit_index_ = commit_index;
+  char buf[8];
+  memcpy(buf, &commit_index_, sizeof(uint64_t));
+  log_db_->Put(rocksdb::WriteOptions(), kCommitIndex, std::string(buf, 8));
 }
 
 int RaftLog::TruncateSuffix(uint64_t index) {

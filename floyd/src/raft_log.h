@@ -31,7 +31,7 @@ class RaftLog {
   bool GetLastLogTermAndIndex(uint64_t* last_log_term, uint64_t* last_log_index);
 
   void UpdateMetadata(uint64_t current_term, std::string voted_for_ip,
-                      int32_t voted_for_port, uint64_t last_applied);
+                      int32_t voted_for_port);
   int TruncateSuffix(uint64_t index);
 
   // return persistent state from zeppelin
@@ -47,6 +47,10 @@ class RaftLog {
   uint64_t last_log_index() {
     return last_log_index_;
   }
+  uint64_t commit_index() {
+    return commit_index_;
+  }
+  void UpdateCommitIndex(uint64_t commit_index);
 
  private:
   std::string path_;
@@ -56,16 +60,18 @@ class RaftLog {
    */
   slash::Mutex lli_mutex_;
 
+  rocksdb::DB* log_db_;
+
+  Logger* info_log_;
   /*
    * we don't store last_log_index_ in rocksdb, since if we store it in rocksdb
    * we need update it every time I append an entry.
    * so we need update it when we open db
    */
   uint64_t last_log_index_;
-  uint64_t last_applied_;
-  rocksdb::DB* log_db_;
 
-  Logger* info_log_;
+  uint64_t commit_index_;
+  uint64_t last_applied_;
   RaftLog(const RaftLog&);
   void operator=(const RaftLog&);
 };  // RaftLog

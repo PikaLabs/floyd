@@ -46,14 +46,14 @@ void FloydApply::ApplyStateMachine(void* arg) {
   uint64_t len = 0, to_apply = 0;
   to_apply = context->NextApplyIndex(&len);
 
-  LOGV(DEBUG_LEVEL, context->info_log(), "ApplyStateMachine with %lu entries to apply from to_apply(%lu)",
+  LOGV(DEBUG_LEVEL, context->info_log(), "FloydApply::ApplyStateMachine: %lu entries to apply from to_apply(%lu)",
             len, to_apply);
   while (len-- > 0) {
     Entry log_entry;
     fapply->raft_log_->GetEntry(to_apply, &log_entry);
     Status s = fapply->Apply(log_entry);
     if (!s.ok()) {
-      LOGV(WARN_LEVEL, context->info_log(), "Apply log entry failed, at: %d, error: %s",
+      LOGV(WARN_LEVEL, context->info_log(), "FloydApply::ApplyStateMachine: Apply log entry failed, at: %d, error: %s",
           to_apply, s.ToString().c_str());
       fapply->ScheduleApply();  // try once more
       usleep(1000000);

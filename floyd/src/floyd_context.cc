@@ -35,6 +35,7 @@ FloydContext::FloydContext(const floyd::Options& opt,
   uint64_t seed = slash::NowMicros() % 100000;
   LOGV(INFO_LEVEL, info_log_, "ElectLeader srandom with seed %lu", seed);
   srandom(seed);
+  commit_index_ = raft_log_->commit_index();
   //srandom(slash::NowMicros());
 }
 
@@ -138,31 +139,30 @@ void FloydContext::BecomeLeader() {
   LOGV(INFO_LEVEL, info_log_, "FloydContext::BecomeLeader I am become Leader!!");
 }
 
-bool FloydContext::AdvanceCommitIndex(uint64_t new_commit_index) {
+// only leader will call AdvanceCommitIndex
+// follower only need set commit as leader's
+bool FloydContext::AdvanceLeaderCommitIndex(uint64_t new_commit_index) {
+  Entry entry;
+  raft_log_->GetEntry(new_commit_index, &entry);
+  slash::MutexLock l(&commit_mu_);
+  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AdvanceCommitIndex"
+      "commit_index=%lu, new_commit_index=%lu, entry.term() = %lu, current_term_ = %lu",
+       commit_index_, new_commit_index, entry.term(), current_term_);
+  if (entry.term() == current_term_) {
+    commit_index_ = new_commit_index;
+    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AdvanceCommitIndex advance commit_index to %ld", new_commit_index);
+    raft_log_->UpdateCommitIndex(commit_index_);
+    return true;
+  }
+  return false;
+}
+
+bool FloydContext::AdvanceFollowerCommitIndex(uint64_t new_commit_index) {
+  // Update log commit index
+  slash::MutexLock l(&commit_mu_);
   commit_index_ = new_commit_index;
+  raft_log_->UpdateCommitIndex(commit_index_);
   return true;
-/*
- *   if (new_commit_index == 0) {
- *     return false;
- *   }
- *   slash::MutexLock l(&commit_mu_);
- *   LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AdvanceCommitIndex commit_index=%lu, new commit_index=%lu",
- *        commit_index_, new_commit_index);
- *   if (commit_index_ >= new_commit_index) {
- *     return false;
- *   }
- * 
- *   uint64_t last_log_index = raft_log_->GetLastLogIndex();
- *   new_commit_index = std::min(last_log_index, new_commit_index);
- *   Entry entry;
- *   raft_log_->GetEntry(new_commit_index, &entry);
- *   if (entry.term() == current_term_) {
- *     commit_index_ = new_commit_index;
- *     LOGV(DEBUG_LEVEL, info_log_, "FloydContext::AdvanceCommitIndex advance commit_index to %ld", new_commit_index);
- *     return true;
- *   }
- *   return false;
- */
 }
 
 uint64_t FloydContext::NextApplyIndex(uint64_t* len) {
@@ -183,7 +183,7 @@ void FloydContext::ApplyDone(uint64_t index) {
 }
 
 void FloydContext::MetaApply() {
-  raft_log_->UpdateMetadata(current_term_, voted_for_ip_, voted_for_port_, last_applied());
+  raft_log_->UpdateMetadata(current_term_, voted_for_ip_, voted_for_port_);
 }
 
 bool FloydContext::VoteAndCheck(uint64_t vote_term) {
@@ -260,18 +260,21 @@ bool FloydContext::ReceiverDoAppendEntries(uint64_t term,
   // Check pre_log match local log entry
   uint64_t last_log_index = raft_log_->GetLastLogIndex();
   if (pre_log_index > last_log_index) {
-    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::ReceiverDoAppendEntries: pre_log(%lu, %lu) > last_log_index(%lu)",
-         pre_log_term, pre_log_index, last_log_index);
+    LOGV(DEBUG_LEVEL, info_log_, "FloydContext::ReceiverDoAppendEntries:"
+        "pre_log(%lu, %lu) > last_log_index(%lu)", pre_log_term, pre_log_index,
+        last_log_index);
     return false;
   }
 
   uint64_t my_log_term = 0;
   Entry entry;
-  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::ReceiverDoAppendEntries pre_log_index: %llu\n", pre_log_index);
+  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::ReceiverDoAppendEntries"
+      "pre_log_index: %llu\n", pre_log_index);
   if (raft_log_->GetEntry(pre_log_index, &entry) == 0) {
     my_log_term = entry.term();
   } else {
-    LOGV(WARN_LEVEL, info_log_, "FloydContext::ReceiverDoAppendEntries: can't get Entry from raft_log pre_log_index %llu", pre_log_index);
+    LOGV(WARN_LEVEL, info_log_, "FloydContext::ReceiverDoAppendEntries: can't"
+        "get Entry from raft_log pre_log_index %llu", pre_log_index);
   }
 
   if (pre_log_term != my_log_term) {

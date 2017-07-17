@@ -1,0 +1,3 @@
+read_floyd is the tool to read floyd log
+read_rock is the tool to read rocksdb data
+cpt is a tool to compare two rocksdb, if they have the same data return true, else return false

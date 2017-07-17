@@ -184,7 +184,7 @@ void FloydPrimary::LaunchAdvanceCommitIndex(void *arg) {
   }
   LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::AdvanceCommitIndex"
        " new_commit_index=%llu", new_commit_index);
-  if (ptr->context_->AdvanceCommitIndex(new_commit_index)) {
+  if (ptr->context_->AdvanceLeaderCommitIndex(new_commit_index)) {
     LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::AdvanceCommitIndex ok, ScheduleApply");
     ptr->apply_->ScheduleApply();
   }

@@ -27,7 +27,6 @@ class FloydPrimary;
 class FloydContext;
 class FloydApply;
 
-// TODO(anan) typedef twice instead of include ?
 class Peer;
 typedef std::map<std::string, Peer*> PeersSet;
 
@@ -72,9 +71,6 @@ class FloydPrimary {
   // Cron task
   static void LaunchLeaderHeartbeat(void *arg);
   static void LaunchCheckElectLeader(void *arg);
-
-  // void LeaderHeartbeat();
-  // void CheckElectLeader();
 
   static void LaunchBecomeLeader(void *arg);
   static void LaunchNewCommand(void *arg);
