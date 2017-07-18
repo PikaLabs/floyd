@@ -556,9 +556,10 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& cmd, CmdResponse* response) {
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: my_term=%lu rqv.term=%lu",
        my_term, request_vote.term());
   MutexLock l(context_->commit_mu_);
-  uint64_t my_current_term = context_->current_term();
-  uint64_t my_last_log_index = context_->last_log_index();
-  context_->raft_log_->GetLastLogTermAndIndex(&my_log_term, &my_log_index);
+  {
+  uint64_t my_current_term;
+  uint64_t my_last_log_index;
+  raft_log_->GetLastLogTermAndIndex(&my_current_term, &my_last_log_index);
   // if caller's term smaller than my term, then I will notice him
   if (request_vote.last_log_term() < my_current_term) {
     BuildRequestVoteResponse(my_current_term, granted, response);
@@ -567,7 +568,7 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& cmd, CmdResponse* response) {
 
   // if votedfor is null or candidateId, and candidated's log is at least as up-to-date
   // as receiver's log, grant vote
-  if (!voted_for_ip_.empty() && (voted_for_ip_ != ip || voted_for_port_ != port) 
+  if (!context_->voted_for_ip_.empty() && (context_->voted_for_ip_ != request_vote.ip() || context_->voted_for_port_ != request_vote.port()) 
       (request_vote.last_log_term() == my_current_term && request_vote.last_log_index() >= my_last_log_index)) {
     
     LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: BecomeFollower with current_term_(%lu) and new_term(%lu)"

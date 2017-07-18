@@ -125,6 +125,7 @@ class FloydContext {
   
   // Commit related
   slash::Mutex commit_mu_;
+  slash::Mutex apply_mu_;
 
   pthread_rwlock_t stat_rw_;
 
@@ -148,7 +149,6 @@ class FloydContext {
   uint64_t commit_index_;
 
   // Apply related
-  slash::Mutex apply_mu_;
   slash::CondVar apply_cond_;
   uint64_t last_applied_;
 

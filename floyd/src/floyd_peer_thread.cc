@@ -64,10 +64,11 @@ void Peer::RequestVoteRPCWrapper(void *arg) {
 }
 
 Status Peer::RequestVoteRPC() {
-  // TODO (anan) log->getEntry() need lock
   uint64_t last_log_term;
   uint64_t last_log_index;
-  context_->raft_log()->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
+  {
+  MutexLock l(&context_->commit_mu_);
+  raft_log_->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
   uint64_t current_term = context_->current_term();
 
   CmdRequest req;
@@ -78,6 +79,7 @@ Status Peer::RequestVoteRPC() {
   request_vote->set_term(current_term);
   request_vote->set_last_log_term(last_log_term);
   request_vote->set_last_log_index(last_log_index);
+  }
 
 #ifndef NDEBUG
   std::string text_format;
@@ -102,6 +104,8 @@ Status Peer::RequestVoteRPC() {
 #endif
 
   // we get term from request vote
+  {
+  MutexLock l(&context_->state_mu_);
   uint64_t res_term = res.request_vote_res().term();
   if (result.ok() && context_->role() == Role::kCandidate) {
     // kOk means RequestVote success, opposite vote for me
@@ -115,18 +119,17 @@ Status Peer::RequestVoteRPC() {
       }
     } else {
       // opposite RequestVote fail, maybe opposite has larger term, or opposite has
-      // longer log.
-      // if opposite has larger term, this node will become follower
+      // longer log. if opposite has larger term, this node will become follower
       // otherwise we will do nothing
       LOGV(DEBUG_LEVEL, context_->info_log(), "Vote request denied by %s,"
            " res_term=%lu, current_term=%lu",
            server_.c_str(), res_term, current_term);
       if (res_term > current_term) {
-        //TODO(anan) maybe combine these 2 steps
         context_->BecomeFollower(res_term);
         primary_->ResetElectLeaderTimer();
       }
     }
+  }
   }
 
   return result;

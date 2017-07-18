@@ -175,37 +175,6 @@ Status FloydContext::WaitApply(uint64_t last_applied, uint32_t timeout) {
 bool FloydContext::ReceiverDoRequestVote(uint64_t term, const std::string ip,
                                int port, uint64_t log_term, uint64_t log_index,
                                uint64_t *my_term) {
-  slash::RWLock l(&stat_rw_, true);
-  // TODO(ba0tiao) we don't need judge here, since before coming here, we have make sure 
-  // that term > current_term_
-  // if there is some call between the judge and here, the problem is floyd not 
-  // thread safe, add judge can't solve the problem. the right way to solve the
-  // problem is make the library thread safe
-  /*
-   * if (term < current_term_) {
-   *   return false; // stale term
-   * }
-   */
-
-  uint64_t my_log_index;
-  uint64_t my_log_term;
-  raft_log_->GetLastLogTermAndIndex(&my_log_term, &my_log_index);
-  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::RequestVote: my last_log is %lu:%lu, caller is %lu:%lu",
-       my_log_term, my_log_index, log_term, log_index);
-  if (log_term < my_log_term
-      || (log_term == my_log_term && log_index < my_log_index)) {
-    LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: log index not up-to-date, my is %lu:%lu, caller is %lu:%lu",
-         my_log_term, my_log_index, log_term, log_index);
-    return false; // log index is not up-to-date as mine
-  }
-
-  if (!voted_for_ip_.empty()
-      && (voted_for_ip_ != ip || voted_for_port_ != port)) {
-    LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: I have vote for (%s:%d) already.",
-         voted_for_ip_.c_str(), voted_for_port_);
-    return false; // I have vote someone else
-  }
-
   // Got my vote
   voted_for_ip_ = ip;
   voted_for_port_ = port;

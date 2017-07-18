@@ -146,8 +146,9 @@ void FloydPrimary::LaunchCheckElectLeader(void *arg) {
 }
 
 void FloydPrimary::LaunchBecomeLeader(void *arg) {
+  Mutex l(&ptr->context_->commit_mu_);
   FloydPrimary* ptr = static_cast<FloydPrimary*>(arg);
-  LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::BecomeLeader");
+  LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::LaunchBecomeLeader");
   ptr->context_->BecomeLeader();
   ptr->NoticePeerTask(kBecomeLeader);
   ptr->AddTask(kLeaderHeartbeat);
