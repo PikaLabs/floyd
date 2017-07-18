@@ -84,5 +84,10 @@ int main()
 
 
   getchar();
+  delete f2;
+  delete f3;
+  delete f4;
+  delete f5;
+  delete f1;
   return 0;
 }

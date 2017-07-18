@@ -55,12 +55,12 @@ int main()
   }
 
   while (i--) {
-    std::string mystr[100100];
-    for (int i = 0; i < 100000; i++) {
-      mystr[i] = slash::RandomString(100);
-    }
-    f1->GetServerStatus(msg);
-    printf("%s\n", msg.c_str());
+  std::string mystr[100100];
+  for (int i = 0; i < 100000; i++) {
+    mystr[i] = slash::RandomString(100);
+  }
+    // f1->GetServerStatus(msg);
+    // printf("%s\n", msg.c_str());
     st = NowMicros();
     for (int j = 0; j < 100000; j++) {
       f1->Write(mystr[j], mystr[j]);
@@ -95,5 +95,10 @@ int main()
   }
 
   getchar();
+  delete f2;
+  delete f3;
+  delete f4;
+  delete f5;
+  delete f1;
   return 0;
 }

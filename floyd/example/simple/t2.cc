@@ -122,5 +122,10 @@ int main()
 
   // at last, we will have 300 log, 100 db
   getchar();
+  delete f2;
+  delete f3;
+  delete f4;
+  delete f5;
+  delete f1;
   return 0;
 }
