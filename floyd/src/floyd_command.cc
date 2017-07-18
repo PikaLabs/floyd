@@ -253,7 +253,6 @@ Status FloydImpl::ReplyExecuteDirtyCommand(const CmdRequest& cmd,
       //TODO(anan) add response type or reorganize proto
       //response->set_type(CmdResponse::DirtyWrite);
       response->set_type(Type::Write);
-      CmdResponse_Kv* kv = response->mutable_kv();
       if (rs.ok()) {
         response->set_code(StatusCode::kOk);
       } else {

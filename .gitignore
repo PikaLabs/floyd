@@ -28,4 +28,14 @@
 *.app
 gmon.out
 
-make_config.mk
+# Examples
+floyd/example/kv/sdk.pb.cc
+floyd/example/kv/sdk.pb.h
+*cpt
+*read_floyd
+*read_rock
+*t
+*t1
+*t2
+
+floyd/src/build_version.cc

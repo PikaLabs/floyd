@@ -5,7 +5,7 @@
 #include <sstream>
 #include <signal.h>
 
-#include "floyd_server.h"
+#include "floyd/include/floyd_server.h"
 
 #include "slash/include/slash_status.h"
 

@@ -144,7 +144,6 @@ bool RaftLog::GetLastLogTermAndIndex(uint64_t* last_log_term, uint64_t* last_log
     return true;
   }
   Entry *entry = new Entry();
-  bool is = entry->ParseFromString(buf);
   *last_log_index = last_log_index_;
   *last_log_term = entry->term();
   return true;

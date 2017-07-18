@@ -1,70 +1,55 @@
-RPATH = ./output/lib/
-LFLAGS = -Wl,-rpath=$(RPATH)
+CC=cc
+CXX=g++
+LDFLAGS= -lsnappy -lz -lbz2 -lprotobuf -lpthread -lrt $(EXTRA_LDFLAGS)
+CFLAGS= -DOS_LINUX -fno-builtin-memcmp -msse -msse4.2 ${EXTRA_CFLAGS}
+CXXFLAGS=-std=c++11 -DOS_LINUX -fno-builtin-memcmp -msse -msse4.2 ${EXTRA_CXXFLAGS}
+# OPT = -O0 -g
+OPT = -O2 -DNDEBUG
 
-CXX = g++
-ifeq ($(__REL), 1)
-	CXXFLAGS = -O0 -g -pipe -fPIC -DNDEBUG  -DLOG_LEVEL=LEVEL_INFO -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -D_GNU_SOURCE -std=c++11 -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls -Wno-unused-variable -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX
-else
-	CXXFLAGS = -pg -O0 -ggdb3 -pipe -fPIC -W -DLOG_LEVEL=LEVEL_DEBUG -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls -Wno-unused-variable -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX 
+# for rocksdb
+CXXFLAGS+= -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX
+
+.PHONY: clean all
+
+all: srv cli
+
+ifndef SLASH_PATH
+  $(warning Warning: missing slash path, using default)
+	SLASH_PATH=$(CURDIR)/../third/slash
 endif
+SLASH_INCLUDE_DIR=$(SLASH_PATH)
+SLASH_LIBRARY=$(SLASH_PATH)/slash/lib/libslash.a
 
-OBJECT = srv cli
-SRC_DIR = ./
-THIRD_PATH = ../../third
-OUTPUT = ./output
+ifndef PINK_PATH
+  $(warning Warning: slash path missing, using default)
+	PINK_PATH=$(CURDIR)/third/pink
+endif
+PINK_INCLUDE_DIR=$(PINK_PATH)
+PINK_LIBRARY=$(PINK_PATH)/pink/lib/libpink.a
 
-LIB_PATH = -L../../lib/ \
-			 -L$(THIRD_PATH)/slash/slash/lib/ \
-			 -L$(THIRD_PATH)/rocksdb/ \
-			 -L$(THIRD_PATH)/pink/pink/lib/
+ifndef ROCKSDB_PATH
+  $(warning Warning: rocksdb path missing, using default)
+  ROCKSDB_PATH=$(CURDIR)/third/rocksdb
+endif
+ROCKSDB_INCLUDE_DIR=$(ROCKSDB_PATH)/include
+ROCKSDB_LIBRARY=$(ROCKSDB_PATH)/librocksdb.a
 
+FLOYD_LIBRARY=../../lib/libfloyd.a
 
-LIBS = -lfloyd \
-			 -lpink \
-			 -lssl \
-			 -lcrypto \
-			 -lslash \
-			 -lrocksdb \
-			 -lsnappy \
-			 -lprotobuf \
-			 -lz \
-			 -lbz2 \
-			 -lrt \
-			 -lpthread
+CXXFLAGS+=-I../../.. \
+					-I$(SLASH_INCLUDE_DIR) \
+					-I$(PINK_INCLUDE_DIR) \
+					-I$(ROCKSDB_INCLUDE_DIR)
 
-INCLUDE_PATH = -I../../../ \
-							 -I$(THIRD_PATH)/rocksdb/include \
-							 -I$(THIRD_PATH)/slash/ \
-							 -I$(THIRD_PATH)/pink/
+srv: kv_server.cc srv.cc $(FLOYD_LIBRARY) $(ROCKSDB_LIBRARY) $(PINK_LIBRARY) $(SLASH_LIBRARY)
+	$(CXX) $(CXXFLAGS) $^ -o$@ $(LDFLAGS)
 
-.PHONY: all clean version
+cli: kv_cli.cc cli.cc $(FLOYD_LIBRARY) $(ROCKSDB_LIBRARY) $(PINK_LIBRARY) $(SLASH_LIBRARY)
+	$(CXX) $(CXXFLAGS) $^ -o$@ $(LDFLAGS)
 
+clean:
+	find . -name "*.[oda]" -exec rm -f {} \;
+	rm -rf ./srv ./cli
 
-BASE_BOJS := $(wildcard $(SRC_DIR)/*.cc)
-BASE_BOJS += $(wildcard $(SRC_DIR)/*.c)
-BASE_BOJS += $(wildcard $(SRC_DIR)/*.cpp)
-OBJS = $(patsubst %.cc,%.o,$(BASE_BOJS))
-
-all: $(OBJECT)
-	rm -rf $(OUTPUT)
-	mkdir -p $(OUTPUT)
-	mkdir -p $(OUTPUT)/bin
-	cp $(OBJECT) $(OUTPUT)/bin/
-	#cp -rf ./lib $(OUTPUT)/
-	rm -rf $(OBJECT)
-	@echo "Success, go, go, go..."
-
-srv: kv_server.o srv.o
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LFLAGS) $(LIBS)
-
-srv: kv_cli.o cli.o
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LFLAGS) $(LIBS)
-
-$(OBJS): %.o : %.cc
-	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE_PATH) 
-
-clean: 
-	rm -rf $(OUTPUT)
-	rm -rf $(SRC_DIR)/log
-	rm -f $(SRC_DIR)/*.o
-	rm -rf $(OBJECT) 
+$(FLOYD_LIBRARY):
+	cd ../.. && $(MAKE) static_lib

@@ -1,77 +1,67 @@
-CXX = g++
-ifeq ($(__PERF), 1)
-	CXXFLAGS = -O0 -g -pipe -fPIC -DNDEBUG  -DLOG_LEVEL=LEVEL_INFO -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -D_GNU_SOURCE -std=c++11 -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls -Wno-unused-variable -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX
-else
-	CXXFLAGS = -pg -O2 -ggdb3 -pipe -fPIC -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls -Wno-unused-variable -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX 
+CC=cc
+CXX=g++
+LDFLAGS= -lsnappy -lz -lbz2 -lprotobuf -lpthread -lrt $(EXTRA_LDFLAGS)
+CFLAGS= -DOS_LINUX -fno-builtin-memcmp -msse -msse4.2 ${EXTRA_CFLAGS}
+CXXFLAGS=-std=c++11 -DOS_LINUX -fno-builtin-memcmp -msse -msse4.2 ${EXTRA_CXXFLAGS}
+# OPT = -O0 -g
+OPT = -O2 -DNDEBUG
+
+# for rocksdb
+CXXFLAGS+= -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX
+
+.PHONY: clean all
+
+all: t t1 t2 cpt read_rock read_floyd
+
+ifndef SLASH_PATH
+  $(warning Warning: missing slash path, using default)
+	SLASH_PATH=$(CURDIR)/../third/slash
 endif
+SLASH_INCLUDE_DIR=$(SLASH_PATH)
+SLASH_LIBRARY=$(SLASH_PATH)/slash/lib/libslash.a
 
-OBJECT = t read_rock read_floyd cpt t1 t2
-SRC_DIR = ./
-THIRD_PATH = ../../third
-OUTPUT = ./output
+ifndef PINK_PATH
+  $(warning Warning: slash path missing, using default)
+	PINK_PATH=$(CURDIR)/third/pink
+endif
+PINK_INCLUDE_DIR=$(PINK_PATH)
+PINK_LIBRARY=$(PINK_PATH)/pink/lib/libpink.a
 
-LIB_PATH = -L../../lib/ \
-			 -L$(THIRD_PATH)/slash/slash/lib/ \
-			 -L$(THIRD_PATH)/rocksdb/ \
-			 -L$(THIRD_PATH)/pink/pink/lib/
+ifndef ROCKSDB_PATH
+  $(warning Warning: rocksdb path missing, using default)
+  ROCKSDB_PATH=$(CURDIR)/third/rocksdb
+endif
+ROCKSDB_INCLUDE_DIR=$(ROCKSDB_PATH)/include
+ROCKSDB_LIBRARY=$(ROCKSDB_PATH)/librocksdb.a
 
+FLOYD_LIBRARY=../../lib/libfloyd.a
 
-LIBS = -lfloyd \
-			 -lpink \
-			 -lslash \
-			 -lrocksdb \
-			 -lsnappy \
-			 -lprotobuf \
-			 -lz \
-			 -lbz2 \
-			 -lrt \
-			 -lssl \
-			 -lcrypto \
-			 -lpthread
+CXXFLAGS+=-I../../.. \
+					-I$(SLASH_INCLUDE_DIR) \
+					-I$(PINK_INCLUDE_DIR) \
+					-I$(ROCKSDB_INCLUDE_DIR)
 
-INCLUDE_PATH = -I../../../ \
-							 -I$(THIRD_PATH)/rocksdb/include \
-							 -I$(THIRD_PATH)/slash/ \
-							 -I$(THIRD_PATH)/pink/
+t: t.cc $(FLOYD_LIBRARY) $(ROCKSDB_LIBRARY) $(PINK_LIBRARY) $(SLASH_LIBRARY)
+	$(CXX) $(CXXFLAGS) $^ -o$@ $(LDFLAGS)
 
-.PHONY: all clean version
+t1: t1.cc $(FLOYD_LIBRARY) $(ROCKSDB_LIBRARY) $(PINK_LIBRARY) $(SLASH_LIBRARY)
+	$(CXX) $(CXXFLAGS) $^ -o$@ $(LDFLAGS)
 
+t2: t2.cc $(FLOYD_LIBRARY) $(ROCKSDB_LIBRARY) $(PINK_LIBRARY) $(SLASH_LIBRARY)
+	$(CXX) $(CXXFLAGS) $^ -o$@ $(LDFLAGS)
 
-BASE_BOJS := $(wildcard $(SRC_DIR)/*.cc)
-BASE_BOJS += $(wildcard $(SRC_DIR)/*.c)
-BASE_BOJS += $(wildcard $(SRC_DIR)/*.cpp)
-OBJS = $(patsubst %.cc,%.o,$(BASE_BOJS))
+cpt: cpt.cc $(FLOYD_LIBRARY) $(ROCKSDB_LIBRARY) $(PINK_LIBRARY) $(SLASH_LIBRARY)
+	$(CXX) $(CXXFLAGS) $^ -o$@ $(LDFLAGS)
 
-all: $(OBJECT)
-	rm -rf $(OUTPUT)
-	mkdir -p $(OUTPUT)
-	mkdir -p $(OUTPUT)/bin
-	cp $(OBJECT) $(OUTPUT)/bin/
-	rm -rf $(OBJECT)
-	@echo "Success, go, go, go..."
+read_floyd: read_floyd.cc $(FLOYD_LIBRARY) $(ROCKSDB_LIBRARY) $(PINK_LIBRARY) $(SLASH_LIBRARY)
+	$(CXX) $(CXXFLAGS) $^ -o$@ $(LDFLAGS)
 
-t: t.o
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
+read_rock: read_rock.cc $(FLOYD_LIBRARY) $(ROCKSDB_LIBRARY) $(PINK_LIBRARY) $(SLASH_LIBRARY)
+	$(CXX) $(CXXFLAGS) $^ -o$@ $(LDFLAGS)
 
-read_rock: read_rock.cc
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
+clean:
+	find . -name "*.[oda]" -exec rm -f {} \;
+	rm -rf ./t ./t1 ./t2 ./cpt ./read_rock ./read_floyd
 
-cpt: cpt.cc
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
-read_floyd: read_floyd.cc
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
-
-t1: t1.cc
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
-
-t2: t2.cc
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
-$(OBJS): %.o : %.cc
-	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE_PATH) 
-
-clean: 
-	rm -rf $(OUTPUT)
-	rm -rf $(SRC_DIR)/log
-	rm -rf ./data*
-	rm -f $(SRC_DIR)/*.o
-	rm -rf $(OBJECT) 
+$(FLOYD_LIBRARY):
+	cd ../.. && $(MAKE) static_lib
