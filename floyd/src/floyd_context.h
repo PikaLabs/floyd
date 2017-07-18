@@ -121,7 +121,13 @@ class FloydContext {
   }
 
   void ApplyDone(uint64_t index);
+  void MetaApply();
   
+  // Commit related
+  slash::Mutex commit_mu_;
+
+  pthread_rwlock_t stat_rw_;
+
  private:
   Options options_;
   RaftLog* raft_log_;
@@ -130,7 +136,6 @@ class FloydContext {
   Logger* info_log_;
 
   // Role related
-  pthread_rwlock_t stat_rw_;
   uint64_t current_term_;
 
   Role role_;
@@ -140,8 +145,6 @@ class FloydContext {
   int leader_port_;
   uint32_t vote_quorum_;
 
-  // Commit related
-  slash::Mutex commit_mu_;
   uint64_t commit_index_;
 
   // Apply related
@@ -149,7 +152,6 @@ class FloydContext {
   slash::CondVar apply_cond_;
   uint64_t last_applied_;
 
-  void MetaApply();
 };
 
 } // namespace floyd

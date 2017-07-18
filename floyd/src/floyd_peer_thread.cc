@@ -64,16 +64,6 @@ void Peer::RequestVoteRPCWrapper(void *arg) {
 }
 
 Status Peer::RequestVoteRPC() {
-  /*
-   * 这里为什么需要判断一下是否是 candidate, 如果保证调用requestvote 之前就肯定是candidate
-   * 就不需要这个保证了吧
-   */
-  if (context_->role() != Role::kCandidate) {
-    LOGV(DEBUG_LEVEL, context_->info_log(), "Peer(%s) not candidate,"
-         "skip RequestVote", server_.c_str());
-    return Status::OK();
-  }
-
   // TODO (anan) log->getEntry() need lock
   uint64_t last_log_term;
   uint64_t last_log_index;
@@ -172,20 +162,8 @@ void Peer::AppendEntriesRPCWrapper(void *arg) {
 }
 
 Status Peer::AppendEntriesRPC() {
-  // 这里想的是如果我不是Leader 我就不应该走下面这个逻辑, 但是实际上及时
-  // 这个判断完成以后, 接下来还是有可能last_log_index 获取的时候是leader
-  //
-  if (context_->role() != Role::kLeader) {
-    LOGV(WARN_LEVEL, context_->info_log(), "Peer(%s) not leader anymore,"
-         "skip AppendEntries", server_.c_str());
-    return Status::OK();
-  }
-
   uint64_t last_log_index = raft_log_->GetLastLogIndex();
   uint64_t prev_log_index = next_index_ - 1;
-  if (prev_log_index > last_log_index) {
-    return Status::InvalidArgument("prev_Log_index > last_log_index");
-  }
 
   uint64_t prev_log_term = 0;
   if (prev_log_index != 0) {

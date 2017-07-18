@@ -556,8 +556,9 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& cmd, CmdResponse* response) {
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: my_term=%lu rqv.term=%lu",
        my_term, request_vote.term());
   MutexLock l(context_->commit_mu_);
-  uint64_t my_current_term = context_->current_term;
-  uint64_t my_last_log_index = context_->last_log_index;
+  uint64_t my_current_term = context_->current_term();
+  uint64_t my_last_log_index = context_->last_log_index();
+  context_->raft_log_->GetLastLogTermAndIndex(&my_log_term, &my_log_index);
   // if caller's term smaller than my term, then I will notice him
   if (request_vote.last_log_term() < my_current_term) {
     BuildRequestVoteResponse(my_current_term, granted, response);
@@ -566,26 +567,16 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& cmd, CmdResponse* response) {
 
   // if votedfor is null or candidateId, and candidated's log is at least as up-to-date
   // as receiver's log, grant vote
-  if (request_vote.last_log_term() > my_current_term || 
+  if (!voted_for_ip_.empty() && (voted_for_ip_ != ip || voted_for_port_ != port) 
       (request_vote.last_log_term() == my_current_term && request_vote.last_log_index() >= my_last_log_index)) {
-    BecomeFollower(request_vote.term());
+    
+    LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: BecomeFollower with current_term_(%lu) and new_term(%lu)"
+        " commit_index(%lu)  last_applied(%lu)",
+        my_current_term, request_vote.last_log_term(), my_last_log_index, ());
+    context_->BecomeFollower(request_vote.term());
     primary_->ResetElectLeaderTimer();
-  }
-  raft_log_->GetLastLogTermAndIndex(&my_log_term, &my_log_index);
-  LOGV(DEBUG_LEVEL, info_log_, "FloydContext::RequestVote: my last_log is %lu:%lu, caller is %lu:%lu",
-       my_log_term, my_log_index, log_term, log_index);
-  if (log_term < my_log_term
-      || (log_term == my_log_term && log_index < my_log_index)) {
-    LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: log index not up-to-date, my is %lu:%lu, caller is %lu:%lu",
-         my_log_term, my_log_index, log_term, log_index);
-    return false; // log index is not up-to-date as mine
-  }
-
-  if (!voted_for_ip_.empty()
-      && (voted_for_ip_ != ip || voted_for_port_ != port)) {
-    LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: I have vote for (%s:%d) already.",
-         voted_for_ip_.c_str(), voted_for_port_);
-    return false; // I have vote someone else
+    BuildRequestVoteResponse(my_current_term, granted, response);
+    return ;
   }
 
   // Got my vote

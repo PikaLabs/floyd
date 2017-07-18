@@ -147,11 +147,6 @@ void FloydPrimary::LaunchCheckElectLeader(void *arg) {
 
 void FloydPrimary::LaunchBecomeLeader(void *arg) {
   FloydPrimary* ptr = static_cast<FloydPrimary*>(arg);
-  LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::LaunchBecomeLeader");
-  if (ptr->context_->role() == Role::kLeader) {
-    LOGV(WARN_LEVEL, ptr->context_->info_log(), "FloydPrimary::BecomeLeader already Leader");
-    return;
-  }
   LOGV(DEBUG_LEVEL, ptr->context_->info_log(), "FloydPrimary::BecomeLeader");
   ptr->context_->BecomeLeader();
   ptr->NoticePeerTask(kBecomeLeader);

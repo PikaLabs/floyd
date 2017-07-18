@@ -79,44 +79,15 @@ uint64_t FloydContext::GetElectLeaderTimeout() {
 
 void FloydContext::BecomeFollower(uint64_t new_term,
                                   const std::string leader_ip, int leader_port) {
-  slash::RWLock l(&stat_rw_, true);
-  LOGV(DEBUG_LEVEL, info_log_, "BecomeFollower: with current_term_(%lu) and new_term(%lu)"
-       " commit_index(%lu)  last_applied(%lu)",
-       current_term_, new_term, commit_index(), last_applied());
-  //TODO(anan) BecameCandidate will conflict this assert
-  //assert(current_term_ <= new_term);
-  if (current_term_ > new_term) {
-    return;
-  }
-  if (current_term_ < new_term) {
-    current_term_ = new_term;
-    voted_for_ip_ = "";
-    voted_for_port_ = 0;
-    MetaApply();
-  }
-  if (!leader_ip.empty() && leader_port != 0) {
-    leader_ip_ = leader_ip;
-    leader_port_ = leader_port;
-  }
+  current_term_ = new_term;
+  voted_for_ip_ = "";
+  voted_for_port_ = 0;
+  leader_ip_ = leader_ip;
+  leader_port_ = leader_port;
   role_ = Role::kFollower;
 }
 
 void FloydContext::BecomeCandidate() {
-  assert(role_ == Role::kFollower || role_ == Role::kCandidate);
-  slash::RWLock l(&stat_rw_, true);
-  switch(role_) {
-  case Role::kFollower:
-    LOGV(INFO_LEVEL, info_log_, "Become Candidate since prev leader timeout, prev term: %lu, prev leader is (%s:%d)",
-         current_term_, leader_ip_.c_str(), leader_port_);
-    break; 
-  case Role::kCandidate:
-    LOGV(INFO_LEVEL, info_log_, "Become Candidate since prev election timeout, prev term: %lu",
-         current_term_, leader_ip_.c_str(), leader_port_);
-    break; 
-  default:
-    LOGV(INFO_LEVEL, info_log_, "Become Candidate, should not be here, role: %d", role_);
-  }
-
   current_term_++;
   role_ = Role::kCandidate;
   leader_ip_.clear();
@@ -124,15 +95,9 @@ void FloydContext::BecomeCandidate() {
   voted_for_ip_ = options_.local_ip;
   voted_for_port_ = options_.local_port;
   vote_quorum_ = 1;
-  MetaApply();
 }
 
 void FloydContext::BecomeLeader() {
-  slash::RWLock l(&stat_rw_, true);
-  if (role_ == Role::kLeader) {
-    LOGV(INFO_LEVEL, info_log_, "FloydContext::BecomeLeader already Leader!!");
-    return;
-  }
   role_ = Role::kLeader;
   leader_ip_ = options_.local_ip;
   leader_port_ = options_.local_port;
