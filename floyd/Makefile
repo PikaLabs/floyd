@@ -65,7 +65,7 @@ $(LIBPINK):
 	make -C $(PINK_PATH)/pink __PERF=$(__PERF)  SLASH_PATH=$(SLASH_PATH)
 
 $(LIBROCKSDB): 
-	make -C $(ROCKSDB_PATH)/ static_lib
+	make -C $(ROCKSDB_PATH)/ static_lib -DDISABLE_JEMALLOC=1
 
 $(LIBRARY): $(LIBSLASH) $(LIBPINK) $(LIBROCKSDB) $(LIBOBJS) $(OBJS)
 	rm -rf $(LIB_OUTPUT)

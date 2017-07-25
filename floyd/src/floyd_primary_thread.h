@@ -26,42 +26,35 @@ class FloydPrimary;
 
 class FloydContext;
 class FloydApply;
-
 class Peer;
+class Options;
+
 typedef std::map<std::string, Peer*> PeersSet;
 
 enum TaskType {
-  kCheckElectLeader = 0,
-  kLeaderHeartbeat,
-  kBecomeLeader,
-  kBecomeFollower,
-  kNewCommand,
-  kAdvanceCommitIndex
+  kHeartBeat = 0,
+  kCheckLeader = 1,
+  kNewCommand = 2
 };
 
 class FloydPrimary {
  public:
-  FloydPrimary(FloydContext* context, FloydApply* apply);
+  FloydPrimary(FloydContext* context, FloydApply* apply, const Options& options, Logger* info_log);
   ~FloydPrimary();
 
   int Start();
 
-  void AddTask(TaskType type, void *arg = NULL);
-
-  void ResetElectLeaderTimer() {
-    reset_elect_leader_time_ = slash::NowMicros();
-  }
-  void ResetLeaderHeartbeatTimer() {
-    reset_leader_heartbeat_time_ = slash::NowMicros();
-  }
+  void AddTask(TaskType type, bool is_delay = true, void *arg = NULL);
 
   void set_peers(PeersSet* peers);
 
  private:
 
   FloydContext* context_;
-  PeersSet* peers_;
   FloydApply* apply_;
+  PeersSet* peers_;
+  Options options_;
+  Logger* info_log_;
 
   std::atomic<uint64_t> reset_elect_leader_time_;
   std::atomic<uint64_t> reset_leader_heartbeat_time_;
@@ -69,12 +62,12 @@ class FloydPrimary {
 
   // The Launch* work is done by floyd_peer_thread
   // Cron task
-  static void LaunchLeaderHeartbeat(void *arg);
-  static void LaunchCheckElectLeader(void *arg);
-
-  static void LaunchBecomeLeader(void *arg);
-  static void LaunchNewCommand(void *arg);
-  static void LaunchAdvanceCommitIndex(void *arg);
+  static void LaunchHeartBeatWrapper(void *arg);
+  void LaunchHeartBeat();
+  static void LaunchCheckLeaderWrapper(void *arg);
+  void LaunchCheckLeader();
+  static void LaunchNewCommandWrapper(void *arg);
+  void LaunchNewCommand();
 
   void NoticePeerTask(TaskType type);
   uint64_t QuorumMatchIndex();
@@ -84,5 +77,5 @@ class FloydPrimary {
   void operator=(const FloydPrimary&);
 };
 
-} // namespace floyd
+}  // namespace floyd
 #endif  // FLOYD_SRC_FLOYD_PRIMARY_THREAD_H_

@@ -514,10 +514,17 @@ class CmdRequest_RequestVote : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required bytes ip = 1;
+  // required uint64 term = 1;
+  inline bool has_term() const;
+  inline void clear_term();
+  static const int kTermFieldNumber = 1;
+  inline ::google::protobuf::uint64 term() const;
+  inline void set_term(::google::protobuf::uint64 value);
+
+  // required bytes ip = 2;
   inline bool has_ip() const;
   inline void clear_ip();
-  static const int kIpFieldNumber = 1;
+  static const int kIpFieldNumber = 2;
   inline const ::std::string& ip() const;
   inline void set_ip(const ::std::string& value);
   inline void set_ip(const char* value);
@@ -526,53 +533,46 @@ class CmdRequest_RequestVote : public ::google::protobuf::Message {
   inline ::std::string* release_ip();
   inline void set_allocated_ip(::std::string* ip);
 
-  // required int32 port = 2;
+  // required int32 port = 3;
   inline bool has_port() const;
   inline void clear_port();
-  static const int kPortFieldNumber = 2;
+  static const int kPortFieldNumber = 3;
   inline ::google::protobuf::int32 port() const;
   inline void set_port(::google::protobuf::int32 value);
 
-  // required uint64 term = 3;
-  inline bool has_term() const;
-  inline void clear_term();
-  static const int kTermFieldNumber = 3;
-  inline ::google::protobuf::uint64 term() const;
-  inline void set_term(::google::protobuf::uint64 value);
-
-  // required uint64 last_log_term = 4;
-  inline bool has_last_log_term() const;
-  inline void clear_last_log_term();
-  static const int kLastLogTermFieldNumber = 4;
-  inline ::google::protobuf::uint64 last_log_term() const;
-  inline void set_last_log_term(::google::protobuf::uint64 value);
-
-  // required uint64 last_log_index = 5;
+  // required uint64 last_log_index = 4;
   inline bool has_last_log_index() const;
   inline void clear_last_log_index();
-  static const int kLastLogIndexFieldNumber = 5;
+  static const int kLastLogIndexFieldNumber = 4;
   inline ::google::protobuf::uint64 last_log_index() const;
   inline void set_last_log_index(::google::protobuf::uint64 value);
 
+  // required uint64 last_log_term = 5;
+  inline bool has_last_log_term() const;
+  inline void clear_last_log_term();
+  static const int kLastLogTermFieldNumber = 5;
+  inline ::google::protobuf::uint64 last_log_term() const;
+  inline void set_last_log_term(::google::protobuf::uint64 value);
+
   // @@protoc_insertion_point(class_scope:floyd.CmdRequest.RequestVote)
  private:
+  inline void set_has_term();
+  inline void clear_has_term();
   inline void set_has_ip();
   inline void clear_has_ip();
   inline void set_has_port();
   inline void clear_has_port();
-  inline void set_has_term();
-  inline void clear_has_term();
-  inline void set_has_last_log_term();
-  inline void clear_has_last_log_term();
   inline void set_has_last_log_index();
   inline void clear_has_last_log_index();
+  inline void set_has_last_log_term();
+  inline void clear_has_last_log_term();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::std::string* ip_;
   ::google::protobuf::uint64 term_;
-  ::google::protobuf::uint64 last_log_term_;
+  ::std::string* ip_;
   ::google::protobuf::uint64 last_log_index_;
+  ::google::protobuf::uint64 last_log_term_;
   ::google::protobuf::int32 port_;
 
   mutable int _cached_size_;
@@ -2162,15 +2162,37 @@ inline void CmdRequest_User::set_port(::google::protobuf::int32 value) {
 
 // CmdRequest_RequestVote
 
-// required bytes ip = 1;
-inline bool CmdRequest_RequestVote::has_ip() const {
+// required uint64 term = 1;
+inline bool CmdRequest_RequestVote::has_term() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void CmdRequest_RequestVote::set_has_ip() {
+inline void CmdRequest_RequestVote::set_has_term() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void CmdRequest_RequestVote::clear_has_ip() {
+inline void CmdRequest_RequestVote::clear_has_term() {
   _has_bits_[0] &= ~0x00000001u;
+}
+inline void CmdRequest_RequestVote::clear_term() {
+  term_ = GOOGLE_ULONGLONG(0);
+  clear_has_term();
+}
+inline ::google::protobuf::uint64 CmdRequest_RequestVote::term() const {
+  return term_;
+}
+inline void CmdRequest_RequestVote::set_term(::google::protobuf::uint64 value) {
+  set_has_term();
+  term_ = value;
+}
+
+// required bytes ip = 2;
+inline bool CmdRequest_RequestVote::has_ip() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void CmdRequest_RequestVote::set_has_ip() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void CmdRequest_RequestVote::clear_has_ip() {
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void CmdRequest_RequestVote::clear_ip() {
   if (ip_ != &::google::protobuf::internal::kEmptyString) {
@@ -2232,15 +2254,15 @@ inline void CmdRequest_RequestVote::set_allocated_ip(::std::string* ip) {
   }
 }
 
-// required int32 port = 2;
+// required int32 port = 3;
 inline bool CmdRequest_RequestVote::has_port() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
 inline void CmdRequest_RequestVote::set_has_port() {
-  _has_bits_[0] |= 0x00000002u;
+  _has_bits_[0] |= 0x00000004u;
 }
 inline void CmdRequest_RequestVote::clear_has_port() {
-  _has_bits_[0] &= ~0x00000002u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void CmdRequest_RequestVote::clear_port() {
   port_ = 0;
@@ -2254,59 +2276,15 @@ inline void CmdRequest_RequestVote::set_port(::google::protobuf::int32 value) {
   port_ = value;
 }
 
-// required uint64 term = 3;
-inline bool CmdRequest_RequestVote::has_term() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void CmdRequest_RequestVote::set_has_term() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void CmdRequest_RequestVote::clear_has_term() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void CmdRequest_RequestVote::clear_term() {
-  term_ = GOOGLE_ULONGLONG(0);
-  clear_has_term();
-}
-inline ::google::protobuf::uint64 CmdRequest_RequestVote::term() const {
-  return term_;
-}
-inline void CmdRequest_RequestVote::set_term(::google::protobuf::uint64 value) {
-  set_has_term();
-  term_ = value;
-}
-
-// required uint64 last_log_term = 4;
-inline bool CmdRequest_RequestVote::has_last_log_term() const {
+// required uint64 last_log_index = 4;
+inline bool CmdRequest_RequestVote::has_last_log_index() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
-inline void CmdRequest_RequestVote::set_has_last_log_term() {
+inline void CmdRequest_RequestVote::set_has_last_log_index() {
   _has_bits_[0] |= 0x00000008u;
 }
-inline void CmdRequest_RequestVote::clear_has_last_log_term() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void CmdRequest_RequestVote::clear_last_log_term() {
-  last_log_term_ = GOOGLE_ULONGLONG(0);
-  clear_has_last_log_term();
-}
-inline ::google::protobuf::uint64 CmdRequest_RequestVote::last_log_term() const {
-  return last_log_term_;
-}
-inline void CmdRequest_RequestVote::set_last_log_term(::google::protobuf::uint64 value) {
-  set_has_last_log_term();
-  last_log_term_ = value;
-}
-
-// required uint64 last_log_index = 5;
-inline bool CmdRequest_RequestVote::has_last_log_index() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void CmdRequest_RequestVote::set_has_last_log_index() {
-  _has_bits_[0] |= 0x00000010u;
-}
 inline void CmdRequest_RequestVote::clear_has_last_log_index() {
-  _has_bits_[0] &= ~0x00000010u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void CmdRequest_RequestVote::clear_last_log_index() {
   last_log_index_ = GOOGLE_ULONGLONG(0);
@@ -2318,6 +2296,28 @@ inline ::google::protobuf::uint64 CmdRequest_RequestVote::last_log_index() const
 inline void CmdRequest_RequestVote::set_last_log_index(::google::protobuf::uint64 value) {
   set_has_last_log_index();
   last_log_index_ = value;
+}
+
+// required uint64 last_log_term = 5;
+inline bool CmdRequest_RequestVote::has_last_log_term() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void CmdRequest_RequestVote::set_has_last_log_term() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void CmdRequest_RequestVote::clear_has_last_log_term() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void CmdRequest_RequestVote::clear_last_log_term() {
+  last_log_term_ = GOOGLE_ULONGLONG(0);
+  clear_has_last_log_term();
+}
+inline ::google::protobuf::uint64 CmdRequest_RequestVote::last_log_term() const {
+  return last_log_term_;
+}
+inline void CmdRequest_RequestVote::set_last_log_term(::google::protobuf::uint64 value) {
+  set_has_last_log_term();
+  last_log_term_ = value;
 }
 
 // -------------------------------------------------------------------

@@ -29,7 +29,7 @@ struct Options {
   std::string local_ip;
   int local_port;
   std::string path;
-  uint64_t elect_timeout_ms;
+  uint64_t check_leader_us;
   uint64_t heartbeat_us;
   uint64_t append_entries_size_once;
   uint64_t append_entries_count_once;

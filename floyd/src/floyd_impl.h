@@ -23,12 +23,13 @@ using slash::Status;
 
 class Log;
 class ClientPool;
-class FloydContext;
+class RaftMeta;
 class Peer;
 class FloydPrimary;
 class FloydApply;
 class FloydWorker;
 class FloydWorkerConn;
+class FloydContext;
 class Logger;
 class CmdRequest;
 class CmdResponse;
@@ -65,20 +66,26 @@ class FloydImpl : public Floyd {
   friend class FloydWorkerHandle;
   friend class Peer;
 
+  // debug log used for ouput to file
+  Logger* info_log_;
+
   Options options_;
+  // state machine db point
   rocksdb::DB* db_;
   // raft log
   RaftLog* raft_log_;
-  // debug log used for ouput to file
-  Logger* info_log_;
+  RaftMeta* raft_meta_;
+  rocksdb::DB* log_and_meta_;  // used to store logs and meta data
+
   FloydContext* context_;
 
   FloydWorker* worker_;
   FloydApply* apply_;
   FloydPrimary* primary_;
-  PeersSet peers_;
-  ClientPool* peer_client_pool_;
+  PeersSet* peers_;
   ClientPool* worker_client_pool_;
+
+  std::map<int64_t, std::pair<std::string, int> > vote_for_;
 
   bool IsSelf(const std::string& ip_port);
 
@@ -88,10 +95,13 @@ class FloydImpl : public Floyd {
   bool DoGetServerStatus(CmdResponse_ServerStatus* res);
 
   /*
-   * these two are the response to the request and appendentries
+   * these two are the response to the request vote and appendentries
    */
   void ReplyRequestVote(const CmdRequest& cmd, CmdResponse* cmd_res);
   void ReplyAppendEntries(CmdRequest& cmd, CmdResponse* cmd_res);
+
+
+  bool AdvanceFollowerCommitIndex(uint64_t new_commit_index);
   
   // No coping allowed
   FloydImpl(const FloydImpl&);

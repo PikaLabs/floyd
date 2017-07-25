@@ -19,20 +19,24 @@ namespace floyd {
 
 using slash::Status;
 
-class Peer;
-
-class FloydContext;
+class RaftMeta;
 class FloydPrimary;
 class RaftLog;
 class ClientPool;
 
+
 class Peer {
  public:
-  Peer(std::string server, FloydContext* context, FloydPrimary* primary,
-       RaftLog* raft_log, ClientPool* pool);
+  Peer(std::string server, FloydContext* context, FloydPrimary* primary, RaftLog* raft_log, 
+    ClientPool* pool, const Options& options, Logger* info_log);
   ~Peer();
 
   int StartThread();
+
+  // Apend Entries
+  // call by other thread, put job to peer_thread's bg_thread_
+  void AddAppendEntriesTask();
+  void AddRequestVoteTask();
 
   /*
    * the two main RPC call in raft consensus protocol is here
@@ -40,12 +44,6 @@ class Peer {
    * RequestVoteRPC
    * the response to these two RPC at floyd_impl.h
    */
-  // Apend Entries
-  void AddAppendEntriesTask();
-  void AddHeartBeatTask();
-  void AddBecomeLeaderTask();
-  void AddRequestVoteTask();
-
   static void AppendEntriesRPCWrapper(void *arg);
   Status AppendEntriesRPC();
   // Request Vote
@@ -53,18 +51,42 @@ class Peer {
   Status RequestVoteRPC();
 
   uint64_t GetMatchIndex();
-  void set_next_index(uint64_t next_index);
-  uint64_t get_next_index();
+
+  void set_next_index(const uint64_t next_index) {
+    next_index_ = next_index;
+  }
+  uint64_t next_index() {
+    return next_index_;
+  }
+
+  uint64_t match_index() {
+    return match_index_;
+  }
+  typedef std::map<std::string, Peer*> PeersSet;
+
+  void set_peers(PeersSet* peers) {
+    peers_ = peers;
+  }
 
  private:
 
+  bool VoteAndCheck(uint64_t vote_term);
+  uint64_t QuorumMatchIndex();
+  void AdvanceLeaderCommitIndex();
+
+  Logger* info_log_;
   std::string server_;
   FloydContext* context_;
   FloydPrimary* primary_;
+  RaftMeta* raft_meta_;
   RaftLog* raft_log_;
   ClientPool* pool_;
+  PeersSet* peers_;
+
+  Options options_;
 
   std::atomic<uint64_t> next_index_;
+  std::atomic<uint64_t> match_index_;
 
   pink::BGThread bg_thread_;
 

@@ -42,10 +42,11 @@ message CmdRequest {
   optional User user = 3;
 
   message RequestVote {
-    required bytes ip = 1;
-    required int32 port = 2;
-    required uint64 last_log_index = 3;
-    required uint64 last_log_term = 4;
+    required uint64 term = 1;
+    required bytes ip = 2;
+    required int32 port = 3;
+    required uint64 last_log_index = 4;
+    required uint64 last_log_term = 5;
   }
   optional RequestVote request_vote = 4;
 

@@ -10,10 +10,10 @@
 #include <utility>
 #include <vector>
 
+#include "pink/include/bg_thread.h"
 #include "slash/include/env.h"
 #include "slash/include/slash_string.h"
-#include "pink/include/bg_thread.h"
-#include "slash/include/slash_string.h"
+#include "slash/include/slash_mutex.h"
 
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_apply.h"
@@ -24,12 +24,13 @@
 #include "floyd/src/floyd_client_pool.h"
 #include "floyd/src/logger.h"
 #include "floyd/src/floyd.pb.h"
+#include "floyd/src/raft_meta.h"
 
 namespace floyd {
 
 FloydImpl::FloydImpl(const Options& options)
-  : options_(options),
-    db_(NULL),
+  : db_(NULL),
+    options_(options),
     info_log_(NULL) {
 }
 
@@ -37,13 +38,12 @@ FloydImpl::~FloydImpl() {
   // worker will use floyd, delete worker first
   delete worker_;
   delete worker_client_pool_;
-  delete peer_client_pool_;
   delete primary_;
   delete apply_;
-  for (auto& pt : peers_) {
+  for (auto& pt : *peers_) {
     delete pt.second;
   }
-
+  delete peers_;
   delete context_;
   delete db_;
   delete raft_log_;
@@ -51,8 +51,7 @@ FloydImpl::~FloydImpl() {
 }
 
 bool FloydImpl::IsSelf(const std::string& ip_port) {
-  return (ip_port ==
-    slash::IpPortString(options_.local_ip, options_.local_port));
+  return (ip_port == slash::IpPortString(options_.local_ip, options_.local_port));
 }
 
 bool FloydImpl::GetLeader(std::string *ip_port) {
@@ -94,7 +93,6 @@ Status FloydImpl::Init() {
   }
 
   // TODO (anan) set timeout and retry
-  peer_client_pool_ = new ClientPool(info_log_);
   worker_client_pool_ = new ClientPool(info_log_);
 
   // Create DB
@@ -106,37 +104,46 @@ Status FloydImpl::Init() {
     return Status::Corruption("Open DB failed, " + s.ToString());
   }
 
+  s = rocksdb::DB::Open(options, options_.path + "/log/", &log_and_meta_);
+  if (!s.ok()) {
+    LOGV(ERROR_LEVEL, info_log_, "Open db failed! path: %s", options_.path.c_str());
+    return Status::Corruption("Open DB failed, " + s.ToString());
+  }
+
   // Recover Context
-  raft_log_ = new RaftLog(options_.path + "/log/", info_log_);
-  context_ = new FloydContext(options_, raft_log_, info_log_);
-  context_->RecoverInit();
+  raft_log_ = new RaftLog(log_and_meta_, info_log_);
+  raft_meta_ = new RaftMeta(log_and_meta_, info_log_);
+  context_ = new FloydContext(options_);
+  context_->RecoverInit(raft_meta_);
 
   // Create Apply threads
-  apply_ = new FloydApply(context_, db_, raft_log_);
+  apply_ = new FloydApply(context_, db_, raft_meta_, raft_log_, info_log_);
 
-  // TODO(annan) peers and primary refer to each other
+  // peers and primary refer to each other
   // Create PrimaryThread before Peers
-  primary_ = new FloydPrimary(context_, apply_);
+  primary_ = new FloydPrimary(context_, apply_, options_, info_log_);
 
   // Create peer threads
+  peers_ = new PeersSet();
   for (auto iter = options_.members.begin();
       iter != options_.members.end(); iter++) {
     if (!IsSelf(*iter)) {
-      Peer* pt = new Peer(*iter, context_, primary_, raft_log_, peer_client_pool_);
-      peers_.insert(std::pair<std::string, Peer*>(*iter, pt));
+      Peer* pt = new Peer(*iter, context_, primary_, raft_log_, worker_client_pool_, options_, info_log_);
+      peers_->insert(std::pair<std::string, Peer*>(*iter, pt));
     }
   }
 
   // Start peer thread
   int ret;
-  for (auto& pt : peers_) {
+  for (auto& pt : *peers_) {
     if ((ret = pt.second->StartThread()) != 0) {
+      pt.second->set_peers(peers_);
       LOGV(ERROR_LEVEL, info_log_, "FloydImpl peer thread to %s failed to "
            " start, ret is %d", pt.first.c_str(), ret);
       return Status::Corruption("failed to start peer thread to " + pt.first);
     }
   }
-  LOGV(INFO_LEVEL, info_log_, "Floyd start %d peer thread", peers_.size());
+  LOGV(INFO_LEVEL, info_log_, "Floyd start %d peer thread", peers_->size());
 
   // Start worker thread after Peers, because WorkerHandle will check peers
   worker_ = new FloydWorker(options_.local_port, 1000, this);
@@ -146,12 +153,12 @@ Status FloydImpl::Init() {
   }
 
   // Set and Start PrimaryThread
-  primary_->set_peers(&peers_);
+  primary_->set_peers(peers_);
   if ((ret = primary_->Start()) != 0) {
     LOGV(ERROR_LEVEL, info_log_, "FloydImpl primary thread failed to start, ret is %d", ret);
     return Status::Corruption("failed to start primary thread, return " + std::to_string(ret));
   }
-  primary_->AddTask(kCheckElectLeader);
+  primary_->AddTask(kCheckLeader);
 
   // test only
   // options_.Dump();
@@ -441,7 +448,7 @@ Status FloydImpl::ReplyExecuteDirtyCommand(const CmdRequest& cmd,
 
 bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
   std::string role_msg;
-  switch (context_->role()) {
+  switch (context_->role) {
     case Role::kFollower:
       role_msg = "follower";
       break;
@@ -453,8 +460,8 @@ bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
       break;
   }
 
-  res->set_term(context_->current_term());   
-  res->set_commit_index(context_->commit_index());
+  res->set_term(context_->current_term);   
+  res->set_commit_index(context_->commit_index);
   res->set_role(role_msg);
 
   std::string ip;
@@ -481,16 +488,16 @@ bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
 
   res->set_last_log_term(last_log_term);
   res->set_last_log_index(last_log_index);
-  res->set_last_applied(context_->last_applied());
+  res->set_last_applied(context_->last_applied);
   return true;
 }
 
-Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
+Status FloydImpl::ExecuteCommand(const CmdRequest& request,
                                  CmdResponse *response) {
   // Append entry local
   std::vector<Entry*> entries;
   Entry entry;
-  BuildLogEntry(cmd, context_->current_term(), &entry);
+  BuildLogEntry(request, context_->current_term, &entry);
   entries.push_back(&entry);
 
   uint64_t last_log_index = raft_log_->Append(entries);
@@ -500,23 +507,25 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
 
   // Notify primary then wait for apply
   if (options_.single_mode) {
-    primary_->AddTask(kAdvanceCommitIndex);
+    primary_->AddTask(kNewCommand);
   } else {
     primary_->AddTask(kNewCommand);
   }
-
-  response->set_type(cmd.type());
+  response->set_type(request.type());
   response->set_code(StatusCode::kError);
 
-  Status res = context_->WaitApply(last_log_index, 1000);
-  if (!res.ok()) {
-    return res;
-  } 
+  context_->apply_mu.Lock();
+  while (context_->last_applied < last_log_index) {
+    if (!context_->apply_cond.TimedWait(1000)) {
+      return Status::Timeout("FloydImpl::ExecuteCommand Timeout");
+    }
+  }
+  context_->apply_mu.Unlock();
 
   // Complete CmdRequest if needed
   std::string value;
   rocksdb::Status rs;
-  switch (cmd.type()) {
+  switch (request.type()) {
   case Type::kWrite: {
     response->set_code(StatusCode::kOk);
     break;
@@ -526,16 +535,16 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
     break;
   }
   case Type::kRead: {
-    rs = db_->Get(rocksdb::ReadOptions(), cmd.kv().key(), &value);
+    rs = db_->Get(rocksdb::ReadOptions(), request.kv().key(), &value);
     if (rs.ok()) {
-      BuildReadResponse(cmd.kv().key(), value, StatusCode::kOk, response);
+      BuildReadResponse(request.kv().key(), value, StatusCode::kOk, response);
     } else if (rs.IsNotFound()) {
-      BuildReadResponse(cmd.kv().key(), value, StatusCode::kNotFound, response);
+      BuildReadResponse(request.kv().key(), value, StatusCode::kNotFound, response);
     } else {
-      BuildReadResponse(cmd.kv().key(), value, StatusCode::kError, response);
+      BuildReadResponse(request.kv().key(), value, StatusCode::kError, response);
     }
     LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteCommand Read %s, key(%s) value(%s)",
-         rs.ToString().c_str(), cmd.kv().key().c_str(), value.c_str());
+         rs.ToString().c_str(), request.kv().key().c_str(), value.c_str());
 #ifndef NDEBUG 
     std::string text_format;
     google::protobuf::TextFormat::PrintToString(*response, &text_format);
@@ -544,102 +553,136 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& cmd,
     break;
   }
   default: {
-    return Status::Corruption("Unknown cmd type");
+    return Status::Corruption("Unknown request type");
   }
   }
   return Status::OK();
 }
 
-void FloydImpl::ReplyRequestVote(const CmdRequest& cmd, CmdResponse* response) {
+
+void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* response) {
+  slash::MutexLock l(&context_->commit_mu);
   bool granted = false;
-  CmdRequest_RequestVote request_vote = cmd.request_vote();
+  CmdRequest_RequestVote request_vote = request.request_vote();
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: my_term=%lu rqv.term=%lu",
-       my_term, request_vote.term());
-  MutexLock l(context_->commit_mu_);
-  {
-  uint64_t my_current_term;
-  uint64_t my_last_log_index;
-  raft_log_->GetLastLogTermAndIndex(&my_current_term, &my_last_log_index);
+       context_->current_term, request_vote.term());
+  uint64_t current_term;
   // if caller's term smaller than my term, then I will notice him
-  if (request_vote.last_log_term() < my_current_term) {
-    BuildRequestVoteResponse(my_current_term, granted, response);
+  if (request_vote.term() < context_->current_term) {
+    BuildRequestVoteResponse(context_->current_term, granted, response);
+    return;
+  }
+  uint64_t my_last_log_term;
+  uint64_t my_last_log_index;
+  raft_log_->GetLastLogTermAndIndex(&my_last_log_term, &my_last_log_index);
+  // if votedfor is null or candidateId, and candidated's log is at least as up-to-date
+  // as receiver's log, grant vote
+  if ((request_vote.last_log_term() < my_last_log_term) || 
+      (request_vote.last_log_term() == my_last_log_term) && (request_vote.last_log_index() < my_last_log_index)) {
+    BuildRequestVoteResponse(context_->current_term, granted, response);
     return;
   }
 
-  // if votedfor is null or candidateId, and candidated's log is at least as up-to-date
-  // as receiver's log, grant vote
-  if (!context_->voted_for_ip_.empty() && (context_->voted_for_ip_ != request_vote.ip() || context_->voted_for_port_ != request_vote.port()) 
-      (request_vote.last_log_term() == my_current_term && request_vote.last_log_index() >= my_last_log_index)) {
-    
+  if (vote_for_.find(request_vote.term()) != vote_for_.end() && vote_for_[request_vote.term()] != std::make_pair(request_vote.ip(), request_vote.port())) {
     LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: BecomeFollower with current_term_(%lu) and new_term(%lu)"
-        " commit_index(%lu)  last_applied(%lu)",
-        my_current_term, request_vote.last_log_term(), my_last_log_index, ());
-    context_->BecomeFollower(request_vote.term());
-    primary_->ResetElectLeaderTimer();
-    BuildRequestVoteResponse(my_current_term, granted, response);
+        " commit_index(%lu) last_applied(%lu)",
+        context_->current_term, request_vote.last_log_term(), my_last_log_index, context_->last_applied);
+    BuildRequestVoteResponse(context_->current_term, granted, response);
+    return ;
+  }
+  vote_for_[request_vote.term()] = std::make_pair(request_vote.ip(), request_vote.port());
+  context_->BecomeFollower(request_vote.term());
+  raft_meta_->SetCurrentTerm(context_->current_term);
+  raft_meta_->SetVotedForIp(context_->voted_for_ip);
+  raft_meta_->SetVotedForPort(context_->voted_for_port);
+  // Got my vote
+  context_->GrantVote(request_vote.term(), request_vote.ip(), request_vote.port());
+  granted = true;
+  BuildRequestVoteResponse(context_->current_term, granted, response);
+}
+
+bool FloydImpl::AdvanceFollowerCommitIndex(uint64_t new_commit_index) {
+  // Update log commit index
+  context_->commit_index_mu.Lock();
+  context_->commit_index = new_commit_index;
+  raft_meta_->SetCommitIndex(new_commit_index);
+  context_->commit_index_mu.Unlock();
+  return true;
+}
+
+void FloydImpl::ReplyAppendEntries(CmdRequest& request, CmdResponse* response) {
+  bool success = false;
+  CmdRequest_AppendEntries append_entries = request.append_entries();
+  slash::MutexLock l(&context_->commit_mu);
+  // Ignore stale term
+  // if the append entries term is smaller then my current term, then the caller must an older leader
+  uint64_t last_log_index = raft_log_->GetLastLogIndex();
+  if (append_entries.term() < context_->current_term) {
+    BuildAppendEntriesResponse(success, context_->current_term, last_log_index, response);
+    return;
+  } else if (append_entries.term() > context_->current_term) {
+    context_->BecomeFollower(append_entries.term(),
+        append_entries.ip(), append_entries.port());
+    raft_meta_->SetCurrentTerm(context_->current_term);
+    raft_meta_->SetVotedForIp(context_->voted_for_ip);
+    raft_meta_->SetVotedForPort(context_->voted_for_port);
+  }
+
+  if (append_entries.prev_log_index() > last_log_index) {
+    LOGV(INFO_LEVEL, info_log_, "RaftMeta::ReceiverDoAppendEntries:"
+        "pre_log(%lu, %lu) > last_log_index(%lu)", append_entries.prev_log_term(), append_entries.prev_log_index(),
+        last_log_index);
+    BuildAppendEntriesResponse(success, context_->current_term, last_log_index, response);
     return ;
   }
 
-  // Got my vote
-  voted_for_ip_ = ip;
-  voted_for_port_ = port;
-  *my_term = current_term_;
-  MetaApply();
-  LOGV(INFO_LEVEL, info_log_, "FloydContext::RequestVote: grant vote for (%s:%d),"
-       " with my_term(%lu), my last_log(%lu:%lu), caller log(%lu,%lu).",
-       voted_for_ip_.c_str(), voted_for_port_, *my_term,
-       my_log_term, my_log_index, log_term, log_index);
-  return true;
-  BuildRequestVoteResponse(my_term, granted, response);
-}
-
-void FloydImpl::ReplyAppendEntries(CmdRequest& cmd, CmdResponse* response) {
-  // Ignore stale term
-  MutexLock l(context_->commit_mu_);
-  bool status = false;
-  uint64_t my_term = context_->current_term;
-  CmdRequest_AppendEntries append_entries = cmd.append_entries();
-  // if the append entries term is smaller then my_term, then the caller must an older leader
-  if (append_entries.term() < my_term) {
-    BuildAppendEntriesResponse(status, my_term, raft_log_->GetLastLogIndex(), response);
-    return;
-  }
-  // TODO(ba0tiao) why we need become follower, maybe we have been follower before
-  context_->BecomeFollower(append_entries.term(),
-                           append_entries.ip(), append_entries.port());
-
   std::vector<Entry*> entries;
-  for (auto& it : *(cmd.mutable_append_entries()->mutable_entries())) {
+  for (auto& it : *(request.mutable_append_entries()->mutable_entries())) {
     entries.push_back(&it);
   }
-  // TODO(ba0tiao) do consistency check here
+  uint64_t my_log_term = 0;
+  Entry entry;
+  LOGV(DEBUG_LEVEL, info_log_, "RaftMeta::ReceiverDoAppendEntries"
+      "prev_log_index: %llu\n", append_entries.prev_log_index());
+  if (raft_log_->GetEntry(append_entries.prev_log_index(), &entry) == 0) {
+    my_log_term = entry.term();
+  } else {
+    LOGV(WARN_LEVEL, info_log_, "FloydImple::ReplyAppentries: can't"
+        "get Entry from raft_log prev_log_index %llu", append_entries.prev_log_index());
+    BuildAppendEntriesResponse(success, context_->current_term, last_log_index, response);
+    return;
+  }
 
-  /*
-   * std::string text_format;
-   * google::protobuf::TextFormat::PrintToString(cmd, &text_format);
-   * LOGV(DEBUG_LEVEL, context_->info_log(), "FloydImpl::ReplyAppendEntries with %llu "
-   *      "entries, message :\n%s",
-   *      entries.size(), text_format.c_str());
-   */
+  if (append_entries.prev_log_term() != my_log_term) {
+    LOGV(WARN_LEVEL, info_log_, "RaftMeta::ReceiverDoAppendEntries: pre_log(%lu, %lu) don't match with"
+         " local log(%lu, %lu), truncate suffix from here",
+         append_entries.prev_log_term(), append_entries.prev_log_index(), my_log_term, last_log_index);
+    // TruncateSuffix [prev_log_index, last_log_index)
+    raft_log_->TruncateSuffix(append_entries.prev_log_index());
+  }
 
-  // Append entries
-  status = context_->ReceiverDoAppendEntries(append_entries.term(),
-                                   append_entries.prev_log_term(),
-                                   append_entries.prev_log_index(),
-                                   entries, &my_term);
+  // Append entry
+  if (append_entries.prev_log_index() < last_log_index) {
+    // TruncateSuffix [prev_log_index + 1, last_log_index)
+    raft_log_->TruncateSuffix(append_entries.prev_log_index() + 1);
+  }
 
+  if (entries.size() > 0) {
+    LOGV(DEBUG_LEVEL, info_log_, "RaftMeta::ReceiverDoAppendEntries: will append %u entries from "
+         " prev_log_index %lu", entries.size(), append_entries.prev_log_index() + 1);
+    if (raft_log_->Append(entries) <= 0) {
+      return ;
+    }
+  }
   // only when follower successfully do appendentries, we will update commit index
-  if (status) {
-    context_->AdvanceFollowerCommitIndex(append_entries.leader_commit());
+  if (success) {
+    AdvanceFollowerCommitIndex(append_entries.leader_commit());
     LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries after AdvanceCommitIndex %lu",
-        context_->commit_index());
+        context_->commit_index);
     apply_->ScheduleApply();
   }
 
-  // TODO(anan) ElectLeader timer may timeout because of slow AppendEntries
-  //   we delay reset timer.
-  primary_->ResetElectLeaderTimer();
-  BuildAppendEntriesResponse(status, my_term, raft_log_->GetLastLogIndex(), response);
+  BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
 }
 
 } // namespace floyd
