@@ -37,7 +37,7 @@ int FloydApply::Start() {
   return bg_thread_.StartThread();
 }
 
-Status FloydApply::ScheduleApply() {
+void FloydApply::ScheduleApply() {
   bg_thread_.Schedule(&ApplyStateMachineWrapper, this);
 }
 
@@ -55,7 +55,8 @@ void FloydApply::ApplyStateMachine() {
 
   LOGV(DEBUG_LEVEL, info_log_, "FloydApply::ApplyStateMachine: last_applied: %lu, commit_index: %lu",
             last_applied, commit_index);
-  while (++last_applied <= commit_index) {
+  while (last_applied < commit_index) {
+    last_applied++;
     Entry log_entry;
     raft_log_->GetEntry(last_applied, &log_entry);
     Status s = Apply(log_entry);
@@ -66,11 +67,11 @@ void FloydApply::ApplyStateMachine() {
       usleep(1000000);
       return;
     }
-    
     raft_meta_->SetLastApplied(last_applied);
   }
   context_->apply_mu.Lock();
   context_->last_applied = last_applied;
+  raft_meta_->SetLastApplied(last_applied);
   context_->apply_mu.Unlock();
   context_->apply_cond.SignalAll();
 }

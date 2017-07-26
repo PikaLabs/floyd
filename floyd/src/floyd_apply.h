@@ -24,7 +24,7 @@ class FloydApply {
   FloydApply(FloydContext* context, rocksdb::DB* db, RaftMeta* raft_meta, RaftLog* raft_log, Logger* info_log);
   ~FloydApply();
   int Start();
-  Status ScheduleApply();
+  void ScheduleApply();
 
  private:
   pink::BGThread bg_thread_;

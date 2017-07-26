@@ -19,7 +19,7 @@ extern uint64_t BitStrToUint(const std::string &str) {
   return be64toh(num);
 }
 
-int main(int argc, char**  argv)
+int main(int argc, char** argv)
 {
   rocksdb::DB* db;
   rocksdb::Options options;
@@ -30,12 +30,19 @@ int main(int argc, char**  argv)
   for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
     cnt++;
     floyd::Entry entry;
-    if (iter->key().ToString() == "CURRENTTERM" || iter->key().ToString() == "VOTEFORIP" || iter->key().ToString() == "VOTEFORPORT" || iter->key().ToString() == "APPLYINDEX") {
-      continue;
+    if (iter->key().ToString() == "CURRENTTERM" || iter->key().ToString() == "VOTEFORIP" || iter->key().ToString() == "VOTEFORPORT" || iter->key().ToString() == "APPLYINDEX" || iter->key().ToString() == "COMMITINDEX") {
+      if (iter->key().ToString() == "VOTEFORIP") {
+        printf("key %s, value %s\n", iter->key().ToString().c_str(), iter->value().ToString().c_str());
+      } else {
+        uint64_t ans;
+        memcpy(&ans, iter->value().data(), sizeof(uint64_t));
+        printf("key %s, value %lu\n", iter->key().ToString().c_str(), ans);
+      }
+    } else {
+      entry.ParseFromString(iter->value().ToString());
+      uint64_t num = BitStrToUint(iter->key().ToString());
+      printf("key %lu entry term: %lu key %s value %s\n", num, entry.term(), entry.key().c_str(), entry.value().c_str());
     }
-    entry.ParseFromString(iter->value().ToString());
-    uint64_t num = BitStrToUint(iter->key().ToString());
-    printf("key %lu entry term: %lu key %s value %s\n", num, entry.term(), entry.key().c_str(), entry.value().c_str());
     // std::cout << "res " << iter->key().ToString() << ": " << iter->value().ToString() << std::endl;
   }
   printf("cnt %d\n", cnt);

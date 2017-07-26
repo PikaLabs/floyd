@@ -19,19 +19,25 @@
 #include "floyd/src/floyd.pb.h"
 #include "floyd/src/logger.h"
 #include "floyd/src/raft_meta.h"
+#include "floyd/src/floyd_apply.h"
 
 namespace floyd {
 
-Peer::Peer(std::string server, FloydContext* context, FloydPrimary* primary, RaftLog* raft_log, 
-    ClientPool* pool, const Options& options, Logger* info_log)
+Peer::Peer(std::string server, FloydContext* context, FloydPrimary* primary, RaftMeta* raft_meta,
+    RaftLog* raft_log, ClientPool* pool, FloydApply* apply, const Options& options, Logger* info_log)
   : server_(server),
     context_(context),
     primary_(primary),
-    options_(options),
+    raft_meta_(raft_meta),
     raft_log_(raft_log),
     pool_(pool),
-    next_index_(1) {
+    apply_(apply),
+    options_(options),
+    info_log_(info_log),
+    next_index_(1),
+    match_index_(0) {
       next_index_ = raft_log_->GetLastLogIndex() + 1;
+      match_index_ = raft_meta_->GetLastApplied();
 }
 
 int Peer::StartThread() {
@@ -43,19 +49,19 @@ Peer::~Peer() {
   LOGV(INFO_LEVEL, info_log_, "Peer(%s) exit!!!", server_.c_str());
 }
 
+bool Peer::CheckAndVote(uint64_t vote_term) {
+  if (context_->current_term != vote_term) {
+    return false;
+  }
+  return (++context_->vote_quorum) > (options_.members.size() / 2);
+}
+
 void Peer::AddRequestVoteTask() {
   bg_thread_.Schedule(&RequestVoteRPCWrapper, this);
 }
 
 void Peer::RequestVoteRPCWrapper(void *arg) {
   reinterpret_cast<Peer*>(arg)->RequestVoteRPC();
-}
-
-bool Peer::VoteAndCheck(uint64_t vote_term) {
-  if (context_->current_term != vote_term) {
-    return false;
-  }
-  return (++context_->vote_quorum) > (options_.members.size() / 2);
 }
 
 Status Peer::RequestVoteRPC() {
@@ -89,17 +95,19 @@ Status Peer::RequestVoteRPC() {
   if (context_->role == Role::kCandidate) {
     // kOk means RequestVote success, opposite vote for me
     if (res.request_vote_res().vote_granted() == true) {    // granted
-      LOGV(INFO_LEVEL, info_log_, "Peer(%s)::RequestVote granted"
-          " will Vote and check", server_.c_str());
+      LOGV(INFO_LEVEL, info_log_, "Peer(%s)::RequestVote granted will Vote and check", server_.c_str());
       // However, we need check whether this vote is vote for old term
       // we need igore these type of vote
-      if (VoteAndCheck(res.request_vote_res().term())) {
+      if (CheckAndVote(res.request_vote_res().term())) {
         context_->BecomeLeader();
-        primary_->AddTask(kHeartBeat);
+        primary_->AddTask(kHeartBeat, false);
       }
     } else {
       if (res.request_vote_res().term() > context_->current_term) {
         context_->BecomeFollower(res.request_vote_res().term());
+        raft_meta_->SetCurrentTerm(context_->current_term);
+        raft_meta_->SetVotedForIp(context_->voted_for_ip);
+        raft_meta_->SetVotedForPort(context_->voted_for_port);
       }
       // opposite RequestVote fail, maybe opposite has larger term, or opposite has
       // longer log. if opposite has larger term, this node will become follower
@@ -125,8 +133,14 @@ void Peer::AppendEntriesRPCWrapper(void *arg) {
 
 uint64_t Peer::QuorumMatchIndex() {
   std::vector<uint64_t> values;
-  for (auto& iter : *peers_) {
-    values.push_back(iter.second->match_index());
+  std::map<std::string, Peer*>::iterator iter; 
+  LOGV(WARN_LEVEL, info_log_, "Peer::QuorumMatchIndex: Peers size %d",
+      peers_.size());
+  for (iter = peers_.begin(); iter != peers_.end(); iter++) {
+    if (iter->first == server_) {
+      continue;
+    }
+    values.push_back(iter->second->match_index());
   }
   std::sort(values.begin(), values.end());
   return values.at(values.size() / 2);
@@ -218,27 +232,31 @@ Status Peer::AppendEntriesRPC() {
      */
     if (res.append_entries_res().term() > context_->current_term) {
       context_->BecomeFollower(res.append_entries_res().term());
+      raft_meta_->SetCurrentTerm(context_->current_term);
+      raft_meta_->SetVotedForIp(context_->voted_for_ip);
+      raft_meta_->SetVotedForPort(context_->voted_for_port);
     }
     if (res.append_entries_res().success() == true) {
-      context_->last_op_time = slash::NowMicros();
-      
-      match_index_ = prev_log_index + num_entries;
-      // only log entries from the leader's current term are committed
-      // by counting replicas
-      if (append_entries->entries(num_entries - 1).term() == context_->current_term) {
-        AdvanceLeaderCommitIndex();
-      }
-      next_index_ = prev_log_index + num_entries + 1;
-      // If this follower is far behind leader, and there is no more
-      // AppendEntryTask, we should add one
-      if (next_index_ + options_.append_entries_count_once < last_log_index) {
-        int pri_size, qu_size;
-        bg_thread_.QueueSize(&pri_size, &qu_size);
-        if (qu_size < 1) {
-          LOGV(DEBUG_LEVEL, info_log_, "AppendEntry again "
-               "to catch up next_index(%llu) last_log_index(%llu)",
-               next_index_.load(), last_log_index);
-          AddAppendEntriesTask();
+      if (num_entries > 0) {
+        match_index_ = prev_log_index + num_entries;
+        // only log entries from the leader's current term are committed
+        // by counting replicas
+        if (append_entries->entries(num_entries - 1).term() == context_->current_term) {
+          AdvanceLeaderCommitIndex();
+          apply_->ScheduleApply();
+        }
+        next_index_ = prev_log_index + num_entries + 1;
+        // If this follower is far behind leader, and there is no more
+        // AppendEntryTask, we should add one
+        if (next_index_ + options_.append_entries_count_once < last_log_index) {
+          int pri_size, qu_size;
+          bg_thread_.QueueSize(&pri_size, &qu_size);
+          if (qu_size < 1) {
+            LOGV(DEBUG_LEVEL, info_log_, "AppendEntry again "
+                "to catch up next_index(%llu) last_log_index(%llu)",
+                next_index_.load(), last_log_index);
+            AddAppendEntriesTask();
+          }
         }
       }
     } else {

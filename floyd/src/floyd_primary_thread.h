@@ -17,6 +17,7 @@
 #include "pink/include/bg_thread.h"
 
 #include "floyd/src/floyd_context.h"
+#include "floyd/src/floyd_peer_thread.h"
 
 namespace floyd {
 
@@ -26,10 +27,9 @@ class FloydPrimary;
 
 class FloydContext;
 class FloydApply;
+class RaftMeta;
 class Peer;
 class Options;
-
-typedef std::map<std::string, Peer*> PeersSet;
 
 enum TaskType {
   kHeartBeat = 0,
@@ -39,20 +39,19 @@ enum TaskType {
 
 class FloydPrimary {
  public:
-  FloydPrimary(FloydContext* context, FloydApply* apply, const Options& options, Logger* info_log);
+  FloydPrimary(FloydContext* context, RaftMeta* raft_meta, const Options& options, Logger* info_log);
   ~FloydPrimary();
 
   int Start();
-
-  void AddTask(TaskType type, bool is_delay = true, void *arg = NULL);
-
-  void set_peers(PeersSet* peers);
-
+  void AddTask(TaskType type, bool is_delay = true);
+  void set_peers(PeersSet peers) {
+    peers_ = peers;
+  }
  private:
 
   FloydContext* context_;
-  FloydApply* apply_;
-  PeersSet* peers_;
+  RaftMeta* raft_meta_;
+  PeersSet peers_;
   Options options_;
   Logger* info_log_;
 

@@ -32,15 +32,14 @@ class RaftLog {
   int TruncateSuffix(uint64_t index);
 
  private:
+  rocksdb::DB* const db_;
+  Logger* info_log_;
   /*
    * mutex for last_log_index_
    */
   slash::Mutex lli_mutex_;
   uint64_t last_log_index_;
 
-  rocksdb::DB* const db_;
-
-  Logger* info_log_;
   /*
    * we don't store last_log_index_ in rocksdb, since if we store it in rocksdb
    * we need update it every time I append an entry.

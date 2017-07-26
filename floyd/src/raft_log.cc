@@ -1,11 +1,17 @@
+// Copyright (c) 2015-present, Qihoo, Inc.  All rights reserved.
+// This source code is licensed under the BSD-style license found in the
+// LICENSE file in the root directory of this source tree. An additional grant
+// of patent rights can be found in the PATENTS file in the same directory.
+
 #include "floyd/src/raft_log.h"
+
+#include <google/protobuf/text_format.h>
 
 #include <vector>
 #include <string>
 
 #include "rocksdb/db.h"
 #include "rocksdb/iterator.h"
-#include <google/protobuf/text_format.h>
 #include "slash/include/xdebug.h"
 
 #include "floyd/src/floyd.pb.h"
@@ -39,7 +45,9 @@ RaftLog::RaftLog(rocksdb::DB *db, Logger *info_log) :
     it->Prev();
     it->Prev();
     it->Prev();
-    last_log_index_ = BitStrToUint(it->key().ToString());
+    if (it->Valid()) {
+      last_log_index_ = BitStrToUint(it->key().ToString());
+    }
   }
 }
 

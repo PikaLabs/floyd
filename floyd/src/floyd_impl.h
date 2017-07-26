@@ -66,23 +66,23 @@ class FloydImpl : public Floyd {
   friend class FloydWorkerHandle;
   friend class Peer;
 
+  rocksdb::DB* db_;
+  Options options_;
   // debug log used for ouput to file
   Logger* info_log_;
 
-  Options options_;
   // state machine db point
-  rocksdb::DB* db_;
   // raft log
+  rocksdb::DB* log_and_meta_;  // used to store logs and meta data
   RaftLog* raft_log_;
   RaftMeta* raft_meta_;
-  rocksdb::DB* log_and_meta_;  // used to store logs and meta data
 
   FloydContext* context_;
 
   FloydWorker* worker_;
   FloydApply* apply_;
   FloydPrimary* primary_;
-  PeersSet* peers_;
+  PeersSet peers_;
   ClientPool* worker_client_pool_;
 
   std::map<int64_t, std::pair<std::string, int> > vote_for_;
@@ -93,6 +93,7 @@ class FloydImpl : public Floyd {
   Status ExecuteCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
   Status ReplyExecuteDirtyCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
   bool DoGetServerStatus(CmdResponse_ServerStatus* res);
+  void GrantVote(uint64_t term, const std::string ip, int port);
 
   /*
    * these two are the response to the request vote and appendentries

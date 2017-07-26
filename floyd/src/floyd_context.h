@@ -31,11 +31,14 @@ struct FloydContext {
   /* Role related */
   FloydContext(const Options& _options) 
     : options(_options),
+      voted_for_ip(""),
+      voted_for_port(0), 
+      leader_ip(""),
+      leader_port(0),
+      vote_quorum(0),
       apply_cond(&apply_mu) {};
   void leader_node(std::string* ip, int* port);
   void voted_for_node(std::string* ip, int* port);
-
-  bool HasLeader();
 
   void RecoverInit(RaftMeta *raft);
   void BecomeFollower(uint64_t new_iterm,
@@ -43,7 +46,6 @@ struct FloydContext {
   void BecomeCandidate();
   void BecomeLeader();
 
-  void GrantVote(uint64_t term, const std::string ip, const int port);
   bool ReceiverDoAppendEntries(uint64_t term,
       uint64_t pre_log_term, uint64_t pre_log_index,
       std::vector<Entry*>& entries, uint64_t* my_term);
@@ -71,7 +73,6 @@ struct FloydContext {
   slash::Mutex commit_mu;
   slash::Mutex apply_mu;
   slash::CondVar apply_cond;
-
 };
 
 } // namespace floyd

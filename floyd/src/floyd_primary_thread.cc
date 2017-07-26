@@ -20,16 +20,16 @@
 #include "floyd/src/floyd_apply.h"
 #include "floyd/src/floyd_context.h"
 #include "floyd/src/floyd_client_pool.h"
-#include "floyd/src/raft_log.h"
+#include "floyd/src/raft_meta.h"
 #include "floyd/src/floyd.pb.h"
 #include "floyd/src/logger.h"
 #include "floyd/include/floyd_options.h"
 
 namespace floyd {
 
-FloydPrimary::FloydPrimary(FloydContext* context, FloydApply* apply, const Options& options, Logger* info_log)
+FloydPrimary::FloydPrimary(FloydContext* context, RaftMeta* raft_meta, const Options& options, Logger* info_log)
   : context_(context),
-    apply_(apply),
+    raft_meta_(raft_meta),
     options_(options),
     info_log_(info_log) {
 }
@@ -43,28 +43,30 @@ FloydPrimary::~FloydPrimary() {
   LOGV(INFO_LEVEL, info_log_, "FloydPrimary exit!!!");
 }
 
-void FloydPrimary::set_peers(PeersSet* peers) {
-  LOGV(DEBUG_LEVEL, info_log_, "FloydPrimary::set_peers peers "
-       "has %d pairs", peers->size());
-  peers_ = peers;
-}
-
 // TODO(anan) We keep 2 Primary Cron in total.
 //    1. one short live Cron for LeaderHeartbeat, which is available as a leader;
 //    2. another long live Cron for ElectLeaderCheck, which is started when
 //    creating Primary;
-void FloydPrimary::AddTask(TaskType type, bool is_delay, void* arg) {
+void FloydPrimary::AddTask(TaskType type, bool is_delay) {
   switch (type) {
   case kHeartBeat: {
     LOGV(DEBUG_LEVEL, info_log_, "FloydPrimary::AddTask HeartBeat");
-    uint64_t timeout = options_.heartbeat_us;
-    bg_thread_.DelaySchedule(timeout / 1000LL, LaunchHeartBeatWrapper, this);
+    if (is_delay) {
+      uint64_t timeout = options_.heartbeat_us;
+      bg_thread_.DelaySchedule(timeout / 1000LL, LaunchHeartBeatWrapper, this);
+    } else {
+      bg_thread_.Schedule(LaunchHeartBeatWrapper, this);
+    }
     break;
   }
   case kCheckLeader: {
     LOGV(DEBUG_LEVEL, info_log_, "FloydPrimary::AddTask CheckLeader");
-    uint64_t timeout = options_.check_leader_us;
-    bg_thread_.DelaySchedule(timeout / 1000LL, LaunchCheckLeaderWrapper, this);
+    if (is_delay) {
+      uint64_t timeout = options_.check_leader_us;
+      bg_thread_.DelaySchedule(timeout / 1000LL, LaunchCheckLeaderWrapper, this);
+    } else {
+      bg_thread_.Schedule(LaunchHeartBeatWrapper, this);
+    }
     break;
   }
   case kNewCommand: {
@@ -86,7 +88,7 @@ void FloydPrimary::LaunchHeartBeatWrapper(void *arg) {
 void FloydPrimary::LaunchHeartBeat() {
   slash::MutexLock l(&context_->commit_mu);
   if (context_->role == Role::kLeader) {
-    NoticePeerTask(kHeartBeat);
+    NoticePeerTask(kNewCommand);
     AddTask(kHeartBeat);
   }
 }
@@ -101,6 +103,9 @@ void FloydPrimary::LaunchCheckLeader() {
       context_->BecomeLeader();
     } else if (context_->last_op_time + options_.check_leader_us < slash::NowMicros()) {
       context_->BecomeCandidate();
+      raft_meta_->SetCurrentTerm(context_->current_term);
+      raft_meta_->SetVotedForIp(context_->voted_for_ip);
+      raft_meta_->SetVotedForPort(context_->voted_for_port);
       NoticePeerTask(kHeartBeat);
     }
   }
@@ -122,7 +127,7 @@ void FloydPrimary::LaunchNewCommand() {
 // when adding task to peer thread, we can consider that this job have been in the network
 // even it is still in the peer thread's queue
 void FloydPrimary::NoticePeerTask(TaskType type) {
-  for (auto& peer : *peers_) {
+  for (auto& peer : peers_) {
     switch (type) {
     case kHeartBeat:
       peer.second->AddRequestVoteTask();

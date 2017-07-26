@@ -8,6 +8,8 @@
 #include <cstdlib>
 #include <ctime>
 
+#include "slash/include/env.h"
+
 namespace floyd {
 
 void split(const std::string &str, char delim,
@@ -83,7 +85,7 @@ Options::Options()
   : local_ip("127.0.0.1"),
     local_port(10086),
     path("/data/floyd"),
-    check_leader_us(3000000),
+    check_leader_us(5000000),
     heartbeat_us(1000000),
     append_entries_size_once(1024),
     append_entries_count_once(24),
@@ -96,16 +98,17 @@ Options::Options(const std::string& cluster_string,
   : local_ip(_local_ip),
     local_port(_local_port),
     path(_path),
-    check_leader_us(3000000),
+    check_leader_us(5000000),
     heartbeat_us(1000000),
     append_entries_size_once(1024),
     append_entries_count_once(24),
     single_mode(false) {
-  std::srand(std::time(0));
+  std::srand(slash::NowMicros());
   // the default check_leader is [3s, 5s)
   // the default heartbeat time is 1s
   // we can promise 1s + 2 * rpc < 3s, since rpc time is approximately 10ms
-  check_leader_us = rand() % 2000000 + check_leader_us;
+  check_leader_us = std::rand() % 2000000 + check_leader_us;
+  printf("check_leader_us %lu\n", check_leader_us);
   split(cluster_string, ',', members);
   if (members.size() == 1) {
     single_mode = true;

@@ -23,12 +23,14 @@ class RaftMeta;
 class FloydPrimary;
 class RaftLog;
 class ClientPool;
-
+class FloydApply;
+class Peer;
+typedef std::map<std::string, Peer*> PeersSet;
 
 class Peer {
  public:
-  Peer(std::string server, FloydContext* context, FloydPrimary* primary, RaftLog* raft_log, 
-    ClientPool* pool, const Options& options, Logger* info_log);
+  Peer(std::string server, FloydContext* context, FloydPrimary* primary, RaftMeta* raft_meta,
+      RaftLog* raft_log, ClientPool* pool, FloydApply* apply, const Options& options, Logger* info_log);
   ~Peer();
 
   int StartThread();
@@ -62,28 +64,28 @@ class Peer {
   uint64_t match_index() {
     return match_index_;
   }
-  typedef std::map<std::string, Peer*> PeersSet;
 
-  void set_peers(PeersSet* peers) {
+  void set_peers(PeersSet &peers) {
     peers_ = peers;
   }
 
  private:
 
-  bool VoteAndCheck(uint64_t vote_term);
+  bool CheckAndVote(uint64_t vote_term);
   uint64_t QuorumMatchIndex();
   void AdvanceLeaderCommitIndex();
 
-  Logger* info_log_;
   std::string server_;
   FloydContext* context_;
   FloydPrimary* primary_;
   RaftMeta* raft_meta_;
   RaftLog* raft_log_;
   ClientPool* pool_;
-  PeersSet* peers_;
-
+  FloydApply* apply_;
   Options options_;
+  Logger* info_log_;
+
+  PeersSet peers_;
 
   std::atomic<uint64_t> next_index_;
   std::atomic<uint64_t> match_index_;
