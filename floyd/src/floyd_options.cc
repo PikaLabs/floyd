@@ -108,7 +108,6 @@ Options::Options(const std::string& cluster_string,
   // the default heartbeat time is 1s
   // we can promise 1s + 2 * rpc < 3s, since rpc time is approximately 10ms
   check_leader_us = std::rand() % 2000000 + check_leader_us;
-  printf("check_leader_us %lu\n", check_leader_us);
   split(cluster_string, ',', members);
   if (members.size() == 1) {
     single_mode = true;

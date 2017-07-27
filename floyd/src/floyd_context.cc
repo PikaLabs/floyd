@@ -25,16 +25,6 @@ void FloydContext::RecoverInit(RaftMeta *raft_meta) {
   role = Role::kFollower;
 }
 
-void FloydContext::leader_node(std::string* ip, int* port) {
-  *ip = leader_ip;
-  *port = leader_port;
-}
-
-void FloydContext::voted_for_node(std::string* ip, int* port) {
-  *ip = voted_for_ip;
-  *port = voted_for_port;
-}
-
 void FloydContext::BecomeFollower(uint64_t new_term,
                                   const std::string _leader_ip, int _leader_port) {
   // when requestvote receive a large term, then we transfer from candidate to follower

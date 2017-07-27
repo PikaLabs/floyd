@@ -127,15 +127,9 @@ void Peer::AddAppendEntriesTask() {
   bg_thread_.Schedule(&AppendEntriesRPCWrapper, this);
 }
 
-void Peer::AppendEntriesRPCWrapper(void *arg) {
-  reinterpret_cast<Peer*>(arg)->AppendEntriesRPC();
-}
-
 uint64_t Peer::QuorumMatchIndex() {
   std::vector<uint64_t> values;
   std::map<std::string, Peer*>::iterator iter; 
-  LOGV(WARN_LEVEL, info_log_, "Peer::QuorumMatchIndex: Peers size %d",
-      peers_.size());
   for (iter = peers_.begin(); iter != peers_.end(); iter++) {
     if (iter->first == server_) {
       continue;
@@ -156,6 +150,10 @@ void Peer::AdvanceLeaderCommitIndex() {
     raft_meta_->SetCommitIndex(context_->commit_index);
   }
   return;
+}
+
+void Peer::AppendEntriesRPCWrapper(void *arg) {
+  reinterpret_cast<Peer*>(arg)->AppendEntriesRPC();
 }
 
 Status Peer::AppendEntriesRPC() {

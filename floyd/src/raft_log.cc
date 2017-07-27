@@ -49,6 +49,7 @@ RaftLog::RaftLog(rocksdb::DB *db, Logger *info_log) :
       last_log_index_ = BitStrToUint(it->key().ToString());
     }
   }
+  delete it;
 }
 
 RaftLog::~RaftLog() {
@@ -103,10 +104,10 @@ bool RaftLog::GetLastLogTermAndIndex(uint64_t* last_log_term, uint64_t* last_log
     *last_log_term = 0;
     return true;
   }
-  Entry *entry = new Entry();
-  bool is = entry->ParseFromString(buf);
+  Entry entry;
+  bool is = entry.ParseFromString(buf);
   *last_log_index = last_log_index_;
-  *last_log_term = entry->term();
+  *last_log_term = entry.term();
   return true;
 }
 

@@ -26,7 +26,7 @@ std::string mystr[100100];
 void *fun(void *arg) {
   int i = 1;
   while (i--) {
-    for (int j = 0; j < 100000; j++) {
+    for (int j = 0; j < 10000; j++) {
       f1->Write(mystr[j], mystr[j]);
     }
   }
@@ -61,7 +61,7 @@ int main()
   std::string msg;
   int i = 10;
   uint64_t st = NowMicros(), ed;
-  for (int i = 0; i < 100000; i++) {
+  for (int i = 0; i < 10000; i++) {
     mystr[i] = slash::RandomString(10);
   }
   while (1) {
@@ -80,7 +80,7 @@ int main()
     pthread_join(pid[i], NULL);
   }
   ed = NowMicros();
-  printf("write 100000 cost time microsecond(us) %ld, qps %llu\n", ed - st, 100000 * 8 * 1000000LL / (ed - st));
+  printf("write 10000 cost time microsecond(us) %ld, qps %llu\n", ed - st, 10000 * 8 * 1000000LL / (ed - st));
 
 
   getchar();

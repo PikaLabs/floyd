@@ -30,6 +30,7 @@ namespace floyd {
 
 FloydImpl::FloydImpl(const Options& options)
   : db_(NULL),
+    log_and_meta_(NULL),
     options_(options),
     info_log_(NULL) {
 }
@@ -46,7 +47,7 @@ FloydImpl::~FloydImpl() {
   delete context_;
   delete raft_meta_;
   delete raft_log_;
-  delete log_and_meta_;
+  // delete log_and_meta_;
   delete info_log_;
   delete db_;
 }
@@ -56,19 +57,16 @@ bool FloydImpl::IsSelf(const std::string& ip_port) {
 }
 
 bool FloydImpl::GetLeader(std::string *ip_port) {
-  std::string ip;
-  int port;
-  context_->leader_node(&ip, &port);
-  if (ip.empty() || port == 0) {
+  if (context_->leader_ip.empty() || context_->leader_port == 0) {
     return false;
   }
-  *ip_port = slash::IpPortString(ip, port);
+  *ip_port = slash::IpPortString(context_->leader_ip, context_->leader_port);
   return true;
 }
 
-// TODO (baotiao): this function is wrong
 bool FloydImpl::GetLeader(std::string* ip, int* port) {
-  context_->leader_node(ip, port);
+  *ip = context_->leader_ip;
+  *port = context_->leader_port;
   return (!ip->empty() && *port != 0);
 }
 
@@ -361,7 +359,7 @@ bool FloydImpl::GetServerStatus(std::string& msg) {
             server_status.term(), server_status.commit_index(),
             server_status.leader_ip().c_str(), server_status.leader_port(),
             server_status.voted_for_ip().c_str(), server_status.voted_for_port(),
-            server_status.last_log_term(), server_status.last_log_index(),
+            server_status.last_log_term(), server_status.last_log_index(), server_status.commit_index(),
             server_status.last_applied());
 
   msg.clear();
@@ -402,7 +400,11 @@ Status FloydImpl::DoCommand(const CmdRequest& cmd, CmdResponse *response) {
   // Execute if is leader
   std::string leader_ip;
   int leader_port;
-  context_->leader_node(&leader_ip, &leader_port);
+  {
+  slash::MutexLock l(&context_->commit_mu);
+  leader_ip = context_->leader_ip;
+  leader_port = context_->leader_port;
+  }
   if (options_.local_ip == leader_ip && options_.local_port == leader_port) {
     return ExecuteCommand(cmd, response);
   }
@@ -473,7 +475,11 @@ bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
 
   std::string ip;
   int port;
-  context_->leader_node(&ip, &port);
+  {
+  slash::MutexLock l(&context_->commit_mu); 
+  ip = context_->leader_ip;
+  port = context_->leader_port;
+  }
   if (ip.empty()) {
     res->set_leader_ip("null");
   } else {
@@ -481,7 +487,11 @@ bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
   }
   res->set_leader_port(port);
 
-  context_->voted_for_node(&ip, &port);
+  {
+  slash::MutexLock l(&context_->commit_mu); 
+  ip = context_->voted_for_ip;
+  port = context_->voted_for_port;
+  }
   if (ip.empty()) {
     res->set_voted_for_ip("null");
   } else {
@@ -495,7 +505,7 @@ bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
 
   res->set_last_log_term(last_log_term);
   res->set_last_log_index(last_log_index);
-  res->set_last_applied(context_->last_applied);
+  res->set_last_applied(raft_meta_->GetLastApplied());
   return true;
 }
 
@@ -552,11 +562,6 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& request,
     }
     LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteCommand Read %s, key(%s) value(%s)",
          rs.ToString().c_str(), request.kv().key().c_str(), value.c_str());
-#ifndef NDEBUG 
-    std::string text_format;
-    google::protobuf::TextFormat::PrintToString(*response, &text_format);
-    LOGV(DEBUG_LEVEL, info_log_, "ReadResponse :\n%s", text_format.c_str());
-#endif
     break;
   }
   default: {
@@ -602,7 +607,7 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* respons
       && vote_for_[request_vote.term()] != std::make_pair(request_vote.ip(), request_vote.port())) {
     LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: BecomeFollower with current_term_(%lu) and new_term(%lu)"
         " commit_index(%lu) last_applied(%lu)",
-        context_->current_term, request_vote.last_log_term(), my_last_log_index, context_->last_applied);
+        context_->current_term, request_vote.last_log_term(), my_last_log_index, context_->last_applied.load());
     BuildRequestVoteResponse(context_->current_term, granted, response);
     return ;
   }

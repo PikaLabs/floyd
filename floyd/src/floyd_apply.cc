@@ -46,7 +46,7 @@ void FloydApply::ApplyStateMachineWrapper(void* arg) {
 }
 
 void FloydApply::ApplyStateMachine() {
-  uint64_t last_applied = raft_meta_->GetLastApplied();
+  uint64_t last_applied = context_->last_applied;
   // Apply as more entry as possible
   uint64_t commit_index;
   context_->commit_index_mu.Lock();
@@ -67,7 +67,6 @@ void FloydApply::ApplyStateMachine() {
       usleep(1000000);
       return;
     }
-    raft_meta_->SetLastApplied(last_applied);
   }
   context_->apply_mu.Lock();
   context_->last_applied = last_applied;

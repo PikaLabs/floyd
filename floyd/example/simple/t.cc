@@ -43,7 +43,7 @@ int main()
   printf("%s\n", s.ToString().c_str());
 
   std::string msg;
-  int i = 100;
+  int cnt = 100;
   uint64_t st = NowMicros(), ed;
 
   sleep(10);
@@ -54,7 +54,7 @@ int main()
     sleep(2);
   }
 
-  while (i--) {
+  while (cnt--) {
     std::string mystr[100100];
     for (int i = 0; i < 100000; i++) {
       mystr[i] = slash::RandomString(10);
@@ -72,8 +72,8 @@ int main()
 
   delete f1;
 
-  i = 5;
-  while (i--) {
+  cnt = 5;
+  while (cnt--) {
     f2->GetServerStatus(msg);
     for (int j = 0; j < 100; j++) {
       f2->Write("zz2" + char(j), "value2" + char(j));
@@ -85,8 +85,8 @@ int main()
   if (!s.ok()) {
     printf("floyd reoptn failed\n");
   }
-  i = 5;
-  while (i--) {
+  cnt = 5;
+  while (cnt--) {
     f2->GetServerStatus(msg);
     for (int j = 0; j < 100; j++) {
       f1->Write("zz3" + char(j), "value3" + char(j));

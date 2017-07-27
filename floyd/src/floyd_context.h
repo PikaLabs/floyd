@@ -37,8 +37,6 @@ struct FloydContext {
       leader_port(0),
       vote_quorum(0),
       apply_cond(&apply_mu) {};
-  void leader_node(std::string* ip, int* port);
-  void voted_for_node(std::string* ip, int* port);
 
   void RecoverInit(RaftMeta *raft);
   void BecomeFollower(uint64_t new_iterm,
@@ -46,10 +44,6 @@ struct FloydContext {
   void BecomeCandidate();
   void BecomeLeader();
 
-  bool ReceiverDoAppendEntries(uint64_t term,
-      uint64_t pre_log_term, uint64_t pre_log_index,
-      std::vector<Entry*>& entries, uint64_t* my_term);
-  
   Options options;
   // Role related
   uint64_t current_term;
@@ -62,7 +56,7 @@ struct FloydContext {
   uint32_t vote_quorum;
 
   uint64_t commit_index;
-  uint64_t last_applied;
+  std::atomic<uint64_t> last_applied;
   uint64_t last_op_time;
 
   // mutex protect commit_index
