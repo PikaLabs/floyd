@@ -33,7 +33,8 @@ class Peer {
       RaftLog* raft_log, ClientPool* pool, FloydApply* apply, const Options& options, Logger* info_log);
   ~Peer();
 
-  int StartThread();
+  int Start();
+  int Stop();
 
   // Apend Entries
   // call by other thread, put job to peer_thread's bg_thread_

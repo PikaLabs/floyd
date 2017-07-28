@@ -43,6 +43,7 @@ class FloydPrimary {
   ~FloydPrimary();
 
   int Start();
+  int Stop();
   void AddTask(TaskType type, bool is_delay = true);
   void set_peers(PeersSet peers) {
     peers_ = peers;

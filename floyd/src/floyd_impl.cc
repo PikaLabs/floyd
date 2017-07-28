@@ -37,19 +37,25 @@ FloydImpl::FloydImpl(const Options& options)
 
 FloydImpl::~FloydImpl() {
   // worker will use floyd, delete worker first
+  context_->global_mu.Lock();
+  worker_->Stop();
+  primary_->Stop();
+  apply_->Stop();
   delete worker_;
   delete worker_client_pool_;
   delete primary_;
   delete apply_;
   for (auto& pt : peers_) {
+    pt.second->Stop();
     delete pt.second;
   }
+  context_->global_mu.Unlock();
   delete context_;
   delete raft_meta_;
   delete raft_log_;
-  // delete log_and_meta_;
   delete info_log_;
   delete db_;
+  // delete log_and_meta_;
 }
 
 bool FloydImpl::IsSelf(const std::string& ip_port) {
@@ -108,8 +114,8 @@ Status FloydImpl::Init() {
 
   s = rocksdb::DB::Open(options, options_.path + "/log/", &log_and_meta_);
   if (!s.ok()) {
-    LOGV(ERROR_LEVEL, info_log_, "Open db failed! path: %s", options_.path.c_str());
-    return Status::Corruption("Open DB failed, " + s.ToString());
+    LOGV(ERROR_LEVEL, info_log_, "Open DB log_and_meta failed! path: %s", options_.path.c_str());
+    return Status::Corruption("Open DB log_and_meta failed, " + s.ToString());
   }
 
   // Recover Context
@@ -142,7 +148,7 @@ Status FloydImpl::Init() {
   int ret;
   for (auto& pt : peers_) {
     pt.second->set_peers(peers_);
-    if ((ret = pt.second->StartThread()) != 0) {
+    if ((ret = pt.second->Start()) != 0) {
       LOGV(ERROR_LEVEL, info_log_, "FloydImpl peer thread to %s failed to "
            " start, ret is %d", pt.first.c_str(), ret);
       return Status::Corruption("failed to start peer thread to " + pt.first);
@@ -401,7 +407,7 @@ Status FloydImpl::DoCommand(const CmdRequest& cmd, CmdResponse *response) {
   std::string leader_ip;
   int leader_port;
   {
-  slash::MutexLock l(&context_->commit_mu);
+  slash::MutexLock l(&context_->global_mu);
   leader_ip = context_->leader_ip;
   leader_port = context_->leader_port;
   }
@@ -476,7 +482,7 @@ bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
   std::string ip;
   int port;
   {
-  slash::MutexLock l(&context_->commit_mu); 
+  slash::MutexLock l(&context_->global_mu); 
   ip = context_->leader_ip;
   port = context_->leader_port;
   }
@@ -488,7 +494,7 @@ bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
   res->set_leader_port(port);
 
   {
-  slash::MutexLock l(&context_->commit_mu); 
+  slash::MutexLock l(&context_->global_mu); 
   ip = context_->voted_for_ip;
   port = context_->voted_for_port;
   }
@@ -581,7 +587,7 @@ void FloydImpl::GrantVote(uint64_t term, const std::string ip, int port) {
 }
 
 void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* response) {
-  slash::MutexLock l(&context_->commit_mu);
+  slash::MutexLock l(&context_->global_mu);
   bool granted = false;
   CmdRequest_RequestVote request_vote = request.request_vote();
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: my_term=%lu request.term=%lu",
@@ -637,7 +643,7 @@ bool FloydImpl::AdvanceFollowerCommitIndex(uint64_t new_commit_index) {
 void FloydImpl::ReplyAppendEntries(CmdRequest& request, CmdResponse* response) {
   bool success = false;
   CmdRequest_AppendEntries append_entries = request.append_entries();
-  slash::MutexLock l(&context_->commit_mu);
+  slash::MutexLock l(&context_->global_mu);
   // Ignore stale term
   // if the append entries term is smaller then my current term, then the caller must an older leader
   uint64_t last_log_index = raft_log_->GetLastLogIndex();

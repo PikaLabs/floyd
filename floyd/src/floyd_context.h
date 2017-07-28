@@ -64,7 +64,7 @@ struct FloydContext {
   // floyd_apply thread will get the commit_index
   // floyd_peer thread will update the commit_index
   slash::Mutex commit_index_mu;
-  slash::Mutex commit_mu;
+  slash::Mutex global_mu;
   slash::Mutex apply_mu;
   slash::CondVar apply_cond;
 };

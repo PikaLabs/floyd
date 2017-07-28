@@ -67,15 +67,15 @@ class FloydImpl : public Floyd {
   friend class Peer;
 
   rocksdb::DB* db_;
-  Options options_;
-  // debug log used for ouput to file
-  Logger* info_log_;
-
   // state machine db point
   // raft log
   rocksdb::DB* log_and_meta_;  // used to store logs and meta data
   RaftLog* raft_log_;
   RaftMeta* raft_meta_;
+
+  Options options_;
+  // debug log used for ouput to file
+  Logger* info_log_;
 
   FloydContext* context_;
 

@@ -40,7 +40,7 @@ Peer::Peer(std::string server, FloydContext* context, FloydPrimary* primary, Raf
       match_index_ = raft_meta_->GetLastApplied();
 }
 
-int Peer::StartThread() {
+int Peer::Start() {
   bg_thread_.set_thread_name("FloydPeer" + server_.substr(server_.find(':')));
   return bg_thread_.StartThread();
 }
@@ -48,6 +48,10 @@ int Peer::StartThread() {
 Peer::~Peer() {
   LOGV(INFO_LEVEL, info_log_, "Peer(%s) exit!!!", server_.c_str());
 }
+int Peer::Stop() {
+  return bg_thread_.StopThread();
+}
+
 
 bool Peer::CheckAndVote(uint64_t vote_term) {
   if (context_->current_term != vote_term) {
@@ -69,7 +73,7 @@ Status Peer::RequestVoteRPC() {
   uint64_t last_log_index;
   CmdRequest req;
   {
-  slash::MutexLock l(&context_->commit_mu);
+  slash::MutexLock l(&context_->global_mu);
   raft_log_->GetLastLogTermAndIndex(&last_log_term, &last_log_index);
 
   req.set_type(Type::kRequestVote);
@@ -91,7 +95,7 @@ Status Peer::RequestVoteRPC() {
   }
 
   {
-  slash::MutexLock l(&context_->commit_mu);
+  slash::MutexLock l(&context_->global_mu);
   if (context_->role == Role::kCandidate) {
     // kOk means RequestVote success, opposite vote for me
     if (res.request_vote_res().vote_granted() == true) {    // granted
@@ -164,7 +168,7 @@ Status Peer::AppendEntriesRPC() {
   CmdRequest req;
   CmdRequest_AppendEntries* append_entries = req.mutable_append_entries();
   {
-  slash::MutexLock l(&context_->commit_mu);
+  slash::MutexLock l(&context_->global_mu);
 
   if (prev_log_index != 0) {
     Entry entry;
@@ -215,7 +219,7 @@ Status Peer::AppendEntriesRPC() {
   Status result = pool_->SendAndRecv(server_, req, &res);
 
   {
-  slash::MutexLock l(&context_->commit_mu);
+  slash::MutexLock l(&context_->global_mu);
   if (!result.ok()) {
     LOGV(WARN_LEVEL, info_log_, "FloydPeerThread::AppendEntries: AppendEntry to %s failed %s",
          server_.c_str(), result.ToString().c_str());

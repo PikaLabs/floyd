@@ -43,6 +43,10 @@ FloydPrimary::~FloydPrimary() {
   LOGV(INFO_LEVEL, info_log_, "FloydPrimary exit!!!");
 }
 
+int FloydPrimary::Stop() {
+  return bg_thread_.StopThread();
+}
+
 // TODO(anan) We keep 2 Primary Cron in total.
 //    1. one short live Cron for LeaderHeartbeat, which is available as a leader;
 //    2. another long live Cron for ElectLeaderCheck, which is started when
@@ -86,7 +90,7 @@ void FloydPrimary::LaunchHeartBeatWrapper(void *arg) {
 }
 
 void FloydPrimary::LaunchHeartBeat() {
-  slash::MutexLock l(&context_->commit_mu);
+  slash::MutexLock l(&context_->global_mu);
   if (context_->role == Role::kLeader) {
     NoticePeerTask(kNewCommand);
     AddTask(kHeartBeat);
@@ -97,7 +101,7 @@ void FloydPrimary::LaunchCheckLeaderWrapper(void *arg) {
   reinterpret_cast<FloydPrimary *>(arg)->LaunchCheckLeader();
 }
 void FloydPrimary::LaunchCheckLeader() {
-  slash::MutexLock l(&context_->commit_mu);
+  slash::MutexLock l(&context_->global_mu);
   if (context_->role == Role::kFollower || context_->role == Role::kCandidate) {
     if (options_.single_mode) {
       context_->BecomeLeader();

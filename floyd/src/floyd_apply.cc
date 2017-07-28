@@ -37,6 +37,10 @@ int FloydApply::Start() {
   return bg_thread_.StartThread();
 }
 
+int FloydApply::Stop() {
+  return bg_thread_.StopThread();
+}
+
 void FloydApply::ScheduleApply() {
   bg_thread_.Schedule(&ApplyStateMachineWrapper, this);
 }

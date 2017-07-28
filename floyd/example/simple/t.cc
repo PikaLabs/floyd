@@ -67,7 +67,7 @@ int main()
       // f1->Write("zz", "zz");
     }
     ed = NowMicros();
-    printf("write 10000 cost time microsecond(us) %ld, qps %llu\n", ed - st, 100000 * 1000000LL / (ed - st));
+    printf("write 100000 cost time microsecond(us) %ld, qps %llu\n", ed - st, 100000 * 1000000LL / (ed - st));
   }
 
   delete f1;
