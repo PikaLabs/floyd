@@ -37,7 +37,6 @@ FloydImpl::FloydImpl(const Options& options)
 
 FloydImpl::~FloydImpl() {
   // worker will use floyd, delete worker first
-  context_->global_mu.Lock();
   worker_->Stop();
   primary_->Stop();
   apply_->Stop();
@@ -49,7 +48,6 @@ FloydImpl::~FloydImpl() {
     pt.second->Stop();
     delete pt.second;
   }
-  context_->global_mu.Unlock();
   delete context_;
   delete raft_meta_;
   delete raft_log_;

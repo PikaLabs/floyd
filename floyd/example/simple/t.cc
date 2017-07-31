@@ -51,6 +51,7 @@ int main()
     if (f1->HasLeader()) {
       break;
     }
+    printf("electing leader... sleep 2s\n");
     sleep(2);
   }
 

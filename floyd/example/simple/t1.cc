@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <signal.h>
 
 #include <iostream>
 #include <string>
@@ -22,11 +23,11 @@ uint64_t NowMicros() {
 }
 
 Floyd *f1;
-std::string mystr[100100];
+std::string mystr[1001000];
 void *fun(void *arg) {
   int i = 1;
   while (i--) {
-    for (int j = 0; j < 10000; j++) {
+    for (int j = 0; j < 100000; j++) {
       f1->Write(mystr[j], mystr[j]);
     }
   }
@@ -34,6 +35,8 @@ void *fun(void *arg) {
 
 int main()
 {
+  // sigaction(27, NULL, NULL);
+  // signal(27, NULL);
   // Options op("127.0.0.1:8907", "127.0.0.1", 8907, "./data1/");
   Options op("127.0.0.1:8907,127.0.0.1:8908,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905", "127.0.0.1", 8907, "./data1/");
   Floyd *f2, *f3, *f4, *f5;
@@ -61,27 +64,28 @@ int main()
   std::string msg;
   int i = 10;
   uint64_t st = NowMicros(), ed;
-  for (int i = 0; i < 10000; i++) {
+  for (int i = 0; i < 1000000; i++) {
     mystr[i] = slash::RandomString(10);
   }
   while (1) {
     if (f1->HasLeader()) {
       break;
     }
+    printf("electing leader... sleep 2s\n");
     sleep(2);
   }
 
   pthread_t pid[24];
   st = NowMicros();
-  for (int i = 0; i < 8; i++) {
+  int thread_num = 4;
+  for (int i = 0; i < thread_num; i++) {
     pthread_create(&pid[i], NULL, fun, NULL);
   } 
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < thread_num; i++) {
     pthread_join(pid[i], NULL);
   }
   ed = NowMicros();
-  printf("write 10000 cost time microsecond(us) %ld, qps %llu\n", ed - st, 10000 * 8 * 1000000LL / (ed - st));
-
+  printf("write 100000 cost time microsecond(us) %ld, qps %llu\n", ed - st, 100000 * thread_num * 1000000LL / (ed - st));
 
   getchar();
   delete f2;
