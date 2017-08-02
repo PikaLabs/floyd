@@ -27,7 +27,8 @@
 
 namespace floyd {
 
-FloydPrimary::FloydPrimary(FloydContext* context, RaftMeta* raft_meta, const Options& options, Logger* info_log)
+FloydPrimary::FloydPrimary(FloydContext* context, RaftMeta* raft_meta, 
+    const Options& options, Logger* info_log)
   : context_(context),
     raft_meta_(raft_meta),
     options_(options),
@@ -54,7 +55,6 @@ int FloydPrimary::Stop() {
 void FloydPrimary::AddTask(TaskType type, bool is_delay) {
   switch (type) {
   case kHeartBeat: {
-    LOGV(DEBUG_LEVEL, info_log_, "FloydPrimary::AddTask HeartBeat");
     if (is_delay) {
       uint64_t timeout = options_.heartbeat_us;
       bg_thread_.DelaySchedule(timeout / 1000LL, LaunchHeartBeatWrapper, this);
@@ -64,7 +64,6 @@ void FloydPrimary::AddTask(TaskType type, bool is_delay) {
     break;
   }
   case kCheckLeader: {
-    LOGV(DEBUG_LEVEL, info_log_, "FloydPrimary::AddTask CheckLeader");
     if (is_delay) {
       uint64_t timeout = options_.check_leader_us;
       bg_thread_.DelaySchedule(timeout / 1000LL, LaunchCheckLeaderWrapper, this);
@@ -74,7 +73,6 @@ void FloydPrimary::AddTask(TaskType type, bool is_delay) {
     break;
   }
   case kNewCommand: {
-    LOGV(DEBUG_LEVEL, info_log_, "FloydPrimary::AddTask NewCommand");
     bg_thread_.Schedule(LaunchNewCommandWrapper, this);
     break;
   }
@@ -105,8 +103,16 @@ void FloydPrimary::LaunchCheckLeader() {
   if (context_->role == Role::kFollower || context_->role == Role::kCandidate) {
     if (options_.single_mode) {
       context_->BecomeLeader();
+      context_->voted_for_ip = options_.local_ip;
+      context_->voted_for_port = options_.local_port;
+      raft_meta_->SetCurrentTerm(context_->current_term);
+      raft_meta_->SetVotedForIp(context_->voted_for_ip);
+      raft_meta_->SetVotedForPort(context_->voted_for_port);
     } else if (context_->last_op_time + options_.check_leader_us < slash::NowMicros()) {
       context_->BecomeCandidate();
+      LOGV(INFO_LEVEL, info_log_, "FloydPrimary::LaunchCheckLeader: %s:%d Become Candidate because of timeout, new term is %d"
+         "voted for %s:%d", options_.local_ip.c_str(), options_.local_port, context_->current_term, 
+         context_->voted_for_ip.c_str(), context_->voted_for_port);
       raft_meta_->SetCurrentTerm(context_->current_term);
       raft_meta_->SetVotedForIp(context_->voted_for_ip);
       raft_meta_->SetVotedForPort(context_->voted_for_port);

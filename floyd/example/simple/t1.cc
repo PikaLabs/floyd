@@ -23,21 +23,30 @@ uint64_t NowMicros() {
 }
 
 Floyd *f1;
-std::string mystr[1001000];
+std::string keystr[1001000];
+std::string valstr[1001000];
 void *fun(void *arg) {
   int i = 1;
   while (i--) {
     for (int j = 0; j < 100000; j++) {
-      f1->Write(mystr[j], mystr[j]);
+      f1->Write(keystr[j], valstr[j]);
     }
   }
 }
 
-int main()
+int main(int argc, char * argv[])
 {
-  // sigaction(27, NULL, NULL);
-  // signal(27, NULL);
-  // Options op("127.0.0.1:8907", "127.0.0.1", 8907, "./data1/");
+  int val_size = 128;
+  int thread_num = 4;
+  if (argc > 1) {
+    val_size = atoi(argv[1]);
+  }
+  if (argc > 2) {
+    thread_num = atoi(argv[2]);
+  }
+
+  printf("multi threads test to get performance thread num %d key size %d\n", thread_num, val_size);
+
   Options op("127.0.0.1:8907,127.0.0.1:8908,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905", "127.0.0.1", 8907, "./data1/");
   Floyd *f2, *f3, *f4, *f5;
   op.Dump();
@@ -65,7 +74,10 @@ int main()
   int i = 10;
   uint64_t st = NowMicros(), ed;
   for (int i = 0; i < 1000000; i++) {
-    mystr[i] = slash::RandomString(10);
+    keystr[i] = slash::RandomString(32);
+  }
+  for (int i = 0; i < 1000000; i++) {
+    valstr[i] = slash::RandomString(val_size);
   }
   while (1) {
     if (f1->HasLeader()) {
@@ -77,7 +89,6 @@ int main()
 
   pthread_t pid[24];
   st = NowMicros();
-  int thread_num = 4;
   for (int i = 0; i < thread_num; i++) {
     pthread_create(&pid[i], NULL, fun, NULL);
   } 

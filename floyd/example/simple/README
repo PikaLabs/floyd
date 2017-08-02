@@ -4,3 +4,6 @@ the simple example will run the Floyd:write the get performance of floyd in a si
 t is a single thread wirte tool to get performance
 t1 is multi thread program to get performance
 t2 is an example test node join and leave
+
+t4 is an example used to see the message passing by each node in a stable situation
+t5 used to test single mode floyd, including starting a node and writing data

@@ -25,7 +25,7 @@ namespace floyd {
 
 Peer::Peer(std::string server, FloydContext* context, FloydPrimary* primary, RaftMeta* raft_meta,
     RaftLog* raft_log, ClientPool* pool, FloydApply* apply, const Options& options, Logger* info_log)
-  : server_(server),
+  : peer_addr_(server),
     context_(context),
     primary_(primary),
     raft_meta_(raft_meta),
@@ -41,12 +41,12 @@ Peer::Peer(std::string server, FloydContext* context, FloydPrimary* primary, Raf
 }
 
 int Peer::Start() {
-  bg_thread_.set_thread_name("FloydPeer" + server_.substr(server_.find(':')));
+  bg_thread_.set_thread_name("FloydPeer" + peer_addr_.substr(peer_addr_.find(':')));
   return bg_thread_.StartThread();
 }
 
 Peer::~Peer() {
-  LOGV(INFO_LEVEL, info_log_, "Peer(%s) exit!!!", server_.c_str());
+  LOGV(INFO_LEVEL, info_log_, "Peer(%s) exit!!!", peer_addr_.c_str());
 }
 int Peer::Stop() {
   return bg_thread_.StopThread();
@@ -86,11 +86,11 @@ Status Peer::RequestVoteRPC() {
   }
 
   CmdResponse res;
-  Status result = pool_->SendAndRecv(server_, req, &res);
+  Status result = pool_->SendAndRecv(peer_addr_, req, &res);
 
   if (!result.ok()) {
     LOGV(DEBUG_LEVEL, info_log_, "RequestVote to %s failed %s",
-         server_.c_str(), result.ToString().c_str());
+         peer_addr_.c_str(), result.ToString().c_str());
     return result;
   }
 
@@ -99,10 +99,13 @@ Status Peer::RequestVoteRPC() {
   if (context_->role == Role::kCandidate) {
     // kOk means RequestVote success, opposite vote for me
     if (res.request_vote_res().vote_granted() == true) {    // granted
-      LOGV(INFO_LEVEL, info_log_, "Peer(%s)::RequestVote granted will Vote and check", server_.c_str());
+      LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRpc: Candidate %s:%d get vote from node %s", 
+          options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str());
       // However, we need check whether this vote is vote for old term
       // we need igore these type of vote
       if (CheckAndVote(res.request_vote_res().term())) {
+        LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRPC: Become leader %s:%d", 
+            options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str());
         context_->BecomeLeader();
         primary_->AddTask(kHeartBeat, false);
       }
@@ -118,7 +121,7 @@ Status Peer::RequestVoteRPC() {
       // otherwise we will do nothing
       LOGV(DEBUG_LEVEL, info_log_, "Vote request denied by %s,"
           " res_term=%lu, current_term=%lu",
-          server_.c_str(), res.request_vote_res().term(), context_->current_term);
+          peer_addr_.c_str(), res.request_vote_res().term(), context_->current_term);
     }
   } else {
     // TODO(ba0tiao) if i am not longer candidate
@@ -135,7 +138,7 @@ uint64_t Peer::QuorumMatchIndex() {
   std::vector<uint64_t> values;
   std::map<std::string, Peer*>::iterator iter; 
   for (iter = peers_.begin(); iter != peers_.end(); iter++) {
-    if (iter->first == server_) {
+    if (iter->first == peer_addr_) {
       continue;
     }
     values.push_back(iter->second->match_index());
@@ -216,13 +219,13 @@ Status Peer::AppendEntriesRPC() {
   }
 
   CmdResponse res;
-  Status result = pool_->SendAndRecv(server_, req, &res);
+  Status result = pool_->SendAndRecv(peer_addr_, req, &res);
 
   {
   slash::MutexLock l(&context_->global_mu);
   if (!result.ok()) {
     LOGV(WARN_LEVEL, info_log_, "FloydPeerThread::AppendEntries: AppendEntry to %s failed %s",
-         server_.c_str(), result.ToString().c_str());
+         peer_addr_.c_str(), result.ToString().c_str());
     return result;
   }
 
@@ -233,6 +236,9 @@ Status Peer::AppendEntriesRPC() {
      * receiver has higer term than myself, so turn from candidate to follower
      */
     if (res.append_entries_res().term() > context_->current_term) {
+      LOGV(INFO_LEVEL, info_log_, "Peer::AppendEntriesRPC: %s:%d Transfer from Leader to Follower since get A larger term"
+          "from peer %s, local term is %d, peer term is %d", options_.local_ip.c_str(), options_.local_port,
+          peer_addr_.c_str(), context_->current_term, res.append_entries_res().term());
       context_->BecomeFollower(res.append_entries_res().term());
       raft_meta_->SetCurrentTerm(context_->current_term);
       raft_meta_->SetVotedForIp(context_->voted_for_ip);

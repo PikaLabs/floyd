@@ -53,9 +53,7 @@ void FloydApply::ApplyStateMachine() {
   uint64_t last_applied = context_->last_applied;
   // Apply as more entry as possible
   uint64_t commit_index;
-  context_->commit_index_mu.Lock();
   commit_index = context_->commit_index;
-  context_->commit_index_mu.Unlock();
 
   LOGV(DEBUG_LEVEL, info_log_, "FloydApply::ApplyStateMachine: last_applied: %lu, commit_index: %lu",
             last_applied, commit_index);

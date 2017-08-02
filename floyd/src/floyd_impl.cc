@@ -528,20 +528,23 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& request,
 
   // Notify primary then wait for apply
   if (options_.single_mode) {
-    primary_->AddTask(kNewCommand);
+    context_->commit_index = last_log_index;
+    raft_meta_->SetCommitIndex(context_->commit_index);
+    apply_->ScheduleApply();
   } else {
     primary_->AddTask(kNewCommand);
   }
   response->set_type(request.type());
   response->set_code(StatusCode::kError);
 
-  context_->apply_mu.Lock();
+  {
+  slash::MutexLock l(&context_->apply_mu);
   while (context_->last_applied < last_log_index) {
     if (!context_->apply_cond.TimedWait(1000)) {
       return Status::Timeout("FloydImpl::ExecuteCommand Timeout");
     }
   }
-  context_->apply_mu.Unlock();
+  }
 
   // Complete CmdRequest if needed
   std::string value;
@@ -586,6 +589,7 @@ void FloydImpl::GrantVote(uint64_t term, const std::string ip, int port) {
 
 void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* response) {
   slash::MutexLock l(&context_->global_mu);
+  context_->last_op_time = slash::NowMicros();
   bool granted = false;
   CmdRequest_RequestVote request_vote = request.request_vote();
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: my_term=%lu request.term=%lu",
@@ -625,16 +629,13 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* respons
   granted = true;
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: Grant my vote to %s:%d at term %lu", 
       context_->voted_for_ip.c_str(), context_->voted_for_port, context_->current_term);
-  context_->last_op_time = slash::NowMicros();
   BuildRequestVoteResponse(context_->current_term, granted, response);
 }
 
 bool FloydImpl::AdvanceFollowerCommitIndex(uint64_t new_commit_index) {
   // Update log commit index
-  context_->commit_index_mu.Lock();
   context_->commit_index = new_commit_index;
   raft_meta_->SetCommitIndex(new_commit_index);
-  context_->commit_index_mu.Unlock();
   return true;
 }
 
@@ -642,6 +643,7 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& request, CmdResponse* response) {
   bool success = false;
   CmdRequest_AppendEntries append_entries = request.append_entries();
   slash::MutexLock l(&context_->global_mu);
+  context_->last_op_time = slash::NowMicros();
   // Ignore stale term
   // if the append entries term is smaller then my current term, then the caller must an older leader
   uint64_t last_log_index = raft_log_->GetLastLogIndex();
@@ -697,23 +699,25 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& request, CmdResponse* response) {
     raft_log_->TruncateSuffix(append_entries.prev_log_index() + 1);
   }
 
-  if (entries.size() > 0) {
+  if (append_entries.entries().size() > 0) {
     LOGV(DEBUG_LEVEL, info_log_, "RaftMeta::ReceiverDoAppendEntries: will append %u entries from "
-         " prev_log_index %lu", entries.size(), append_entries.prev_log_index() + 1);
+         " prev_log_index %lu", append_entries.entries().size(), append_entries.prev_log_index() + 1);
     if (raft_log_->Append(entries) <= 0) {
       context_->last_op_time = slash::NowMicros();
       BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
       return ;
     }
+    AdvanceFollowerCommitIndex(append_entries.leader_commit());
+    apply_->ScheduleApply();
+  } else {
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReceiverDoAppendEntries: Receive PingPong AppendEntries from %s:%d", 
+        append_entries.ip().c_str(), append_entries.port());
   }
   success = true;
   // only when follower successfully do appendentries, we will update commit index
-  AdvanceFollowerCommitIndex(append_entries.leader_commit());
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries after AdvanceCommitIndex %lu",
       context_->commit_index);
-  apply_->ScheduleApply();
-
-  context_->last_op_time = slash::NowMicros();
+  // update last_op_time to avoid another leader election
   BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
 }
 

@@ -76,7 +76,7 @@ class Peer {
   uint64_t QuorumMatchIndex();
   void AdvanceLeaderCommitIndex();
 
-  std::string server_;
+  std::string peer_addr_;
   FloydContext* context_;
   FloydPrimary* primary_;
   RaftMeta* raft_meta_;
