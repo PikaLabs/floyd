@@ -69,6 +69,9 @@ class Peer {
   void set_peers(PeersSet &peers) {
     peers_ = peers;
   }
+  std::string peer_addr() const {
+    return peer_addr_;
+  }
 
  private:
 

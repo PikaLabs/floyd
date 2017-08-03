@@ -57,16 +57,16 @@ void FloydApply::ApplyStateMachine() {
 
   LOGV(DEBUG_LEVEL, info_log_, "FloydApply::ApplyStateMachine: last_applied: %lu, commit_index: %lu",
             last_applied, commit_index);
+  Entry log_entry;
   while (last_applied < commit_index) {
     last_applied++;
-    Entry log_entry;
     raft_log_->GetEntry(last_applied, &log_entry);
     Status s = Apply(log_entry);
     if (!s.ok()) {
       LOGV(WARN_LEVEL, info_log_, "FloydApply::ApplyStateMachine: Apply log entry failed, at: %d, error: %s",
           last_applied, s.ToString().c_str());
-      ScheduleApply();  // try once more
       usleep(1000000);
+      ScheduleApply();  // try once more
       return;
     }
   }

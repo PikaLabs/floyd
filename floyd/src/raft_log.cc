@@ -66,7 +66,7 @@ uint64_t RaftLog::Append(const std::vector<Entry *> &entries) {
     last_log_index_++;
     s = db_->Put(rocksdb::WriteOptions(), UintToBitStr(last_log_index_), buf);
     if (!s.ok()) {
-      LOGV(ERROR_LEVEL, info_log_, "RaftLog::Append false\n");
+      LOGV(ERROR_LEVEL, info_log_, "RaftLog::Append %lu false\n", last_log_index_);
     }
   }
   return last_log_index_;
@@ -112,7 +112,7 @@ bool RaftLog::GetLastLogTermAndIndex(uint64_t* last_log_term, uint64_t* last_log
 }
 
 int RaftLog::TruncateSuffix(uint64_t index) {
-  // here we need to delete the unnecessary entry, since we don't store
+  // we need to delete the unnecessary entry, since we don't store
   // last_log_index in rocksdb
   for (uint64_t i = index; i <= last_log_index_; i++) {
     db_->Delete(rocksdb::WriteOptions(), UintToBitStr(i));

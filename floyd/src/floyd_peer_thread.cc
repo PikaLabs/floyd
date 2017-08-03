@@ -89,7 +89,7 @@ Status Peer::RequestVoteRPC() {
   Status result = pool_->SendAndRecv(peer_addr_, req, &res);
 
   if (!result.ok()) {
-    LOGV(DEBUG_LEVEL, info_log_, "RequestVote to %s failed %s",
+    LOGV(DEBUG_LEVEL, info_log_, "Peer::RequestVoteRPC: RequestVote to %s failed %s",
          peer_addr_.c_str(), result.ToString().c_str());
     return result;
   }
@@ -99,29 +99,29 @@ Status Peer::RequestVoteRPC() {
   if (context_->role == Role::kCandidate) {
     // kOk means RequestVote success, opposite vote for me
     if (res.request_vote_res().vote_granted() == true) {    // granted
-      LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRpc: Candidate %s:%d get vote from node %s", 
-          options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str());
+      LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRpc: Candidate %s:%d get vote from node %s at term %d", 
+          options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), context_->current_term);
       // However, we need check whether this vote is vote for old term
       // we need igore these type of vote
       if (CheckAndVote(res.request_vote_res().term())) {
-        LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRPC: Become leader %s:%d", 
-            options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str());
         context_->BecomeLeader();
+        LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRPC: %s:%d become leader at term %d", 
+            options_.local_ip.c_str(), options_.local_port, context_->current_term);
         primary_->AddTask(kHeartBeat, false);
       }
     } else {
       if (res.request_vote_res().term() > context_->current_term) {
+        // opposite RequestVote fail, maybe opposite has larger term, or opposite has
+        // longer log. if opposite has larger term, this node will become follower
+        // otherwise we will do nothing
+        LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRPC: Candidate %s:%d vote request denied by %s,"
+            " res_term=%lu, current_term=%lu", options_.local_ip.c_str(), options_.local_port,
+            peer_addr_.c_str(), res.request_vote_res().term(), context_->current_term);
         context_->BecomeFollower(res.request_vote_res().term());
         raft_meta_->SetCurrentTerm(context_->current_term);
         raft_meta_->SetVotedForIp(context_->voted_for_ip);
         raft_meta_->SetVotedForPort(context_->voted_for_port);
       }
-      // opposite RequestVote fail, maybe opposite has larger term, or opposite has
-      // longer log. if opposite has larger term, this node will become follower
-      // otherwise we will do nothing
-      LOGV(DEBUG_LEVEL, info_log_, "Vote request denied by %s,"
-          " res_term=%lu, current_term=%lu",
-          peer_addr_.c_str(), res.request_vote_res().term(), context_->current_term);
     }
   } else {
     // TODO(ba0tiao) if i am not longer candidate
@@ -176,8 +176,8 @@ Status Peer::AppendEntriesRPC() {
   if (prev_log_index != 0) {
     Entry entry;
     if (raft_log_->GetEntry(prev_log_index, &entry) != 0) {
-      LOGV(WARN_LEVEL, info_log_, "Peer::AppendEntriesRPC:GetEntry index %llu "
-          "not found", prev_log_index);
+      LOGV(WARN_LEVEL, info_log_, "Peer::AppendEntriesRPC: Get my(%s:%d) Entry index %llu "
+          "not found", options_.local_ip.c_str(), options_.local_port, prev_log_index);
     } else {
       prev_log_term = entry.term();
     }
@@ -192,14 +192,16 @@ Status Peer::AppendEntriesRPC() {
 
   last_log_index = raft_log_->GetLastLogIndex();
   Entry *tmp_entry = new Entry();
-  LOGV(DEBUG_LEVEL, info_log_, "next_index_ %llu, last_log_index %llu", next_index_.load(), last_log_index);
+  LOGV(DEBUG_LEVEL, info_log_, "Peer::AppendEntriesRPC: peer_addr(%s)'s next_index_ %llu, my last_log_index %llu", 
+      peer_addr_.c_str(), next_index_.load(), last_log_index);
   for (uint64_t index = next_index_; index <= last_log_index; index++) {
     if (raft_log_->GetEntry(index, tmp_entry) == 0) {
       // TODO(ba0tiao) how to avoid memory copy here
       Entry *entry = append_entries->add_entries();
       *entry = *tmp_entry;
     } else {
-      LOGV(WARN_LEVEL, info_log_, "FloydPeerThread::AppendEntries: can't get Entry from raft_log, index %lld", index);
+      LOGV(WARN_LEVEL, info_log_, "Peer::AppendEntriesRPC: peer_addr %s can't get Entry ",
+          "from raft_log, index %lld", peer_addr_.c_str(), index);
       break;
     }
 
@@ -224,8 +226,8 @@ Status Peer::AppendEntriesRPC() {
   {
   slash::MutexLock l(&context_->global_mu);
   if (!result.ok()) {
-    LOGV(WARN_LEVEL, info_log_, "FloydPeerThread::AppendEntries: AppendEntry to %s failed %s",
-         peer_addr_.c_str(), result.ToString().c_str());
+    LOGV(WARN_LEVEL, info_log_, "Peer::AppendEntries: Candidate %s:%d SendAndRecv to %s failed %s",
+         options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), result.ToString().c_str());
     return result;
   }
 
@@ -260,9 +262,9 @@ Status Peer::AppendEntriesRPC() {
           int pri_size, qu_size;
           bg_thread_.QueueSize(&pri_size, &qu_size);
           if (qu_size < 1) {
-            LOGV(DEBUG_LEVEL, info_log_, "AppendEntry again "
+            LOGV(DEBUG_LEVEL, info_log_, "Peer::AppendEntriesRPC: peer_addr %s AppendEntry again "
                 "to catch up next_index(%llu) last_log_index(%llu)",
-                next_index_.load(), last_log_index);
+                peer_addr_.c_str(), next_index_.load(), last_log_index);
             AddAppendEntriesTask();
           }
         }
@@ -274,7 +276,7 @@ Status Peer::AppendEntriesRPC() {
         // Prev log don't match, so we retry with more prev one according to
         // response
         next_index_ = adjust_index;
-        LOGV(INFO_LEVEL, info_log_, "update next_index_ %lld", next_index_.load());
+        LOGV(INFO_LEVEL, info_log_, "Peer::AppendEntriesRPC: peer_addr %s Update next_index_ %lld", peer_addr_.c_str(), next_index_.load());
         AddAppendEntriesTask();
       }
     }

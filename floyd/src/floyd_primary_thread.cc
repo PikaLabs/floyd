@@ -140,11 +140,14 @@ void FloydPrimary::NoticePeerTask(TaskType type) {
   for (auto& peer : peers_) {
     switch (type) {
     case kHeartBeat:
-      LOGV(INFO_LEVEL, info_log_, "FloydPrimary::NoticePeerTask send request vote message");
+      LOGV(INFO_LEVEL, info_log_, "FloydPrimary::NoticePeerTask server %s:%d send request vote message to %s",
+          options_.local_ip.c_str(), options_.local_port, peer.second->peer_addr().c_str());
       peer.second->AddRequestVoteTask();
       break;
     case kNewCommand:
-      LOGV(DEBUG_LEVEL, info_log_, "FloydPrimary::NoticePeerTask send appendEntries message");
+      LOGV(DEBUG_LEVEL, info_log_, "FloydPrimary::NoticePeerTask server %s:%d send appendEntries message to %s",
+          options_.local_ip.c_str(), options_.local_port, peer.second->peer_addr().c_str());
+
       peer.second->AddAppendEntriesTask();
       break;
     default:
