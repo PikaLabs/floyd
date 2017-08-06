@@ -76,7 +76,6 @@ std::string RaftMeta::GetVotedForIp() {
 }
 
 void RaftMeta::SetVotedForIp(const std::string ip) {
-  char buf[8];
   db_->Put(rocksdb::WriteOptions(), kVoteForIp, ip);
   return;
 }

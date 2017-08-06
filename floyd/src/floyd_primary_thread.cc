@@ -111,7 +111,7 @@ void FloydPrimary::LaunchCheckLeader() {
     } else if (context_->last_op_time + options_.check_leader_us < slash::NowMicros()) {
       context_->BecomeCandidate();
       LOGV(INFO_LEVEL, info_log_, "FloydPrimary::LaunchCheckLeader: %s:%d Become Candidate because of timeout, new term is %d"
-         "voted for %s:%d", options_.local_ip.c_str(), options_.local_port, context_->current_term, 
+         " voted for %s:%d", options_.local_ip.c_str(), options_.local_port, context_->current_term, 
          context_->voted_for_ip.c_str(), context_->voted_for_port);
       raft_meta_->SetCurrentTerm(context_->current_term);
       raft_meta_->SetVotedForIp(context_->voted_for_ip);
@@ -140,13 +140,13 @@ void FloydPrimary::NoticePeerTask(TaskType type) {
   for (auto& peer : peers_) {
     switch (type) {
     case kHeartBeat:
-      LOGV(INFO_LEVEL, info_log_, "FloydPrimary::NoticePeerTask server %s:%d send request vote message to %s",
-          options_.local_ip.c_str(), options_.local_port, peer.second->peer_addr().c_str());
+      LOGV(INFO_LEVEL, info_log_, "FloydPrimary::NoticePeerTask server %s:%d send request vote message to %s at term %d",
+          options_.local_ip.c_str(), options_.local_port, peer.second->peer_addr().c_str(), context_->current_term);
       peer.second->AddRequestVoteTask();
       break;
     case kNewCommand:
-      LOGV(DEBUG_LEVEL, info_log_, "FloydPrimary::NoticePeerTask server %s:%d send appendEntries message to %s",
-          options_.local_ip.c_str(), options_.local_port, peer.second->peer_addr().c_str());
+      LOGV(DEBUG_LEVEL, info_log_, "FloydPrimary::NoticePeerTask server %s:%d send appendEntries message to %s at term %d",
+          options_.local_ip.c_str(), options_.local_port, peer.second->peer_addr().c_str(), context_->current_term);
 
       peer.second->AddAppendEntriesTask();
       break;

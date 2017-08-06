@@ -68,7 +68,7 @@ void Peer::RequestVoteRPCWrapper(void *arg) {
   reinterpret_cast<Peer*>(arg)->RequestVoteRPC();
 }
 
-Status Peer::RequestVoteRPC() {
+void Peer::RequestVoteRPC() {
   uint64_t last_log_term;
   uint64_t last_log_index;
   CmdRequest req;
@@ -91,7 +91,7 @@ Status Peer::RequestVoteRPC() {
   if (!result.ok()) {
     LOGV(DEBUG_LEVEL, info_log_, "Peer::RequestVoteRPC: RequestVote to %s failed %s",
          peer_addr_.c_str(), result.ToString().c_str());
-    return result;
+    return ;
   }
 
   {
@@ -127,11 +127,7 @@ Status Peer::RequestVoteRPC() {
     // TODO(ba0tiao) if i am not longer candidate
   }
   }
-  return result;
-}
-
-void Peer::AddAppendEntriesTask() {
-  bg_thread_.Schedule(&AppendEntriesRPCWrapper, this);
+  return ;
 }
 
 uint64_t Peer::QuorumMatchIndex() {
@@ -158,12 +154,13 @@ void Peer::AdvanceLeaderCommitIndex() {
   }
   return;
 }
-
+void Peer::AddAppendEntriesTask() {
+  bg_thread_.Schedule(&AppendEntriesRPCWrapper, this);
+}
 void Peer::AppendEntriesRPCWrapper(void *arg) {
   reinterpret_cast<Peer*>(arg)->AppendEntriesRPC();
 }
-
-Status Peer::AppendEntriesRPC() {
+void Peer::AppendEntriesRPC() {
   uint64_t prev_log_index = next_index_ - 1;
   uint64_t num_entries = 0;
   uint64_t prev_log_term = 0;
@@ -228,7 +225,7 @@ Status Peer::AppendEntriesRPC() {
   if (!result.ok()) {
     LOGV(WARN_LEVEL, info_log_, "Peer::AppendEntries: Candidate %s:%d SendAndRecv to %s failed %s",
          options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), result.ToString().c_str());
-    return result;
+    return ;
   }
 
   // here we may get a larger term, and transfer to follower
@@ -270,13 +267,17 @@ Status Peer::AppendEntriesRPC() {
         }
       }
     } else {
+      LOGV(INFO_LEVEL, info_log_, "Peer::AppEntriesRPC: peer_addr %s Send AppEntriesRPC failed,"
+          "peer's last_log_index %lu, peer's next_index_ %lu",
+          peer_addr_.c_str(), res.append_entries_res().last_log_index(), next_index_.load());
       uint64_t adjust_index = std::min(res.append_entries_res().last_log_index() + 1,
                                        next_index_ - 1);
       if (adjust_index > 0) {
         // Prev log don't match, so we retry with more prev one according to
         // response
         next_index_ = adjust_index;
-        LOGV(INFO_LEVEL, info_log_, "Peer::AppendEntriesRPC: peer_addr %s Update next_index_ %lld", peer_addr_.c_str(), next_index_.load());
+        LOGV(INFO_LEVEL, info_log_, "Peer::AppEntriesRPC: peer_addr %s Adjust peer next_index_, Now next_index_ is %lu", 
+            peer_addr_.c_str(), adjust_index);
         AddAppendEntriesTask();
       }
     }
@@ -285,7 +286,7 @@ Status Peer::AppendEntriesRPC() {
   } else if (context_->role == Role::kCandidate) {
   }
   }
-  return result;
+  return ;
 }
 
 } // namespace floyd

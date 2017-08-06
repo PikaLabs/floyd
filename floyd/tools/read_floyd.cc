@@ -7,7 +7,6 @@
 #include "floyd/src/floyd.pb.h"
 #include <google/protobuf/text_format.h>
 
-
 using namespace rocksdb;
 extern std::string UintToBitStr(const uint64_t num) {
   char buf[8];

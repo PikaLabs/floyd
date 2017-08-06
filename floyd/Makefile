@@ -77,7 +77,7 @@ $(LIBRARY): $(LIBSLASH) $(LIBPINK) $(LIBROCKSDB) $(LIBOBJS) $(OBJS)
 $(OBJS): %.o : %.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE_PATH) 
 
-clean: 
+clean:
 	rm -rf $(SRC_DIR)/*.o
 	rm -rf $(LIB_OUTPUT)/*
 

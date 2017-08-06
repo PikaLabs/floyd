@@ -9,6 +9,7 @@
 
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 #include "pink/include/bg_thread.h"
 #include "slash/include/env.h"
@@ -133,8 +134,7 @@ Status FloydImpl::Init() {
 
   // Create peer threads
   // peers_.clear();
-  for (auto iter = options_.members.begin();
-      iter != options_.members.end(); iter++) {
+  for (auto iter = options_.members.begin(); iter != options_.members.end(); iter++) {
     if (!IsSelf(*iter)) {
       Peer* pt = new Peer(*iter, context_, primary_, raft_meta_, raft_log_, 
           worker_client_pool_, apply_, options_, info_log_);
@@ -356,11 +356,9 @@ bool FloydImpl::GetServerStatus(std::string& msg) {
 
   char str[512];
   snprintf (str, 512,
-            "      Node           | Role    |   Term    | CommitIdx |    Leader         |  VoteFor          | LastLogTerm | LastLogIdx | CommitIndex | LastApplied |\n" 
-            "%15s:%-6d %9s %10lu %10lu %15s:%-6d %15s:%-6d %10lu %10lu %10lu %10lu\n",
-            options_.local_ip.c_str(), options_.local_port,
-            server_status.role().c_str(),
-            server_status.term(), server_status.commit_index(),
+            "      Node           |    Role    | Term |      Leader      |      VoteFor      | LastLogTerm | LastLogIdx | CommitIndex | LastApplied |\n" 
+            "%15s:%-6d%10s%7lu%14s:%-6d%14s:%-d%10lu%13lu%14lu%13lu\n",
+            options_.local_ip.c_str(), options_.local_port, server_status.role().c_str(), server_status.term(),
             server_status.leader_ip().c_str(), server_status.leader_port(),
             server_status.voted_for_ip().c_str(), server_status.voted_for_port(),
             server_status.last_log_term(), server_status.last_log_index(), server_status.commit_index(),
@@ -384,16 +382,13 @@ bool FloydImpl::GetServerStatus(std::string& msg) {
         slash::ParseIpPortString(iter, ip, port);
         CmdResponse_ServerStatus server_status = response.server_status();
         snprintf (str, 512,
-                  "%15s:%-6d %9s %10lu %10lu %15s:%-6d %15s:%-6d %10lu %10lu %10lu %10lu\n",
-                  ip.c_str(), port,
-                  server_status.role().c_str(),
-                  server_status.term(), server_status.commit_index(),
+                  "%15s:%-6d%10s%7lu%14s:%-6d%14s:%-d%10lu%13lu%14lu%13lu\n",
+                  ip.c_str(), port, server_status.role().c_str(), server_status.term(),
                   server_status.leader_ip().c_str(), server_status.leader_port(),
                   server_status.voted_for_ip().c_str(), server_status.voted_for_port(),
                   server_status.last_log_term(), server_status.last_log_index(), server_status.commit_index(),
                   server_status.last_applied());
         msg.append(str);
-        LOGV(DEBUG_LEVEL, info_log_, "GetServerStatus msg(%s)", str);
       }
     }
   }
@@ -632,10 +627,14 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* respons
   BuildRequestVoteResponse(context_->current_term, granted, response);
 }
 
-bool FloydImpl::AdvanceFollowerCommitIndex(uint64_t new_commit_index) {
+bool FloydImpl::AdvanceFollowerCommitIndex(uint64_t leader_commit) {
   // Update log commit index
-  context_->commit_index = new_commit_index;
-  raft_meta_->SetCommitIndex(new_commit_index);
+  /*
+   * If leaderCommit > commitIndex, set commitIndex =
+   *   min(leaderCommit, index of last new entry)
+   */
+  context_->commit_index = std::min(leader_commit, raft_log_->GetLastLogIndex());
+  raft_meta_->SetCommitIndex(context_->commit_index);
   return true;
 }
 
@@ -643,6 +642,7 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& request, CmdResponse* response) {
   bool success = false;
   CmdRequest_AppendEntries append_entries = request.append_entries();
   slash::MutexLock l(&context_->global_mu);
+  // update last_op_time to avoid another leader election
   context_->last_op_time = slash::NowMicros();
   // Ignore stale term
   // if the append entries term is smaller then my current term, then the caller must an older leader
@@ -659,7 +659,7 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& request, CmdResponse* response) {
   }
 
   if (append_entries.prev_log_index() > last_log_index) {
-    LOGV(INFO_LEVEL, info_log_, "RaftMeta::ReceiverDoAppendEntries:"
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries:"
         "pre_log(%lu, %lu) > last_log_index(%lu)", append_entries.prev_log_term(), append_entries.prev_log_index(),
         last_log_index);
     BuildAppendEntriesResponse(success, context_->current_term, last_log_index, response);
@@ -672,7 +672,7 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& request, CmdResponse* response) {
   }
   uint64_t my_log_term = 0;
   Entry entry;
-  LOGV(DEBUG_LEVEL, info_log_, "RaftMeta::ReceiverDoAppendEntries "
+  LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries "
       "prev_log_index: %llu\n", append_entries.prev_log_index());
   if (append_entries.prev_log_index() == 0) {
     my_log_term = 0;
@@ -686,38 +686,41 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& request, CmdResponse* response) {
   }
 
   if (append_entries.prev_log_term() != my_log_term) {
-    LOGV(WARN_LEVEL, info_log_, "RaftMeta::ReceiverDoAppendEntries: pre_log(%lu, %lu) don't match with"
-         " local log(%lu, %lu), truncate suffix from here",
-         append_entries.prev_log_term(), append_entries.prev_log_index(), my_log_term, last_log_index);
+    LOGV(WARN_LEVEL, info_log_, "FloydImpl::ReplyAppentries: leader %s:%d pre_log(%lu, %lu)'s term don't match with"
+         " my log(%lu, %lu) term, truncate my log from here %lu",append_entries.ip().c_str(), append_entries.port(),
+         append_entries.prev_log_term(), append_entries.prev_log_index(), my_log_term, last_log_index,
+         append_entries.prev_log_index());
     // TruncateSuffix [prev_log_index, last_log_index)
     raft_log_->TruncateSuffix(append_entries.prev_log_index());
   }
 
   // Append entry
   if (append_entries.prev_log_index() < last_log_index) {
-    // TruncateSuffix [prev_log_index + 1, last_log_index)
+    LOGV(WARN_LEVEL, info_log_, "FloydImpl::ReplyAppentries: leader %s:%d pre_log(%lu, %lu)'s index smaller than"
+        " my log(%lu, %lu) index, truncate suffix from here %lu", append_entries.ip().c_str(), append_entries.port(), 
+        append_entries.prev_log_term(), append_entries.prev_log_index(), my_log_term, last_log_index,
+        append_entries.prev_log_index() + 1);
     raft_log_->TruncateSuffix(append_entries.prev_log_index() + 1);
   }
 
   if (append_entries.entries().size() > 0) {
-    LOGV(DEBUG_LEVEL, info_log_, "RaftMeta::ReceiverDoAppendEntries: will append %u entries from "
-         " prev_log_index %lu", append_entries.entries().size(), append_entries.prev_log_index() + 1);
+    LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: leader %s:%d will append %u entries from "
+         " prev_log_index %lu", append_entries.ip().c_str(), append_entries.port(), 
+         append_entries.entries().size(), append_entries.prev_log_index());
     if (raft_log_->Append(entries) <= 0) {
-      context_->last_op_time = slash::NowMicros();
       BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
       return ;
     }
     AdvanceFollowerCommitIndex(append_entries.leader_commit());
     apply_->ScheduleApply();
   } else {
-    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReceiverDoAppendEntries: Receive PingPong AppendEntries from %s:%d", 
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: Receive PingPong AppendEntries from %s:%d", 
         append_entries.ip().c_str(), append_entries.port());
   }
   success = true;
   // only when follower successfully do appendentries, we will update commit index
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries after AdvanceCommitIndex %lu",
       context_->commit_index);
-  // update last_op_time to avoid another leader election
   BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
 }
 

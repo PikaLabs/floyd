@@ -48,10 +48,10 @@ class Peer {
    * the response to these two RPC at floyd_impl.h
    */
   static void AppendEntriesRPCWrapper(void *arg);
-  Status AppendEntriesRPC();
+  void AppendEntriesRPC();
   // Request Vote
   static void RequestVoteRPCWrapper(void *arg);
-  Status RequestVoteRPC();
+  void RequestVoteRPC();
 
   uint64_t GetMatchIndex();
 
