@@ -34,7 +34,7 @@ FloydApply::~FloydApply() {
 
 int FloydApply::Start() {
   bg_thread_.set_thread_name("FloydApply");
-  // bg_thread_.DelaySchedule(3000, ApplyStateMachineWrapper, this);
+  bg_thread_.DelaySchedule(3000, ApplyStateMachineWrapper, this);
   return bg_thread_.StartThread();
 }
 
@@ -76,7 +76,7 @@ void FloydApply::ApplyStateMachine() {
   raft_meta_->SetLastApplied(last_applied);
   context_->apply_mu.Unlock();
   context_->apply_cond.SignalAll();
-  // bg_thread_.DelaySchedule(3000, ApplyStateMachineWrapper, this);
+  bg_thread_.DelaySchedule(3000, ApplyStateMachineWrapper, this);
 }
 
 Status FloydApply::Apply(const Entry& entry) {

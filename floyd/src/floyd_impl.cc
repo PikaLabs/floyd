@@ -645,10 +645,9 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& request, CmdResponse* response) {
   // update last_op_time to avoid another leader election
   context_->last_op_time = slash::NowMicros();
   // Ignore stale term
-  // if the append entries term is smaller then my current term, then the caller must an older leader
-  uint64_t last_log_index = raft_log_->GetLastLogIndex();
+  // if the append entries leader's term is smaller then my current term, then the caller must an older leader
   if (append_entries.term() < context_->current_term) {
-    BuildAppendEntriesResponse(success, context_->current_term, last_log_index, response);
+    BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
     return;
   } else if (append_entries.term() >= context_->current_term) {
     context_->BecomeFollower(append_entries.term(),
@@ -658,11 +657,47 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& request, CmdResponse* response) {
     raft_meta_->SetVotedForPort(context_->voted_for_port);
   }
 
-  if (append_entries.prev_log_index() > last_log_index) {
-    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries:"
-        "pre_log(%lu, %lu) > last_log_index(%lu)", append_entries.prev_log_term(), append_entries.prev_log_index(),
-        last_log_index);
-    BuildAppendEntriesResponse(success, context_->current_term, last_log_index, response);
+  if (append_entries.prev_log_index() > raft_log_->GetLastLogIndex()) {
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: leader %s:%p "
+        " pre_log(%lu, %lu) > last_log_index(%lu)", options_.local_ip.c_str(), options_.local_port, append_entries.prev_log_term(), 
+        append_entries.prev_log_index(), raft_log_->GetLastLogIndex());
+    BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
+    return ;
+  }
+
+  // Append entry
+  if (append_entries.prev_log_index() < raft_log_->GetLastLogIndex()) {
+    LOGV(WARN_LEVEL, info_log_, "FloydImpl::ReplyAppentries: leader %s:%d pre_log(%lu, %lu)'s index smaller than"
+        " my log(%lu) index, truncate suffix from here %lu", append_entries.ip().c_str(), append_entries.port(), 
+        append_entries.prev_log_term(), append_entries.prev_log_index(), raft_log_->GetLastLogIndex(),
+        append_entries.prev_log_index() + 1);
+    raft_log_->TruncateSuffix(append_entries.prev_log_index() + 1);
+  }
+
+  // we compare peer's prev index and term with my last log index and term
+  uint64_t my_last_log_term = 0;
+  Entry entry;
+  LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries "
+      "prev_log_index: %llu\n", append_entries.prev_log_index());
+  if (append_entries.prev_log_index() == 0) {
+    my_last_log_term = 0;
+  } else if (raft_log_->GetEntry(append_entries.prev_log_index(), &entry) == 0) {
+    my_last_log_term = entry.term();
+  } else {
+    LOGV(WARN_LEVEL, info_log_, "FloydImple::ReplyAppentries: can't "
+        "get Entry from raft_log prev_log_index %llu", append_entries.prev_log_index());
+    BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
+    return;
+  }
+
+  if (append_entries.prev_log_term() != my_last_log_term) {
+    LOGV(WARN_LEVEL, info_log_, "FloydImpl::ReplyAppentries: leader %s:%d pre_log(%lu, %lu)'s term don't match with"
+         " my log(%lu, %lu) term, truncate my log from here %lu",append_entries.ip().c_str(), append_entries.port(),
+         append_entries.prev_log_term(), append_entries.prev_log_index(), my_last_log_term, raft_log_->GetLastLogIndex(),
+         append_entries.prev_log_index());
+    // TruncateSuffix [prev_log_index, last_log_index)
+    raft_log_->TruncateSuffix(append_entries.prev_log_index());
+    BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
     return ;
   }
 
@@ -670,39 +705,6 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& request, CmdResponse* response) {
   for (auto& it : *(request.mutable_append_entries()->mutable_entries())) {
     entries.push_back(&it);
   }
-  uint64_t my_log_term = 0;
-  Entry entry;
-  LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries "
-      "prev_log_index: %llu\n", append_entries.prev_log_index());
-  if (append_entries.prev_log_index() == 0) {
-    my_log_term = 0;
-  } else if (raft_log_->GetEntry(append_entries.prev_log_index(), &entry) == 0) {
-    my_log_term = entry.term();
-  } else {
-    LOGV(WARN_LEVEL, info_log_, "FloydImple::ReplyAppentries: can't "
-        "get Entry from raft_log prev_log_index %llu", append_entries.prev_log_index());
-    BuildAppendEntriesResponse(success, context_->current_term, last_log_index, response);
-    return;
-  }
-
-  if (append_entries.prev_log_term() != my_log_term) {
-    LOGV(WARN_LEVEL, info_log_, "FloydImpl::ReplyAppentries: leader %s:%d pre_log(%lu, %lu)'s term don't match with"
-         " my log(%lu, %lu) term, truncate my log from here %lu",append_entries.ip().c_str(), append_entries.port(),
-         append_entries.prev_log_term(), append_entries.prev_log_index(), my_log_term, last_log_index,
-         append_entries.prev_log_index());
-    // TruncateSuffix [prev_log_index, last_log_index)
-    raft_log_->TruncateSuffix(append_entries.prev_log_index());
-  }
-
-  // Append entry
-  if (append_entries.prev_log_index() < last_log_index) {
-    LOGV(WARN_LEVEL, info_log_, "FloydImpl::ReplyAppentries: leader %s:%d pre_log(%lu, %lu)'s index smaller than"
-        " my log(%lu, %lu) index, truncate suffix from here %lu", append_entries.ip().c_str(), append_entries.port(), 
-        append_entries.prev_log_term(), append_entries.prev_log_index(), my_log_term, last_log_index,
-        append_entries.prev_log_index() + 1);
-    raft_log_->TruncateSuffix(append_entries.prev_log_index() + 1);
-  }
-
   if (append_entries.entries().size() > 0) {
     LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: leader %s:%d will append %u entries from "
          " prev_log_index %lu", append_entries.ip().c_str(), append_entries.port(), 

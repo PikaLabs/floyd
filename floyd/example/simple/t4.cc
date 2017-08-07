@@ -50,15 +50,14 @@ int main()
   std::string msg;
   while (1) {
     f1->GetServerStatus(msg);
-    /*
-     * if (is_writed == false) {
-     *   // writing one record to update the meta data
-     *   slash::Status s = f1->Write("lastdata", "lastdata");
-     *   if (s.ok()) {
-     *     is_writed = true;
-     *   }
-     * }
-     */
+    if (is_writed == false) {
+      // writing one record to update the meta data
+      slash::Status s = f1->Write("lastdata", "lastdata");
+      if (s.ok()) {
+        is_writed = true;
+        printf("write lastdata success\n");
+      }
+    }
     printf("%s\n", msg.c_str());
     sleep(2);
   }

@@ -197,7 +197,7 @@ void Peer::AppendEntriesRPC() {
       Entry *entry = append_entries->add_entries();
       *entry = *tmp_entry;
     } else {
-      LOGV(WARN_LEVEL, info_log_, "Peer::AppendEntriesRPC: peer_addr %s can't get Entry ",
+      LOGV(WARN_LEVEL, info_log_, "Peer::AppendEntriesRPC: peer_addr %s can't get Entry "
           "from raft_log, index %lld", peer_addr_.c_str(), index);
       break;
     }
