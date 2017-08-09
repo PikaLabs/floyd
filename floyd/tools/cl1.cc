@@ -43,7 +43,7 @@ int cl1(const std::string path) {
   raft_meta->Init();
   RaftLog *raft_log = new RaftLog(db, logger);
 
-  std::vector<Entry *> entries;
+  std::vector<const Entry *> entries;
   Entry *entry = new Entry();
   InitEntry(1, "1", "1", entry);
   entries.push_back(entry);
@@ -110,7 +110,7 @@ int cl2(const std::string path) {
   raft_meta->Init();
   RaftLog *raft_log = new RaftLog(db, logger);
 
-  std::vector<Entry *> entries;
+  std::vector<const Entry *> entries;
   Entry *entry = new Entry();
   InitEntry(1, "1", "1", entry);
   entries.push_back(entry);
@@ -173,7 +173,7 @@ int cl3(const std::string path) {
   raft_meta->Init();
   RaftLog *raft_log = new RaftLog(db, logger);
 
-  std::vector<Entry *> entries;
+  std::vector<const Entry *> entries;
   Entry *entry = new Entry();
   InitEntry(1, "1", "1", entry);
   entries.push_back(entry);
@@ -245,7 +245,7 @@ int cl4(const std::string path) {
   raft_meta->Init();
   RaftLog *raft_log = new RaftLog(db, logger);
 
-  std::vector<Entry *> entries;
+  std::vector<const Entry *> entries;
   Entry *entry = new Entry();
   InitEntry(1, "1", "1", entry);
   entries.push_back(entry);
@@ -300,7 +300,7 @@ int cl5(const std::string path) {
   raft_meta->Init();
   RaftLog *raft_log = new RaftLog(db, logger);
 
-  std::vector<Entry *> entries;
+  std::vector<const Entry *> entries;
   Entry *entry = new Entry();
   InitEntry(1, "1", "1", entry);
   entries.push_back(entry);

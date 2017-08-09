@@ -32,7 +32,7 @@ int cl(const std::string path) {
   RaftMeta *raft_meta = new RaftMeta(db, logger);
   raft_meta->Init();
   RaftLog *raft_log = new RaftLog(db, logger);
-  std::vector<Entry *> entries;
+  std::vector<const Entry *> entries;
   char buff[10];
   for (int i = 0; i < 10; i++) {
     Entry *entry = new Entry();
@@ -65,7 +65,7 @@ int cl_spec(const std::string path) {
   RaftMeta *raft_meta = new RaftMeta(db, logger);
   raft_meta->Init();
   RaftLog *raft_log = new RaftLog(db, logger);
-  std::vector<Entry *> entries;
+  std::vector<const Entry *> entries;
   char buff[10];
   for (int i = 0; i < 21; i++) {
     Entry *entry = new Entry();
