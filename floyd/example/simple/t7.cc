@@ -56,6 +56,9 @@ int main(int argc, char *argv[])
   std::string msg;
   int cnt = 1;
   uint64_t st = NowMicros(), ed;
+  for (int i = 0; i < item_num; i++) {
+    keystr[i] = slash::RandomString(32);
+  }
 
   while (1) {
     if (f1->HasLeader()) {
@@ -82,6 +85,7 @@ int main(int argc, char *argv[])
   delete f1;
   delete f5;
 
+  sleep(10);
   while (1) {
     if (f2->HasLeader()) {
       break;
@@ -98,10 +102,15 @@ int main(int argc, char *argv[])
     printf("%s\n", msg.c_str());
     st = NowMicros();
     for (int j = 0; j < item_num; j++) {
-      f2->Write(keystr[j], valstr[j]);
+      slash::Status s1 = f2->Write(keystr[j], valstr[j]);
+      if (s.ok()) {
+        printf("write key success %s %s\n", keystr[j].c_str(), valstr[j].c_str());
+      } else {
+        printf("write error\n");
+      }
     }
     ed = NowMicros();
-    printf("write 100000 cost time microsecond(us) %ld, qps %llu\n", ed - st, item_num * 1000000LL / (ed - st));
+    printf("write after delete two nodes cost time microsecond(us) %ld, qps %llu\n", ed - st, item_num * 1000000LL / (ed - st));
   }
 
   s = Floyd::Open(op, &f1);
@@ -111,6 +120,7 @@ int main(int argc, char *argv[])
   while (cnt--) {
     f2->GetServerStatus(msg);
     printf("%s\n", msg.c_str());
+    sleep(2);
   }
 
   getchar();

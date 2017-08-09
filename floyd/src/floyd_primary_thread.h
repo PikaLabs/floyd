@@ -70,7 +70,6 @@ class FloydPrimary {
   void LaunchNewCommand();
 
   void NoticePeerTask(TaskType type);
-  uint64_t QuorumMatchIndex();
 
   // No copying allowed
   FloydPrimary(const FloydPrimary&);

@@ -153,10 +153,13 @@ uint64_t Peer::QuorumMatchIndex() {
   std::map<std::string, Peer*>::iterator iter; 
   for (iter = peers_.begin(); iter != peers_.end(); iter++) {
     if (iter->first == peer_addr_) {
+      values.push_back(match_index_);
       continue;
     }
     values.push_back(iter->second->match_index());
   }
+  LOGV(DEBUG_LEVEL, info_log_, "Peer::QuorumMatchIndex: Get peers match_index %d %d %d %d",
+      values[0], values[1], values[2], values[3]);
   std::sort(values.begin(), values.end());
   return values.at(values.size() / 2);
 }
@@ -166,7 +169,7 @@ uint64_t Peer::QuorumMatchIndex() {
 void Peer::AdvanceLeaderCommitIndex() {
   Entry entry;
   uint64_t new_commit_index = QuorumMatchIndex();
-  if (context_->commit_index != new_commit_index) {
+  if (context_->commit_index < new_commit_index) {
     context_->commit_index = new_commit_index;
     raft_meta_->SetCommitIndex(context_->commit_index);
   }
