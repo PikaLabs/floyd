@@ -60,7 +60,7 @@ int main()
     for (int i = 0; i < 100000; i++) {
       mystr[i] = slash::RandomString(10);
     }
-    f1->GetServerStatus(msg);
+    f1->GetServerStatus(&msg);
     printf("%s\n", msg.c_str());
     st = NowMicros();
     for (int j = 0; j < 100000; j++) {
@@ -75,7 +75,7 @@ int main()
 
   cnt = 5;
   while (cnt--) {
-    f2->GetServerStatus(msg);
+    f2->GetServerStatus(&msg);
     for (int j = 0; j < 100; j++) {
       f2->Write("zz2" + char(j), "value2" + char(j));
     }
@@ -88,7 +88,7 @@ int main()
   }
   cnt = 5;
   while (cnt--) {
-    f2->GetServerStatus(msg);
+    f2->GetServerStatus(&msg);
     for (int j = 0; j < 100; j++) {
       f1->Write("zz3" + char(j), "value3" + char(j));
     }
