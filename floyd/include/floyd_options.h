@@ -3,8 +3,8 @@
 // LICENSE file in the root directory of this source tree. An additional grant
 // of patent rights can be found in the PATENTS file in the same directory.
 
-#ifndef FLOYD_SRC_FLOYD_OPTIONS_H_
-#define FLOYD_SRC_FLOYD_OPTIONS_H_
+#ifndef FLOYD_INCLUDE_FLOYD_OPTIONS_H_
+#define FLOYD_INCLUDE_FLOYD_OPTIONS_H_
 
 #include <string>
 #include <vector>
@@ -24,8 +24,7 @@ enum {
 struct Options {
   // cluster members
   // parsed from comma separated ip1:port1,ip2:port2...
-  std::vector<std::string> members; 
-
+  std::vector<std::string> members;
   std::string local_ip;
   int local_port;
   std::string path;
@@ -46,5 +45,5 @@ struct Options {
           const std::string& _path);
 };
 
-} // namespace floyd
-#endif  // FLOYD_INCLUDE_FLOYD_OPTIONS_
+}  // namespace floyd
+#endif  // FLOYD_INCLUDE_FLOYD_OPTIONS_H_

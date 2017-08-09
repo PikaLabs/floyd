@@ -35,7 +35,9 @@ Peer::Peer(std::string server, FloydContext* context, FloydPrimary* primary, Raf
     options_(options),
     info_log_(info_log),
     next_index_(1),
-    match_index_(0) {
+    match_index_(0),
+    peer_last_op_time(0),
+    bg_thread_(1024 * 1024 * 256) {
       next_index_ = raft_log_->GetLastLogIndex() + 1;
       match_index_ = raft_meta_->GetLastApplied();
 }
@@ -60,7 +62,20 @@ bool Peer::CheckAndVote(uint64_t vote_term) {
   return (++context_->vote_quorum) > (options_.members.size() / 2);
 }
 
+void Peer::UpdatePeerInfo() {
+  for (auto& pt : peers_) {
+    pt.second->set_next_index(raft_log_->GetLastLogIndex() + 1);
+    pt.second->set_match_index(0);
+  }
+}
+
 void Peer::AddRequestVoteTask() {
+  /*
+   * int timer_queue_size, queue_size;
+   * bg_thread_.QueueSize(&timer_queue_size, &queue_size);
+   * LOGV(INFO_LEVEL, info_log_, "Peer::AddRequestVoteTask timer_queue size %d queue_size %d", 
+   *     timer_queue_size, queue_size);
+   */
   bg_thread_.Schedule(&RequestVoteRPCWrapper, this);
 }
 
@@ -83,6 +98,8 @@ void Peer::RequestVoteRPC() {
   request_vote->set_term(context_->current_term);
   request_vote->set_last_log_term(last_log_term);
   request_vote->set_last_log_index(last_log_index);
+  LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRPC server %s:%d Send RequestVoteRPC message to %s at term %d",
+      options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), context_->current_term);
   }
 
   CmdResponse res;
@@ -105,6 +122,7 @@ void Peer::RequestVoteRPC() {
       // we need igore these type of vote
       if (CheckAndVote(res.request_vote_res().term())) {
         context_->BecomeLeader();
+        UpdatePeerInfo();
         LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRPC: %s:%d become leader at term %d", 
             options_.local_ip.c_str(), options_.local_port, context_->current_term);
         primary_->AddTask(kHeartBeat, false);
@@ -155,6 +173,12 @@ void Peer::AdvanceLeaderCommitIndex() {
   return;
 }
 void Peer::AddAppendEntriesTask() {
+  /*
+   * int timer_queue_size, queue_size;
+   * bg_thread_.QueueSize(&timer_queue_size, &queue_size);
+   * LOGV(INFO_LEVEL, info_log_, "Peer::AddAppendEntriesTask timer_queue size %d queue_size %d", 
+   *     timer_queue_size, queue_size);
+   */
   bg_thread_.Schedule(&AppendEntriesRPCWrapper, this);
 }
 void Peer::AppendEntriesRPCWrapper(void *arg) {
@@ -169,6 +193,15 @@ void Peer::AppendEntriesRPC() {
   CmdRequest_AppendEntries* append_entries = req.mutable_append_entries();
   {
   slash::MutexLock l(&context_->global_mu);
+  last_log_index = raft_log_->GetLastLogIndex();
+  /*
+   * LOGV(INFO_LEVEL, info_log_, "Peer::AppendEntriesRPC: next_index_ %d last_log_index %d peer_last_op_time %lu nowmicros %lu",
+   *     next_index_.load(), last_log_index, peer_last_op_time, slash::NowMicros());
+   */
+  if (next_index_ > last_log_index && peer_last_op_time + options_.heartbeat_us > slash::NowMicros()) {
+    return;
+  }
+  peer_last_op_time = slash::NowMicros();
 
   if (prev_log_index != 0) {
     Entry entry;
@@ -186,11 +219,8 @@ void Peer::AppendEntriesRPC() {
   append_entries->set_term(context_->current_term);
   append_entries->set_prev_log_index(prev_log_index);
   append_entries->set_prev_log_term(prev_log_term);
-
-  last_log_index = raft_log_->GetLastLogIndex();
+  append_entries->set_leader_commit(context_->commit_index);
   Entry *tmp_entry = new Entry();
-  LOGV(DEBUG_LEVEL, info_log_, "Peer::AppendEntriesRPC: peer_addr(%s)'s next_index_ %llu, my last_log_index %llu", 
-      peer_addr_.c_str(), next_index_.load(), last_log_index);
   for (uint64_t index = next_index_; index <= last_log_index; index++) {
     if (raft_log_->GetEntry(index, tmp_entry) == 0) {
       // TODO(ba0tiao) how to avoid memory copy here
@@ -209,12 +239,14 @@ void Peer::AppendEntriesRPC() {
     }
   }
   delete tmp_entry;
-  /*
-   * commit_index should be min of follower log and leader's commit_index
-   * if follower's commit index larger than follower log, it conflict 
-   */
-  append_entries->set_leader_commit(
-      std::min(context_->commit_index, prev_log_index + num_entries));
+  LOGV(DEBUG_LEVEL, info_log_, "Peer::AppendEntriesRPC: peer_addr(%s)'s next_index_ %llu, my last_log_index %llu" 
+      " AppendEntriesRPC will send %d iterm", peer_addr_.c_str(), next_index_.load(), last_log_index, num_entries);
+  // if the AppendEntries don't contain any log item
+  if (num_entries == 0) {
+    LOGV(INFO_LEVEL, info_log_, "Peer::AppendEntryRpc server %s:%d Send pingpong appendEntries message to %s at term %d",
+        options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), context_->current_term);
+  }
+
   }
 
   CmdResponse res;
@@ -253,18 +285,20 @@ void Peer::AppendEntriesRPC() {
           apply_->ScheduleApply();
         }
         next_index_ = prev_log_index + num_entries + 1;
-        // If this follower is far behind leader, and there is no more
-        // AppendEntryTask, we should add one
-        if (next_index_ + options_.append_entries_count_once < last_log_index) {
-          int pri_size, qu_size;
-          bg_thread_.QueueSize(&pri_size, &qu_size);
-          if (qu_size < 1) {
-            LOGV(DEBUG_LEVEL, info_log_, "Peer::AppendEntriesRPC: peer_addr %s AppendEntry again "
-                "to catch up next_index(%llu) last_log_index(%llu)",
-                peer_addr_.c_str(), next_index_.load(), last_log_index);
-            AddAppendEntriesTask();
-          }
-        }
+        /*
+         * // If this follower is far behind leader, and there is no more
+         * // AppendEntryTask, we should add one
+         * if (next_index_ + options_.append_entries_count_once < last_log_index) {
+         *   int pri_size, qu_size;
+         *   bg_thread_.QueueSize(&pri_size, &qu_size);
+         *   if (qu_size < 1) {
+         *     LOGV(DEBUG_LEVEL, info_log_, "Peer::AppendEntriesRPC: peer_addr %s AppendEntry again "
+         *         "to catch up next_index(%llu) last_log_index(%llu)",
+         *         peer_addr_.c_str(), next_index_.load(), last_log_index);
+         *     AddAppendEntriesTask();
+         *   }
+         * }
+         */
       }
     } else {
       LOGV(INFO_LEVEL, info_log_, "Peer::AppEntriesRPC: peer_addr %s Send AppEntriesRPC failed,"

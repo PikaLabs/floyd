@@ -31,21 +31,9 @@ int item_num = 10000;
 
 void *fun(void *arg) {
   int i = 1;
-  Floyd *p;
+  Floyd *p = f1;
   if (f1->IsLeader()) {
-    p = f1;
-  }
-  if (f2->IsLeader()) {
     p = f2;
-  }
-  if (f3->IsLeader()) {
-    p = f3;
-  }
-  if (f4->IsLeader()) {
-    p = f4;
-  }
-  if (f5->IsLeader()) {
-    p = f5;
   }
   while (i--) {
     for (int j = 0; j < item_num; j++) {

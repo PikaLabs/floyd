@@ -52,11 +52,12 @@ class FloydImpl : public Floyd {
 
   // return true if leader has been elected
   virtual bool GetLeader(std::string* ip_port);
-  virtual bool HasLeader();
   virtual bool GetLeader(std::string* ip, int* port);
+  virtual bool HasLeader();
   virtual bool GetAllNodes(std::vector<std::string>& nodes);
-  virtual bool GetServerStatus(std::string& msg);
+  virtual bool IsLeader();
   
+  virtual bool GetServerStatus(std::string& msg);
   // log level can be modified
   virtual void set_log_level(const int log_level);
 

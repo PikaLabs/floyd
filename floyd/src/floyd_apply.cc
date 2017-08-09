@@ -5,24 +5,24 @@
 
 #include "floyd/src/floyd_apply.h"
 
+#include <google/protobuf/text_format.h>
+
 #include <unistd.h>
 #include <string>
 
 #include "slash/include/xdebug.h"
-#include <google/protobuf/text_format.h>
-
 
 #include "floyd/src/logger.h"
 #include "floyd/src/floyd.pb.h"
 #include "floyd/src/raft_meta.h"
 #include "floyd/src/raft_log.h"
 
-
 namespace floyd {
 
 FloydApply::FloydApply(FloydContext* context, rocksdb::DB* db, RaftMeta* raft_meta,
     RaftLog* raft_log, Logger* info_log)
-  : context_(context),
+  : bg_thread_(1024 * 1024 * 1024),
+    context_(context),
     db_(db),
     raft_meta_(raft_meta),
     raft_log_(raft_log),
@@ -34,7 +34,7 @@ FloydApply::~FloydApply() {
 
 int FloydApply::Start() {
   bg_thread_.set_thread_name("FloydApply");
-  bg_thread_.DelaySchedule(3000, ApplyStateMachineWrapper, this);
+  bg_thread_.Schedule(ApplyStateMachineWrapper, this);
   return bg_thread_.StartThread();
 }
 
@@ -43,6 +43,12 @@ int FloydApply::Stop() {
 }
 
 void FloydApply::ScheduleApply() {
+  /*
+   * int timer_queue_size, queue_size;
+   * bg_thread_.QueueSize(&timer_queue_size, &queue_size);
+   * LOGV(INFO_LEVEL, info_log_, "Peer::AddRequestVoteTask timer_queue size %d queue_size %d",
+   *     timer_queue_size, queue_size);
+   */
   bg_thread_.Schedule(&ApplyStateMachineWrapper, this);
 }
 
@@ -76,7 +82,6 @@ void FloydApply::ApplyStateMachine() {
   raft_meta_->SetLastApplied(last_applied);
   context_->apply_mu.Unlock();
   context_->apply_cond.SignalAll();
-  bg_thread_.DelaySchedule(3000, ApplyStateMachineWrapper, this);
 }
 
 Status FloydApply::Apply(const Entry& entry) {

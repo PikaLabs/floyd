@@ -36,6 +36,9 @@ struct FloydContext {
       leader_ip(""),
       leader_port(0),
       vote_quorum(0),
+      commit_index(0),
+      last_applied(0),
+      last_op_time(0),
       apply_cond(&apply_mu) {};
 
   void RecoverInit(RaftMeta *raft);

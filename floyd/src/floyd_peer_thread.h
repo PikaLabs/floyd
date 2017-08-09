@@ -62,6 +62,9 @@ class Peer {
     return next_index_;
   }
 
+  void set_match_index(const uint64_t match_index) {
+    match_index_ = match_index;
+  }
   uint64_t match_index() {
     return match_index_;
   }
@@ -78,6 +81,7 @@ class Peer {
   bool CheckAndVote(uint64_t vote_term);
   uint64_t QuorumMatchIndex();
   void AdvanceLeaderCommitIndex();
+  void UpdatePeerInfo();
 
   std::string peer_addr_;
   FloydContext* context_;
@@ -93,6 +97,7 @@ class Peer {
 
   std::atomic<uint64_t> next_index_;
   std::atomic<uint64_t> match_index_;
+  uint64_t peer_last_op_time;
 
   pink::BGThread bg_thread_;
 

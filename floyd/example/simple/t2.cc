@@ -54,6 +54,7 @@ int main()
     sleep(2);
   }
 
+  printf("delete node2, node3 to show 3 nodes status\n");
   delete f2;
   delete f3;
   i = 8;
@@ -63,6 +64,7 @@ int main()
     sleep(2);
   }
 
+  printf("restart node2, node3 and stop node4, show 4 nodes status\n");
   s = Floyd::Open(op2, &f2);
   s = Floyd::Open(op3, &f3);
   delete f4;
@@ -73,6 +75,7 @@ int main()
     sleep(2);
   }
 
+  printf("reopen node4, delete node1, node5 show 3 nodes status\n");
   s = Floyd::Open(op4, &f4);
   delete f1;
   delete f5;
@@ -83,6 +86,7 @@ int main()
     sleep(2);
   }
 
+  printf("delete node2, now only two nodes are alive\n");
   delete f2;
   i = 8;
   while (i--) {
@@ -91,6 +95,7 @@ int main()
     sleep(2);
   }
 
+  printf("reopen node1, node2, node5, the cluster recover now\n");
   s = Floyd::Open(op, &f1);
   s = Floyd::Open(op2, &f2);
   s = Floyd::Open(op5, &f5);

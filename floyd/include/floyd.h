@@ -16,7 +16,7 @@ namespace floyd {
 
 using slash::Status;
 
-class Floyd {
+class Floyd  {
  public:
   static Status Open(const Options& options, Floyd** floyd);
 
@@ -31,13 +31,14 @@ class Floyd {
 
   // return true if leader has been elected
   virtual bool GetLeader(std::string* ip_port) = 0;
-  virtual bool HasLeader() = 0;
   virtual bool GetLeader(std::string* ip, int* port) = 0;
+  virtual bool HasLeader() = 0;
   virtual bool GetAllNodes(std::vector<std::string>& nodes) = 0;
+  virtual bool IsLeader() = 0;
 
   // used for debug
   virtual bool GetServerStatus(std::string& msg) = 0;
-  
+
   // log level can be modified
   virtual void set_log_level(const int log_level) = 0;
 

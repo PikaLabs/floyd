@@ -54,7 +54,7 @@ FloydImpl::~FloydImpl() {
   delete raft_log_;
   delete info_log_;
   delete db_;
-  // delete log_and_meta_;
+  delete log_and_meta_;
 }
 
 bool FloydImpl::IsSelf(const std::string& ip_port) {
@@ -67,6 +67,16 @@ bool FloydImpl::GetLeader(std::string *ip_port) {
   }
   *ip_port = slash::IpPortString(context_->leader_ip, context_->leader_port);
   return true;
+}
+
+bool FloydImpl::IsLeader() {
+  if (context_->leader_ip == "" || context_->leader_port == 0) {
+    return false;
+  }
+  if (context_->leader_ip == options_.local_ip && context_->leader_port == options_.local_port) {
+    return true;
+  }
+  return false;
 }
 
 bool FloydImpl::GetLeader(std::string* ip, int* port) {
@@ -357,7 +367,7 @@ bool FloydImpl::GetServerStatus(std::string& msg) {
   char str[512];
   snprintf (str, 512,
             "      Node           |    Role    | Term |      Leader      |      VoteFor      | LastLogTerm | LastLogIdx | CommitIndex | LastApplied |\n" 
-            "%15s:%-6d%10s%7lu%14s:%-6d%14s:%-d%10lu%13lu%14lu%13lu\n",
+            "%15s:%-6d%10s%7lu%14s:%-6d%14s:%-6d%10lu%13lu%14lu%13lu\n",
             options_.local_ip.c_str(), options_.local_port, server_status.role().c_str(), server_status.term(),
             server_status.leader_ip().c_str(), server_status.leader_port(),
             server_status.voted_for_ip().c_str(), server_status.voted_for_port(),
@@ -382,7 +392,7 @@ bool FloydImpl::GetServerStatus(std::string& msg) {
         slash::ParseIpPortString(iter, ip, port);
         CmdResponse_ServerStatus server_status = response.server_status();
         snprintf (str, 512,
-                  "%15s:%-6d%10s%7lu%14s:%-6d%14s:%-d%10lu%13lu%14lu%13lu\n",
+                  "%15s:%-6d%10s%7lu%14s:%-6d%14s:%-6d%10lu%13lu%14lu%13lu\n",
                   ip.c_str(), port, server_status.role().c_str(), server_status.term(),
                   server_status.leader_ip().c_str(), server_status.leader_port(),
                   server_status.voted_for_ip().c_str(), server_status.voted_for_port(),
@@ -658,7 +668,7 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& request, CmdResponse* response) {
   }
 
   if (append_entries.prev_log_index() > raft_log_->GetLastLogIndex()) {
-    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: leader %s:%p "
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: leader %s:%d "
         " pre_log(%lu, %lu) > last_log_index(%lu)", options_.local_ip.c_str(), options_.local_port, append_entries.prev_log_term(), 
         append_entries.prev_log_index(), raft_log_->GetLastLogIndex());
     BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
@@ -667,8 +677,8 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& request, CmdResponse* response) {
 
   // Append entry
   if (append_entries.prev_log_index() < raft_log_->GetLastLogIndex()) {
-    LOGV(WARN_LEVEL, info_log_, "FloydImpl::ReplyAppentries: leader %s:%d pre_log(%lu, %lu)'s index smaller than"
-        " my log(%lu) index, truncate suffix from here %lu", append_entries.ip().c_str(), append_entries.port(), 
+    LOGV(WARN_LEVEL, info_log_, "FloydImpl::ReplyAppendEtries: leader %s:%d pre_log(%lu, %lu)'s index smaller than"
+        " my log index %lu, truncate suffix from %lu", append_entries.ip().c_str(), append_entries.port(), 
         append_entries.prev_log_term(), append_entries.prev_log_index(), raft_log_->GetLastLogIndex(),
         append_entries.prev_log_index() + 1);
     raft_log_->TruncateSuffix(append_entries.prev_log_index() + 1);
@@ -692,7 +702,7 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& request, CmdResponse* response) {
 
   if (append_entries.prev_log_term() != my_last_log_term) {
     LOGV(WARN_LEVEL, info_log_, "FloydImpl::ReplyAppentries: leader %s:%d pre_log(%lu, %lu)'s term don't match with"
-         " my log(%lu, %lu) term, truncate my log from here %lu",append_entries.ip().c_str(), append_entries.port(),
+         " my log(%lu, %lu) term, truncate my log from %lu",append_entries.ip().c_str(), append_entries.port(),
          append_entries.prev_log_term(), append_entries.prev_log_index(), my_last_log_term, raft_log_->GetLastLogIndex(),
          append_entries.prev_log_index());
     // TruncateSuffix [prev_log_index, last_log_index)
@@ -713,11 +723,13 @@ void FloydImpl::ReplyAppendEntries(CmdRequest& request, CmdResponse* response) {
       BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
       return ;
     }
-    AdvanceFollowerCommitIndex(append_entries.leader_commit());
-    apply_->ScheduleApply();
   } else {
     LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: Receive PingPong AppendEntries from %s:%d", 
         append_entries.ip().c_str(), append_entries.port());
+  }
+  if (append_entries.leader_commit() != context_->commit_index) {
+    AdvanceFollowerCommitIndex(append_entries.leader_commit());
+    apply_->ScheduleApply();
   }
   success = true;
   // only when follower successfully do appendentries, we will update commit index

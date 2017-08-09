@@ -14,10 +14,20 @@ uint64_t NowMicros() {
   gettimeofday(&tv, NULL);
   return static_cast<uint64_t>(tv.tv_sec) * 1000000 + tv.tv_usec;
 }
-std::string mystr[100100];
 
-int main()
+std::string keystr[1001000];
+std::string valstr[1001000];
+int val_size = 128;
+int item_num = 1000;
+
+int main(int argc, char *argv[])
 {
+  if (argc > 1) {
+    val_size = atoi(argv[1]);
+  }
+
+  printf("test write 3 node and then join the other 2 node case, key size %d\n", val_size);
+
   Options op("127.0.0.1:8901,127.0.0.1:8902,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905", "127.0.0.1", 8901, "./data1/");
   op.Dump();
 
@@ -44,36 +54,70 @@ int main()
   printf("%s\n", s.ToString().c_str());
 
   std::string msg;
-  int i = 100;
+  int cnt = 1;
   uint64_t st = NowMicros(), ed;
-  for (int i = 0; i < 100000; i++) {
-    mystr[i] = slash::RandomString(10);
-  }
 
   while (1) {
     if (f1->HasLeader()) {
       break;
     }
+    printf("electing leader... sleep 2s\n");
     sleep(2);
   }
 
-  // ran at the begining
-  printf("run 5 times, every time write 100 item. at the beginning state\n");
-  i = 5;
-  std::string val;
-  while (i--) {
-    f3->GetServerStatus(msg);
-    for (int j = 0; j < 100; j++) {
-      f3->Write(mystr[j], mystr[j]);
-      s = f3->Read(mystr[j], val);
-      printf("status %s val %s\n", s.ToString().c_str(), val.c_str());
+  while (cnt--) {
+    for (int i = 0; i < item_num; i++) {
+      valstr[i] = slash::RandomString(10);
     }
+    f1->GetServerStatus(msg);
+    printf("%s\n", msg.c_str());
+    st = NowMicros();
+    for (int j = 0; j < item_num; j++) {
+      f1->Write(keystr[j], valstr[j]);
+    }
+    ed = NowMicros();
+    printf("write 100000 cost time microsecond(us) %ld, qps %llu\n", ed - st, item_num * 1000000LL / (ed - st));
+  }
+
+  delete f1;
+  delete f5;
+
+  while (1) {
+    if (f2->HasLeader()) {
+      break;
+    }
+    printf("electing leader... sleep 2s\n");
+    sleep(2);
+  }
+  cnt = 1;
+  while (cnt--) {
+    for (int i = 0; i < item_num; i++) {
+      valstr[i] = slash::RandomString(10);
+    }
+    f2->GetServerStatus(msg);
+    printf("%s\n", msg.c_str());
+    st = NowMicros();
+    for (int j = 0; j < item_num; j++) {
+      f2->Write(keystr[j], valstr[j]);
+    }
+    ed = NowMicros();
+    printf("write 100000 cost time microsecond(us) %ld, qps %llu\n", ed - st, item_num * 1000000LL / (ed - st));
+  }
+
+  s = Floyd::Open(op, &f1);
+  s = Floyd::Open(op5, &f5);
+
+  cnt = 10;
+  while (cnt--) {
+    f2->GetServerStatus(msg);
     printf("%s\n", msg.c_str());
   }
 
-  // sleep(1);
-
-
   getchar();
+  delete f2;
+  delete f3;
+  delete f4;
+  delete f5;
+  delete f1;
   return 0;
 }

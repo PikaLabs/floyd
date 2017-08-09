@@ -57,28 +57,26 @@ RaftLog::~RaftLog() {
 
 uint64_t RaftLog::Append(const std::vector<Entry *> &entries) {
   slash::MutexLock l(&lli_mutex_);
-  std::string buf;
-  rocksdb::Status s;
   rocksdb::WriteBatch wb;
   LOGV(DEBUG_LEVEL, info_log_, "RaftLog::Append: entries.size %lld", entries.size());
   for (size_t i = 0; i < entries.size(); i++) {
+    std::string buf;
     entries[i]->SerializeToString(&buf);
     last_log_index_++;
-    // wb.Put(UintToBitStr(last_log_index_), buf);
-    s = db_->Put(rocksdb::WriteOptions(), UintToBitStr(last_log_index_), buf);
-    if (!s.ok()) {
-      LOGV(ERROR_LEVEL, info_log_, "RaftLog::Append %lu string %s false\n", last_log_index_, UintToBitStr(last_log_index_).c_str());
-      return --last_log_index_;
-    }
+    wb.Put(UintToBitStr(last_log_index_), buf);
+    // s = db_->Put(rocksdb::WriteOptions(), UintToBitStr(last_log_index_), buf);
+    // if (!s.ok()) {
+    //   LOGV(ERROR_LEVEL, info_log_, "RaftLog::Append %lu string %s false\n", last_log_index_, UintToBitStr(last_log_index_).c_str());
+    //   return --last_log_index_;
+    // }
   }
-  /*
-   * s = db_->Write(rocksdb::WriteOptions(), &wb);
-   * if (!s.ok()) {
-   *   LOGV(ERROR_LEVEL, info_log_, "RaftLog::Append %lu false\n", last_log_index_);
-   *   return last_log_index_;
-   * }
-   * last_log_index_ += entries.size();
-   */
+  rocksdb::Status s;
+  s = db_->Write(rocksdb::WriteOptions(), &wb);
+  if (!s.ok()) {
+    LOGV(ERROR_LEVEL, info_log_, "RaftLog::Append %lu false\n", last_log_index_);
+    last_log_index_ -= entries.size();
+    return last_log_index_;
+  }
   return last_log_index_;
 }
 
@@ -130,6 +128,8 @@ int RaftLog::TruncateSuffix(uint64_t index) {
   for (; last_log_index_ >= index; last_log_index_--) {
     rocksdb::Status s = db_->Delete(rocksdb::WriteOptions(), UintToBitStr(last_log_index_));
     if (!s.ok()) {
+      LOGV(ERROR_LEVEL, info_log_, "RaftLog::TruncateSuffix Error last_log_index %lu "
+          "truncate from %lu\n", last_log_index_, index);
       return -1;
     }
   }

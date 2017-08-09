@@ -37,7 +37,7 @@ int cl(const std::string path) {
   for (int i = 0; i < 10; i++) {
     Entry *entry = new Entry();
     snprintf(buff, sizeof(buff), "%d", i);
-    InitEntry(10, std::string(buff, sizeof(int)), std::string(buff, sizeof(int)));
+    InitEntry(10, std::string(buff, sizeof(int)), std::string(buff, sizeof(int)), entry);
     entries.push_back(entry);
   }
   raft_log->Append(entries);

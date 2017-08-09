@@ -53,6 +53,12 @@ int FloydPrimary::Stop() {
 //    2. another long live Cron for ElectLeaderCheck, which is started when
 //    creating Primary;
 void FloydPrimary::AddTask(TaskType type, bool is_delay) {
+  /*
+   * int timer_queue_size, queue_size;
+   * bg_thread_.QueueSize(&timer_queue_size, &queue_size);
+   * LOGV(INFO_LEVEL, info_log_, "FloydPrimary::AddTask timer_queue size %d queue_size %d tasktype %d is_delay %d", 
+   *     timer_queue_size, queue_size, type, is_delay);
+   */
   switch (type) {
   case kHeartBeat: {
     if (is_delay) {
@@ -140,14 +146,13 @@ void FloydPrimary::NoticePeerTask(TaskType type) {
   for (auto& peer : peers_) {
     switch (type) {
     case kHeartBeat:
-      LOGV(INFO_LEVEL, info_log_, "FloydPrimary::NoticePeerTask server %s:%d send request vote message to %s at term %d",
+      LOGV(INFO_LEVEL, info_log_, "FloydPrimary::NoticePeerTask server %s:%d Add request Task to queue to %s at term %d",
           options_.local_ip.c_str(), options_.local_port, peer.second->peer_addr().c_str(), context_->current_term);
       peer.second->AddRequestVoteTask();
       break;
     case kNewCommand:
-      LOGV(DEBUG_LEVEL, info_log_, "FloydPrimary::NoticePeerTask server %s:%d send appendEntries message to %s at term %d",
+      LOGV(DEBUG_LEVEL, info_log_, "FloydPrimary::NoticePeerTask server %s:%d Add appendEntries Task to queue to %s at term %d",
           options_.local_ip.c_str(), options_.local_port, peer.second->peer_addr().c_str(), context_->current_term);
-
       peer.second->AddAppendEntriesTask();
       break;
     default:
