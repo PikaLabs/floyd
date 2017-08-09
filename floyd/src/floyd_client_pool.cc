@@ -23,52 +23,36 @@ ClientPool::ClientPool(Logger* info_log, int timeout_ms, int retry)
 
 Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req, CmdResponse* res) {
   // LOGV(DEBUG_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s", CmdType(req).c_str(), server.c_str());
-  Status ret;
-  char stage = 0;
   Client *client = GetClient(server);
   pink::PinkCli* cli = client->cli;
 
+  Status ret = Status::Incomplete("Not send");
   slash::MutexLock l(&client->mu);
   // TODO(anan) concurrent by epoll
-  for (int i = 0; i < retry_; i++) {
-    // Stage 0: Need Connect
-    if ((stage & 0x01) == 0) {
-      ret = UpHoldCli(client);
-      if (!ret.ok()) {
-        LOGV(WARN_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s, Connect Failed %s",
-             CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
-        cli->Close();
-        usleep(5000);
-        continue;
-      }
-      stage |= 0x01;
+  for (int i = 0; !ret.ok() && i < retry_; i++) {
+    ret = UpHoldCli(client);
+    if (!ret.ok()) {
+      LOGV(WARN_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s, Connect Failed %s",
+          CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
+      continue;
     }
 
-    // Stage 1: Need Send
-    if ((stage & 0x02) == 0) {
-      ret = cli->Send((void*)&req);
-      LOGV(DEBUG_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s Send return %s",
-           CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
-      if (ret.ok()) {
-        stage |= 0x02;
-      } else if (!ret.IsTimeout()) {
-        cli->Close();
-      }
+    ret = cli->Send((void*)&req);
+    if (!ret.ok()) {
+      LOGV(WARN_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s, Send return %s",
+          CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
+      cli->Close();
+      continue;
     }
 
-    // Stage 2: Need Recv
-    if ((stage & 0x04) == 0) {
-      ret = cli->Recv(res);
-      LOGV(DEBUG_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s, Recv return %s",
-           CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
-      if (ret.ok()) {
-        break;
-      } else if (!ret.IsTimeout()) {
-        cli->Close();
-      }
+    ret = cli->Recv(res);
+    if (!ret.ok()) {
+      LOGV(WARN_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s, Recv return %s",
+          CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
+      cli->Close();
+      continue;
     }
   }
-
   return ret;
 }
 
