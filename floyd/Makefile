@@ -1,11 +1,9 @@
 CLEAN_FILES = # deliberately empty, so we can append below.
 CC=cc
 CXX=g++
-LDFLAGS= -lpthread -lrt -lprotobuf $(EXTRA_LDFLAGS)
-CFLAGS= -DOS_LINUX -fno-builtin-memcmp -msse -msse4.2 ${EXTRA_CFLAGS}
-CXXFLAGS=-std=c++11 -DOS_LINUX -fno-builtin-memcmp -msse -msse4.2 ${EXTRA_CXXFLAGS}
-SHARED_CFLAGS=-fPIC
-SHARED_LDFLAGS=-Wl,--no-as-needed -shared -Wl,-soname -Wl,
+LDFLAGS= -lpthread -lrt -lprotobuf
+CFLAGS= -DOS_LINUX -fno-builtin-memcmp -msse -msse4.2
+CXXFLAGS=-std=c++11 -fno-builtin-memcmp -msse -msse4.2
 PROFILING_FLAGS=-pg
 ARFLAGS = rs
 OPT=
@@ -169,11 +167,9 @@ $(LIBRARY): $(LIBOBJECTS)
 
 clean:
 	rm -f $(TESTS)
-	rm -f $(LIBRARY) $(SHARED)
+	rm -f $(LIBRARY)
 	rm -rf $(CLEAN_FILES)
 	rm -rf $(LIBOUTPUT)
-	find . -name "*.[oda]" ! -path "./third/*" -exec rm -f {} \;
-	find . -type f -regex ".*\.\(\(gcda\)\|\(gcno\)\)" -exec rm {} \;
 
 .cc.o:
 	$(AM_V_CC)$(CXX) $(CXXFLAGS) -c $< -o $@ $(COVERAGEFLAGS)
