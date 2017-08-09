@@ -25,10 +25,6 @@ ifeq ($(MAKECMDGOALS),clean)
   DEBUG_LEVEL=0
 endif
 
-ifeq ($(MAKECMDGOALS),shared_lib)
-  DEBUG_LEVEL=0
-endif
-
 ifeq ($(MAKECMDGOALS),static_lib)
   DEBUG_LEVEL=0
 endif
@@ -159,35 +155,7 @@ LIBOUTPUT = ./lib
 dummy := $(shell mkdir -p $(LIBOUTPUT))
 LIBRARY = $(LIBOUTPUT)/${LIBNAME}.a
 
-FLOYD_MAJOR = $(shell egrep "FLOYD_MAJOR.[0-9]" include/version.h | cut -d ' ' -f 3)
-FLOYD_MINOR = $(shell egrep "FLOYD_MINOR.[0-9]" include/version.h | cut -d ' ' -f 3)
-FLOYD_PATCH = $(shell egrep "FLOYD_PATCH.[0-9]" include/version.h | cut -d ' ' -f 3)
-
-#-----------------------------------------------
-# Create platform independent shared libraries.
-#-----------------------------------------------
-SHARED_EXT=so
-
-SHARED_MAJOR = $(FLOYD_MAJOR)
-SHARED_MINOR = $(FLOYD_MINOR)
-SHARED_PATCH = $(FLOYD_PATCH)
-SHARED1 = ${LIBNAME}.$(SHARED_EXT)
-SHARED2 = $(SHARED1).$(SHARED_MAJOR)
-SHARED3 = $(SHARED1).$(SHARED_MAJOR).$(SHARED_MINOR)
-SHARED4 = $(SHARED1).$(SHARED_MAJOR).$(SHARED_MINOR).$(SHARED_PATCH)
-SHARED = $(SHARED1) $(SHARED2) $(SHARED3) $(SHARED4)
-$(SHARED1): $(SHARED4)
-	ln -fs $(SHARED4) $(SHARED1)
-$(SHARED2): $(SHARED4)
-	ln -fs $(SHARED4) $(SHARED2)
-$(SHARED3): $(SHARED4)
-	ln -fs $(SHARED4) $(SHARED3)
-
-$(SHARED4): $(LIBOBJECTS)
-	$(CXX) $(SHARED_LDFLAGS)$(SHARED3) $(CXXFLAGS) $(SHARED_CFLAGS) $(LIB_SOURCES) \
-    $(LDFLAGS) -o $@
-
-.PHONY: clean dbg static_lib shared_lib all
+.PHONY: clean dbg static_lib all
 
 all: $(LIBRARY)
 

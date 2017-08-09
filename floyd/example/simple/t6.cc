@@ -84,7 +84,7 @@ int main(int argc, char * argv[])
   }
   while (1) {
     if (f1->HasLeader()) {
-      f1->GetServerStatus(msg);
+      f1->GetServerStatus(&msg);
       printf("%s\n", msg.c_str());
       break;
     }

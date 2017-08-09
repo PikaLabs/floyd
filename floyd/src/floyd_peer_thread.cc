@@ -5,8 +5,11 @@
 
 #include "floyd/src/floyd_peer_thread.h"
 
-#include <climits>
 #include <google/protobuf/text_format.h>
+
+#include <algorithm>
+#include <climits>
+#include <vector>
 
 #include "slash/include/env.h"
 #include "slash/include/slash_mutex.h"
@@ -50,10 +53,10 @@ int Peer::Start() {
 Peer::~Peer() {
   LOGV(INFO_LEVEL, info_log_, "Peer(%s) exit!!!", peer_addr_.c_str());
 }
+
 int Peer::Stop() {
   return bg_thread_.StopThread();
 }
-
 
 bool Peer::CheckAndVote(uint64_t vote_term) {
   if (context_->current_term != vote_term) {
@@ -73,7 +76,7 @@ void Peer::AddRequestVoteTask() {
   /*
    * int timer_queue_size, queue_size;
    * bg_thread_.QueueSize(&timer_queue_size, &queue_size);
-   * LOGV(INFO_LEVEL, info_log_, "Peer::AddRequestVoteTask timer_queue size %d queue_size %d", 
+   * LOGV(INFO_LEVEL, info_log_, "Peer::AddRequestVoteTask timer_queue size %d queue_size %d",
    *     timer_queue_size, queue_size);
    */
   bg_thread_.Schedule(&RequestVoteRPCWrapper, this);
@@ -108,7 +111,7 @@ void Peer::RequestVoteRPC() {
   if (!result.ok()) {
     LOGV(DEBUG_LEVEL, info_log_, "Peer::RequestVoteRPC: RequestVote to %s failed %s",
          peer_addr_.c_str(), result.ToString().c_str());
-    return ;
+    return;
   }
 
   {
@@ -116,14 +119,14 @@ void Peer::RequestVoteRPC() {
   if (context_->role == Role::kCandidate) {
     // kOk means RequestVote success, opposite vote for me
     if (res.request_vote_res().vote_granted() == true) {    // granted
-      LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRpc: Candidate %s:%d get vote from node %s at term %d", 
+      LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRpc: Candidate %s:%d get vote from node %s at term %d",
           options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), context_->current_term);
       // However, we need check whether this vote is vote for old term
       // we need igore these type of vote
       if (CheckAndVote(res.request_vote_res().term())) {
         context_->BecomeLeader();
         UpdatePeerInfo();
-        LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRPC: %s:%d become leader at term %d", 
+        LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRPC: %s:%d become leader at term %d",
             options_.local_ip.c_str(), options_.local_port, context_->current_term);
         primary_->AddTask(kHeartBeat, false);
       }
@@ -145,12 +148,12 @@ void Peer::RequestVoteRPC() {
     // TODO(ba0tiao) if i am not longer candidate
   }
   }
-  return ;
+  return;
 }
 
 uint64_t Peer::QuorumMatchIndex() {
   std::vector<uint64_t> values;
-  std::map<std::string, Peer*>::iterator iter; 
+  std::map<std::string, Peer*>::iterator iter;
   for (iter = peers_.begin(); iter != peers_.end(); iter++) {
     if (iter->first == peer_addr_) {
       values.push_back(match_index_);
@@ -175,18 +178,21 @@ void Peer::AdvanceLeaderCommitIndex() {
   }
   return;
 }
+
 void Peer::AddAppendEntriesTask() {
   /*
    * int timer_queue_size, queue_size;
    * bg_thread_.QueueSize(&timer_queue_size, &queue_size);
-   * LOGV(INFO_LEVEL, info_log_, "Peer::AddAppendEntriesTask timer_queue size %d queue_size %d", 
+   * LOGV(INFO_LEVEL, info_log_, "Peer::AddAppendEntriesTask timer_queue size %d queue_size %d",
    *     timer_queue_size, queue_size);
    */
   bg_thread_.Schedule(&AppendEntriesRPCWrapper, this);
 }
+
 void Peer::AppendEntriesRPCWrapper(void *arg) {
   reinterpret_cast<Peer*>(arg)->AppendEntriesRPC();
 }
+
 void Peer::AppendEntriesRPC() {
   uint64_t prev_log_index = next_index_ - 1;
   uint64_t num_entries = 0;
@@ -242,14 +248,13 @@ void Peer::AppendEntriesRPC() {
     }
   }
   delete tmp_entry;
-  LOGV(DEBUG_LEVEL, info_log_, "Peer::AppendEntriesRPC: peer_addr(%s)'s next_index_ %llu, my last_log_index %llu" 
+  LOGV(DEBUG_LEVEL, info_log_, "Peer::AppendEntriesRPC: peer_addr(%s)'s next_index_ %llu, my last_log_index %llu"
       " AppendEntriesRPC will send %d iterm", peer_addr_.c_str(), next_index_.load(), last_log_index, num_entries);
   // if the AppendEntries don't contain any log item
   if (num_entries == 0) {
     LOGV(INFO_LEVEL, info_log_, "Peer::AppendEntryRpc server %s:%d Send pingpong appendEntries message to %s at term %d",
         options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), context_->current_term);
   }
-
   }
 
   CmdResponse res;
@@ -260,7 +265,7 @@ void Peer::AppendEntriesRPC() {
   if (!result.ok()) {
     LOGV(WARN_LEVEL, info_log_, "Peer::AppendEntries: Candidate %s:%d SendAndRecv to %s failed %s",
          options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), result.ToString().c_str());
-    return ;
+    return;
   }
 
   // here we may get a larger term, and transfer to follower
@@ -313,7 +318,7 @@ void Peer::AppendEntriesRPC() {
         // Prev log don't match, so we retry with more prev one according to
         // response
         next_index_ = adjust_index;
-        LOGV(INFO_LEVEL, info_log_, "Peer::AppEntriesRPC: peer_addr %s Adjust peer next_index_, Now next_index_ is %lu", 
+        LOGV(INFO_LEVEL, info_log_, "Peer::AppEntriesRPC: peer_addr %s Adjust peer next_index_, Now next_index_ is %lu",
             peer_addr_.c_str(), adjust_index);
         AddAppendEntriesTask();
       }
@@ -323,7 +328,7 @@ void Peer::AppendEntriesRPC() {
   } else if (context_->role == Role::kCandidate) {
   }
   }
-  return ;
+  return;
 }
 
-} // namespace floyd
+}  // namespace floyd

@@ -48,8 +48,8 @@ class FloydPrimary {
   void set_peers(PeersSet peers) {
     peers_ = peers;
   }
- private:
 
+ private:
   FloydContext* context_;
   RaftMeta* raft_meta_;
   PeersSet peers_;

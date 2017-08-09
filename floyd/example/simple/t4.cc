@@ -49,7 +49,7 @@ int main()
   bool is_writed = false;
   std::string msg;
   while (1) {
-    f1->GetServerStatus(msg);
+    f1->GetServerStatus(&msg);
     if (is_writed == false) {
       // writing one record to update the meta data
       slash::Status s = f1->Write("lastdata", "lastdata");

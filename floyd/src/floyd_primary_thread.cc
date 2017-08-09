@@ -27,7 +27,7 @@
 
 namespace floyd {
 
-FloydPrimary::FloydPrimary(FloydContext* context, RaftMeta* raft_meta, 
+FloydPrimary::FloydPrimary(FloydContext* context, RaftMeta* raft_meta,
     const Options& options, Logger* info_log)
   : context_(context),
     raft_meta_(raft_meta),
@@ -56,7 +56,7 @@ void FloydPrimary::AddTask(TaskType type, bool is_delay) {
   /*
    * int timer_queue_size, queue_size;
    * bg_thread_.QueueSize(&timer_queue_size, &queue_size);
-   * LOGV(INFO_LEVEL, info_log_, "FloydPrimary::AddTask timer_queue size %d queue_size %d tasktype %d is_delay %d", 
+   * LOGV(INFO_LEVEL, info_log_, "FloydPrimary::AddTask timer_queue size %d queue_size %d tasktype %d is_delay %d",
    *     timer_queue_size, queue_size, type, is_delay);
    */
   switch (type) {
@@ -104,6 +104,7 @@ void FloydPrimary::LaunchHeartBeat() {
 void FloydPrimary::LaunchCheckLeaderWrapper(void *arg) {
   reinterpret_cast<FloydPrimary *>(arg)->LaunchCheckLeader();
 }
+
 void FloydPrimary::LaunchCheckLeader() {
   slash::MutexLock l(&context_->global_mu);
   if (context_->role == Role::kFollower || context_->role == Role::kCandidate) {
@@ -117,7 +118,7 @@ void FloydPrimary::LaunchCheckLeader() {
     } else if (context_->last_op_time + options_.check_leader_us < slash::NowMicros()) {
       context_->BecomeCandidate();
       LOGV(INFO_LEVEL, info_log_, "FloydPrimary::LaunchCheckLeader: %s:%d Become Candidate because of timeout, new term is %d"
-         " voted for %s:%d", options_.local_ip.c_str(), options_.local_port, context_->current_term, 
+         " voted for %s:%d", options_.local_ip.c_str(), options_.local_port, context_->current_term,
          context_->voted_for_ip.c_str(), context_->voted_for_port);
       raft_meta_->SetCurrentTerm(context_->current_term);
       raft_meta_->SetVotedForIp(context_->voted_for_ip);
@@ -131,6 +132,7 @@ void FloydPrimary::LaunchCheckLeader() {
 void FloydPrimary::LaunchNewCommandWrapper(void *arg) {
   reinterpret_cast<FloydPrimary *>(arg)->LaunchNewCommand();
 }
+
 void FloydPrimary::LaunchNewCommand() {
   LOGV(DEBUG_LEVEL, info_log_, "FloydPrimary::LaunchNewCommand");
   if (context_->role != Role::kLeader) {
@@ -161,4 +163,4 @@ void FloydPrimary::NoticePeerTask(TaskType type) {
   }
 }
 
-} // namespace floyd
+}  // namespace floyd

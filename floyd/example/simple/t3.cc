@@ -62,10 +62,10 @@ int main()
   i = 5;
   std::string val;
   while (i--) {
-    f3->GetServerStatus(msg);
+    f3->GetServerStatus(&msg);
     for (int j = 0; j < 100; j++) {
       f3->Write(mystr[j], mystr[j]);
-      s = f3->Read(mystr[j], val);
+      s = f3->Read(mystr[j], &val);
       printf("status %s val %s\n", s.ToString().c_str(), val.c_str());
     }
     printf("%s\n", msg.c_str());

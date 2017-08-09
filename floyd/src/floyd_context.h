@@ -8,6 +8,8 @@
 
 #include <pthread.h>
 
+#include <string>
+
 #include "floyd/include/floyd_options.h"
 #include "floyd/src/raft_log.h"
 
@@ -28,18 +30,18 @@ class RaftMeta;
  * we use FloydContext to avoid passing the floyd_impl's this point to other thread
  */
 struct FloydContext {
-  /* Role related */
-  FloydContext(const Options& _options) 
+  // Role related
+  explicit FloydContext(const Options& _options)
     : options(_options),
       voted_for_ip(""),
-      voted_for_port(0), 
+      voted_for_port(0),
       leader_ip(""),
       leader_port(0),
       vote_quorum(0),
       commit_index(0),
       last_applied(0),
       last_op_time(0),
-      apply_cond(&apply_mu) {};
+      apply_cond(&apply_mu) {}
 
   void RecoverInit(RaftMeta *raft);
   void BecomeFollower(uint64_t new_iterm,

@@ -15,7 +15,7 @@
 namespace floyd {
 
 class FloydImpl;
-class FloydWorkerConnFactory; 
+class FloydWorkerConnFactory;
 class FloydWorkerHandle;
 
 class FloydWorkerConn : public pink::PbConn {
@@ -37,11 +37,8 @@ class FloydWorkerConnFactory : public pink::ConnFactory {
   explicit FloydWorkerConnFactory(FloydImpl* floyd)
     : floyd_(floyd) {}
 
-  virtual pink::PinkConn *NewPinkConn(int connfd,
-                                      const std::string &ip_port,
-                                      pink::ServerThread *server_thread,
-                                      void* worker_private_data)
-      const override {
+  pink::PinkConn *NewPinkConn(int connfd, const std::string &ip_port,
+      pink::ServerThread *server_thread, void* worker_private_data) const override {
     return new FloydWorkerConn(connfd, ip_port, server_thread, floyd_);
   }
 
@@ -50,11 +47,11 @@ class FloydWorkerConnFactory : public pink::ConnFactory {
 };
 
 class FloydWorkerHandle : public pink::ServerHandle {
-public:
+ public:
   explicit FloydWorkerHandle(FloydImpl* f);
   using pink::ServerHandle::AccessHandle;
-  virtual bool AccessHandle(std::string& ip) const override;
-private:
+  bool AccessHandle(std::string& ip) const override;
+ private:
   FloydImpl* floyd_;
 };
 

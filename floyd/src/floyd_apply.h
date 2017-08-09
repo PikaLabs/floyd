@@ -19,7 +19,7 @@ class RaftMeta;
 class RaftLog;
 class Logger;
 
-class FloydApply {
+class FloydApply  {
  public:
   FloydApply(FloydContext* context, rocksdb::DB* db, RaftMeta* raft_meta, RaftLog* raft_log, Logger* info_log);
   ~FloydApply();

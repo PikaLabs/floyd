@@ -32,8 +32,7 @@ extern uint64_t BitStrToUint(const std::string &str) {
   return be64toh(num);
 }
 
-
-RaftLog::RaftLog(rocksdb::DB *db, Logger *info_log) : 
+RaftLog::RaftLog(rocksdb::DB *db, Logger *info_log) :
   db_(db),
   info_log_(info_log),
   last_log_index_(0) {
@@ -55,7 +54,7 @@ RaftLog::RaftLog(rocksdb::DB *db, Logger *info_log) :
 RaftLog::~RaftLog() {
 }
 
-uint64_t RaftLog::Append(const std::vector<Entry *> &entries) {
+uint64_t RaftLog::Append(const std::vector<const Entry *> &entries) {
   slash::MutexLock l(&lli_mutex_);
   rocksdb::WriteBatch wb;
   LOGV(DEBUG_LEVEL, info_log_, "RaftLog::Append: entries.size %lld", entries.size());
@@ -113,7 +112,7 @@ bool RaftLog::GetLastLogTermAndIndex(uint64_t* last_log_term, uint64_t* last_log
     return true;
   }
   Entry entry;
-  bool is = entry.ParseFromString(buf);
+  entry.ParseFromString(buf);
   *last_log_index = last_log_index_;
   *last_log_term = entry.term();
   return true;
@@ -136,4 +135,4 @@ int RaftLog::TruncateSuffix(uint64_t index) {
   return 0;
 }
 
-}
+}  // namespace floyd

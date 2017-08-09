@@ -7,6 +7,7 @@
 #define FLOYD_SRC_RAFT_META_H_
 
 #include <pthread.h>
+#include <string>
 
 #include "rocksdb/db.h"
 

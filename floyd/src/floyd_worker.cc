@@ -22,7 +22,7 @@ FloydWorker::FloydWorker(int port, int cron_interval, FloydImpl* floyd)
 FloydWorkerConn::FloydWorkerConn(int fd, const std::string& ip_port,
     pink::ServerThread* thread, FloydImpl* floyd)
   : PbConn(fd, ip_port, thread),
-  floyd_(floyd){
+  floyd_(floyd) {
   }
 
 FloydWorkerConn::~FloydWorkerConn() {}
@@ -77,12 +77,12 @@ FloydWorkerHandle::FloydWorkerHandle(FloydImpl* f)
 
 // Only connection from other node should be accepted
 bool FloydWorkerHandle::AccessHandle(std::string& ip_port) const {
-  //TODO(anan) 
-  //if (floyd_->peers_.find(ip_port) == floyd_->peers_.end()) {
+  // TODO(anan)
+  // if (floyd_->peers_.find(ip_port) == floyd_->peers_.end()) {
   //  LOGV(WARN_LEVEL, floyd_->info_log_, "WorkerThread deny access from %s", ip_port.c_str());
   //  return false;
-  //}
+  // }
   return true;
 }
 
-} // namespace floyd
+}  // namespace floyd

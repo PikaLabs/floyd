@@ -7,6 +7,8 @@
 #define FLOYD_SRC_FLOYD_IMPL_H_
 
 #include <string>
+#include <vector>
+#include <utility>
 #include <map>
 
 #include "slash/include/slash_mutex.h"
@@ -16,7 +18,6 @@
 #include "floyd/include/floyd.h"
 #include "floyd/include/floyd_options.h"
 #include "floyd/src/raft_log.h"
-
 
 namespace floyd {
 using slash::Status;
@@ -37,9 +38,9 @@ class CmdResponse_ServerStatus;
 
 typedef std::map<std::string, Peer*> PeersSet;
 
-class FloydImpl : public Floyd {
+class FloydImpl : public Floyd  {
  public:
-  FloydImpl(const Options& options);
+  explicit FloydImpl(const Options& options);
   virtual ~FloydImpl();
 
   Status Init();
@@ -47,22 +48,22 @@ class FloydImpl : public Floyd {
   virtual Status Write(const std::string& key, const std::string& value);
   virtual Status DirtyWrite(const std::string& key, const std::string& value);
   virtual Status Delete(const std::string& key);
-  virtual Status Read(const std::string& key, std::string& value);
-  virtual Status DirtyRead(const std::string& key, std::string& value);
+  virtual Status Read(const std::string& key, std::string* value);
+  virtual Status DirtyRead(const std::string& key, std::string* value);
 
   // return true if leader has been elected
   virtual bool GetLeader(std::string* ip_port);
   virtual bool GetLeader(std::string* ip, int* port);
   virtual bool HasLeader();
-  virtual bool GetAllNodes(std::vector<std::string>& nodes);
+  virtual bool GetAllNodes(std::vector<std::string>* nodes);
   virtual bool IsLeader();
-  
-  virtual bool GetServerStatus(std::string& msg);
+
+  virtual bool GetServerStatus(std::string* msg);
   // log level can be modified
   virtual void set_log_level(const int log_level);
 
  private:
-  //friend class Floyd;
+  // friend class Floyd;
   friend class FloydWorkerConn;
   friend class FloydWorkerHandle;
   friend class Peer;
@@ -100,15 +101,14 @@ class FloydImpl : public Floyd {
    * these two are the response to the request vote and appendentries
    */
   void ReplyRequestVote(const CmdRequest& cmd, CmdResponse* cmd_res);
-  void ReplyAppendEntries(CmdRequest& cmd, CmdResponse* cmd_res);
-
+  void ReplyAppendEntries(const CmdRequest& cmd, CmdResponse* cmd_res);
 
   bool AdvanceFollowerCommitIndex(uint64_t new_commit_index);
-  
+
   // No coping allowed
   FloydImpl(const FloydImpl&);
   void operator=(const FloydImpl&);
-}; // FloydImpl
+};  // FloydImpl
 
-} // namespace floyd
+}  // namespace floyd
 #endif  // FLOYD_SRC_FLOYD_IMPL_H_

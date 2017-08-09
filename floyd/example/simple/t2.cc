@@ -49,7 +49,7 @@ int main()
   std::string msg;
   int i = 8;
   while (i--) {
-    f1->GetServerStatus(msg);
+    f1->GetServerStatus(&msg);
     printf("%s\n", msg.c_str());
     sleep(2);
   }
@@ -59,7 +59,7 @@ int main()
   delete f3;
   i = 8;
   while (i--) {
-    f1->GetServerStatus(msg);
+    f1->GetServerStatus(&msg);
     printf("%s\n", msg.c_str());
     sleep(2);
   }
@@ -70,7 +70,7 @@ int main()
   delete f4;
   i = 8;
   while (i--) {
-    f1->GetServerStatus(msg);
+    f1->GetServerStatus(&msg);
     printf("%s\n", msg.c_str());
     sleep(2);
   }
@@ -81,7 +81,7 @@ int main()
   delete f5;
   i = 8;
   while (i--) {
-    f3->GetServerStatus(msg);
+    f3->GetServerStatus(&msg);
     printf("%s\n", msg.c_str());
     sleep(2);
   }
@@ -90,7 +90,7 @@ int main()
   delete f2;
   i = 8;
   while (i--) {
-    f3->GetServerStatus(msg);
+    f3->GetServerStatus(&msg);
     printf("%s\n", msg.c_str());
     sleep(2);
   }
@@ -101,7 +101,7 @@ int main()
   s = Floyd::Open(op5, &f5);
   i = 8;
   while (i--) {
-    f1->GetServerStatus(msg);
+    f1->GetServerStatus(&msg);
     printf("%s\n", msg.c_str());
     sleep(2);
   }

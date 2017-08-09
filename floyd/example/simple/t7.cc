@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     for (int i = 0; i < item_num; i++) {
       valstr[i] = slash::RandomString(10);
     }
-    f1->GetServerStatus(msg);
+    f1->GetServerStatus(&msg);
     printf("%s\n", msg.c_str());
     st = NowMicros();
     for (int j = 0; j < item_num; j++) {
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
     for (int i = 0; i < item_num; i++) {
       valstr[i] = slash::RandomString(10);
     }
-    f2->GetServerStatus(msg);
+    f2->GetServerStatus(&msg);
     printf("%s\n", msg.c_str());
     st = NowMicros();
     for (int j = 0; j < item_num; j++) {
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 
   cnt = 10;
   while (cnt--) {
-    f2->GetServerStatus(msg);
+    f2->GetServerStatus(&msg);
     printf("%s\n", msg.c_str());
     sleep(2);
   }

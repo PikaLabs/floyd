@@ -26,18 +26,18 @@ class Floyd  {
   virtual Status Write(const std::string& key, const std::string& value) = 0;
   virtual Status DirtyWrite(const std::string& key, const std::string& value) = 0;
   virtual Status Delete(const std::string& key) = 0;
-  virtual Status Read(const std::string& key, std::string& value) = 0;
-  virtual Status DirtyRead(const std::string& key, std::string& value) = 0;
+  virtual Status Read(const std::string& key, std::string* value) = 0;
+  virtual Status DirtyRead(const std::string& key, std::string* value) = 0;
 
   // return true if leader has been elected
   virtual bool GetLeader(std::string* ip_port) = 0;
   virtual bool GetLeader(std::string* ip, int* port) = 0;
   virtual bool HasLeader() = 0;
-  virtual bool GetAllNodes(std::vector<std::string>& nodes) = 0;
+  virtual bool GetAllNodes(std::vector<std::string>* nodes) = 0;
   virtual bool IsLeader() = 0;
 
   // used for debug
-  virtual bool GetServerStatus(std::string& msg) = 0;
+  virtual bool GetServerStatus(std::string* msg) = 0;
 
   // log level can be modified
   virtual void set_log_level(const int log_level) = 0;

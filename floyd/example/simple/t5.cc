@@ -31,7 +31,7 @@ int main()
   std::string msg;
   int cnt = 10;
   while (cnt--) {
-    f1->GetServerStatus(msg);
+    f1->GetServerStatus(&msg);
     printf("%s\n", msg.c_str());
     sleep(2);
   }
@@ -40,7 +40,7 @@ int main()
   for (int i = 0; i < 100000; i++) {
     mystr[i] = slash::RandomString(10);
   }
-  f1->GetServerStatus(msg);
+  f1->GetServerStatus(&msg);
   printf("%s\n", msg.c_str());
   st = NowMicros();
   for (int j = 0; j < 100000; j++) {

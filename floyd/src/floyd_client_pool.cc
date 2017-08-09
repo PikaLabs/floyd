@@ -37,7 +37,7 @@ Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req,
       continue;
     }
 
-    ret = cli->Send((void*)&req);
+    ret = cli->Send((void *)(&req));
     if (!ret.ok()) {
       LOGV(WARN_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s, Send return %s",
           CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());

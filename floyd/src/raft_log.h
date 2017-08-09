@@ -6,9 +6,11 @@
 #ifndef FLOYD_SRC_RAFT_LOG_H_
 #define FLOYD_SRC_RAFT_LOG_H_
 
-#include <string>
 #include <stdint.h>
+
 #include <atomic>
+#include <string>
+#include <vector>
 
 #include "rocksdb/db.h"
 #include "slash/include/slash_mutex.h"
@@ -23,7 +25,7 @@ class RaftLog {
   RaftLog(rocksdb::DB* db, Logger* info_log);
   ~RaftLog();
 
-  uint64_t Append(const std::vector<Entry *> &entries);
+  uint64_t Append(const std::vector<const Entry *> &entries);
 
   int GetEntry(uint64_t index, Entry *entry);
 
@@ -51,4 +53,4 @@ class RaftLog {
 
 }; // namespace floyd
 
-#endif  // FLOYD_RAFT_LOG_H_
+#endif  // FLOYD_SRC_RAFT_LOG_H_

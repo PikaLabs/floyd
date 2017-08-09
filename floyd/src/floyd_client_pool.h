@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 #include "pink/include/pink_cli.h"
 #include "slash/include/slash_status.h"

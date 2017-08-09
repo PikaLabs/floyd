@@ -12,15 +12,15 @@
 
 namespace floyd {
 
-void split(const std::string &str, char delim,
-           std::vector<std::string> &tokens) {
-  tokens.clear();
+static void split(const std::string &str, char delim,
+           std::vector<std::string> *tokens) {
+  tokens->clear();
   size_t prev_pos = str.find_first_not_of(delim, 0);
   size_t pos = str.find(delim, prev_pos);
 
   while (prev_pos != std::string::npos || pos != std::string::npos) {
     std::string token(str.substr(prev_pos, pos - prev_pos));
-    tokens.push_back(token);
+    tokens->push_back(token);
 
     prev_pos = str.find_first_not_of(delim, pos);
     pos = str.find_first_of(delim, prev_pos);
@@ -28,7 +28,7 @@ void split(const std::string &str, char delim,
 }
 
 void Options::SetMembers(const std::string& cluster_string) {
-  split(cluster_string, ',', members);
+  split(cluster_string, ',', &members);
   if (members.size() == 1) {
     single_mode = true;
   }
@@ -36,9 +36,9 @@ void Options::SetMembers(const std::string& cluster_string) {
 
 void Options::Dump() {
   for (size_t i = 0; i < members.size(); i++) {
-    printf ("               member %lu : %s\n", i, members[i].c_str());
+    printf("               member %lu : %s\n", i, members[i].c_str());
   }
-  printf ("                 local_ip : %s\n"
+  printf("                 local_ip : %s\n"
           "               local_port : %d\n"
           "                     path : %s\n"
           "          check_leader_us : %ld\n"
@@ -60,9 +60,9 @@ std::string Options::ToString() {
   char str[1024];
   int len = 0;
   for (size_t i = 0; i < members.size(); i++) {
-    len += sprintf (str + len, "                 member %lu : %s\n", i, members[i].c_str());
+    len += snprintf(str + len, sizeof(str), "                 member %lu : %s\n", i, members[i].c_str());
   }
-  sprintf (str + len, "                 local_ip : %s\n"
+  snprintf(str + len, sizeof(str), "                 local_ip : %s\n"
           "               local_port : %d\n"
           "                     path : %s\n"
           "          check_leader_us : %ld\n"
@@ -108,7 +108,7 @@ Options::Options(const std::string& cluster_string,
   // the default heartbeat time is 1s
   // we can promise 1s + 2 * rpc < 3s, since rpc time is approximately 10ms
   check_leader_us = std::rand() % 2000000 + check_leader_us;
-  split(cluster_string, ',', members);
+  split(cluster_string, ',', &members);
   if (members.size() == 1) {
     single_mode = true;
   }

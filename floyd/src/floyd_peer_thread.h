@@ -6,14 +6,13 @@
 #ifndef FLOYD_SRC_FLOYD_PEER_THREAD_H_
 #define FLOYD_SRC_FLOYD_PEER_THREAD_H_
 
-
 #include <string>
+#include <map>
 
 #include "slash/include/slash_status.h"
 #include "pink/include/bg_thread.h"
 
 #include "floyd/src/floyd_context.h"
-
 
 namespace floyd {
 
@@ -27,7 +26,7 @@ class FloydApply;
 class Peer;
 typedef std::map<std::string, Peer*> PeersSet;
 
-class Peer {
+class Peer  {
  public:
   Peer(std::string server, FloydContext* context, FloydPrimary* primary, RaftMeta* raft_meta,
       RaftLog* raft_log, ClientPool* pool, FloydApply* apply, const Options& options, Logger* info_log);
@@ -69,7 +68,7 @@ class Peer {
     return match_index_;
   }
 
-  void set_peers(PeersSet &peers) {
+  void set_peers(const PeersSet &peers) {
     peers_ = peers;
   }
   std::string peer_addr() const {
@@ -77,7 +76,6 @@ class Peer {
   }
 
  private:
-
   bool CheckAndVote(uint64_t vote_term);
   uint64_t QuorumMatchIndex();
   void AdvanceLeaderCommitIndex();
@@ -106,5 +104,5 @@ class Peer {
   void operator=(const Peer&);
 };
 
-} // namespace floyd
+}  // namespace floyd
 #endif   // FLOYD_SRC_FLOYD_PEER_THREAD_H_
