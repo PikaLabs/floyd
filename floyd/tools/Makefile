@@ -2,45 +2,21 @@ CXX = g++
 ifeq ($(__PERF), 1)
 	CXXFLAGS = -O0 -g -pipe -fPIC -DNDEBUG  -DLOG_LEVEL=LEVEL_INFO -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -Wall -D_GNU_SOURCE -std=c++11 -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls -Wno-unused-variable -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX
 else
-	CXXFLAGS = -pg -g -O2 -ggdb3 -pipe -fPIC -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls -Wno-unused-variable -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX 
+	CXXFLAGS = -pg -O2 -ggdb3 -pipe -fPIC -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls -Wno-unused-variable -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX 
 endif
-SLASH_INCLUDE_DIR=$(SLASH_PATH)
-SLASH_LIBRARY=$(SLASH_PATH)/slash/lib/libslash.a
 
-ifndef PINK_PATH
-  $(warning Warning: slash path missing, using default)
-	PINK_PATH=$(CURDIR)/third/pink
-endif
-PINK_INCLUDE_DIR=$(PINK_PATH)
-PINK_LIBRARY=$(PINK_PATH)/pink/lib/libpink.a
-
-ifndef ROCKSDB_PATH
-  $(warning Warning: rocksdb path missing, using default)
-  ROCKSDB_PATH=$(CURDIR)/third/rocksdb
-endif
-ROCKSDB_INCLUDE_DIR=$(ROCKSDB_PATH)/include
-ROCKSDB_LIBRARY=$(ROCKSDB_PATH)/librocksdb.a
-
-FLOYD_LIBRARY=../../lib/libfloyd.a
-
-CXXFLAGS+=-I../../.. \
-					-I$(SLASH_INCLUDE_DIR) \
-					-I$(PINK_INCLUDE_DIR) \
-					-I$(ROCKSDB_INCLUDE_DIR)
-
-OBJECT = t t1 t2 t3 t4 t5 t6 t7
+OBJECT = read_rock read_floyd cpt cl cl1
 SRC_DIR = ./
-THIRD_PATH = ../../third
+THIRD_PATH = ../third
 OUTPUT = ./output
 
-LIB_PATH = -L../../lib/ \
+LIB_PATH = -L../lib/ \
 			 -L$(THIRD_PATH)/slash/slash/lib/ \
 			 -L$(THIRD_PATH)/rocksdb/ \
 			 -L$(THIRD_PATH)/pink/pink/lib/
 
 
-LIBS = -lfloyd \
-			 -lpink \
+LIBS = -lpink \
 			 -lslash \
 			 -lrocksdb \
 			 -lsnappy \
@@ -50,10 +26,9 @@ LIBS = -lfloyd \
 			 -lrt \
 			 -lssl \
 			 -lcrypto \
-			 -lprofiler \
 			 -lpthread
 
-INCLUDE_PATH = -I../../../ \
+INCLUDE_PATH = -I../../ \
 							 -I$(THIRD_PATH)/rocksdb/include \
 							 -I$(THIRD_PATH)/slash/ \
 							 -I$(THIRD_PATH)/pink/
@@ -74,23 +49,15 @@ all: $(OBJECT)
 	rm -rf $(OBJECT)
 	@echo "Success, go, go, go..."
 
-t: t.o
+read_rock: read_rock.cc
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
-
-t1: t1.cc
+cpt: cpt.cc
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
-
-t2: t2.cc
+read_floyd: read_floyd.cc floyd.pb.cc
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
-t3: t3.cc
+cl: cl.cc ../src/*.cc ../include/*
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
-t4: t4.cc
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
-t5: t5.cc
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
-t6: t6.cc
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
-t7: t7.cc
+cl1: cl1.cc ../src/*.cc ../include/*
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
 $(OBJS): %.o : %.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE_PATH) 

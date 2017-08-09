@@ -14,6 +14,7 @@ uint64_t NowMicros() {
   gettimeofday(&tv, NULL);
   return static_cast<uint64_t>(tv.tv_sec) * 1000000 + tv.tv_usec;
 }
+std::string mystr[100100];
 
 int main()
 {
@@ -43,63 +44,36 @@ int main()
   printf("%s\n", s.ToString().c_str());
 
   std::string msg;
-  int cnt = 100;
+  int i = 100;
   uint64_t st = NowMicros(), ed;
+  for (int i = 0; i < 100000; i++) {
+    mystr[i] = slash::RandomString(10);
+  }
 
-  sleep(10);
   while (1) {
     if (f1->HasLeader()) {
       break;
     }
-    printf("electing leader... sleep 2s\n");
     sleep(2);
   }
 
-  while (cnt--) {
-    std::string mystr[100100];
-    for (int i = 0; i < 100000; i++) {
-      mystr[i] = slash::RandomString(10);
-    }
-    f1->GetServerStatus(msg);
-    printf("%s\n", msg.c_str());
-    st = NowMicros();
-    for (int j = 0; j < 100000; j++) {
-      f1->Write(mystr[j], mystr[j]);
-      // f1->Write("zz", "zz");
-    }
-    ed = NowMicros();
-    printf("write 100000 cost time microsecond(us) %ld, qps %llu\n", ed - st, 100000 * 1000000LL / (ed - st));
-  }
-
-  delete f1;
-
-  cnt = 5;
-  while (cnt--) {
-    f2->GetServerStatus(msg);
+  // ran at the begining
+  printf("run 5 times, every time write 100 item. at the beginning state\n");
+  i = 5;
+  std::string val;
+  while (i--) {
+    f3->GetServerStatus(msg);
     for (int j = 0; j < 100; j++) {
-      f2->Write("zz2" + char(j), "value2" + char(j));
+      f3->Write(mystr[j], mystr[j]);
+      s = f3->Read(mystr[j], val);
+      printf("status %s val %s\n", s.ToString().c_str(), val.c_str());
     }
     printf("%s\n", msg.c_str());
   }
 
-  s = Floyd::Open(op, &f1);
-  if (!s.ok()) {
-    printf("floyd reoptn failed\n");
-  }
-  cnt = 5;
-  while (cnt--) {
-    f2->GetServerStatus(msg);
-    for (int j = 0; j < 100; j++) {
-      f1->Write("zz3" + char(j), "value3" + char(j));
-    }
-    printf("%s\n", msg.c_str());
-  }
+  // sleep(1);
+
 
   getchar();
-  delete f2;
-  delete f3;
-  delete f4;
-  delete f5;
-  delete f1;
   return 0;
 }

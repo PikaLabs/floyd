@@ -42,5 +42,9 @@ int main(int argc, char**  argv)
     return -1;
   }
   printf("success, two rocksdb data are same\n");
+  delete iter2;
+  delete iter1;
+  delete db2;
+  delete db1;
   return 0;
 }

@@ -5,6 +5,11 @@
 
 #include "floyd/include/floyd_options.h"
 
+#include <cstdlib>
+#include <ctime>
+
+#include "slash/include/env.h"
+
 namespace floyd {
 
 void split(const std::string &str, char delim,
@@ -36,7 +41,7 @@ void Options::Dump() {
   printf ("                 local_ip : %s\n"
           "               local_port : %d\n"
           "                     path : %s\n"
-          "         elect_timeout_ms : %ld\n"
+          "          check_leader_us : %ld\n"
           "             heartbeat_us : %ld\n"
           " append_entries_size_once : %ld\n"
           "append_entries_count_once : %lu\n"
@@ -44,7 +49,7 @@ void Options::Dump() {
             local_ip.c_str(),
             local_port,
             path.c_str(),
-            elect_timeout_ms,
+            check_leader_us,
             heartbeat_us,
             append_entries_size_once,
             append_entries_count_once,
@@ -60,7 +65,7 @@ std::string Options::ToString() {
   sprintf (str + len, "                 local_ip : %s\n"
           "               local_port : %d\n"
           "                     path : %s\n"
-          "         elect_timeout_ms : %ld\n"
+          "          check_leader_us : %ld\n"
           "             heartbeat_us : %ld\n"
           " append_entries_size_once : %ld\n"
           "append_entries_count_once : %lu\n"
@@ -68,7 +73,7 @@ std::string Options::ToString() {
             local_ip.c_str(),
             local_port,
             path.c_str(),
-            elect_timeout_ms,
+            check_leader_us,
             heartbeat_us,
             append_entries_size_once,
             append_entries_count_once,
@@ -80,10 +85,10 @@ Options::Options()
   : local_ip("127.0.0.1"),
     local_port(10086),
     path("/data/floyd"),
-    elect_timeout_ms(5000),
-    heartbeat_us(1000000),
-    append_entries_size_once(1024),
-    append_entries_count_once(24),
+    check_leader_us(6000000),
+    heartbeat_us(3000000),
+    append_entries_size_once(1024000),
+    append_entries_count_once(128),
     single_mode(false) {
     }
 
@@ -93,11 +98,16 @@ Options::Options(const std::string& cluster_string,
   : local_ip(_local_ip),
     local_port(_local_port),
     path(_path),
-    elect_timeout_ms(5000),
-    heartbeat_us(1000000),
-    append_entries_size_once(1024),
-    append_entries_count_once(24),
+    check_leader_us(6000000),
+    heartbeat_us(3000000),
+    append_entries_size_once(1024000),
+    append_entries_count_once(128),
     single_mode(false) {
+  std::srand(slash::NowMicros());
+  // the default check_leader is [3s, 5s)
+  // the default heartbeat time is 1s
+  // we can promise 1s + 2 * rpc < 3s, since rpc time is approximately 10ms
+  check_leader_us = std::rand() % 2000000 + check_leader_us;
   split(cluster_string, ',', members);
   if (members.size() == 1) {
     single_mode = true;

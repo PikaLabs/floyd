@@ -22,7 +22,7 @@ ClientPool::ClientPool(Logger* info_log, int timeout_ms, int retry)
 }
 
 Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req, CmdResponse* res) {
-  // LOGV(DEBUG_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s", CmdType(req).c_str(), server.c_str());
+  LOGV(DEBUG_LEVEL, info_log_, "ClientPool::SendAndRecv Send %s command to server %s", CmdType(req).c_str(), server.c_str());
   Client *client = GetClient(server);
   pink::PinkCli* cli = client->cli;
 
@@ -99,47 +99,31 @@ Status ClientPool::UpHoldCli(Client *client) {
 static std::string CmdType(const CmdRequest& cmd) {
   std::string ret;
   switch (cmd.type()) {
-    case Type::Read: {
+    case Type::kRead: {
       ret = "Read";
       break;
     }
-    case Type::ReadAll: {
-      ret = "ReadAll";
-      break;
-    }
-    case Type::DirtyWrite: {
-      ret = "DirtyWrite";
-      break;
-    }
-    case Type::Write: {
+    case Type::kWrite: {
       ret = "Write";
       break;
     }
-    case Type::Delete: {
+    case Type::kDirtyWrite: {
+      ret = "DirtyWrite";
+      break;
+    }
+    case Type::kDelete: {
       ret = "Delete";
       break;
     }
-    case Type::TryLock: {
-      ret = "TryLock";
-      break;
-    }
-    case Type::UnLock: {
-      ret = "UnLock";
-      break;
-    }
-    case Type::DeleteUser: {
-      ret = "DeleteUser";
-      break;
-    }
-    case Type::RequestVote: {
+    case Type::kRequestVote: {
       ret = "RequestVote";
       break;
     }
-    case Type::AppendEntries: {
+    case Type::kAppendEntries: {
       ret = "AppendEntries";
       break;
     }
-    case Type::ServerStatus: {
+    case Type::kServerStatus: {
       ret = "ServerStatus";
       break;
     }

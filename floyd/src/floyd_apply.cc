@@ -5,92 +5,101 @@
 
 #include "floyd/src/floyd_apply.h"
 
+#include <google/protobuf/text_format.h>
+
 #include <unistd.h>
 #include <string>
 
 #include "slash/include/xdebug.h"
-#include <google/protobuf/text_format.h>
-
 
 #include "floyd/src/logger.h"
 #include "floyd/src/floyd.pb.h"
-
+#include "floyd/src/raft_meta.h"
+#include "floyd/src/raft_log.h"
 
 namespace floyd {
 
-FloydApply::FloydApply(FloydContext* context, rocksdb::DB* db, RaftLog* raft_log)
-  : context_(context),
+FloydApply::FloydApply(FloydContext* context, rocksdb::DB* db, RaftMeta* raft_meta,
+    RaftLog* raft_log, Logger* info_log)
+  : bg_thread_(1024 * 1024 * 1024),
+    context_(context),
     db_(db),
-    raft_log_(raft_log) {
-  bg_thread_ = new pink::BGThread();
-  bg_thread_->set_thread_name("FloydApply");
+    raft_meta_(raft_meta),
+    raft_log_(raft_log),
+    info_log_(info_log) {
 }
 
 FloydApply::~FloydApply() {
-  delete bg_thread_;
 }
 
-Status FloydApply::ScheduleApply() {
-  if (bg_thread_->StartThread() != 0) {
-    return Status::Corruption("Failed to start apply thread");
-  }
-  bg_thread_->Schedule(&ApplyStateMachine, static_cast<void*>(this));
-  return Status::OK();
+int FloydApply::Start() {
+  bg_thread_.set_thread_name("FloydApply");
+  bg_thread_.Schedule(ApplyStateMachineWrapper, this);
+  return bg_thread_.StartThread();
 }
 
-void FloydApply::ApplyStateMachine(void* arg) {
-  FloydApply* fapply = static_cast<FloydApply*>(arg);
-  FloydContext* context = fapply->context_;
+int FloydApply::Stop() {
+  return bg_thread_.StopThread();
+}
 
+void FloydApply::ScheduleApply() {
+  /*
+   * int timer_queue_size, queue_size;
+   * bg_thread_.QueueSize(&timer_queue_size, &queue_size);
+   * LOGV(INFO_LEVEL, info_log_, "Peer::AddRequestVoteTask timer_queue size %d queue_size %d",
+   *     timer_queue_size, queue_size);
+   */
+  bg_thread_.Schedule(&ApplyStateMachineWrapper, this);
+}
+
+void FloydApply::ApplyStateMachineWrapper(void* arg) {
+  reinterpret_cast<FloydApply*>(arg)->ApplyStateMachine();
+}
+
+void FloydApply::ApplyStateMachine() {
+  uint64_t last_applied = context_->last_applied;
   // Apply as more entry as possible
-  uint64_t len = 0, to_apply = 0;
-  to_apply = context->NextApplyIndex(&len);
+  uint64_t commit_index;
+  commit_index = context_->commit_index;
 
-  LOGV(DEBUG_LEVEL, context->info_log(), "ApplyStateMachine with %lu entries to apply from to_apply(%lu)",
-            len, to_apply);
-  while (len-- > 0) {
-    Entry log_entry;
-    fapply->raft_log_->GetEntry(to_apply, &log_entry);
-    Status s = fapply->Apply(log_entry);
+  LOGV(DEBUG_LEVEL, info_log_, "FloydApply::ApplyStateMachine: last_applied: %lu, commit_index: %lu",
+            last_applied, commit_index);
+  Entry log_entry;
+  while (last_applied < commit_index) {
+    last_applied++;
+    raft_log_->GetEntry(last_applied, &log_entry);
+    Status s = Apply(log_entry);
     if (!s.ok()) {
-      LOGV(WARN_LEVEL, context->info_log(), "Apply log entry failed, at: %d, error: %s",
-          to_apply, s.ToString().c_str());
-      fapply->ScheduleApply();  // try once more
+      LOGV(WARN_LEVEL, info_log_, "FloydApply::ApplyStateMachine: Apply log entry failed, at: %d, error: %s",
+          last_applied, s.ToString().c_str());
       usleep(1000000);
+      ScheduleApply();  // try once more
       return;
     }
-    context->ApplyDone(to_apply);
-    to_apply++;
   }
-  fapply->raft_log_->UpdateLastApplied(to_apply - 1);
+  context_->apply_mu.Lock();
+  context_->last_applied = last_applied;
+  raft_meta_->SetLastApplied(last_applied);
+  context_->apply_mu.Unlock();
+  context_->apply_cond.SignalAll();
 }
 
-Status FloydApply::Apply(const Entry& log_entry) {
-  const std::string& data = log_entry.cmd();
-  CmdRequest cmd;
-  if (!cmd.ParseFromArray(data.c_str(), data.length())) {
-    std::string text_format;
-    google::protobuf::TextFormat::PrintToString(cmd, &text_format);
-    LOGV(WARN_LEVEL, context_->info_log(), "FloydApply:Apply :\n%s \n", text_format.c_str());
-    LOGV(WARN_LEVEL, context_->info_log(), "Parse log_entry failed");
-    return Status::IOError("Parse error");
-  }
-
+Status FloydApply::Apply(const Entry& entry) {
   rocksdb::Status ret;
-  switch (cmd.type()) {
-    case Type::Write:
-      ret = db_->Put(rocksdb::WriteOptions(), cmd.kv().key(), cmd.kv().value());
-      LOGV(DEBUG_LEVEL, context_->info_log(), "Floyd Apply Write %s, key(%s) value(%s)",
-          ret.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
+  switch (entry.optype()) {
+    case Entry_OpType_kWrite:
+      ret = db_->Put(rocksdb::WriteOptions(), entry.key(), entry.value());
+      LOGV(DEBUG_LEVEL, info_log_, "FloydApply::Apply %s, key(%s) value(%s)",
+          ret.ToString().c_str(), entry.key().c_str(), entry.value().c_str());
       break;
-    case Type::Delete:
-      ret = db_->Delete(rocksdb::WriteOptions(), cmd.kv().key());
+    case Entry_OpType_kDelete:
+      ret = db_->Delete(rocksdb::WriteOptions(), entry.key());
       break;
-    case Type::Read:
+    case Entry_OpType_kRead:
       ret = rocksdb::Status::OK();
       break;
     default:
-      ret = rocksdb::Status::Corruption("Unknown cmd type");
+      ret = rocksdb::Status::Corruption("Unknown entry type");
   }
   if (!ret.ok()) {
     return Status::Corruption(ret.ToString());

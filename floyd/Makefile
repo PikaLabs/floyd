@@ -193,9 +193,6 @@ all: $(LIBRARY)
 
 static_lib: $(LIBRARY)
 
-shared_lib: $(SHARED)
-	for f in $(notdir $(SHARED)); do mv "$$f" $(LIBOUTPUT); done
-
 dbg: $(LIBRARY)
 
 $(LIBRARY): $(LIBOBJECTS)

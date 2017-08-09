@@ -1,0 +1,5 @@
+read_floyd is the tool to read floyd log
+read_rock is the tool to read rocksdb data
+cpt is a tool to compare two rocksdb, if they have the same data return true, else return false
+cl construct 4 same log, ant one log with longer logger
+cl1 construct the raft paper's Figure 7 logger, cl1 is the leader, cl2 is (a), cl3 is (c), cl4 is (e), cl5 is (f)

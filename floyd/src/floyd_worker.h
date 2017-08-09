@@ -63,13 +63,17 @@ class FloydWorker {
   FloydWorker(int port, int cron_interval, FloydImpl* floyd);
 
   ~FloydWorker() {
-    thread_->StopThread();
+    // thread_->StopThread();
     delete thread_;
   }
 
   int Start() {
     thread_->set_thread_name("FloydWorker");
     return thread_->StartThread();
+  }
+
+  int Stop() {
+    return thread_->StopThread();
   }
 
  private:

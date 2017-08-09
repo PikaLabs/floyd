@@ -23,12 +23,13 @@ using slash::Status;
 
 class Log;
 class ClientPool;
-class FloydContext;
+class RaftMeta;
 class Peer;
 class FloydPrimary;
 class FloydApply;
 class FloydWorker;
 class FloydWorkerConn;
+class FloydContext;
 class Logger;
 class CmdRequest;
 class CmdResponse;
@@ -51,11 +52,12 @@ class FloydImpl : public Floyd {
 
   // return true if leader has been elected
   virtual bool GetLeader(std::string* ip_port);
-  virtual bool HasLeader();
   virtual bool GetLeader(std::string* ip, int* port);
+  virtual bool HasLeader();
   virtual bool GetAllNodes(std::vector<std::string>& nodes);
-  virtual bool GetServerStatus(std::string& msg);
+  virtual bool IsLeader();
   
+  virtual bool GetServerStatus(std::string& msg);
   // log level can be modified
   virtual void set_log_level(const int log_level);
 
@@ -65,20 +67,26 @@ class FloydImpl : public Floyd {
   friend class FloydWorkerHandle;
   friend class Peer;
 
-  Options options_;
   rocksdb::DB* db_;
+  // state machine db point
   // raft log
+  rocksdb::DB* log_and_meta_;  // used to store logs and meta data
   RaftLog* raft_log_;
+  RaftMeta* raft_meta_;
+
+  Options options_;
   // debug log used for ouput to file
   Logger* info_log_;
+
   FloydContext* context_;
 
   FloydWorker* worker_;
   FloydApply* apply_;
   FloydPrimary* primary_;
   PeersSet peers_;
-  ClientPool* peer_client_pool_;
   ClientPool* worker_client_pool_;
+
+  std::map<int64_t, std::pair<std::string, int> > vote_for_;
 
   bool IsSelf(const std::string& ip_port);
 
@@ -86,12 +94,16 @@ class FloydImpl : public Floyd {
   Status ExecuteCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
   Status ReplyExecuteDirtyCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
   bool DoGetServerStatus(CmdResponse_ServerStatus* res);
+  void GrantVote(uint64_t term, const std::string ip, int port);
 
   /*
-   * these two are the response to the request and appendentries
+   * these two are the response to the request vote and appendentries
    */
   void ReplyRequestVote(const CmdRequest& cmd, CmdResponse* cmd_res);
   void ReplyAppendEntries(CmdRequest& cmd, CmdResponse* cmd_res);
+
+
+  bool AdvanceFollowerCommitIndex(uint64_t new_commit_index);
   
   // No coping allowed
   FloydImpl(const FloydImpl&);

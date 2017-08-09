@@ -2,24 +2,28 @@ package floyd;
 
 enum Type {
   // User cmd
-  Read = 0;
-  ReadAll = 1;
-  DirtyWrite = 2;
-  Write = 3;
-  Delete = 4;
-  TryLock = 5;
-  UnLock = 6;
-  DeleteUser = 7;
+  kRead = 0;
+  kWrite = 1;
+  kDirtyWrite = 2;
+  kDelete = 3;
 
   // Raft RPC
-  RequestVote = 8;
-  AppendEntries = 9;
-  ServerStatus = 10;
+  kRequestVote = 8;
+  kAppendEntries = 9;
+  kServerStatus = 10;
 }
 
+
 message Entry {
+  enum OpType {
+    kRead = 0;
+    kWrite = 1;
+    kDelete = 2;
+  }
   required uint64 term = 1;
-  optional bytes cmd = 2;
+  required string key = 2;
+  optional bytes value = 3;
+  required OpType optype = 4;
 }
 
 message CmdRequest {
@@ -38,11 +42,11 @@ message CmdRequest {
   optional User user = 3;
 
   message RequestVote {
-    required bytes ip = 1;
-    required int32 port = 2;
-    required uint64 term = 3;
-    required uint64 last_log_term = 4;
-    required uint64 last_log_index = 5;
+    required uint64 term = 1;
+    required bytes ip = 2;
+    required int32 port = 3;
+    required uint64 last_log_index = 4;
+    required uint64 last_log_term = 5;
   }
   optional RequestVote request_vote = 4;
 
@@ -52,7 +56,7 @@ message CmdRequest {
     required uint64 term = 3;
     required uint64 prev_log_index = 4;
     required uint64 prev_log_term = 5;
-    required uint64 commit_index = 6;
+    required uint64 leader_commit = 6;
     repeated Entry entries = 7;
   }
   optional AppendEntries append_entries = 5;

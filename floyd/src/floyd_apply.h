@@ -12,20 +12,30 @@
 #include "pink/include/bg_thread.h"
 
 namespace floyd {
+
 using slash::Status;
+
+class RaftMeta;
+class RaftLog;
+class Logger;
 
 class FloydApply {
  public:
-  FloydApply(FloydContext* context, rocksdb::DB* db, RaftLog* raft_log);
+  FloydApply(FloydContext* context, rocksdb::DB* db, RaftMeta* raft_meta, RaftLog* raft_log, Logger* info_log);
   ~FloydApply();
-  Status ScheduleApply();
+  int Start();
+  int Stop();
+  void ScheduleApply();
 
  private:
-  pink::BGThread* bg_thread_;
+  pink::BGThread bg_thread_;
   FloydContext* context_;
   rocksdb::DB* db_;
+  RaftMeta* raft_meta_;
   RaftLog* raft_log_;
-  static void ApplyStateMachine(void* arg);
+  Logger* info_log_;
+  static void ApplyStateMachineWrapper(void* arg);
+  void ApplyStateMachine();
   Status Apply(const Entry& log_entry);
 };
 
