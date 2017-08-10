@@ -51,9 +51,9 @@ message CmdRequest {
   optional RequestVote request_vote = 4;
 
   message AppendEntries {
-    required bytes ip = 1;
-    required int32 port = 2;
-    required uint64 term = 3;
+    required uint64 term = 1;
+    required bytes ip = 2;
+    required int32 port = 3;
     required uint64 prev_log_index = 4;
     required uint64 prev_log_term = 5;
     required uint64 leader_commit = 6;

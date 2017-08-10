@@ -76,7 +76,10 @@ int main(int argc, char *argv[])
     printf("%s\n", msg.c_str());
     st = NowMicros();
     for (int j = 0; j < item_num; j++) {
-      f1->Write(keystr[j], valstr[j]);
+      slash::Status s1 = f1->Write(keystr[j], valstr[j]);
+      if (!s1.ok()) {
+        printf("write key error in 5 node, key is %s\n", keystr[j].c_str());
+      }
     }
     ed = NowMicros();
     printf("write 100000 cost time microsecond(us) %ld, qps %llu\n", ed - st, item_num * 1000000LL / (ed - st));
@@ -96,6 +99,9 @@ int main(int argc, char *argv[])
   cnt = 1;
   while (cnt--) {
     for (int i = 0; i < item_num; i++) {
+      keystr[i] = slash::RandomString(32);
+    }
+    for (int i = 0; i < item_num; i++) {
       valstr[i] = slash::RandomString(10);
     }
     f2->GetServerStatus(&msg);
@@ -104,7 +110,7 @@ int main(int argc, char *argv[])
     for (int j = 0; j < item_num; j++) {
       slash::Status s1 = f2->Write(keystr[j], valstr[j]);
       if (s.ok()) {
-        printf("write key success %s %s\n", keystr[j].c_str(), valstr[j].c_str());
+        printf("write key success number %d %s %s\n", j, keystr[j].c_str(), valstr[j].c_str());
       } else {
         printf("write error\n");
       }

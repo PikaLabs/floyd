@@ -2,8 +2,8 @@ CLEAN_FILES = # deliberately empty, so we can append below.
 CC=cc
 CXX=g++
 LDFLAGS= -lpthread -lrt -lprotobuf
-CFLAGS= -DOS_LINUX -fno-builtin-memcmp -msse -msse4.2
-CXXFLAGS=-std=c++11 -fno-builtin-memcmp -msse -msse4.2
+CFLAGS= -fno-builtin-memcmp -msse -msse4.2
+CXXFLAGS= -std=c++11 -fno-builtin-memcmp -msse -msse4.2
 PROFILING_FLAGS=-pg
 ARFLAGS = rs
 OPT=
@@ -15,18 +15,6 @@ ifeq ($(MAKECMDGOALS),dbg)
   DEBUG_LEVEL=2 # compatible with rocksdb
 endif
 
-ifeq ($(MAKECMDGOALS),all)
-  DEBUG_LEVEL=0
-endif
-
-ifeq ($(MAKECMDGOALS),clean)
-  DEBUG_LEVEL=0
-endif
-
-ifeq ($(MAKECMDGOALS),static_lib)
-  DEBUG_LEVEL=0
-endif
-
 # compile with -O2 if for release
 # if we're compiling for release, compile without debug code (-DNDEBUG) and
 # don't treat warnings as errors
@@ -34,10 +22,6 @@ ifeq ($(DEBUG_LEVEL),0)
 DISABLE_WARNING_AS_ERROR=1
 OPT += -O2 -fno-omit-frame-pointer -DNDEBUG
 OPT += -DLOG_LEVEL=LEVEL_INFO
-# Skip for archs that don't support -momit-leaf-frame-pointer
-ifeq (,$(shell $(CXX) -fsyntax-only -momit-leaf-frame-pointer -xc /dev/null 2>&1))
-OPT += -momit-leaf-frame-pointer
-endif
 else
 $(warning Warning: Compiling in debug mode. Don't use the resulting binary in production)
 OPT += -O0 -D__XDEBUG__ -DLOG_LEVEL=LEVEL_DEBUG $(PROFILING_FLAGS)
@@ -100,7 +84,7 @@ am__v_AR_ = $(am__v_AR_$(AM_DEFAULT_VERBOSITY))
 am__v_AR_0 = @echo "  AR      " $@;
 am__v_AR_1 =
 
-AM_LINK = $(AM_V_CCLD)$(CXX) $^ $(EXEC_LDFLAGS) -o $@ $(LDFLAGS) $(COVERAGEFLAGS)
+AM_LINK = $(AM_V_CCLD)$(CXX) $^ $(EXEC_LDFLAGS) -o $@ $(LDFLAGS)
 
 CFLAGS += -g
 CXXFLAGS += -g
@@ -146,7 +130,7 @@ ifeq ($(LIBNAME),)
 ifeq ($(DEBUG_LEVEL),0)
         LIBNAME=libfloyd
 else
-        LIBNAME=libfloyd_debug
+        LIBNAME=libfloyd
 endif
 endif
 LIBOUTPUT = ./lib
@@ -170,9 +154,10 @@ clean:
 	rm -f $(LIBRARY)
 	rm -rf $(CLEAN_FILES)
 	rm -rf $(LIBOUTPUT)
+	find . -name "*.[oda]*" ! -path "./third/*" -exec rm -f {} \;
 
 .cc.o:
-	$(AM_V_CC)$(CXX) $(CXXFLAGS) -c $< -o $@ $(COVERAGEFLAGS)
+	$(AM_V_CC)$(CXX) $(CXXFLAGS) -c $< -o $@
 
 .c.o:
 	$(AM_V_CC)$(CC) $(CFLAGS) -c $< -o $@

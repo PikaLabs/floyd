@@ -73,12 +73,10 @@ void Peer::UpdatePeerInfo() {
 }
 
 void Peer::AddRequestVoteTask() {
-  /*
-   * int timer_queue_size, queue_size;
-   * bg_thread_.QueueSize(&timer_queue_size, &queue_size);
-   * LOGV(INFO_LEVEL, info_log_, "Peer::AddRequestVoteTask timer_queue size %d queue_size %d",
-   *     timer_queue_size, queue_size);
-   */
+  int timer_queue_size, queue_size;
+  bg_thread_.QueueSize(&timer_queue_size, &queue_size);
+  LOGV(INFO_LEVEL, info_log_, "Peer::AddRequestVoteTask peer_addr %s timer_queue size %d queue_size %d",
+      peer_addr_.c_str(),timer_queue_size, queue_size);
   bg_thread_.Schedule(&RequestVoteRPCWrapper, this);
 }
 
@@ -116,10 +114,28 @@ void Peer::RequestVoteRPC() {
 
   {
   slash::MutexLock l(&context_->global_mu);
+  if (!result.ok()) {
+    LOGV(WARN_LEVEL, info_log_, "Peer::RequestVoteRPC: Candidate %s:%d SendAndRecv to %s failed %s",
+         options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), result.ToString().c_str());
+    return;
+  }
+  if (res.request_vote_res().term() > context_->current_term) {
+    // RequestVote fail, maybe opposite has larger term, or opposite has
+    // longer log. if opposite has larger term, this node will become follower
+    // otherwise we will do nothing
+    LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRPC: Become Follower, Candidate %s:%d vote request denied by %s,"
+        " request_vote_res.term()=%lu, current_term=%lu", options_.local_ip.c_str(), options_.local_port,
+        peer_addr_.c_str(), res.request_vote_res().term(), context_->current_term);
+    context_->BecomeFollower(res.request_vote_res().term());
+    raft_meta_->SetCurrentTerm(context_->current_term);
+    raft_meta_->SetVotedForIp(context_->voted_for_ip);
+    raft_meta_->SetVotedForPort(context_->voted_for_port);
+    return;
+  }
   if (context_->role == Role::kCandidate) {
     // kOk means RequestVote success, opposite vote for me
     if (res.request_vote_res().vote_granted() == true) {    // granted
-      LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRpc: Candidate %s:%d get vote from node %s at term %d",
+      LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRPC: Candidate %s:%d get vote from node %s at term %d",
           options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), context_->current_term);
       // However, we need check whether this vote is vote for old term
       // we need igore these type of vote
@@ -130,22 +146,16 @@ void Peer::RequestVoteRPC() {
             options_.local_ip.c_str(), options_.local_port, context_->current_term);
         primary_->AddTask(kHeartBeat, false);
       }
-    } else {
-      if (res.request_vote_res().term() > context_->current_term) {
-        // opposite RequestVote fail, maybe opposite has larger term, or opposite has
-        // longer log. if opposite has larger term, this node will become follower
-        // otherwise we will do nothing
-        LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRPC: Candidate %s:%d vote request denied by %s,"
-            " res_term=%lu, current_term=%lu", options_.local_ip.c_str(), options_.local_port,
-            peer_addr_.c_str(), res.request_vote_res().term(), context_->current_term);
-        context_->BecomeFollower(res.request_vote_res().term());
-        raft_meta_->SetCurrentTerm(context_->current_term);
-        raft_meta_->SetVotedForIp(context_->voted_for_ip);
-        raft_meta_->SetVotedForPort(context_->voted_for_port);
-      }
     }
-  } else {
-    // TODO(ba0tiao) if i am not longer candidate
+  } else if (context_->role == Role::kFollower) {
+    LOGV(INFO_LEVEL, info_log_, "Peer::RequestVotePPC: Server %s:%d have transformed to follower when doing RequestVoteRPC, " 
+        "The leader is %s:%d, new term is %lu", options_.local_ip.c_str(), options_.local_port, context_->leader_ip.c_str(),
+        context_->leader_port, context_->current_term);
+  } else if (context_->role == Role::kLeader) {
+    LOGV(INFO_LEVEL, info_log_, "Peer::RequestVotePPC: Server %s:%d is already a leader at term %lu ," 
+        "get vote from node %s at term %d", 
+        options_.local_ip.c_str(), options_.local_port, context_->current_term, 
+        peer_addr_.c_str(), res.request_vote_res().term());
   }
   }
   return;
@@ -180,12 +190,10 @@ void Peer::AdvanceLeaderCommitIndex() {
 }
 
 void Peer::AddAppendEntriesTask() {
-  /*
-   * int timer_queue_size, queue_size;
-   * bg_thread_.QueueSize(&timer_queue_size, &queue_size);
-   * LOGV(INFO_LEVEL, info_log_, "Peer::AddAppendEntriesTask timer_queue size %d queue_size %d",
-   *     timer_queue_size, queue_size);
-   */
+  int timer_queue_size, queue_size;
+  bg_thread_.QueueSize(&timer_queue_size, &queue_size);
+  LOGV(INFO_LEVEL, info_log_, "Peer::AddAppendEntriesTask peer_addr %s timer_queue size %d queue_size %d",
+      peer_addr_.c_str(),timer_queue_size, queue_size);
   bg_thread_.Schedule(&AppendEntriesRPCWrapper, this);
 }
 
@@ -194,7 +202,7 @@ void Peer::AppendEntriesRPCWrapper(void *arg) {
 }
 
 void Peer::AppendEntriesRPC() {
-  uint64_t prev_log_index = next_index_ - 1;
+  uint64_t prev_log_index = 0;
   uint64_t num_entries = 0;
   uint64_t prev_log_term = 0;
   uint64_t last_log_index = 0;
@@ -202,6 +210,7 @@ void Peer::AppendEntriesRPC() {
   CmdRequest_AppendEntries* append_entries = req.mutable_append_entries();
   {
   slash::MutexLock l(&context_->global_mu);
+  prev_log_index = next_index_ - 1;
   last_log_index = raft_log_->GetLastLogIndex();
   /*
    * LOGV(INFO_LEVEL, info_log_, "Peer::AppendEntriesRPC: next_index_ %d last_log_index %d peer_last_op_time %lu nowmicros %lu",
@@ -263,7 +272,7 @@ void Peer::AppendEntriesRPC() {
   {
   slash::MutexLock l(&context_->global_mu);
   if (!result.ok()) {
-    LOGV(WARN_LEVEL, info_log_, "Peer::AppendEntries: Candidate %s:%d SendAndRecv to %s failed %s",
+    LOGV(WARN_LEVEL, info_log_, "Peer::AppendEntries: Leader %s:%d SendAndRecv to %s failed %s",
          options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), result.ToString().c_str());
     return;
   }
@@ -282,8 +291,7 @@ void Peer::AppendEntriesRPC() {
       raft_meta_->SetCurrentTerm(context_->current_term);
       raft_meta_->SetVotedForIp(context_->voted_for_ip);
       raft_meta_->SetVotedForPort(context_->voted_for_port);
-    }
-    if (res.append_entries_res().success() == true) {
+    } else if (res.append_entries_res().success() == true) {
       if (num_entries > 0) {
         match_index_ = prev_log_index + num_entries;
         // only log entries from the leader's current term are committed
@@ -293,20 +301,6 @@ void Peer::AppendEntriesRPC() {
           apply_->ScheduleApply();
         }
         next_index_ = prev_log_index + num_entries + 1;
-        /*
-         * // If this follower is far behind leader, and there is no more
-         * // AppendEntryTask, we should add one
-         * if (next_index_ + options_.append_entries_count_once < last_log_index) {
-         *   int pri_size, qu_size;
-         *   bg_thread_.QueueSize(&pri_size, &qu_size);
-         *   if (qu_size < 1) {
-         *     LOGV(DEBUG_LEVEL, info_log_, "Peer::AppendEntriesRPC: peer_addr %s AppendEntry again "
-         *         "to catch up next_index(%llu) last_log_index(%llu)",
-         *         peer_addr_.c_str(), next_index_.load(), last_log_index);
-         *     AddAppendEntriesTask();
-         *   }
-         * }
-         */
       }
     } else {
       LOGV(INFO_LEVEL, info_log_, "Peer::AppEntriesRPC: peer_addr %s Send AppEntriesRPC failed,"
@@ -324,8 +318,12 @@ void Peer::AppendEntriesRPC() {
       }
     }
   } else if (context_->role == Role::kFollower) {
-    // TODO(ba0tiao) if I am not longer a leader
+    LOGV(INFO_LEVEL, info_log_, "Peer::AppEntriesRPC: Server %s:%d have transformed to follower when doing AppEntriesRPC, "
+        "new leader is %s:%d, new term is %lu", options_.local_ip.c_str(), options_.local_port, context_->leader_ip.c_str(),
+        context_->leader_port, context_->current_term);
   } else if (context_->role == Role::kCandidate) {
+    LOGV(INFO_LEVEL, info_log_, "Peer::AppEntriesRPC: Server %s:%d have transformed to candidate when doing AppEntriesRPC, "
+        "new term is %lu", options_.local_ip.c_str(), options_.local_port, context_->current_term);
   }
   }
   return;

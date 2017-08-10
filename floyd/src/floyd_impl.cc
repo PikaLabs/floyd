@@ -360,6 +360,7 @@ Status FloydImpl::DirtyRead(const std::string& key, std::string* value) {
 
 bool FloydImpl::GetServerStatus(std::string* msg) {
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::GetServerStatus start");
+  slash::MutexLock l(&context_->global_mu);
 
   CmdResponse_ServerStatus server_status;
   DoGetServerStatus(&server_status);
@@ -483,11 +484,8 @@ bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
 
   std::string ip;
   int port;
-  {
-  slash::MutexLock l(&context_->global_mu);
   ip = context_->leader_ip;
   port = context_->leader_port;
-  }
   if (ip.empty()) {
     res->set_leader_ip("null");
   } else {
@@ -495,11 +493,8 @@ bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
   }
   res->set_leader_port(port);
 
-  {
-  slash::MutexLock l(&context_->global_mu);
   ip = context_->voted_for_ip;
   port = context_->voted_for_port;
-  }
   if (ip.empty()) {
     res->set_voted_for_ip("null");
   } else {
@@ -599,29 +594,40 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* respons
        context_->current_term, request_vote.term());
   // if caller's term smaller than my term, then I will notice him
   if (request_vote.term() < context_->current_term) {
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: Leader %s:%d term %lu is smaller than my %s:%d current term %lu",
+        request_vote.ip().c_str(), request_vote.port(), request_vote.term(), options_.local_ip.c_str(), options_.local_port,
+        context_->current_term);
     BuildRequestVoteResponse(context_->current_term, granted, response);
     return;
   }
-  uint64_t my_last_log_term;
-  uint64_t my_last_log_index;
+  uint64_t my_last_log_term = 0;
+  uint64_t my_last_log_index = 0;
   raft_log_->GetLastLogTermAndIndex(&my_last_log_term, &my_last_log_index);
   // if votedfor is null or candidateId, and candidated's log is at least as up-to-date
   // as receiver's log, grant vote
   if ((request_vote.last_log_term() < my_last_log_term) ||
       ((request_vote.last_log_term() == my_last_log_term) && (request_vote.last_log_index() < my_last_log_index))) {
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: Leader %s:%d last_log_term %lu is smaller than my %s:%d last_log_term term %lu,"
+        " or Leader's last log term equal to my last_log_term, but Leader's last_log_index %lu is smaller than my last_log_index %lu",
+        request_vote.ip().c_str(), request_vote.port(), request_vote.last_log_term(), options_.local_ip.c_str(), options_.local_port,
+        my_last_log_term, request_vote.last_log_index(), my_last_log_index);
     BuildRequestVoteResponse(context_->current_term, granted, response);
     return;
   }
 
   if (vote_for_.find(request_vote.term()) != vote_for_.end()
       && vote_for_[request_vote.term()] != std::make_pair(request_vote.ip(), request_vote.port())) {
-    LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: BecomeFollower with current_term_(%lu) and new_term(%lu)"
-        " commit_index(%lu) last_applied(%lu)",
-        context_->current_term, request_vote.last_log_term(), my_last_log_index, context_->last_applied.load());
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: I %s:%d have voted for %s:%d in this term %lu",
+        options_.local_ip.c_str(), options_.local_port, vote_for_[request_vote.term()].first.c_str(), 
+        vote_for_[request_vote.term()].second, request_vote.term());
     BuildRequestVoteResponse(context_->current_term, granted, response);
     return;
   }
   vote_for_[request_vote.term()] = std::make_pair(request_vote.ip(), request_vote.port());
+  LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: Receive Request Vote from %s:%d, "
+      "Become Follower with current_term_(%lu) and new_term(%lu)"
+      " commit_index(%lu) last_applied(%lu)", request_vote.ip().c_str(), request_vote.port(),
+      context_->current_term, request_vote.last_log_term(), my_last_log_index, context_->last_applied.load());
   context_->BecomeFollower(request_vote.term());
   raft_meta_->SetCurrentTerm(context_->current_term);
   raft_meta_->SetVotedForIp(context_->voted_for_ip);
@@ -629,7 +635,7 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* respons
   // Got my vote
   GrantVote(request_vote.term(), request_vote.ip(), request_vote.port());
   granted = true;
-  LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: Grant my vote to %s:%d at term %lu",
+  LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: Grant my vote to %s:%d at term %lu",
       context_->voted_for_ip.c_str(), context_->voted_for_port, context_->current_term);
   BuildRequestVoteResponse(context_->current_term, granted, response);
 }
@@ -652,11 +658,20 @@ void FloydImpl::ReplyAppendEntries(const CmdRequest& request, CmdResponse* respo
   // update last_op_time to avoid another leader election
   context_->last_op_time = slash::NowMicros();
   // Ignore stale term
-  // if the append entries leader's term is smaller then my current term, then the caller must an older leader
+  // if the append entries leader's term is smaller than my current term, then the caller must an older leader
   if (append_entries.term() < context_->current_term) {
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: Leader %s:%d term %lu is smaller than my %s:%d current term %lu",
+        append_entries.ip().c_str(), append_entries.port(), append_entries.term(), options_.local_ip.c_str(), options_.local_port,
+        context_->current_term);
     BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
     return;
-  } else if (append_entries.term() >= context_->current_term) {
+  } else if ((append_entries.term() > context_->current_term) 
+      || (append_entries.term() == context_->current_term && 
+        (context_->role == kCandidate || (context_->role == kFollower && context_->leader_ip == "")))) {
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: Leader %s:%d term %lu is larger than my %s:%d current term %lu, "
+        "or leader term is equal to my current term, my role is %d, leader is [%s:%d]",
+        append_entries.ip().c_str(), append_entries.port(), append_entries.term(), options_.local_ip.c_str(), options_.local_port,
+        context_->current_term, context_->role, context_->leader_ip.c_str(), context_->leader_port);
     context_->BecomeFollower(append_entries.term(),
         append_entries.ip(), append_entries.port());
     raft_meta_->SetCurrentTerm(context_->current_term);
@@ -665,17 +680,17 @@ void FloydImpl::ReplyAppendEntries(const CmdRequest& request, CmdResponse* respo
   }
 
   if (append_entries.prev_log_index() > raft_log_->GetLastLogIndex()) {
-    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: leader %s:%d "
-        " pre_log(%lu, %lu) > last_log_index(%lu)", options_.local_ip.c_str(), options_.local_port, append_entries.prev_log_term(),
-        append_entries.prev_log_index(), raft_log_->GetLastLogIndex());
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: Leader %s:%d prev_log_index %lu is larger than my %s:%d last_log_index %lu",
+        append_entries.ip().c_str(), append_entries.port(), append_entries.prev_log_index(), options_.local_ip.c_str(), options_.local_port,
+        raft_log_->GetLastLogIndex());
     BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
     return;
   }
 
   // Append entry
   if (append_entries.prev_log_index() < raft_log_->GetLastLogIndex()) {
-    LOGV(WARN_LEVEL, info_log_, "FloydImpl::ReplyAppendEtries: leader %s:%d pre_log(%lu, %lu)'s index smaller than"
-        " my log index %lu, truncate suffix from %lu", append_entries.ip().c_str(), append_entries.port(),
+    LOGV(WARN_LEVEL, info_log_, "FloydImpl::ReplyAppendEtries: Leader %s:%d prev_log_index(%lu, %lu) is smaller than"
+        " my last_log_index %lu, truncate suffix from %lu", append_entries.ip().c_str(), append_entries.port(),
         append_entries.prev_log_term(), append_entries.prev_log_index(), raft_log_->GetLastLogIndex(),
         append_entries.prev_log_index() + 1);
     raft_log_->TruncateSuffix(append_entries.prev_log_index() + 1);
@@ -685,7 +700,7 @@ void FloydImpl::ReplyAppendEntries(const CmdRequest& request, CmdResponse* respo
   uint64_t my_last_log_term = 0;
   Entry entry;
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries "
-      "prev_log_index: %llu\n", append_entries.prev_log_index());
+      "prev_log_index: %lu\n", append_entries.prev_log_index());
   if (append_entries.prev_log_index() == 0) {
     my_last_log_term = 0;
   } else if (raft_log_->GetEntry(append_entries.prev_log_index(), &entry) == 0) {
@@ -718,16 +733,19 @@ void FloydImpl::ReplyAppendEntries(const CmdRequest& request, CmdResponse* respo
    * }
    */
   if (append_entries.entries().size() > 0) {
-    LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: leader %s:%d will append %u entries from "
+    LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: Leader %s:%d will append %u entries from "
          " prev_log_index %lu", append_entries.ip().c_str(), append_entries.port(),
          append_entries.entries().size(), append_entries.prev_log_index());
     if (raft_log_->Append(entries) <= 0) {
+      LOGV(ERROR_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: Leader %s:%d ppend %u entries from "
+          " prev_log_index %lu error at term %lu", append_entries.ip().c_str(), append_entries.port(),
+          append_entries.entries().size(), append_entries.prev_log_index(), append_entries.term());
       BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
       return;
     }
   } else {
-    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: Receive PingPong AppendEntries from %s:%d",
-        append_entries.ip().c_str(), append_entries.port());
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: Receive PingPong AppendEntries from %s:%d at term %lu",
+        append_entries.ip().c_str(), append_entries.port(), append_entries.term());
   }
   if (append_entries.leader_commit() != context_->commit_index) {
     AdvanceFollowerCommitIndex(append_entries.leader_commit());
@@ -735,8 +753,11 @@ void FloydImpl::ReplyAppendEntries(const CmdRequest& request, CmdResponse* respo
   }
   success = true;
   // only when follower successfully do appendentries, we will update commit index
-  LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries after AdvanceCommitIndex %lu",
-      context_->commit_index);
+  LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries server %s:%d Apply %d entries from Leader %s:%d"
+      " prev_log_index %lu, leader commit %lu at term %lu", options_.local_ip.c_str(),
+      options_.local_port, append_entries.entries().size(), append_entries.ip().c_str(),
+      append_entries.port(), append_entries.prev_log_index(), append_entries.leader_commit(),
+      append_entries.term());
   BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
 }
 

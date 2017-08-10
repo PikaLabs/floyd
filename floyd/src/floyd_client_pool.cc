@@ -13,7 +13,43 @@
 
 namespace floyd {
 
-static std::string CmdType(const CmdRequest& req);
+static std::string CmdType(const CmdRequest& cmd) {
+  std::string ret;
+  switch (cmd.type()) {
+    case Type::kRead: {
+      ret = "Read";
+      break;
+    }
+    case Type::kWrite: {
+      ret = "Write";
+      break;
+    }
+    case Type::kDirtyWrite: {
+      ret = "DirtyWrite";
+      break;
+    }
+    case Type::kDelete: {
+      ret = "Delete";
+      break;
+    }
+    case Type::kRequestVote: {
+      ret = "RequestVote";
+      break;
+    }
+    case Type::kAppendEntries: {
+      ret = "AppendEntries";
+      break;
+    }
+    case Type::kServerStatus: {
+      ret = "ServerStatus";
+      break;
+    }
+    default:
+      ret = "UnknownCmd";
+  }
+  return ret;
+}
+
 
 ClientPool::ClientPool(Logger* info_log, int timeout_ms, int retry)
   : info_log_(info_log),
@@ -22,36 +58,65 @@ ClientPool::ClientPool(Logger* info_log, int timeout_ms, int retry)
 }
 
 Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req, CmdResponse* res) {
+  if (req.type() == kAppendEntries) {
+    LOGV(INFO_LEVEL, info_log_, "ClientPool::SendAndRecv to %s"
+        " Request type %s prev_log_index %lu prev_log_term %lu leader_commit %lu "
+        "append entries size %d at term %d", server.c_str(),
+        CmdType(req).c_str(), req.append_entries().prev_log_index(), req.append_entries().prev_log_term(),
+        req.append_entries().leader_commit(), req.append_entries().entries().size(), req.append_entries().term());
+  }
   LOGV(DEBUG_LEVEL, info_log_, "ClientPool::SendAndRecv Send %s command to server %s", CmdType(req).c_str(), server.c_str());
   Client *client = GetClient(server);
   pink::PinkCli* cli = client->cli;
 
   Status ret = Status::Incomplete("Not send");
   slash::MutexLock l(&client->mu);
-  // TODO(anan) concurrent by epoll
-  for (int i = 0; !ret.ok() && i < retry_; i++) {
-    ret = UpHoldCli(client);
-    if (!ret.ok()) {
-      LOGV(WARN_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s, Connect Failed %s",
-          CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
-      continue;
+  ret = UpHoldCli(client);
+  if (!ret.ok()) {
+    if (req.type() == kAppendEntries) {
+      LOGV(WARN_LEVEL, info_log_, "ClientPool::SendAndRecv Server Connect to %s failed, error reason: %s"
+          " Request type %s prev_log_index %lu prev_log_term %lu leader_commit %lu "
+          "append entries size %d at term %d", server.c_str(), ret.ToString().c_str(),
+          CmdType(req).c_str(), req.append_entries().prev_log_index(), req.append_entries().prev_log_term(),
+          req.append_entries().leader_commit(), req.append_entries().entries().size(), req.append_entries().term());
+    } else {
+      LOGV(WARN_LEVEL, info_log_, "ClientPool::SendAndRecv Server Connect to %s failed, error reason: %s"
+          " Request type %s", server.c_str(), ret.ToString().c_str(), CmdType(req).c_str());
     }
+    cli->Close();
+    return ret;
+  }
 
-    ret = cli->Send((void *)(&req));
-    if (!ret.ok()) {
-      LOGV(WARN_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s, Send return %s",
-          CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
-      cli->Close();
-      continue;
+  ret = cli->Send((void *)(&req));
+  if (!ret.ok()) {
+    if (req.type() == kAppendEntries) {
+      LOGV(WARN_LEVEL, info_log_, "ClientPool::SendAndRecv Server Send to %s failed, error reason: %s"
+          " Request type %s prev_log_index %lu prev_log_term %lu leader_commit %lu "
+          "append entries size %d at term %d", server.c_str(), ret.ToString().c_str(),
+          CmdType(req).c_str(), req.append_entries().prev_log_index(), req.append_entries().prev_log_term(),
+          req.append_entries().leader_commit(), req.append_entries().entries().size(), req.append_entries().term());
+    } else {
+      LOGV(WARN_LEVEL, info_log_, "ClientPool::SendAndRecv Server Send to %s failed, error reason: %s"
+          " Request type %s", server.c_str(), ret.ToString().c_str(), CmdType(req).c_str());
     }
+    cli->Close();
+    return ret;
+  }
 
-    ret = cli->Recv(res);
-    if (!ret.ok()) {
-      LOGV(WARN_LEVEL, info_log_, "Client::SendAndRecv %s cmd to %s, Recv return %s",
-          CmdType(req).c_str(), server.c_str(), ret.ToString().c_str());
-      cli->Close();
-      continue;
+  ret = cli->Recv(res);
+  if (!ret.ok()) {
+    if (req.type() == kAppendEntries) {
+      LOGV(WARN_LEVEL, info_log_, "ClientPool::SendAndRecv Server Recv to %s failed, error reason: %s"
+          " Request type %s prev_log_index %lu prev_log_term %lu leader_commit %lu "
+          "append entries size %d at term %d", server.c_str(), ret.ToString().c_str(),
+          CmdType(req).c_str(), req.append_entries().prev_log_index(), req.append_entries().prev_log_term(),
+          req.append_entries().leader_commit(), req.append_entries().entries().size(), req.append_entries().term());
+    } else {
+      LOGV(WARN_LEVEL, info_log_, "ClientPool::SendAndRecv Server Recv to %s failed, error reason: %s"
+          " Request type %s", server.c_str(), ret.ToString().c_str(), CmdType(req).c_str());
     }
+    cli->Close();
+    return ret;
   }
   return ret;
 }
@@ -92,43 +157,6 @@ Status ClientPool::UpHoldCli(Client *client) {
       cli->set_send_timeout(timeout_ms_);
       cli->set_recv_timeout(timeout_ms_);
     }
-  }
-  return ret;
-}
-
-static std::string CmdType(const CmdRequest& cmd) {
-  std::string ret;
-  switch (cmd.type()) {
-    case Type::kRead: {
-      ret = "Read";
-      break;
-    }
-    case Type::kWrite: {
-      ret = "Write";
-      break;
-    }
-    case Type::kDirtyWrite: {
-      ret = "DirtyWrite";
-      break;
-    }
-    case Type::kDelete: {
-      ret = "Delete";
-      break;
-    }
-    case Type::kRequestVote: {
-      ret = "RequestVote";
-      break;
-    }
-    case Type::kAppendEntries: {
-      ret = "AppendEntries";
-      break;
-    }
-    case Type::kServerStatus: {
-      ret = "ServerStatus";
-      break;
-    }
-    default:
-      ret = "UnknownCmd";
   }
   return ret;
 }

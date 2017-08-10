@@ -65,6 +65,9 @@ void FloydApply::ApplyStateMachine() {
   LOGV(DEBUG_LEVEL, info_log_, "FloydApply::ApplyStateMachine: last_applied: %lu, commit_index: %lu",
             last_applied, commit_index);
   Entry log_entry;
+  if (last_applied >= commit_index) {
+    return;
+  }
   while (last_applied < commit_index) {
     last_applied++;
     raft_log_->GetEntry(last_applied, &log_entry);
@@ -89,8 +92,8 @@ Status FloydApply::Apply(const Entry& entry) {
   switch (entry.optype()) {
     case Entry_OpType_kWrite:
       ret = db_->Put(rocksdb::WriteOptions(), entry.key(), entry.value());
-      LOGV(DEBUG_LEVEL, info_log_, "FloydApply::Apply %s, key(%s) value(%s)",
-          ret.ToString().c_str(), entry.key().c_str(), entry.value().c_str());
+      LOGV(DEBUG_LEVEL, info_log_, "FloydApply::Apply %s, key(%s)",
+          ret.ToString().c_str(), entry.key().c_str());
       break;
     case Entry_OpType_kDelete:
       ret = db_->Delete(rocksdb::WriteOptions(), entry.key());

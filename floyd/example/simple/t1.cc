@@ -57,13 +57,13 @@ void *fun(void *arg) {
 int main(int argc, char * argv[])
 {
   if (argc > 1) {
-    val_size = atoi(argv[1]);
+    thread_num = atoi(argv[1]);
   }
   if (argc > 2) {
-    thread_num = atoi(argv[2]);
+    val_size = atoi(argv[2]);
   }
 
-  printf("multi threads test to get performance thread num %d key size %d\n", thread_num, val_size);
+  printf("multi threads test to get performance thread num %d key size %d item number %d\n", thread_num, val_size, item_num);
 
   Options op1("127.0.0.1:8901,127.0.0.1:8902,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905", "127.0.0.1", 8901, "./data1/");
   slash::Status s = Floyd::Open(op1, &f1);

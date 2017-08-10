@@ -41,7 +41,7 @@ Logger::Logger(FILE* f)
     last_flush_micros_(0),
     flush_pending_(false),
 #ifdef NDEBUG
-    log_level_(INFO_LEVEL)
+  log_level_(INFO_LEVEL)
 #else 
   log_level_(DEBUG_LEVEL)
 #endif

@@ -4,6 +4,11 @@ ifeq ($(__PERF), 1)
 else
 	CXXFLAGS = -pg -g -O2 -ggdb3 -pipe -fPIC -W -Wwrite-strings -Wpointer-arith -Wreorder -Wswitch -Wsign-promo -Wredundant-decls -Wformat -D_GNU_SOURCE -D__STDC_FORMAT_MACROS -std=c++11 -gdwarf-2 -Wno-redundant-decls -Wno-unused-variable -DROCKSDB_PLATFORM_POSIX -DROCKSDB_LIB_IO_POSIX -DOS_LINUX 
 endif
+
+ifndef SLASH_PATH
+  $(warning Warning: slash path missing, using default)
+	SLASH_PATH=$(CURDIR)/third/slash
+endif
 SLASH_INCLUDE_DIR=$(SLASH_PATH)
 SLASH_LIBRARY=$(SLASH_PATH)/slash/lib/libslash.a
 
