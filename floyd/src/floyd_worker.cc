@@ -9,6 +9,7 @@
 
 #include "floyd/src/floyd_impl.h"
 #include "floyd/src/logger.h"
+#include "slash/include/env.h"
 
 namespace floyd {
 using slash::Status;
@@ -42,23 +43,19 @@ int FloydWorkerConn::DealMessage() {
     case Type::kWrite:
     case Type::kDelete:
     case Type::kRead: {
-      LOGV(DEBUG_LEVEL, floyd_->info_log_, "WorkerConn::DealMessage Write/Delete/Read");
       floyd_->DoCommand(request_, &response_);
       break;
     }
     case Type::kDirtyWrite:
     case Type::kServerStatus: {
-      LOGV(DEBUG_LEVEL, floyd_->info_log_, "WorkerConn::DealMessage DirtyWrite/ServerStatus");
       floyd_->ReplyExecuteDirtyCommand(request_, &response_);
       break;
     }
     case Type::kRequestVote: {
-      LOGV(DEBUG_LEVEL, floyd_->info_log_, "WorkerConn::DealMessage RequestVote");
       floyd_->ReplyRequestVote(request_, &response_);
       break;
     }
     case Type::kAppendEntries: {
-      LOGV(DEBUG_LEVEL, floyd_->info_log_, "WorkerConn::DealMessage AppendEntries");
       floyd_->ReplyAppendEntries(request_, &response_);
       break;
     }

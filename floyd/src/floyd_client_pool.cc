@@ -58,13 +58,15 @@ ClientPool::ClientPool(Logger* info_log, int timeout_ms, int retry)
 }
 
 Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req, CmdResponse* res) {
-  if (req.type() == kAppendEntries) {
-    LOGV(INFO_LEVEL, info_log_, "ClientPool::SendAndRecv to %s"
-        " Request type %s prev_log_index %lu prev_log_term %lu leader_commit %lu "
-        "append entries size %d at term %d", server.c_str(),
-        CmdType(req).c_str(), req.append_entries().prev_log_index(), req.append_entries().prev_log_term(),
-        req.append_entries().leader_commit(), req.append_entries().entries().size(), req.append_entries().term());
-  }
+  /*
+   * if (req.type() == kAppendEntries) {
+   *   LOGV(INFO_LEVEL, info_log_, "ClientPool::SendAndRecv to %s"
+   *       " Request type %s prev_log_index %lu prev_log_term %lu leader_commit %lu "
+   *       "append entries size %d at term %d", server.c_str(),
+   *       CmdType(req).c_str(), req.append_entries().prev_log_index(), req.append_entries().prev_log_term(),
+   *       req.append_entries().leader_commit(), req.append_entries().entries().size(), req.append_entries().term());
+   * }
+   */
   LOGV(DEBUG_LEVEL, info_log_, "ClientPool::SendAndRecv Send %s command to server %s", CmdType(req).c_str(), server.c_str());
   Client *client = GetClient(server);
   pink::PinkCli* cli = client->cli;

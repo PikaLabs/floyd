@@ -115,6 +115,9 @@ Status FloydImpl::Init() {
   // Create DB
   rocksdb::Options options;
   options.create_if_missing = true;
+  // options.disableDataSync = true;
+  options.write_buffer_size = 1024 * 1024 * 1024;
+  options.max_background_flushes = 8;
   rocksdb::Status s = rocksdb::DB::Open(options, options_.path + "/db/", &db_);
   if (!s.ok()) {
     LOGV(ERROR_LEVEL, info_log_, "Open db failed! path: %s", options_.path.c_str());

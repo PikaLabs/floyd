@@ -53,10 +53,12 @@ int FloydPrimary::Stop() {
 //    2. another long live Cron for ElectLeaderCheck, which is started when
 //    creating Primary;
 void FloydPrimary::AddTask(TaskType type, bool is_delay) {
-  int timer_queue_size, queue_size;
-  bg_thread_.QueueSize(&timer_queue_size, &queue_size);
-  LOGV(INFO_LEVEL, info_log_, "FloydPrimary::AddTask timer_queue size %d queue_size %d tasktype %d is_delay %d",
-      timer_queue_size, queue_size, type, is_delay);
+  /*
+   * int timer_queue_size, queue_size;
+   * bg_thread_.QueueSize(&timer_queue_size, &queue_size);
+   * LOGV(INFO_LEVEL, info_log_, "FloydPrimary::AddTask timer_queue size %d queue_size %d tasktype %d is_delay %d",
+   *     timer_queue_size, queue_size, type, is_delay);
+   */
   switch (type) {
   case kHeartBeat: {
     if (is_delay) {

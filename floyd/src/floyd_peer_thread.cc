@@ -73,10 +73,12 @@ void Peer::UpdatePeerInfo() {
 }
 
 void Peer::AddRequestVoteTask() {
-  int timer_queue_size, queue_size;
-  bg_thread_.QueueSize(&timer_queue_size, &queue_size);
-  LOGV(INFO_LEVEL, info_log_, "Peer::AddRequestVoteTask peer_addr %s timer_queue size %d queue_size %d",
-      peer_addr_.c_str(),timer_queue_size, queue_size);
+  /*
+   * int timer_queue_size, queue_size;
+   * bg_thread_.QueueSize(&timer_queue_size, &queue_size);
+   * LOGV(INFO_LEVEL, info_log_, "Peer::AddRequestVoteTask peer_addr %s timer_queue size %d queue_size %d",
+   *     peer_addr_.c_str(),timer_queue_size, queue_size);
+   */
   bg_thread_.Schedule(&RequestVoteRPCWrapper, this);
 }
 
@@ -190,10 +192,12 @@ void Peer::AdvanceLeaderCommitIndex() {
 }
 
 void Peer::AddAppendEntriesTask() {
-  int timer_queue_size, queue_size;
-  bg_thread_.QueueSize(&timer_queue_size, &queue_size);
-  LOGV(INFO_LEVEL, info_log_, "Peer::AddAppendEntriesTask peer_addr %s timer_queue size %d queue_size %d",
-      peer_addr_.c_str(),timer_queue_size, queue_size);
+  /*
+   * int timer_queue_size, queue_size;
+   * bg_thread_.QueueSize(&timer_queue_size, &queue_size);
+   * LOGV(INFO_LEVEL, info_log_, "Peer::AddAppendEntriesTask peer_addr %s timer_queue size %d queue_size %d",
+   *     peer_addr_.c_str(),timer_queue_size, queue_size);
+   */
   bg_thread_.Schedule(&AppendEntriesRPCWrapper, this);
 }
 
