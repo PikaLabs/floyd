@@ -11,7 +11,7 @@ int main(int argc, char**  argv)
   rocksdb::DB* db;
   rocksdb::Options options;
   std::cout << argv[1] << std::endl;
-  rocksdb::Status s = rocksdb::DB::Open(options, argv[1], &db);
+  rocksdb::Status s = rocksdb::DB::OpenForReadOnly(options, argv[1], &db);
   rocksdb::Iterator* iter = db->NewIterator(rocksdb::ReadOptions());
   char c;
   int index = 0;
@@ -36,7 +36,7 @@ int main(int argc, char**  argv)
   int cnt = 0;
   for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
     cnt++;
-    std::cout << "res " << iter->key().ToString() << ": " << iter->value().ToString() << std::endl;
+    std::cout << "key " << iter->key().ToString() << ";val " << iter->value().ToString() << std::endl;
   }
   printf("cnt %d\n", cnt);
   return 0;

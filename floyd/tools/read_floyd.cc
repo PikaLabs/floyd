@@ -26,7 +26,7 @@ int main(int argc, char** argv)
   rocksdb::DB* db;
   rocksdb::Options options;
   std::cout << argv[1] << std::endl;
-  rocksdb::Status s = rocksdb::DB::Open(options, argv[1], &db);
+  rocksdb::Status s = rocksdb::DB::OpenForReadOnly(options, argv[1], &db);
   rocksdb::Iterator* iter = db->NewIterator(rocksdb::ReadOptions());
   char c;
   bool is_meta = false;
