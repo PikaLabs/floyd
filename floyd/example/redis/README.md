@@ -1,6 +1,18 @@
 ### Raftis
 
-raftis is a consensus server support redis protocol(get/set command). raftis is an example of building a consensus cluster with floyd(floyd is a simple implementation of raft protocol). It's very simple and intuitive. we can test raftis with redis-cli, benchmark with redis redis-benchmark tools, here is the result test with redis-benchmark
+raftis is a consensus server with 5 nodes and supporting redis protocol(get/set command). raftis is an example of building a consensus cluster with floyd(floyd is a simple implementation of raft protocol). It's very simple and intuitive. we can test raftis with redis-cli, benchmark with redis redis-benchmark tools. 
+here is a 5 local nodes benchmark with redis-benchmark
+
+```
+start with run.sh
+
+./output/bin/raftis "127.0.0.1:8901,127.0.0.1:8902,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905" "127.0.0.1" 8901 "./data1/" 6379 &
+./output/bin/raftis "127.0.0.1:8901,127.0.0.1:8902,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905" "127.0.0.1" 8902 "./data2/" 6479 &
+./output/bin/raftis "127.0.0.1:8901,127.0.0.1:8902,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905" "127.0.0.1" 8903 "./data3/" 6579 &
+./output/bin/raftis "127.0.0.1:8901,127.0.0.1:8902,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905" "127.0.0.1" 8904 "./data4/" 6679 &
+./output/bin/raftis "127.0.0.1:8901,127.0.0.1:8902,127.0.0.1:8903,127.0.0.1:8904,127.0.0.1:8905" "127.0.0.1" 8905 "./data5/" 6779 &
+```
+
 
 ```
 └─[$] ./src/redis-benchmark -t set -n 1000000 -r 100000000 -c 20
