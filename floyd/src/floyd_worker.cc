@@ -32,8 +32,7 @@ int FloydWorkerConn::DealMessage() {
   if (!request_.ParseFromArray(rbuf_ + 4, header_len_)) {
     std::string text_format;
     google::protobuf::TextFormat::PrintToString(request_, &text_format);
-    LOGV(WARN_LEVEL, floyd_->info_log_, "FloydWorker: DealMessage :\n%s \n", text_format.c_str());
-    LOGV(WARN_LEVEL, floyd_->info_log_, "FlowdWorker::DealMessage ParseFromArray failed");
+    LOGV(WARN_LEVEL, floyd_->info_log_, "FloydWorker: DealMessage failed:\n%s \n", text_format.c_str());
     return -1;
   }
   response_.Clear();

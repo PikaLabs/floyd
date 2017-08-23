@@ -42,12 +42,12 @@ int MyConn::DealMessage() {
   // set command
   std::string res;
 
-  if (argv_.size() == 3) {
+  if (argv_.size() == 3 && (argv_[0] == "set" || argv_[0] == "SET")) {
     s = f->Write(argv_[1], argv_[2]);
     res = "+OK\r\n";
     memcpy(wbuf_ + wbuf_len_, res.data(), res.size());
     wbuf_len_ += res.size();
-  } else {
+  } else if (argv_.size() == 2 && (argv_[0] == "get" || argv_[0] == "GET")) {
     s = f->Read(argv_[1], &val);
     if (s.ok()) {
       memcpy(wbuf_ + wbuf_len_, "*1\r\n$", 5);
@@ -66,6 +66,10 @@ int MyConn::DealMessage() {
       memcpy(wbuf_ + wbuf_len_, res.data(), res.size());
       wbuf_len_ += res.size();
     }
+  } else {
+    res = "+OK\r\n";
+    memcpy(wbuf_ + wbuf_len_, res.data(), res.size());
+    wbuf_len_ += res.size();
   }
   set_is_reply(true);
   return 0;

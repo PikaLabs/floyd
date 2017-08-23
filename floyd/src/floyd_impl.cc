@@ -434,8 +434,6 @@ Status FloydImpl::ReplyExecuteDirtyCommand(const CmdRequest& cmd,
   switch (cmd.type()) {
   case Type::kDirtyWrite: {
     rs = db_->Put(rocksdb::WriteOptions(), cmd.kv().key(), cmd.kv().value());
-    // TODO(anan) add response type or reorganize proto
-    // response->set_type(CmdResponse::DirtyWrite);
     response->set_type(Type::kWrite);
     if (rs.ok()) {
       response->set_code(StatusCode::kOk);
@@ -445,11 +443,6 @@ Status FloydImpl::ReplyExecuteDirtyCommand(const CmdRequest& cmd,
 
     LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteDirtyCommand DirtyWrite %s, key(%s) value(%s)",
          rs.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
-#ifndef NDEBUG
-    std::string text_format;
-    google::protobuf::TextFormat::PrintToString(*response, &text_format);
-    LOGV(DEBUG_LEVEL, info_log_, "DirtyWrite Response :\n%s", text_format.c_str());
-#endif
     break;
   }
   case Type::kServerStatus: {
@@ -590,7 +583,6 @@ void FloydImpl::GrantVote(uint64_t term, const std::string ip, int port) {
 
 void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* response) {
   slash::MutexLock l(&context_->global_mu);
-  context_->last_op_time = slash::NowMicros();
   bool granted = false;
   CmdRequest_RequestVote request_vote = request.request_vote();
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: my_term=%lu request.term=%lu",
@@ -640,6 +632,7 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* respons
   granted = true;
   LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: Grant my vote to %s:%d at term %lu",
       context_->voted_for_ip.c_str(), context_->voted_for_port, context_->current_term);
+  context_->last_op_time = slash::NowMicros();
   BuildRequestVoteResponse(context_->current_term, granted, response);
 }
 
