@@ -587,6 +587,13 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* respons
   CmdRequest_RequestVote request_vote = request.request_vote();
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: my_term=%lu request.term=%lu",
        context_->current_term, request_vote.term());
+  /*
+   * If RPC request or response contains term T > currentTerm: set currentTerm = T, convert to follower (§5.1)
+   */
+  if (request_vote.term() > context_->current_term) {
+    context_->BecomeFollower(request_vote.term());
+    raft_meta_->SetCurrentTerm(context_->current_term);
+  }
   // if caller's term smaller than my term, then I will notice him
   if (request_vote.term() < context_->current_term) {
     LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: Leader %s:%d term %lu is smaller than my %s:%d current term %lu",
