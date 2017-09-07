@@ -273,9 +273,6 @@ static void BuildLogEntry(const CmdRequest& cmd, uint64_t current_term, Entry* e
 }
 
 Status FloydImpl::Write(const std::string& key, const std::string& value) {
-  if (!HasLeader()) {
-    return Status::Incomplete("no leader node!");
-  }
   CmdRequest cmd;
   BuildWriteRequest(key, value, &cmd);
   CmdResponse response;
@@ -313,9 +310,6 @@ Status FloydImpl::DirtyWrite(const std::string& key, const std::string& value) {
 }
 
 Status FloydImpl::Delete(const std::string& key) {
-  if (!HasLeader()) {
-    return Status::Incomplete("no leader node!");
-  }
   CmdRequest cmd;
   BuildDeleteRequest(key, &cmd);
 
@@ -331,13 +325,10 @@ Status FloydImpl::Delete(const std::string& key) {
 }
 
 Status FloydImpl::Read(const std::string& key, std::string* value) {
-  if (!HasLeader()) {
-    return Status::Incomplete("no leader node!");
-  }
-  CmdRequest cmd;
-  BuildReadRequest(key, &cmd);
+  CmdRequest request;
+  BuildReadRequest(key, &request);
   CmdResponse response;
-  Status s = DoCommand(cmd, &response);
+  Status s = DoCommand(request, &response);
   if (!s.ok()) {
     return s;
   }
@@ -409,7 +400,7 @@ bool FloydImpl::GetServerStatus(std::string* msg) {
   return true;
 }
 
-Status FloydImpl::DoCommand(const CmdRequest& cmd, CmdResponse *response) {
+Status FloydImpl::DoCommand(const CmdRequest& request, CmdResponse *response) {
   // Execute if is leader
   std::string leader_ip;
   int leader_port;
@@ -419,12 +410,14 @@ Status FloydImpl::DoCommand(const CmdRequest& cmd, CmdResponse *response) {
   leader_port = context_->leader_port;
   }
   if (options_.local_ip == leader_ip && options_.local_port == leader_port) {
-    return ExecuteCommand(cmd, response);
+    return ExecuteCommand(request, response);
+  } else if (leader_ip == "" || leader_port == 0) {
+    return Status::Incomplete("no leader node!");
   }
   // Redirect to leader
   return worker_client_pool_->SendAndRecv(
       slash::IpPortString(leader_ip, leader_port),
-      cmd, response);
+      request, response);
 }
 
 Status FloydImpl::ReplyExecuteDirtyCommand(const CmdRequest& cmd,
@@ -545,30 +538,26 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& request,
   std::string value;
   rocksdb::Status rs;
   switch (request.type()) {
-  case Type::kWrite: {
-    response->set_code(StatusCode::kOk);
-    break;
-  }
-  case Type::kDelete: {
-    response->set_code(StatusCode::kOk);
-    break;
-  }
-  case Type::kRead: {
-    rs = db_->Get(rocksdb::ReadOptions(), request.kv().key(), &value);
-    if (rs.ok()) {
-      BuildReadResponse(request.kv().key(), value, StatusCode::kOk, response);
-    } else if (rs.IsNotFound()) {
-      BuildReadResponse(request.kv().key(), value, StatusCode::kNotFound, response);
-    } else {
-      BuildReadResponse(request.kv().key(), value, StatusCode::kError, response);
-    }
-    LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteCommand Read %s, key(%s) value(%s)",
-         rs.ToString().c_str(), request.kv().key().c_str(), value.c_str());
-    break;
-  }
-  default: {
-    return Status::Corruption("Unknown request type");
-  }
+    case Type::kWrite:
+      response->set_code(StatusCode::kOk);
+      break;
+    case Type::kDelete:
+      response->set_code(StatusCode::kOk);
+      break;
+    case Type::kRead:
+      rs = db_->Get(rocksdb::ReadOptions(), request.kv().key(), &value);
+      if (rs.ok()) {
+        BuildReadResponse(request.kv().key(), value, StatusCode::kOk, response);
+      } else if (rs.IsNotFound()) {
+        BuildReadResponse(request.kv().key(), value, StatusCode::kNotFound, response);
+      } else {
+        BuildReadResponse(request.kv().key(), value, StatusCode::kError, response);
+      }
+      LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteCommand Read %s, key(%s) value(%s)",
+           rs.ToString().c_str(), request.kv().key().c_str(), value.c_str());
+      break;
+    default:
+      return Status::Corruption("Unknown request type");
   }
   return Status::OK();
 }
