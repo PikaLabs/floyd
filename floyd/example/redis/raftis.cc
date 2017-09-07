@@ -44,7 +44,11 @@ int MyConn::DealMessage() {
 
   if (argv_.size() == 3 && (argv_[0] == "set" || argv_[0] == "SET")) {
     s = f->Write(argv_[1], argv_[2]);
-    res = "+OK\r\n";
+    if (s.ok()) {
+      res = "+OK\r\n";
+    } else {
+      res = "-ERR write " + s.ToString() + " \r\n";
+    }
     memcpy(wbuf_ + wbuf_len_, res.data(), res.size());
     wbuf_len_ += res.size();
   } else if (argv_.size() == 2 && (argv_[0] == "get" || argv_[0] == "GET")) {
@@ -61,8 +65,12 @@ int MyConn::DealMessage() {
       wbuf_len_ += val.size();
       memcpy(wbuf_ + wbuf_len_, "\r\n", 2);
       wbuf_len_ += 2;
-    } else {
+    } else if (s.IsNotFound()) {
       res = "$-1\r\n";
+      memcpy(wbuf_ + wbuf_len_, res.data(), res.size());
+      wbuf_len_ += res.size();
+    } else {
+      res = "-ERR read " + s.ToString() + " \r\n";
       memcpy(wbuf_ + wbuf_len_, res.data(), res.size());
       wbuf_len_ += res.size();
     }
