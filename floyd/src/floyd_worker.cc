@@ -36,32 +36,41 @@ int FloydWorkerConn::DealMessage() {
     return -1;
   }
   response_.Clear();
+  response_.set_type(Type::kRead);
   set_is_reply(true);
 
   // why we still need to deal with message that is not these type
   switch (request_.type()) {
     case Type::kWrite:
+      response_.set_type(Type::kWrite);
       floyd_->DoCommand(request_, &response_);
       break;
     case Type::kDelete:
+      response_.set_type(Type::kDelete);
       floyd_->DoCommand(request_, &response_);
       break;
     case Type::kRead:
+      response_.set_type(Type::kRead);
       floyd_->DoCommand(request_, &response_);
       break;
     case Type::kDirtyWrite:
+      response_.set_type(Type::kDirtyWrite);
       floyd_->DoCommand(request_, &response_);
       break;
     case Type::kServerStatus:
+      response_.set_type(Type::kServerStatus);
       floyd_->ReplyExecuteDirtyCommand(request_, &response_);
       break;
     case Type::kRequestVote:
+      response_.set_type(Type::kRequestVote);
       floyd_->ReplyRequestVote(request_, &response_);
       break;
     case Type::kAppendEntries:
+      response_.set_type(Type::kAppendEntries);
       floyd_->ReplyAppendEntries(request_, &response_);
       break;
     default:
+      response_.set_type(Type::kRead);
       LOGV(WARN_LEVEL, floyd_->info_log_, "unknown cmd type");
       return -1;
   }

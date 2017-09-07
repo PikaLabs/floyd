@@ -57,6 +57,7 @@ ClientPool::ClientPool(Logger* info_log, int timeout_ms, int retry)
     retry_(retry) {
 }
 
+// sleep 1 second after each send message
 Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req, CmdResponse* res) {
   /*
    * if (req.type() == kAppendEntries) {
@@ -84,6 +85,7 @@ Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req,
     } else {
       LOGV(WARN_LEVEL, info_log_, "ClientPool::SendAndRecv Server Connect to %s failed, error reason: %s"
           " Request type %s", server.c_str(), ret.ToString().c_str(), CmdType(req).c_str());
+      sleep(1);
     }
     cli->Close();
     return ret;
@@ -100,6 +102,7 @@ Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req,
     } else {
       LOGV(WARN_LEVEL, info_log_, "ClientPool::SendAndRecv Server Send to %s failed, error reason: %s"
           " Request type %s", server.c_str(), ret.ToString().c_str(), CmdType(req).c_str());
+      sleep(1);
     }
     cli->Close();
     return ret;
@@ -116,6 +119,7 @@ Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req,
     } else {
       LOGV(WARN_LEVEL, info_log_, "ClientPool::SendAndRecv Server Recv to %s failed, error reason: %s"
           " Request type %s", server.c_str(), ret.ToString().c_str(), CmdType(req).c_str());
+      sleep(1);
     }
     cli->Close();
     return ret;

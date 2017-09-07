@@ -312,7 +312,6 @@ Status FloydImpl::DirtyWrite(const std::string& key, const std::string& value) {
 Status FloydImpl::Delete(const std::string& key) {
   CmdRequest cmd;
   BuildDeleteRequest(key, &cmd);
-
   CmdResponse response;
   Status s = DoCommand(cmd, &response);
   if (!s.ok()) {

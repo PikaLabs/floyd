@@ -276,7 +276,7 @@ void Peer::AppendEntriesRPC() {
   {
   slash::MutexLock l(&context_->global_mu);
   if (!result.ok()) {
-    LOGV(WARN_LEVEL, info_log_, "Peer::AppendEntries: Leader %s:%d SendAndRecv to %s failed %s, \n",
+    LOGV(WARN_LEVEL, info_log_, "Peer::AppendEntries: Leader %s:%d SendAndRecv to %s failed, result is %s\n",
          options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), result.ToString().c_str());
     return;
   }
