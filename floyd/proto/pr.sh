@@ -1,11 +1,6 @@
 #!/bin/sh
 set -x
 
-###################
-# floyd.proto
-###################
-FILE1="floyd"
-for file in $FILE1 ; do
-  protoc -I=./ --cpp_out=./ ./$file.proto
-  cp $file.pb.h $file.pb.cc ../src
-done
+protoc -I=./ --cpp_out=../src/ ./floyd.proto
+
+echo "run protoc success, go, go, go...";

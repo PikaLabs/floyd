@@ -39,3 +39,4 @@ floyd/example/kv/sdk.pb.h
 *t2
 
 floyd/src/build_version.cc
+floyd/example/redis/deploy.sh
