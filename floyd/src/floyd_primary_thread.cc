@@ -48,10 +48,6 @@ int FloydPrimary::Stop() {
   return bg_thread_.StopThread();
 }
 
-// TODO(anan) We keep 2 Primary Cron in total.
-//    1. one short live Cron for LeaderHeartbeat, which is available as a leader;
-//    2. another long live Cron for ElectLeaderCheck, which is started when
-//    creating Primary;
 void FloydPrimary::AddTask(TaskType type, bool is_delay) {
   /*
    * int timer_queue_size, queue_size;
@@ -60,33 +56,29 @@ void FloydPrimary::AddTask(TaskType type, bool is_delay) {
    *     timer_queue_size, queue_size, type, is_delay);
    */
   switch (type) {
-  case kHeartBeat: {
-    if (is_delay) {
-      uint64_t timeout = options_.heartbeat_us;
-      bg_thread_.DelaySchedule(timeout / 1000LL, LaunchHeartBeatWrapper, this);
-    } else {
-      bg_thread_.Schedule(LaunchHeartBeatWrapper, this);
+    case kHeartBeat:
+      if (is_delay) {
+        uint64_t timeout = options_.heartbeat_us;
+        bg_thread_.DelaySchedule(timeout / 1000LL, LaunchHeartBeatWrapper, this);
+      } else {
+        bg_thread_.Schedule(LaunchHeartBeatWrapper, this);
+      }
+      break;
+    case kCheckLeader:
+      if (is_delay) {
+        uint64_t timeout = options_.check_leader_us;
+        bg_thread_.DelaySchedule(timeout / 1000LL, LaunchCheckLeaderWrapper, this);
+      } else {
+        bg_thread_.Schedule(LaunchHeartBeatWrapper, this);
+      }
+      break;
+    case kNewCommand:
+      bg_thread_.Schedule(LaunchNewCommandWrapper, this);
+      break;
+    default:
+      LOGV(WARN_LEVEL, info_log_, "FloydPrimary:: unknown task type %d", type);
+      break;
     }
-    break;
-  }
-  case kCheckLeader: {
-    if (is_delay) {
-      uint64_t timeout = options_.check_leader_us;
-      bg_thread_.DelaySchedule(timeout / 1000LL, LaunchCheckLeaderWrapper, this);
-    } else {
-      bg_thread_.Schedule(LaunchHeartBeatWrapper, this);
-    }
-    break;
-  }
-  case kNewCommand: {
-    bg_thread_.Schedule(LaunchNewCommandWrapper, this);
-    break;
-  }
-  default: {
-    LOGV(WARN_LEVEL, info_log_, "FloydPrimary:: unknown task type %d", type);
-    break;
-  }
-  }
 }
 
 void FloydPrimary::LaunchHeartBeatWrapper(void *arg) {

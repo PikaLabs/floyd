@@ -31,12 +31,15 @@ class FloydApply  {
   pink::BGThread bg_thread_;
   FloydContext* context_;
   rocksdb::DB* db_;
+  /*
+   * we will store the increasing id in raft_meta_
+   */
   RaftMeta* raft_meta_;
   RaftLog* raft_log_;
   Logger* info_log_;
   static void ApplyStateMachineWrapper(void* arg);
   void ApplyStateMachine();
-  Status Apply(const Entry& log_entry);
+  rocksdb::Status Apply(const Entry& log_entry);
 };
 
 }  // namespace floyd

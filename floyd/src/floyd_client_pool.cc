@@ -16,34 +16,30 @@ namespace floyd {
 static std::string CmdType(const CmdRequest& cmd) {
   std::string ret;
   switch (cmd.type()) {
-    case Type::kRead: {
+    case Type::kRead:
       ret = "Read";
       break;
-    }
-    case Type::kWrite: {
+    case Type::kWrite:
       ret = "Write";
       break;
-    }
-    case Type::kDirtyWrite: {
-      ret = "DirtyWrite";
-      break;
-    }
-    case Type::kDelete: {
+    case Type::kDelete:
       ret = "Delete";
       break;
-    }
-    case Type::kRequestVote: {
+    case Type::kTryLock:
+      ret = "TryLock";
+      break;
+    case Type::kUnLock:
+      ret = "UnLock";
+      break;
+    case Type::kRequestVote:
       ret = "RequestVote";
       break;
-    }
-    case Type::kAppendEntries: {
+    case Type::kAppendEntries:
       ret = "AppendEntries";
       break;
-    }
-    case Type::kServerStatus: {
+    case Type::kServerStatus:
       ret = "ServerStatus";
       break;
-    }
     default:
       ret = "UnknownCmd";
   }

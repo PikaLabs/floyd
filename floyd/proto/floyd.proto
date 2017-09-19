@@ -4,8 +4,9 @@ enum Type {
   // User cmd
   kRead = 0;
   kWrite = 1;
-  kDirtyWrite = 2;
   kDelete = 3;
+  kTryLock = 5;
+  kUnLock = 6;
 
   // Raft RPC
   kRequestVote = 8;
@@ -19,11 +20,14 @@ message Entry {
     kRead = 0;
     kWrite = 1;
     kDelete = 2;
+    kTryLock= 4;
+    kUnLock = 5;
   }
   required uint64 term = 1;
   required string key = 2;
   optional bytes value = 3;
   required OpType optype = 4;
+  optional uint64 session = 5;
 }
 
 message CmdRequest {
@@ -34,12 +38,6 @@ message CmdRequest {
     optional bytes value = 2;
   }
   optional Kv kv = 2;
-
-  message User {
-    required bytes ip = 1;
-    required int32 port = 2;
-  }
-  optional User user = 3;
 
   message RequestVote {
     required uint64 term = 1;
@@ -68,6 +66,12 @@ message CmdRequest {
     optional int32 port = 4;
   }
   optional ServerStatus server_status = 6;
+
+  message LockRequest {
+    required bytes name = 1;
+    optional uint64 session = 2;
+  }
+  optional LockRequest lock_request = 7;
 }
 
 enum StatusCode {
@@ -85,11 +89,6 @@ message CmdResponse {
     optional bytes value = 1;
   }
   optional Kv kv = 4;
-
-  message Kvs {
-    repeated Kv kv = 1;
-  }
-  optional Kvs kvs = 5;
 
   message RequestVoteResponse {
     required uint64 term = 1;
@@ -117,4 +116,18 @@ message CmdResponse {
     optional uint64 last_applied = 10;
   }
   optional ServerStatus server_status = 8;
+
+  message LockResponse {
+    required uint64 session = 1;
+  }
+  optional LockResponse lock_response = 9;
+}
+
+/*
+ * protos used in lock API
+ */
+
+message Lock {
+  required uint64 lease_end = 1;
+  required uint64 session = 2;
 }

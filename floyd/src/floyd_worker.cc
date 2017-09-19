@@ -53,8 +53,12 @@ int FloydWorkerConn::DealMessage() {
       response_.set_type(Type::kRead);
       floyd_->DoCommand(request_, &response_);
       break;
-    case Type::kDirtyWrite:
-      response_.set_type(Type::kDirtyWrite);
+    case Type::kTryLock:
+      response_.set_type(Type::kTryLock);
+      floyd_->DoCommand(request_, &response_);
+      break;
+    case Type::kUnLock:
+      response_.set_type(Type::kUnLock);
       floyd_->DoCommand(request_, &response_);
       break;
     case Type::kServerStatus:

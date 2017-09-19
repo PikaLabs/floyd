@@ -11,6 +11,7 @@
 #include <string>
 
 #include "slash/include/xdebug.h"
+#include "slash/include/env.h"
 
 #include "floyd/src/logger.h"
 #include "floyd/src/floyd.pb.h"
@@ -71,7 +72,7 @@ void FloydApply::ApplyStateMachine() {
   while (last_applied < commit_index) {
     last_applied++;
     raft_log_->GetEntry(last_applied, &log_entry);
-    Status s = Apply(log_entry);
+    rocksdb::Status s = Apply(log_entry);
     if (!s.ok()) {
       LOGV(WARN_LEVEL, info_log_, "FloydApply::ApplyStateMachine: Apply log entry failed, at: %d, error: %s",
           last_applied, s.ToString().c_str());
@@ -87,8 +88,10 @@ void FloydApply::ApplyStateMachine() {
   context_->apply_cond.SignalAll();
 }
 
-Status FloydApply::Apply(const Entry& entry) {
+rocksdb::Status FloydApply::Apply(const Entry& entry) {
   rocksdb::Status ret;
+  Lock lock;
+  std::string val;
   switch (entry.optype()) {
     case Entry_OpType_kWrite:
       ret = db_->Put(rocksdb::WriteOptions(), entry.key(), entry.value());
@@ -101,19 +104,50 @@ Status FloydApply::Apply(const Entry& entry) {
     case Entry_OpType_kRead:
       ret = rocksdb::Status::OK();
       break;
+    case Entry_OpType_kTryLock:
+      ret = db_->Get(rocksdb::ReadOptions(), entry.key(), &val);
+      if (ret.IsNotFound() == false) {
+        lock.ParseFromString(val);
+      }
+      if (ret.IsNotFound() || lock.lease_end() < slash::NowMicros()) {
+        lock.set_lease_end(slash::NowMicros() + 10 * 1000000);
+        uint64_t session = raft_meta_->GetNewFencingToken();
+        lock.set_session(session);
+        lock.SerializeToString(&val);
+        ret = db_->Put(rocksdb::WriteOptions(), entry.key(), val);
+        LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply trylock success name %s session %ld lease_end %ld",
+            entry.key().c_str(), lock.session(), lock.lease_end());
+      } else {
+        LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply trylock failed because of other hold the lock,"
+            "name %s lease_end %ld", entry.key().c_str(), lock.lease_end());
+        ret = rocksdb::Status::OK();
+      }
+      break;
+    case Entry_OpType_kUnLock:
+      ret = db_->Get(rocksdb::ReadOptions(), entry.key(), &val);
+      if (ret.IsNotFound()) {
+        LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply unlock failed because of the lock not exist, "
+            "name %s", entry.key().c_str());
+        ret = rocksdb::Status::OK();
+        break;
+      }
+      lock.ParseFromString(val);
+      if (lock.session() == entry.session() && lock.lease_end() > slash::NowMicros()) {
+        ret = db_->Delete(rocksdb::WriteOptions(), entry.key());
+        LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply unlock status %s, "
+            "name %s lease_end %ld lock.session %ld entry.session %ld", 
+            ret.ToString().c_str(), entry.key().c_str(), lock.lease_end(), lock.session(), entry.session());
+      } else {
+        LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply unlock failed bcause of lease time expired, "
+            "name %s lease_end %ld lock.session %ld entry.session %ld", 
+            entry.key().c_str(), lock.lease_end(), lock.session(), entry.session());
+        ret = rocksdb::Status::OK();
+      }
+      break;
     default:
       ret = rocksdb::Status::Corruption("Unknown entry type");
   }
-  if (!ret.ok()) {
-    return Status::Corruption(ret.ToString());
-  }
-  return Status::OK();
-  /* TODO wangkang-xy
-  // case CmdRequest::ReadAll:
-  // case CmdRequest::TryLock:
-  // case CmdRequest::UnLock:
-  // case CmdRequest::DeleteUser:
-  */
+  return ret;
 }
 
 } // namespace floyd

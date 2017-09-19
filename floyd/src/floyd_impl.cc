@@ -227,18 +227,25 @@ static void BuildWriteRequest(const std::string& key,
   kv->set_value(value);
 }
 
-static void BuildDirtyWriteRequest(const std::string& key,
-                                   const std::string& value, CmdRequest* cmd) {
-  cmd->set_type(Type::kDirtyWrite);
-  CmdRequest_Kv* kv = cmd->mutable_kv();
-  kv->set_key(key);
-  kv->set_value(value);
-}
-
 static void BuildDeleteRequest(const std::string& key, CmdRequest* cmd) {
   cmd->set_type(Type::kDelete);
   CmdRequest_Kv* kv = cmd->mutable_kv();
   kv->set_key(key);
+}
+
+static void BuildTryLockRequest(const std::string& name,
+                              CmdRequest* cmd) {
+  cmd->set_type(Type::kTryLock);
+  CmdRequest_LockRequest* lock_request = cmd->mutable_lock_request();
+  lock_request->set_name(name);
+}
+
+static void BuildUnLockRequest(const std::string& name, const uint64_t session,
+                              CmdRequest* cmd) {
+  cmd->set_type(Type::kUnLock);
+  CmdRequest_LockRequest* lock_request = cmd->mutable_lock_request();
+  lock_request->set_name(name);
+  lock_request->set_session(session);
 }
 
 static void BuildRequestVoteResponse(uint64_t term, bool granted,
@@ -265,10 +272,17 @@ static void BuildLogEntry(const CmdRequest& cmd, uint64_t current_term, Entry* e
   entry->set_value(cmd.kv().value());
   if (cmd.type() == Type::kRead) {
     entry->set_optype(Entry_OpType_kRead);
-  } else if (cmd.type() == Type::kWrite || cmd.type() == Type::kDirtyWrite) {
+  } else if (cmd.type() == Type::kWrite) {
     entry->set_optype(Entry_OpType_kWrite);
   } else if (cmd.type() == Type::kDelete) {
     entry->set_optype(Entry_OpType_kDelete);
+  } else if (cmd.type() == Type::kTryLock) {
+    entry->set_optype(Entry_OpType_kTryLock);
+    entry->set_key(cmd.lock_request().name());
+  } else if (cmd.type() == Type::kUnLock) {
+    entry->set_optype(Entry_OpType_kUnLock);
+    entry->set_key(cmd.lock_request().name());
+    entry->set_session(cmd.lock_request().session());
   }
 }
 
@@ -284,29 +298,6 @@ Status FloydImpl::Write(const std::string& key, const std::string& value) {
     return Status::OK();
   }
   return Status::Corruption("Write Error");
-}
-
-Status FloydImpl::DirtyWrite(const std::string& key, const std::string& value) {
-  // Write myself first
-  rocksdb::Status rs = db_->Put(rocksdb::WriteOptions(), key, value);
-  if (!rs.ok()) {
-    return Status::IOError("DirtyWrite failed, " + rs.ToString());
-  }
-
-  // Sync to other nodes without response
-  CmdRequest cmd;
-  BuildDirtyWriteRequest(key, value, &cmd);
-
-  CmdResponse response;
-  std::string local_server = slash::IpPortString(options_.local_ip, options_.local_port);
-  for (auto& iter : options_.members) {
-    if (iter != local_server) {
-      Status s = worker_client_pool_->SendAndRecv(iter, cmd, &response);
-      LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::DirtyWrite Send to %s return %s, key(%s) value(%s)",
-           iter.c_str(), s.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
-    }
-  }
-  return Status::OK();
 }
 
 Status FloydImpl::Delete(const std::string& key) {
@@ -349,6 +340,35 @@ Status FloydImpl::DirtyRead(const std::string& key, std::string* value) {
     return Status::NotFound("");
   }
   return Status::Corruption(s.ToString());
+}
+
+Status FloydImpl::TryLock(const std::string& key, uint64_t* session) {
+  CmdRequest request;
+  BuildTryLockRequest(key, &request);
+  CmdResponse response;
+  Status s = DoCommand(request, &response);
+  if (!s.ok()) {
+    return s;
+  }
+  *session = response.lock_response().session();
+  if (response.code() == StatusCode::kOk) {
+    return Status::OK();
+  }
+  return Status::Corruption("Lock Error");
+}
+
+Status FloydImpl::UnLock(const std::string& key, const uint64_t session) {
+  CmdRequest request;
+  BuildUnLockRequest(key, session, &request);
+  CmdResponse response;
+  Status s = DoCommand(request, &response);
+  if (!s.ok()) {
+    return s;
+  }
+  if (response.code() == StatusCode::kOk) {
+    return Status::OK();
+  }
+  return Status::Corruption("UnLock Error");
 }
 
 bool FloydImpl::GetServerStatus(std::string* msg) {
@@ -424,19 +444,6 @@ Status FloydImpl::ReplyExecuteDirtyCommand(const CmdRequest& cmd,
   std::string value;
   rocksdb::Status rs;
   switch (cmd.type()) {
-  case Type::kDirtyWrite: {
-    rs = db_->Put(rocksdb::WriteOptions(), cmd.kv().key(), cmd.kv().value());
-    response->set_type(Type::kWrite);
-    if (rs.ok()) {
-      response->set_code(StatusCode::kOk);
-    } else {
-      response->set_code(StatusCode::kError);
-    }
-
-    LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteDirtyCommand DirtyWrite %s, key(%s) value(%s)",
-         rs.ToString().c_str(), cmd.kv().key().c_str(), cmd.kv().value().c_str());
-    break;
-  }
   case Type::kServerStatus: {
     response->set_type(Type::kServerStatus);
     response->set_code(StatusCode::kOk);
@@ -536,6 +543,7 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& request,
   // Complete CmdRequest if needed
   std::string value;
   rocksdb::Status rs;
+  Lock lock;
   switch (request.type()) {
     case Type::kWrite:
       response->set_code(StatusCode::kOk);
@@ -554,6 +562,19 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& request,
       }
       LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteCommand Read %s, key(%s) value(%s)",
            rs.ToString().c_str(), request.kv().key().c_str(), value.c_str());
+      break;
+    case Type::kTryLock:
+      rs = db_->Get(rocksdb::ReadOptions(), request.lock_request().name(), &value);
+      lock.ParseFromString(value);
+      LOGV(INFO_LEVEL, info_log_, "FloydImpl::ExecuteCommand Trylock %s, name %s session %ld",
+           rs.ToString().c_str(), request.lock_request().name().c_str(), lock.session());
+      response->mutable_lock_response()->set_session(lock.session());
+      if (lock.lease_end() < slash::NowMicros()) {
+        response->set_code(StatusCode::kOk);
+      }
+      break;
+    case Type::kUnLock:
+      response->set_code(StatusCode::kOk);
       break;
     default:
       return Status::Corruption("Unknown request type");

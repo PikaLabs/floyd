@@ -21,6 +21,10 @@ static const std::string kVoteForIp = "VOTEFORIP";
 static const std::string kVoteForPort = "VOTEFORPORT";
 static const std::string kCommitIndex = "COMMITINDEX";
 static const std::string kLastApplied = "APPLYINDEX";
+/*
+ * fencing token is not part of raft, fencing token is used for implementing distributed lock
+ */
+static const std::string kFencingToken = "FENCINGTOKEN";
 
 RaftMeta::RaftMeta(rocksdb::DB* db, Logger* info_log)
   : db_(db),
@@ -130,6 +134,21 @@ void RaftMeta::SetLastApplied(uint64_t last_applied) {
   char buf[8];
   memcpy(buf, &last_applied, sizeof(uint64_t));
   db_->Put(rocksdb::WriteOptions(), kLastApplied, std::string(buf, 8));
+}
+
+uint64_t RaftMeta::GetNewFencingToken() {
+  std::string buf;
+  uint64_t ans;
+  rocksdb::Status s = db_->Get(rocksdb::ReadOptions(), kFencingToken, &buf);
+  if (s.IsNotFound()) {
+    ans = 0;
+  }
+  memcpy(&ans, buf.data(), sizeof(uint64_t));
+  ans++;
+  char wbuf[8];
+  memcpy(wbuf, &ans, sizeof(uint64_t));
+  db_->Put(rocksdb::WriteOptions(), kFencingToken, std::string(wbuf, 8));
+  return ans;
 }
 
 }  // namespace floyd

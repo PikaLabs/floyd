@@ -69,7 +69,7 @@ int main(int argc, char** argv)
   int cnt = 0;
   for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
     cnt++;
-    if (iter->key().ToString() == "CURRENTTERM" || iter->key().ToString() == "VOTEFORIP" || iter->key().ToString() == "VOTEFORPORT" || iter->key().ToString() == "APPLYINDEX" || iter->key().ToString() == "COMMITINDEX") {
+    if (iter->key().ToString() == "CURRENTTERM" || iter->key().ToString() == "VOTEFORIP" || iter->key().ToString() == "VOTEFORPORT" || iter->key().ToString() == "APPLYINDEX" || iter->key().ToString() == "COMMITINDEX" || iter->key().ToString() == "FENCINGTOKEN") {
       if (iter->key().ToString() == "VOTEFORIP") {
         printf("key %s, value %s\n", iter->key().ToString().c_str(), iter->value().ToString().c_str());
       } else {
@@ -80,7 +80,13 @@ int main(int argc, char** argv)
     } else {
       entry.ParseFromString(iter->value().ToString());
       uint64_t num = BitStrToUint(iter->key().ToString());
-      printf("index %lu entry term: %lu key %s value %s\n", num, entry.term(), entry.key().c_str(), entry.value().c_str());
+      if (entry.optype() == floyd::Entry_OpType_kUnLock) {
+        printf("index %lu entry type: unlock term: %lu name: %s session %lu\n", num, entry.term(), entry.key().c_str(), entry.session());
+      } else if (entry.optype() == floyd::Entry_OpType_kTryLock) {
+        printf("index %lu entry type: trylock term: %lu name: %s\n", num, entry.term(), entry.key().c_str());
+      } else {
+        printf("index %lu entry type: %d term: %lu key %s value %s\n", num, entry.optype(), entry.term(), entry.key().c_str(), entry.value().c_str());
+      }
     }
     // std::cout << "res " << iter->key().ToString() << ": " << iter->value().ToString() << std::endl;
   }

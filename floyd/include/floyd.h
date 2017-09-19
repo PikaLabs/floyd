@@ -24,10 +24,11 @@ class Floyd  {
   virtual ~Floyd();
 
   virtual Status Write(const std::string& key, const std::string& value) = 0;
-  virtual Status DirtyWrite(const std::string& key, const std::string& value) = 0;
   virtual Status Delete(const std::string& key) = 0;
   virtual Status Read(const std::string& key, std::string* value) = 0;
   virtual Status DirtyRead(const std::string& key, std::string* value) = 0;
+  virtual Status TryLock(const std::string& name, uint64_t* session) = 0;
+  virtual Status UnLock(const std::string& name, const uint64_t session) = 0;
 
   // return true if leader has been elected
   virtual bool GetLeader(std::string* ip_port) = 0;

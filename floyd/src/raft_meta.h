@@ -24,6 +24,16 @@ class Logger;
 /*
  * we use RaftMeta to avoid passing the floyd_impl's this point to other thread
  */
+/*
+ * main data stored in raftmeta
+ * static const std::string kcurrentterm = "currentterm";
+ * static const std::string kvoteforip = "voteforip";
+ * static const std::string kvoteforport = "voteforport";
+ * static const std::string kcommitindex = "commitindex";
+ * static const std::string klastapplied = "applyindex";
+ * fencing token is not part of raft, fencing token is used for implementing distributed lock
+ * static const std::string kFencingToken = "FENCINGTOKEN";
+ */
 class RaftMeta {
  public:
   RaftMeta(rocksdb::DB *db, Logger* info_log);
@@ -46,6 +56,7 @@ class RaftMeta {
   uint64_t GetLastApplied();
   void SetLastApplied(uint64_t last_applied);
 
+  uint64_t GetNewFencingToken();
  private:
   // db used to data that need to be persistent
   rocksdb::DB * const db_;

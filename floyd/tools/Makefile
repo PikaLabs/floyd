@@ -81,7 +81,7 @@ read_rock: read_rock.cc
 	$(AM_V_CC)$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
 cpt: cpt.cc
 	$(AM_V_CC)$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
-read_floyd: read_floyd.cc floyd.pb.cc
+read_floyd: read_floyd.cc ../src/floyd.pb.cc ../src/floyd.pb.h
 	$(AM_V_CC)$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
 cl: cl.cc ../src/*.cc ../include/*
 	$(AM_V_CC)$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
