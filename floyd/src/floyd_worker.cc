@@ -72,11 +72,11 @@ int FloydWorkerConn::DealMessage() {
       break;
     case Type::kRequestVote:
       response_.set_type(Type::kRequestVote);
-      ret = floyd_->ReplyRequestVote(request_, &response_);
+      floyd_->ReplyRequestVote(request_, &response_);
       break;
     case Type::kAppendEntries:
       response_.set_type(Type::kAppendEntries);
-      ret = floyd_->ReplyAppendEntries(request_, &response_);
+      floyd_->ReplyAppendEntries(request_, &response_);
       break;
     default:
       response_.set_type(Type::kRead);
