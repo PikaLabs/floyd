@@ -571,7 +571,7 @@ void FloydImpl::GrantVote(uint64_t term, const std::string ip, int port) {
   context_->current_term = term;
 }
 
-void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* response) {
+int FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* response) {
   slash::MutexLock l(&context_->global_mu);
   bool granted = false;
   CmdRequest_RequestVote request_vote = request.request_vote();
@@ -590,7 +590,7 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* respons
         request_vote.ip().c_str(), request_vote.port(), request_vote.term(), options_.local_ip.c_str(), options_.local_port,
         context_->current_term);
     BuildRequestVoteResponse(context_->current_term, granted, response);
-    return;
+    return -1;
   }
   uint64_t my_last_log_term = 0;
   uint64_t my_last_log_index = 0;
@@ -604,7 +604,7 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* respons
         request_vote.ip().c_str(), request_vote.port(), request_vote.last_log_term(), options_.local_ip.c_str(), options_.local_port,
         my_last_log_term, request_vote.last_log_index(), my_last_log_index);
     BuildRequestVoteResponse(context_->current_term, granted, response);
-    return;
+    return -1;
   }
 
   if (vote_for_.find(request_vote.term()) != vote_for_.end()
@@ -613,7 +613,7 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* respons
         options_.local_ip.c_str(), options_.local_port, vote_for_[request_vote.term()].first.c_str(), 
         vote_for_[request_vote.term()].second, request_vote.term());
     BuildRequestVoteResponse(context_->current_term, granted, response);
-    return;
+    return -1;
   }
   vote_for_[request_vote.term()] = std::make_pair(request_vote.ip(), request_vote.port());
   LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: Receive Request Vote from %s:%d, "
@@ -631,6 +631,7 @@ void FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* respons
       context_->voted_for_ip.c_str(), context_->voted_for_port, context_->current_term);
   context_->last_op_time = slash::NowMicros();
   BuildRequestVoteResponse(context_->current_term, granted, response);
+  return 0;
 }
 
 bool FloydImpl::AdvanceFollowerCommitIndex(uint64_t leader_commit) {
@@ -644,7 +645,7 @@ bool FloydImpl::AdvanceFollowerCommitIndex(uint64_t leader_commit) {
   return true;
 }
 
-void FloydImpl::ReplyAppendEntries(const CmdRequest& request, CmdResponse* response) {
+int FloydImpl::ReplyAppendEntries(const CmdRequest& request, CmdResponse* response) {
   bool success = false;
   CmdRequest_AppendEntries append_entries = request.append_entries();
   slash::MutexLock l(&context_->global_mu);
@@ -657,7 +658,7 @@ void FloydImpl::ReplyAppendEntries(const CmdRequest& request, CmdResponse* respo
         append_entries.ip().c_str(), append_entries.port(), append_entries.term(), options_.local_ip.c_str(), options_.local_port,
         context_->current_term);
     BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
-    return;
+    return -1;
   } else if ((append_entries.term() > context_->current_term) 
       || (append_entries.term() == context_->current_term && 
         (context_->role == kCandidate || (context_->role == kFollower && context_->leader_ip == "")))) {
@@ -677,7 +678,7 @@ void FloydImpl::ReplyAppendEntries(const CmdRequest& request, CmdResponse* respo
         append_entries.ip().c_str(), append_entries.port(), append_entries.prev_log_index(), options_.local_ip.c_str(), options_.local_port,
         raft_log_->GetLastLogIndex());
     BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
-    return;
+    return -1;
   }
 
   // Append entry
@@ -702,7 +703,7 @@ void FloydImpl::ReplyAppendEntries(const CmdRequest& request, CmdResponse* respo
     LOGV(WARN_LEVEL, info_log_, "FloydImple::ReplyAppentries: can't "
         "get Entry from raft_log prev_log_index %llu", append_entries.prev_log_index());
     BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
-    return;
+    return -1;
   }
 
   if (append_entries.prev_log_term() != my_last_log_term) {
@@ -713,7 +714,7 @@ void FloydImpl::ReplyAppendEntries(const CmdRequest& request, CmdResponse* respo
     // TruncateSuffix [prev_log_index, last_log_index)
     raft_log_->TruncateSuffix(append_entries.prev_log_index());
     BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
-    return;
+    return -1;
   }
 
   std::vector<const Entry*> entries;
@@ -734,7 +735,7 @@ void FloydImpl::ReplyAppendEntries(const CmdRequest& request, CmdResponse* respo
           " prev_log_index %lu error at term %lu", append_entries.ip().c_str(), append_entries.port(),
           append_entries.entries().size(), append_entries.prev_log_index(), append_entries.term());
       BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
-      return;
+      return -1;
     }
   } else {
     LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: Receive PingPong AppendEntries from %s:%d at term %lu",
@@ -752,6 +753,7 @@ void FloydImpl::ReplyAppendEntries(const CmdRequest& request, CmdResponse* respo
       append_entries.port(), append_entries.prev_log_index(), append_entries.leader_commit(),
       append_entries.term());
   BuildAppendEntriesResponse(success, context_->current_term, raft_log_->GetLastLogIndex(), response);
+  return 0;
 }
 
 }  // namespace floyd

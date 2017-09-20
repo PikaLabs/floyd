@@ -29,6 +29,7 @@ FloydWorkerConn::FloydWorkerConn(int fd, const std::string& ip_port,
 FloydWorkerConn::~FloydWorkerConn() {}
 
 int FloydWorkerConn::DealMessage() {
+  int ret = 0;
   if (!request_.ParseFromArray(rbuf_ + 4, header_len_)) {
     std::string text_format;
     google::protobuf::TextFormat::PrintToString(request_, &text_format);
@@ -43,19 +44,27 @@ int FloydWorkerConn::DealMessage() {
   switch (request_.type()) {
     case Type::kWrite:
       response_.set_type(Type::kWrite);
-      floyd_->DoCommand(request_, &response_);
+      if (!floyd_->DoCommand(request_, &response_).ok()) {
+        ret = -1;
+      }
       break;
     case Type::kDelete:
       response_.set_type(Type::kDelete);
-      floyd_->DoCommand(request_, &response_);
+      if (!floyd_->DoCommand(request_, &response_).ok()) {
+        ret = -1;
+      }
       break;
     case Type::kRead:
       response_.set_type(Type::kRead);
-      floyd_->DoCommand(request_, &response_);
+      if (!floyd_->DoCommand(request_, &response_).ok()) {
+        ret = -1;
+      }
       break;
     case Type::kDirtyWrite:
       response_.set_type(Type::kDirtyWrite);
-      floyd_->DoCommand(request_, &response_);
+      if (!floyd_->DoCommand(request_, &response_).ok()) {
+        ret = -1;
+      }
       break;
     case Type::kServerStatus:
       response_.set_type(Type::kServerStatus);
@@ -63,11 +72,11 @@ int FloydWorkerConn::DealMessage() {
       break;
     case Type::kRequestVote:
       response_.set_type(Type::kRequestVote);
-      floyd_->ReplyRequestVote(request_, &response_);
+      ret = floyd_->ReplyRequestVote(request_, &response_);
       break;
     case Type::kAppendEntries:
       response_.set_type(Type::kAppendEntries);
-      floyd_->ReplyAppendEntries(request_, &response_);
+      ret = floyd_->ReplyAppendEntries(request_, &response_);
       break;
     default:
       response_.set_type(Type::kRead);
@@ -76,7 +85,7 @@ int FloydWorkerConn::DealMessage() {
   }
 
   res_ = &response_;
-  return 0;
+  return ret;
 }
 
 FloydWorkerHandle::FloydWorkerHandle(FloydImpl* f)
