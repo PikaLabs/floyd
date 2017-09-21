@@ -124,6 +124,13 @@ Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req,
     cli->Close();
     return ret;
   }
+  if (ret.ok()) {
+    if (res->code() == StatusCode::kOk) {
+      return Status::OK();
+    } else {
+      return Status::Corruption("Client sent error");
+    }
+  }
   return ret;
 }
 

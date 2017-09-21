@@ -29,7 +29,6 @@ FloydWorkerConn::FloydWorkerConn(int fd, const std::string& ip_port,
 FloydWorkerConn::~FloydWorkerConn() {}
 
 int FloydWorkerConn::DealMessage() {
-  int ret = 0;
   if (!request_.ParseFromArray(rbuf_ + 4, header_len_)) {
     std::string text_format;
     google::protobuf::TextFormat::PrintToString(request_, &text_format);
@@ -45,26 +44,24 @@ int FloydWorkerConn::DealMessage() {
     case Type::kWrite:
       response_.set_type(Type::kWrite);
       if (!floyd_->DoCommand(request_, &response_).ok()) {
-        ret = -1;
+        response_.set_code(StatusCode::kError);
       }
       break;
     case Type::kDelete:
       response_.set_type(Type::kDelete);
       if (!floyd_->DoCommand(request_, &response_).ok()) {
-        ret = -1;
+        response_.set_code(StatusCode::kError);
       }
       break;
     case Type::kRead:
       response_.set_type(Type::kRead);
       if (!floyd_->DoCommand(request_, &response_).ok()) {
-        ret = -1;
+        response_.set_code(StatusCode::kError);
       }
       break;
     case Type::kDirtyWrite:
       response_.set_type(Type::kDirtyWrite);
-      if (!floyd_->DoCommand(request_, &response_).ok()) {
-        ret = -1;
-      }
+      floyd_->DoCommand(request_, &response_);
       break;
     case Type::kServerStatus:
       response_.set_type(Type::kServerStatus);
@@ -81,11 +78,10 @@ int FloydWorkerConn::DealMessage() {
     default:
       response_.set_type(Type::kRead);
       LOGV(WARN_LEVEL, floyd_->info_log_, "unknown cmd type");
-      return -1;
+      break;
   }
-
   res_ = &response_;
-  return ret;
+  return 0;
 }
 
 FloydWorkerHandle::FloydWorkerHandle(FloydImpl* f)
