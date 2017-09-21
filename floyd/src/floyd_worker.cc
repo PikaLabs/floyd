@@ -38,26 +38,21 @@ int FloydWorkerConn::DealMessage() {
   response_.Clear();
   response_.set_type(Type::kRead);
   set_is_reply(true);
+  slash::Status req_status;
 
   // why we still need to deal with message that is not these type
   switch (request_.type()) {
     case Type::kWrite:
       response_.set_type(Type::kWrite);
-      if (!floyd_->DoCommand(request_, &response_).ok()) {
-        response_.set_code(StatusCode::kError);
-      }
+      floyd_->DoCommand(request_, &response_);
       break;
     case Type::kDelete:
       response_.set_type(Type::kDelete);
-      if (!floyd_->DoCommand(request_, &response_).ok()) {
-        response_.set_code(StatusCode::kError);
-      }
+      floyd_->DoCommand(request_, &response_);
       break;
     case Type::kRead:
       response_.set_type(Type::kRead);
-      if (!floyd_->DoCommand(request_, &response_).ok()) {
-        response_.set_code(StatusCode::kError);
-      }
+      floyd_->DoCommand(request_, &response_);
       break;
     case Type::kDirtyWrite:
       response_.set_type(Type::kDirtyWrite);
@@ -66,14 +61,17 @@ int FloydWorkerConn::DealMessage() {
     case Type::kServerStatus:
       response_.set_type(Type::kServerStatus);
       floyd_->ReplyExecuteDirtyCommand(request_, &response_);
+      response_.set_code(StatusCode::kOk);
       break;
     case Type::kRequestVote:
       response_.set_type(Type::kRequestVote);
       floyd_->ReplyRequestVote(request_, &response_);
+      response_.set_code(StatusCode::kOk);
       break;
     case Type::kAppendEntries:
       response_.set_type(Type::kAppendEntries);
       floyd_->ReplyAppendEntries(request_, &response_);
+      response_.set_code(StatusCode::kOk);
       break;
     default:
       response_.set_type(Type::kRead);

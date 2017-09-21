@@ -125,10 +125,8 @@ Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req,
     return ret;
   }
   if (ret.ok()) {
-    if (res->code() == StatusCode::kOk) {
+    if (res->code() == StatusCode::kOk || res->code() == StatusCode::kNotFound) {
       return Status::OK();
-    } else {
-      return Status::Corruption("Client sent error");
     }
   }
   return ret;

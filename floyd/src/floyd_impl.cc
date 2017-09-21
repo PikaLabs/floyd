@@ -549,7 +549,6 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& request,
         BuildReadResponse(request.kv().key(), value, StatusCode::kOk, response);
       } else if (rs.IsNotFound()) {
         BuildReadResponse(request.kv().key(), value, StatusCode::kNotFound, response);
-        return Status::NotFound("key not found");
       } else {
         BuildReadResponse(request.kv().key(), value, StatusCode::kError, response);
         return Status::Corruption("get key error");
