@@ -1,0 +1,2 @@
+#!/bin/bash
+rm -rf /opt/raftis/gmon.out /opt/raftis/data

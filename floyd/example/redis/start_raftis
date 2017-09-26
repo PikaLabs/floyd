@@ -1,0 +1,4 @@
+#!/bin/bash
+cd /opt/raftis
+nohup ./raftis "n1:8901,n2:8901,n3:8901,n4:8901,n5:8901" "n1" 8901 "./data" 6379 > /opt/raftis/output 2>&1 &
+exit 0

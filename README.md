@@ -3,7 +3,7 @@
 Floyd is an C++ library based on Raft consensus protocol. 
 
 * [Raft](https://raft.github.io/) is a consensus algorithm  which is easy to understand;
-* Floyd is an **library** that could be easily embeded into users' application; 
+* Floyd is a **library** that could be easily embeded into users' application; 
 * Floyd support consistency between cluster nodes by APIs like Read/Write/Delete; 
 * Also we support direct access to data without consistency: DirtyRead/DirtyWrite;
 * Also some query and debug managment APIs： GetLeader/GetServerStatus/set_log_level
