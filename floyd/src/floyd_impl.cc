@@ -335,7 +335,7 @@ Status FloydImpl::Read(const std::string& key, std::string* value) {
     *value = response.kv().value();
     return Status::OK();
   } else if (response.code() == StatusCode::kNotFound) {
-    return Status::NotFound("");
+    return Status::NotFound("not found the key");
   } else {
     return Status::Corruption("Read Error");
   }
@@ -507,6 +507,8 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& request,
   Entry entry;
   BuildLogEntry(request, context_->current_term, &entry);
   entries.push_back(&entry);
+  response->set_type(request.type());
+  response->set_code(StatusCode::kError);
 
   uint64_t last_log_index = raft_log_->Append(entries);
   if (last_log_index <= 0) {
@@ -521,8 +523,6 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& request,
   } else {
     primary_->AddTask(kNewCommand);
   }
-  response->set_type(request.type());
-  response->set_code(StatusCode::kError);
 
   {
   slash::MutexLock l(&context_->apply_mu);
