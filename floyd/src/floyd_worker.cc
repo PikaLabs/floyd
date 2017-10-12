@@ -44,10 +44,12 @@ int FloydWorkerConn::DealMessage() {
   switch (request_.type()) {
     case Type::kWrite:
       response_.set_type(Type::kWrite);
+      response_.set_code(StatusCode::kError);
       floyd_->DoCommand(request_, &response_);
       break;
     case Type::kDelete:
       response_.set_type(Type::kDelete);
+      response_.set_code(StatusCode::kError);
       floyd_->DoCommand(request_, &response_);
       break;
     case Type::kRead:
