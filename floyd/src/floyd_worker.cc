@@ -38,7 +38,6 @@ int FloydWorkerConn::DealMessage() {
   response_.Clear();
   response_.set_type(Type::kRead);
   set_is_reply(true);
-  slash::Status req_status;
 
   // why we still need to deal with message that is not these type
   switch (request_.type()) {
