@@ -101,8 +101,8 @@ class FloydImpl : public Floyd  {
   /*
    * these two are the response to the request vote and appendentries
    */
-  void ReplyRequestVote(const CmdRequest& cmd, CmdResponse* cmd_res);
-  void ReplyAppendEntries(const CmdRequest& cmd, CmdResponse* cmd_res);
+  int ReplyRequestVote(const CmdRequest& cmd, CmdResponse* cmd_res);
+  int ReplyAppendEntries(const CmdRequest& cmd, CmdResponse* cmd_res);
 
   bool AdvanceFollowerCommitIndex(uint64_t new_commit_index);
 

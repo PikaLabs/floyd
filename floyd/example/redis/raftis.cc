@@ -43,36 +43,55 @@ int MyConn::DealMessage() {
   std::string res;
 
   if (argv_.size() == 3 && (argv_[0] == "set" || argv_[0] == "SET")) {
-    s = f->Write(argv_[1], argv_[2]);
-    if (s.ok()) {
-      res = "+OK\r\n";
-    } else {
-      res = "-ERR write " + s.ToString() + " \r\n";
+    int retries = 5;
+    while (true) {
+      retries--;
+      s = f->Write(argv_[1], argv_[2]);
+      if (s.ok()) {
+        res = "+OK\r\n";
+        break;
+      } else if (retries > 0 &&
+                 (s.ToString().find("no leader") != std::string::npos ||
+                 s.ToString().find("Client sent error") != std::string::npos)) {
+        sleep(1);
+      } else {
+        res = "-ERR write " + s.ToString() + " \r\n";
+        break;
+      }
     }
     memcpy(wbuf_ + wbuf_len_, res.data(), res.size());
     wbuf_len_ += res.size();
   } else if (argv_.size() == 2 && (argv_[0] == "get" || argv_[0] == "GET")) {
-    s = f->Read(argv_[1], &val);
-    if (s.ok()) {
-      memcpy(wbuf_ + wbuf_len_, "*1\r\n$", 5);
-      wbuf_len_ += 5;
-      std::string len = std::to_string(val.length());
-      memcpy(wbuf_ + wbuf_len_, len.data(), len.size());
-      wbuf_len_ += len.size();
-      memcpy(wbuf_ + wbuf_len_, "\r\n", 2);
-      wbuf_len_ += 2;
-      memcpy(wbuf_ + wbuf_len_, val.data(), val.size());
-      wbuf_len_ += val.size();
-      memcpy(wbuf_ + wbuf_len_, "\r\n", 2);
-      wbuf_len_ += 2;
-    } else if (s.IsNotFound()) {
-      res = "$-1\r\n";
-      memcpy(wbuf_ + wbuf_len_, res.data(), res.size());
-      wbuf_len_ += res.size();
-    } else {
-      res = "-ERR read " + s.ToString() + " \r\n";
-      memcpy(wbuf_ + wbuf_len_, res.data(), res.size());
-      wbuf_len_ += res.size();
+    int retries = 5;
+    while (true) {
+      retries--;
+      s = f->Read(argv_[1], &val);
+      if (s.ok() || s.IsNotFound()) {
+        if (s.IsNotFound()) {
+          val = "0";  // default value for jepsen
+        }
+        memcpy(wbuf_ + wbuf_len_, "*1\r\n$", 5);
+        wbuf_len_ += 5;
+        std::string len = std::to_string(val.length());
+        memcpy(wbuf_ + wbuf_len_, len.data(), len.size());
+        wbuf_len_ += len.size();
+        memcpy(wbuf_ + wbuf_len_, "\r\n", 2);
+        wbuf_len_ += 2;
+        memcpy(wbuf_ + wbuf_len_, val.data(), val.size());
+        wbuf_len_ += val.size();
+        memcpy(wbuf_ + wbuf_len_, "\r\n", 2);
+        wbuf_len_ += 2;
+        break;
+      } else if (retries > 0 &&
+                 (s.ToString().find("Client sent error") != std::string::npos ||
+                 s.ToString().find("no leader") != std::string::npos)) {
+        sleep(1);
+      } else {
+        res = "-ERR read " + s.ToString() + " \r\n";
+        memcpy(wbuf_ + wbuf_len_, res.data(), res.size());
+        wbuf_len_ += res.size();
+        break;
+      }
     }
   } else {
     res = "+OK\r\n";

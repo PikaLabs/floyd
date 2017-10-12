@@ -120,6 +120,11 @@ Status ClientPool::SendAndRecv(const std::string& server, const CmdRequest& req,
     cli->Close();
     return ret;
   }
+  if (ret.ok()) {
+    if (res->code() == StatusCode::kOk || res->code() == StatusCode::kNotFound) {
+      return Status::OK();
+    }
+  }
   return ret;
 }
 

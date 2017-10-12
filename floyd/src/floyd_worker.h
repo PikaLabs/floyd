@@ -29,7 +29,7 @@ class FloydWorkerConn : public pink::PbConn {
  private:
   FloydImpl* floyd_;
   CmdRequest request_;
-  CmdResponse  response_;
+  CmdResponse response_;
 };
 
 class FloydWorkerConnFactory : public pink::ConnFactory {

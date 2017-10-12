@@ -43,14 +43,17 @@ int FloydWorkerConn::DealMessage() {
   switch (request_.type()) {
     case Type::kWrite:
       response_.set_type(Type::kWrite);
+      response_.set_code(StatusCode::kError);
       floyd_->DoCommand(request_, &response_);
       break;
     case Type::kDelete:
       response_.set_type(Type::kDelete);
+      response_.set_code(StatusCode::kError);
       floyd_->DoCommand(request_, &response_);
       break;
     case Type::kRead:
       response_.set_type(Type::kRead);
+      response_.set_code(StatusCode::kError);
       floyd_->DoCommand(request_, &response_);
       break;
     case Type::kTryLock:
@@ -64,21 +67,23 @@ int FloydWorkerConn::DealMessage() {
     case Type::kServerStatus:
       response_.set_type(Type::kServerStatus);
       floyd_->ReplyExecuteDirtyCommand(request_, &response_);
+      response_.set_code(StatusCode::kOk);
       break;
     case Type::kRequestVote:
       response_.set_type(Type::kRequestVote);
       floyd_->ReplyRequestVote(request_, &response_);
+      response_.set_code(StatusCode::kOk);
       break;
     case Type::kAppendEntries:
       response_.set_type(Type::kAppendEntries);
       floyd_->ReplyAppendEntries(request_, &response_);
+      response_.set_code(StatusCode::kOk);
       break;
     default:
       response_.set_type(Type::kRead);
       LOGV(WARN_LEVEL, floyd_->info_log_, "unknown cmd type");
-      return -1;
+      break;
   }
-
   res_ = &response_;
   return 0;
 }
