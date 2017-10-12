@@ -52,6 +52,7 @@ int FloydWorkerConn::DealMessage() {
       break;
     case Type::kRead:
       response_.set_type(Type::kRead);
+      response_.set_code(StatusCode::kError);
       floyd_->DoCommand(request_, &response_);
       break;
     case Type::kDirtyWrite:
