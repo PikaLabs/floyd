@@ -149,6 +149,10 @@ make && sh run.sh
 
 A simple consensus kv example contain server and client builded with floyd
 
+## Test
+floyd has pass the jepsen test, you can get the test case here
+[jepsen](https://github.com/gaodq/jepsen)
+
 ## Documents
 * [Wikis](https://github.com/Qihoo360/floyd/wiki)
 
