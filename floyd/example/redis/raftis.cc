@@ -70,8 +70,8 @@ int MyConn::DealMessage() {
         if (s.IsNotFound()) {
           val = "0";  // default value for jepsen
         }
-        memcpy(wbuf_ + wbuf_len_, "*1\r\n$", 5);
-        wbuf_len_ += 5;
+        memcpy(wbuf_ + wbuf_len_, "$", 1);
+        wbuf_len_ += 1;
         std::string len = std::to_string(val.length());
         memcpy(wbuf_ + wbuf_len_, len.data(), len.size());
         wbuf_len_ += len.size();
