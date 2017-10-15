@@ -206,46 +206,48 @@ Floyd::~Floyd() {
 
 static void BuildReadRequest(const std::string& key, CmdRequest* cmd) {
   cmd->set_type(Type::kRead);
-  CmdRequest_Kv* kv = cmd->mutable_kv();
-  kv->set_key(key);
+  CmdRequest_KvRequest* kv_request = cmd->mutable_kv_request();
+  kv_request->set_key(key);
 }
 
 static void BuildReadResponse(const std::string &key, const std::string &value,
                               StatusCode code, CmdResponse* response) {
   response->set_code(code);
-  CmdResponse_Kv* kv = response->mutable_kv();
+  CmdResponse_KvResponse* kv_response = response->mutable_kv_response();
   if (code == StatusCode::kOk) {
-    kv->set_value(value);
+    kv_response->set_value(value);
   }
 }
 
 static void BuildWriteRequest(const std::string& key,
                               const std::string& value, CmdRequest* cmd) {
   cmd->set_type(Type::kWrite);
-  CmdRequest_Kv* kv = cmd->mutable_kv();
-  kv->set_key(key);
-  kv->set_value(value);
+  CmdRequest_KvRequest* kv_request = cmd->mutable_kv_request();
+  kv_request->set_key(key);
+  kv_request->set_value(value);
 }
 
 static void BuildDeleteRequest(const std::string& key, CmdRequest* cmd) {
   cmd->set_type(Type::kDelete);
-  CmdRequest_Kv* kv = cmd->mutable_kv();
-  kv->set_key(key);
+  CmdRequest_KvRequest* kv_request = cmd->mutable_kv_request();
+  kv_request->set_key(key);
 }
 
-static void BuildTryLockRequest(const std::string& name,
+static void BuildTryLockRequest(const std::string& name, const std::string& holder, uint64_t ttl,
                               CmdRequest* cmd) {
   cmd->set_type(Type::kTryLock);
   CmdRequest_LockRequest* lock_request = cmd->mutable_lock_request();
   lock_request->set_name(name);
+  lock_request->set_holder(holder);
+  lock_request->set_lease_end(slash::NowMicros() + ttl * 1000);
 }
 
-static void BuildUnLockRequest(const std::string& name, const uint64_t session,
+static void BuildUnLockRequest(const std::string& name, const std::string& holder,
                               CmdRequest* cmd) {
   cmd->set_type(Type::kUnLock);
   CmdRequest_LockRequest* lock_request = cmd->mutable_lock_request();
   lock_request->set_name(name);
-  lock_request->set_session(session);
+  lock_request->set_holder(holder);
 }
 
 static void BuildRequestVoteResponse(uint64_t term, bool granted,
@@ -268,8 +270,8 @@ static void BuildAppendEntriesResponse(bool succ, uint64_t term,
 
 static void BuildLogEntry(const CmdRequest& cmd, uint64_t current_term, Entry* entry) {
   entry->set_term(current_term);
-  entry->set_key(cmd.kv().key());
-  entry->set_value(cmd.kv().value());
+  entry->set_key(cmd.kv_request().key());
+  entry->set_value(cmd.kv_request().value());
   if (cmd.type() == Type::kRead) {
     entry->set_optype(Entry_OpType_kRead);
   } else if (cmd.type() == Type::kWrite) {
@@ -279,10 +281,12 @@ static void BuildLogEntry(const CmdRequest& cmd, uint64_t current_term, Entry* e
   } else if (cmd.type() == Type::kTryLock) {
     entry->set_optype(Entry_OpType_kTryLock);
     entry->set_key(cmd.lock_request().name());
+    entry->set_holder(cmd.lock_request().holder());
+    entry->set_lease_end(cmd.lock_request().lease_end());
   } else if (cmd.type() == Type::kUnLock) {
     entry->set_optype(Entry_OpType_kUnLock);
     entry->set_key(cmd.lock_request().name());
-    entry->set_session(cmd.lock_request().session());
+    entry->set_holder(cmd.lock_request().holder());
   }
 }
 
@@ -323,7 +327,7 @@ Status FloydImpl::Read(const std::string& key, std::string* value) {
     return s;
   }
   if (response.code() == StatusCode::kOk) {
-    *value = response.kv().value();
+    *value = response.kv_response().value();
     return Status::OK();
   } else if (response.code() == StatusCode::kNotFound) {
     return Status::NotFound("not found the key");
@@ -342,24 +346,23 @@ Status FloydImpl::DirtyRead(const std::string& key, std::string* value) {
   return Status::Corruption(s.ToString());
 }
 
-Status FloydImpl::TryLock(const std::string& key, uint64_t* session) {
+Status FloydImpl::TryLock(const std::string& name, const std::string& holder, uint64_t ttl) {
   CmdRequest request;
-  BuildTryLockRequest(key, &request);
+  BuildTryLockRequest(name, holder, ttl, &request);
   CmdResponse response;
   Status s = DoCommand(request, &response);
   if (!s.ok()) {
     return s;
   }
-  *session = response.lock_response().session();
   if (response.code() == StatusCode::kOk) {
     return Status::OK();
   }
   return Status::Corruption("Lock Error");
 }
 
-Status FloydImpl::UnLock(const std::string& key, const uint64_t session) {
+Status FloydImpl::UnLock(const std::string& name, const std::string& holder) {
   CmdRequest request;
-  BuildUnLockRequest(key, session, &request);
+  BuildUnLockRequest(name, holder, &request);
   CmdResponse response;
   Status s = DoCommand(request, &response);
   if (!s.ok()) {
@@ -552,30 +555,36 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& request,
       response->set_code(StatusCode::kOk);
       break;
     case Type::kRead:
-      rs = db_->Get(rocksdb::ReadOptions(), request.kv().key(), &value);
+      rs = db_->Get(rocksdb::ReadOptions(), request.kv_request().key(), &value);
       if (rs.ok()) {
-        BuildReadResponse(request.kv().key(), value, StatusCode::kOk, response);
+        BuildReadResponse(request.kv_request().key(), value, StatusCode::kOk, response);
       } else if (rs.IsNotFound()) {
-        BuildReadResponse(request.kv().key(), value, StatusCode::kNotFound, response);
+        BuildReadResponse(request.kv_request().key(), value, StatusCode::kNotFound, response);
       } else {
-        BuildReadResponse(request.kv().key(), value, StatusCode::kError, response);
+        BuildReadResponse(request.kv_request().key(), value, StatusCode::kError, response);
         return Status::Corruption("get key error");
       }
       LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteCommand Read %s, key(%s) value(%s)",
-           rs.ToString().c_str(), request.kv().key().c_str(), value.c_str());
+           rs.ToString().c_str(), request.kv_request().key().c_str(), value.c_str());
       break;
     case Type::kTryLock:
       rs = db_->Get(rocksdb::ReadOptions(), request.lock_request().name(), &value);
-      lock.ParseFromString(value);
-      LOGV(INFO_LEVEL, info_log_, "FloydImpl::ExecuteCommand Trylock %s, name %s session %ld",
-           rs.ToString().c_str(), request.lock_request().name().c_str(), lock.session());
-      response->mutable_lock_response()->set_session(lock.session());
-      if (lock.lease_end() < slash::NowMicros()) {
-        response->set_code(StatusCode::kOk);
+      if (rs.ok()) {
+        lock.ParseFromString(value);
+        if (lock.holder() == request.lock_request().holder() && lock.lease_end() == request.lock_request().lease_end()) {
+          response->set_code(StatusCode::kOk);
+        }
+      } else {
+        response->set_code(StatusCode::kLocked);
       }
       break;
     case Type::kUnLock:
-      response->set_code(StatusCode::kOk);
+      rs = db_->Get(rocksdb::ReadOptions(), request.lock_request().name(), &value);
+      if (rs.IsNotFound()) {
+        response->set_code(StatusCode::kOk);
+      } else {
+        response->set_code(StatusCode::kLocked);
+      }
       break;
     default:
       return Status::Corruption("Unknown request type");

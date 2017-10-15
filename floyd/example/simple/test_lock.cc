@@ -53,24 +53,13 @@ int main()
     sleep(2);
   }
 
-  int cnt;
-  cnt = 5;
+  int cnt = 100;
+  std::string holder = "baotiao-holder";
   while (cnt--) {
-    f2->GetServerStatus(&msg);
-    for (int j = 0; j < 100; j++) {
-      f2->Write("zz2" + char(j), "value2" + char(j));
-    }
-    printf("%s\n", msg.c_str());
-  }
-
-  // two thread 
-  cnt = 100;
-  while (cnt--) {
-    uint64_t session;
-    s = f1->TryLock("baotiao", &session);
-    printf("TryLock status %s session %ld\n", s.ToString().c_str(), session);
-    s = f1->UnLock("baotiao", session);
-    printf("TryUnLock status %s session %ld\n", s.ToString().c_str(), session);
+    s = f1->TryLock("baotiao-key", holder, 1000);
+    printf("TryLock status %s holder %s\n", s.ToString().c_str(), holder.c_str());
+    s = f1->UnLock("baotiao-key", holder);
+    printf("TryUnLock status %s holder %s\n", s.ToString().c_str(), holder.c_str());
   }
 
   getchar();

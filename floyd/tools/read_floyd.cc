@@ -80,10 +80,10 @@ int main(int argc, char** argv)
     } else {
       entry.ParseFromString(iter->value().ToString());
       uint64_t num = BitStrToUint(iter->key().ToString());
-      if (entry.optype() == floyd::Entry_OpType_kUnLock) {
-        printf("index %lu entry type: unlock term: %lu name: %s session %lu\n", num, entry.term(), entry.key().c_str(), entry.session());
-      } else if (entry.optype() == floyd::Entry_OpType_kTryLock) {
-        printf("index %lu entry type: trylock term: %lu name: %s\n", num, entry.term(), entry.key().c_str());
+      if (entry.optype() == floyd::Entry_OpType_kTryLock) {
+        printf("index %lu entry type: trylock term: %lu name: %s holder %s\n", num, entry.term(), entry.key().c_str(), entry.holder().c_str());
+      } else if (entry.optype() == floyd::Entry_OpType_kUnLock) {
+        printf("index %lu entry type: unlock term: %lu name: %s holder %s\n", num, entry.term(), entry.key().c_str(), entry.holder().c_str());
       } else {
         printf("index %lu entry type: %d term: %lu key %s value %s\n", num, entry.optype(), entry.term(), entry.key().c_str(), entry.value().c_str());
       }

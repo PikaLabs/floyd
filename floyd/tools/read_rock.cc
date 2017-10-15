@@ -36,7 +36,7 @@ int main(int argc, char**  argv)
   int cnt = 0;
   for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
     cnt++;
-    std::cout << "key " << iter->key().ToString() << ";val " << iter->value().ToString() << std::endl;
+    std::cout << "key " << iter->key().ToString() << "; val " << iter->value().ToString() << std::endl;
   }
   printf("cnt %d\n", cnt);
   return 0;

@@ -25,21 +25,23 @@ slash::Status s;
  */
 
 void *thread1_fun(void *arg) {
-  uint64_t session;
-  s = f1->TryLock("baotiao", &session);
-  printf("thread1 TryLock status %s session %ld\n", s.ToString().c_str(), session);
-  sleep(6);
-  s = f1->UnLock("baotiao", session);
-  printf("thread2 TryUnLock status %s session %ld\n", s.ToString().c_str(), session);
+  std::string holder = "thread1_fun";
+  while (1) {
+    s = f1->TryLock("baotiao-key", holder, 10000);
+    printf("thread1 TryLock status %s holder %s\n", s.ToString().c_str(), holder.c_str());
+    sleep(6);
+    s = f1->UnLock("baotiao-key", holder);
+    printf("thread2 TryUnLock status %s holder %s\n", s.ToString().c_str(), holder.c_str());
+  }
 }
 
 void *thread2_fun(void *arg) {
+  std::string holder = "thread2_fun";
   while (1) {
-    uint64_t session;
-    s = f1->TryLock("baotiao", &session);
-    printf("thread2 TryLock status %s session %ld\n", s.ToString().c_str(), session);
-    s = f1->UnLock("baotiao", session);
-    printf("thread2 TryUnLock status %s session %ld\n", s.ToString().c_str(), session);
+    s = f1->TryLock("baotiao-key", holder, 10000);
+    printf("thread2 TryLock status %s holder %s\n", s.ToString().c_str(), holder.c_str());
+    s = f1->UnLock("baotiao-key", holder);
+    printf("thread2 TryUnLock status %s holder %s\n", s.ToString().c_str(), holder.c_str());
     sleep(1);
   }
 }
@@ -78,16 +80,6 @@ int main()
     }
     printf("electing leader... sleep 2s\n");
     sleep(2);
-  }
-
-  int cnt;
-  cnt = 5;
-  while (cnt--) {
-    f2->GetServerStatus(&msg);
-    for (int j = 0; j < 100; j++) {
-      f2->Write("zz2" + char(j), "value2" + char(j));
-    }
-    printf("%s\n", msg.c_str());
   }
 
   pthread_t t1, t2;

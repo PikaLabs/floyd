@@ -1,5 +1,29 @@
 package floyd;
 
+/*
+ * Entry is used storing data in raft log
+ */
+message Entry {
+  enum OpType {
+    kRead = 0;
+    kWrite = 1;
+    kDelete = 2;
+    kTryLock= 4;
+    kUnLock = 5;
+  }
+  required OpType optype = 1;
+  // used in key value operator
+  required uint64 term = 2;
+  required string key = 3;
+  optional bytes value = 4;
+  // used in lock and unlock 
+  optional bytes holder = 5;
+  optional uint64 lease_end = 6;
+}
+
+// Raft RPC is the RPC presented in raft paper
+// User cmd RPC the cmd build upon the raft protocol
+
 enum Type {
   // User cmd
   kRead = 0;
@@ -14,30 +38,8 @@ enum Type {
   kServerStatus = 10;
 }
 
-
-message Entry {
-  enum OpType {
-    kRead = 0;
-    kWrite = 1;
-    kDelete = 2;
-    kTryLock= 4;
-    kUnLock = 5;
-  }
-  required uint64 term = 1;
-  required string key = 2;
-  optional bytes value = 3;
-  required OpType optype = 4;
-  optional uint64 session = 5;
-}
-
 message CmdRequest {
   required Type type = 1;
-
-  message Kv {
-    required bytes key = 1;
-    optional bytes value = 2;
-  }
-  optional Kv kv = 2;
 
   message RequestVote {
     required uint64 term = 1;
@@ -46,7 +48,7 @@ message CmdRequest {
     required uint64 last_log_index = 4;
     required uint64 last_log_term = 5;
   }
-  optional RequestVote request_vote = 4;
+  optional RequestVote request_vote = 2;
 
   message AppendEntries {
     required uint64 term = 1;
@@ -57,7 +59,20 @@ message CmdRequest {
     required uint64 leader_commit = 6;
     repeated Entry entries = 7;
   }
-  optional AppendEntries append_entries = 5;
+  optional AppendEntries append_entries = 3;
+
+  message KvRequest {
+    required bytes key = 1;
+    optional bytes value = 2;
+  }
+  optional KvRequest kv_request = 4;
+
+  message LockRequest {
+    required bytes name = 1;
+    required bytes holder = 2;
+    optional uint64 lease_end = 3;
+  }
+  optional LockRequest lock_request = 5;
 
   message ServerStatus {
     required int64 term = 1;
@@ -66,42 +81,38 @@ message CmdRequest {
     optional int32 port = 4;
   }
   optional ServerStatus server_status = 6;
-
-  message LockRequest {
-    required bytes name = 1;
-    optional uint64 session = 2;
-  }
-  optional LockRequest lock_request = 7;
 }
 
 enum StatusCode {
   kOk = 0;
   kNotFound = 1;
   kError = 2;
+  kLocked = 3;
 }
 
 message CmdResponse {
   required Type type = 1;
   optional StatusCode code = 2;
-  optional bytes msg = 3;
-
-  message Kv {
-    optional bytes value = 1;
-  }
-  optional Kv kv = 4;
 
   message RequestVoteResponse {
     required uint64 term = 1;
     required bool vote_granted = 2;
   }
-  optional RequestVoteResponse request_vote_res = 6;
+  optional RequestVoteResponse request_vote_res = 3;
 
   message AppendEntriesResponse {
     required uint64 term = 1;
     required bool success = 2;
     optional uint64 last_log_index = 3;
   }
-  optional AppendEntriesResponse append_entries_res = 7;
+  optional AppendEntriesResponse append_entries_res = 4;
+
+  optional bytes msg = 5;
+
+  message KvResponse {
+    optional bytes value = 1;
+  }
+  optional KvResponse kv_response = 6;
 
   message ServerStatus {
     required uint64 term = 1;
@@ -115,19 +126,16 @@ message CmdResponse {
     optional uint64 last_log_index = 9;
     optional uint64 last_applied = 10;
   }
-  optional ServerStatus server_status = 8;
-
-  message LockResponse {
-    required uint64 session = 1;
-  }
-  optional LockResponse lock_response = 9;
+  optional ServerStatus server_status = 7;
 }
 
 /*
  * protos used in lock API
+ * Lock is used storing data in database
+ * since the Lock should contain more than one variable as the value
+ * so we need a struct to serialize the value
  */
-
 message Lock {
-  required uint64 lease_end = 1;
-  required uint64 session = 2;
+  required bytes holder = 1;
+  required uint64 lease_end = 2;
 }

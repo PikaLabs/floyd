@@ -106,42 +106,49 @@ rocksdb::Status FloydApply::Apply(const Entry& entry) {
       break;
     case Entry_OpType_kTryLock:
       ret = db_->Get(rocksdb::ReadOptions(), entry.key(), &val);
-      if (ret.IsNotFound() == false) {
+      if (ret.ok()) {
         lock.ParseFromString(val);
-      }
-      if (ret.IsNotFound() || lock.lease_end() < slash::NowMicros()) {
-        lock.set_lease_end(slash::NowMicros() + 10 * 1000000);
-        uint64_t session = raft_meta_->GetNewFencingToken();
-        lock.set_session(session);
+        if (lock.lease_end() < slash::NowMicros()) {
+          LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply Trylock Success, name %s holder %s, "
+              "but the lock has been locked by %s, and right now it is timeout",
+              entry.key().c_str(), entry.holder().c_str(), lock.holder().c_str());
+          lock.set_holder(entry.holder());
+          lock.set_lease_end(entry.lease_end());
+          lock.SerializeToString(&val);
+          ret = db_->Put(rocksdb::WriteOptions(), entry.key(), val);
+        } else {
+          ret = rocksdb::Status::OK();
+        }
+      } else if (ret.IsNotFound()) {
+        lock.set_holder(entry.holder());
+        lock.set_lease_end(entry.lease_end());
         lock.SerializeToString(&val);
         ret = db_->Put(rocksdb::WriteOptions(), entry.key(), val);
-        LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply trylock success name %s session %ld lease_end %ld",
-            entry.key().c_str(), lock.session(), lock.lease_end());
       } else {
-        LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply trylock failed because of other hold the lock,"
-            "name %s lease_end %ld", entry.key().c_str(), lock.lease_end());
-        ret = rocksdb::Status::OK();
+        LOGV(WARN_LEVEL, info_log_, "FloydImpl::Apply Trylock Error operate db error, name %s holder %s",
+            entry.key().c_str(), entry.holder().c_str());
       }
       break;
     case Entry_OpType_kUnLock:
       ret = db_->Get(rocksdb::ReadOptions(), entry.key(), &val);
-      if (ret.IsNotFound()) {
-        LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply unlock failed because of the lock not exist, "
-            "name %s", entry.key().c_str());
+      if (ret.ok()) {
+        lock.ParseFromString(val);
+        if (lock.holder() != entry.holder()) {
+          LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply Warning UnLock an lock holded by other, name %s holder %s, origin holder %s",
+              entry.key().c_str(), entry.holder().c_str(), lock.holder().c_str());
+        } else if (lock.lease_end() < slash::NowMicros()) {
+          LOGV(INFO_LEVEL, info_log_, "FloydImpl::Apply UnLock an lock which is expired, name %s holder %s",
+              entry.key().c_str(), entry.holder().c_str(), lock.holder().c_str());
+        } else {
+          ret = db_->Delete(rocksdb::WriteOptions(), entry.key());
+        }
+      } else if (ret.IsNotFound()) {
+        LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply Warning UnLock an dosen't exist lock, name %s holder %s",
+            entry.key().c_str(), entry.holder().c_str());
         ret = rocksdb::Status::OK();
-        break;
-      }
-      lock.ParseFromString(val);
-      if (lock.session() == entry.session() && lock.lease_end() > slash::NowMicros()) {
-        ret = db_->Delete(rocksdb::WriteOptions(), entry.key());
-        LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply unlock status %s, "
-            "name %s lease_end %ld lock.session %ld entry.session %ld", 
-            ret.ToString().c_str(), entry.key().c_str(), lock.lease_end(), lock.session(), entry.session());
       } else {
-        LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply unlock failed bcause of lease time expired, "
-            "name %s lease_end %ld lock.session %ld entry.session %ld", 
-            entry.key().c_str(), lock.lease_end(), lock.session(), entry.session());
-        ret = rocksdb::Status::OK();
+        LOGV(WARN_LEVEL, info_log_, "FloydApply::Apply UnLock Error, operate db error, name %s holder %s",
+            entry.key().c_str(), entry.holder().c_str());
       }
       break;
     default:

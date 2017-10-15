@@ -23,8 +23,8 @@ FloydWorker::FloydWorker(int port, int cron_interval, FloydImpl* floyd)
 FloydWorkerConn::FloydWorkerConn(int fd, const std::string& ip_port,
     pink::ServerThread* thread, FloydImpl* floyd)
   : PbConn(fd, ip_port, thread),
-  floyd_(floyd) {
-  }
+    floyd_(floyd) {
+}
 
 FloydWorkerConn::~FloydWorkerConn() {}
 
@@ -58,10 +58,12 @@ int FloydWorkerConn::DealMessage() {
       break;
     case Type::kTryLock:
       response_.set_type(Type::kTryLock);
+      response_.set_code(StatusCode::kError);
       floyd_->DoCommand(request_, &response_);
       break;
     case Type::kUnLock:
       response_.set_type(Type::kUnLock);
+      response_.set_code(StatusCode::kError);
       floyd_->DoCommand(request_, &response_);
       break;
     case Type::kServerStatus:

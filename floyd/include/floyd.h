@@ -27,8 +27,9 @@ class Floyd  {
   virtual Status Delete(const std::string& key) = 0;
   virtual Status Read(const std::string& key, std::string* value) = 0;
   virtual Status DirtyRead(const std::string& key, std::string* value) = 0;
-  virtual Status TryLock(const std::string& name, uint64_t* session) = 0;
-  virtual Status UnLock(const std::string& name, const uint64_t session) = 0;
+  // ttl is millisecond
+  virtual Status TryLock(const std::string& name, const std::string& holder, uint64_t ttl) = 0;
+  virtual Status UnLock(const std::string& name, const std::string& holder) = 0;
 
   // return true if leader has been elected
   virtual bool GetLeader(std::string* ip_port) = 0;

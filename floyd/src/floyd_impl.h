@@ -49,8 +49,9 @@ class FloydImpl : public Floyd  {
   virtual Status Delete(const std::string& key);
   virtual Status Read(const std::string& key, std::string* value);
   virtual Status DirtyRead(const std::string& key, std::string* value);
-  virtual Status TryLock(const std::string& name, uint64_t* session);
-  virtual Status UnLock(const std::string& name, const uint64_t session);
+  // ttl is millisecond
+  virtual Status TryLock(const std::string& name, const std::string& holder, uint64_t ttl) override;
+  virtual Status UnLock(const std::string& name, const std::string& holder) override;
 
   // return true if leader has been elected
   virtual bool GetLeader(std::string* ip_port);
