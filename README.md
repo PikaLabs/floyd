@@ -5,12 +5,13 @@ Floyd is an C++ library based on Raft consensus protocol.
 * [Raft](https://raft.github.io/) is a consensus algorithm  which is easy to understand;
 * Floyd is a **library** that could be easily embeded into users' application; 
 * Floyd support consistency between cluster nodes by APIs like Read/Write/Delete; 
-* Also we support direct access to data without consistency: DirtyRead/DirtyWrite;
 * Also some query and debug managment APIs： GetLeader/GetServerStatus/set_log_level
+* Floyd support lock operation upon raft consensus protocol
 
 ## Users
 
 * Floyd has provided high available store for Meta cluster of [Zeppelin](https://github.com/Qihoo360/zeppelin) , which is a huge distributed key-value storage.
+* Floyd lock interface has used in our production pika_hub
 * The list will goes on.
 
 ## Why do we prefer a library to a service?
@@ -157,6 +158,8 @@ floyd has pass the jepsen test, you can get the test case here
 * [Wikis](https://github.com/Qihoo360/floyd/wiki)
 
 ## Contant us
+
+Anyone who is interested in raft protocol, used floyd in your production or has wrote some article about souce code of floyd please contact me, we have a article list.
 
 * email: g-infra-bada@360.cn
 * QQ Group: 294254078
