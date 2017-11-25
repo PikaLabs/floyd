@@ -26,7 +26,7 @@ class FloydApply;
 class Peer;
 typedef std::map<std::string, Peer*> PeersSet;
 
-class Peer  {
+class Peer {
  public:
   Peer(std::string server, FloydContext* context, FloydPrimary* primary, RaftMeta* raft_meta,
       RaftLog* raft_log, ClientPool* pool, FloydApply* apply, const Options& options, Logger* info_log);

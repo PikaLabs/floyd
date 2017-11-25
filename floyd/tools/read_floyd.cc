@@ -84,6 +84,8 @@ int main(int argc, char** argv)
         printf("index %lu entry type: trylock term: %lu name: %s holder %s\n", num, entry.term(), entry.key().c_str(), entry.holder().c_str());
       } else if (entry.optype() == floyd::Entry_OpType_kUnLock) {
         printf("index %lu entry type: unlock term: %lu name: %s holder %s\n", num, entry.term(), entry.key().c_str(), entry.holder().c_str());
+      } else if (entry.optype() == floyd::Entry_OpType_kAddServer) {
+        printf("index %lu entry type: addserver new_server: %s\n", num, entry.new_server().c_str());
       } else {
         printf("index %lu entry type: %d term: %lu key %s value %s\n", num, entry.optype(), entry.term(), entry.key().c_str(), entry.value().c_str());
       }

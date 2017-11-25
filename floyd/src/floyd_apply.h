@@ -18,11 +18,13 @@ using slash::Status;
 class RaftMeta;
 class RaftLog;
 class Logger;
+class FloydImpl;
 
-class FloydApply  {
+class FloydApply {
  public:
-  FloydApply(FloydContext* context, rocksdb::DB* db, RaftMeta* raft_meta, RaftLog* raft_log, Logger* info_log);
-  ~FloydApply();
+  FloydApply(FloydContext* context, rocksdb::DB* db, RaftMeta* raft_meta,
+      RaftLog* raft_log, FloydImpl* impl_, Logger* info_log); 
+  virtual ~FloydApply();
   int Start();
   int Stop();
   void ScheduleApply();
@@ -31,6 +33,7 @@ class FloydApply  {
   pink::BGThread bg_thread_;
   FloydContext* context_;
   rocksdb::DB* db_;
+  FloydImpl* impl_;
   /*
    * we will store the increasing id in raft_meta_
    */
@@ -40,6 +43,9 @@ class FloydApply  {
   static void ApplyStateMachineWrapper(void* arg);
   void ApplyStateMachine();
   rocksdb::Status Apply(const Entry& log_entry);
+
+  FloydApply(const FloydApply&);
+  void operator=(const FloydApply&);
 };
 
 }  // namespace floyd

@@ -40,7 +40,7 @@ enum TaskType {
 class FloydPrimary {
  public:
   FloydPrimary(FloydContext* context, RaftMeta* raft_meta, const Options& options, Logger* info_log);
-  ~FloydPrimary();
+  virtual ~FloydPrimary();
 
   int Start();
   int Stop();

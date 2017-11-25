@@ -38,7 +38,7 @@ class CmdResponse_ServerStatus;
 
 typedef std::map<std::string, Peer*> PeersSet;
 
-class FloydImpl : public Floyd  {
+class FloydImpl : public Floyd {
  public:
   explicit FloydImpl(const Options& options);
   virtual ~FloydImpl();
@@ -53,16 +53,21 @@ class FloydImpl : public Floyd  {
   virtual Status TryLock(const std::string& name, const std::string& holder, uint64_t ttl) override;
   virtual Status UnLock(const std::string& name, const std::string& holder) override;
 
+  // membership change interface
+  virtual Status AddServer(const std::string& new_server) override;
+
   // return true if leader has been elected
-  virtual bool GetLeader(std::string* ip_port);
-  virtual bool GetLeader(std::string* ip, int* port);
-  virtual bool HasLeader();
-  virtual bool GetAllNodes(std::vector<std::string>* nodes);
-  virtual bool IsLeader();
+  virtual bool GetLeader(std::string* ip_port) override;
+  virtual bool GetLeader(std::string* ip, int* port) override;
+  virtual bool HasLeader() override;
+  virtual bool GetAllNodes(std::vector<std::string>* nodes) override;
+  virtual bool IsLeader() override;
 
   virtual bool GetServerStatus(std::string* msg);
   // log level can be modified
-  virtual void set_log_level(const int log_level);
+  void set_log_level(const int log_level);
+  // used by add_new_server
+  int AddNewPeer();
 
  private:
   // friend class Floyd;
@@ -106,6 +111,8 @@ class FloydImpl : public Floyd  {
   int ReplyAppendEntries(const CmdRequest& cmd, CmdResponse* cmd_res);
 
   bool AdvanceFollowerCommitIndex(uint64_t new_commit_index);
+
+  int InitPeers();
 
   // No coping allowed
   FloydImpl(const FloydImpl&);
