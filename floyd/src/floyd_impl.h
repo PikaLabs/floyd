@@ -63,6 +63,10 @@ class FloydImpl : public Floyd {
   virtual bool GetAllNodes(std::vector<std::string>* nodes) override;
   virtual bool IsLeader() override;
 
+  int GetLocalPort() {
+    return options_.local_port;
+  }
+
   virtual bool GetServerStatus(std::string* msg);
   // log level can be modified
   void set_log_level(const int log_level);

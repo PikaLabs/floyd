@@ -60,7 +60,7 @@ int main()
   for (int i = 0; i < 200000; i++) {
     mystr[i] = slash::RandomString(10);
   }
-  for (int i = 0; i < 100000; i++) {
+  for (int i = 0; i < 10000; i++) {
     f1->Write(mystr[i], mystr[i]);
   }
 
@@ -73,7 +73,7 @@ int main()
   pthread_t t1;
   pthread_create(&t1, NULL, thread_fun, NULL);
 
-  for (int i = 100000; i < 200000; i++) {
+  for (int i = 10000; i < 20000; i++) {
     f1->Write(mystr[i], mystr[i]);
   }
 

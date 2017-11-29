@@ -87,8 +87,8 @@ Options::Options()
     path("/data/floyd"),
     check_leader_us(6000000),
     heartbeat_us(3000000),
-    append_entries_size_once(1024000),
-    append_entries_count_once(128),
+    append_entries_size_once(10240000),
+    append_entries_count_once(10240),
     single_mode(false) {
     }
 
@@ -100,8 +100,8 @@ Options::Options(const std::string& cluster_string,
     path(_path),
     check_leader_us(6000000),
     heartbeat_us(3000000),
-    append_entries_size_once(1024000),
-    append_entries_count_once(128),
+    append_entries_size_once(10240000),
+    append_entries_count_once(10240),
     single_mode(false) {
   std::srand(slash::NowMicros());
   // the default check_leader is [3s, 5s)

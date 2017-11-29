@@ -36,7 +36,7 @@ FloydApply::~FloydApply() {
 }
 
 int FloydApply::Start() {
-  bg_thread_.set_thread_name("FloydApply");
+  bg_thread_.set_thread_name("A:" + std::to_string(impl_->GetLocalPort()));
   bg_thread_.Schedule(ApplyStateMachineWrapper, this);
   return bg_thread_.StartThread();
 }

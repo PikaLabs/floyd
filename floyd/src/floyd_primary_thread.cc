@@ -37,12 +37,12 @@ FloydPrimary::FloydPrimary(FloydContext* context, PeersSet* peers, RaftMeta* raf
 }
 
 int FloydPrimary::Start() {
-  bg_thread_.set_thread_name("FloydPrimary");
+  bg_thread_.set_thread_name("R:" + std::to_string(options_.local_port));
   return bg_thread_.StartThread();
 }
 
 FloydPrimary::~FloydPrimary() {
-  LOGV(INFO_LEVEL, info_log_, "FloydPrimary exit!!!");
+  LOGV(INFO_LEVEL, info_log_, "FloydPrimary::~FloydPrimary Primary thread exit");
 }
 
 int FloydPrimary::Stop() {

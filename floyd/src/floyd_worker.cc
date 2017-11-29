@@ -18,6 +18,7 @@ FloydWorker::FloydWorker(int port, int cron_interval, FloydImpl* floyd)
   : conn_factory_(floyd),
     handle_(floyd) {
     thread_ = pink::NewHolyThread(port, &conn_factory_, cron_interval, &handle_);
+    thread_->set_thread_name("W:" + std::to_string(port));
 }
 
 FloydWorkerConn::FloydWorkerConn(int fd, const std::string& ip_port,
