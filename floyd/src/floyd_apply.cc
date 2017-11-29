@@ -28,6 +28,7 @@ FloydApply::FloydApply(FloydContext* context, rocksdb::DB* db, RaftMeta* raft_me
     db_(db),
     raft_meta_(raft_meta),
     raft_log_(raft_log),
+    impl_(impl),
     info_log_(info_log) {
 }
 
@@ -70,6 +71,7 @@ void FloydApply::ApplyStateMachine() {
   if (last_applied >= commit_index) {
     return;
   }
+  // TODO: use batch commit to optimization
   while (last_applied < commit_index) {
     last_applied++;
     raft_log_->GetEntry(last_applied, &log_entry);

@@ -108,13 +108,16 @@ int FloydImpl::AddNewPeer() {
     if (!IsSelf(*iter)) {
       auto peers_iter = peers_.find(*iter);
       if (peers_iter == peers_.end()) {
-        Peer* pt = new Peer(*iter, context_, primary_, raft_meta_, raft_log_,
+        LOGV(INFO_LEVEL, info_log_, "FloydImpl::AddNewPeer server %s:%d add new peer thread %s",
+            options_.local_ip.c_str(), options_.local_port, (*iter).c_str());
+        Peer* pt = new Peer(*iter, &peers_, context_, primary_, raft_meta_, raft_log_,
             worker_client_pool_, apply_, options_, info_log_);
         peers_.insert(std::pair<std::string, Peer*>(*iter, pt));
         pt->Start();
       }
     }
   }
+  return 0;
 }
 
 int FloydImpl::InitPeers() {
@@ -122,7 +125,7 @@ int FloydImpl::InitPeers() {
   // peers_.clear();
   for (auto iter = context_->members.begin(); iter != context_->members.end(); iter++) {
     if (!IsSelf(*iter)) {
-      Peer* pt = new Peer(*iter, context_, primary_, raft_meta_, raft_log_,
+      Peer* pt = new Peer(*iter, &peers_, context_, primary_, raft_meta_, raft_log_,
           worker_client_pool_, apply_, options_, info_log_);
       peers_.insert(std::pair<std::string, Peer*>(*iter, pt));
     }
@@ -131,14 +134,13 @@ int FloydImpl::InitPeers() {
   // Start peer thread
   int ret;
   for (auto& pt : peers_) {
-    pt.second->set_peers(peers_);
     if ((ret = pt.second->Start()) != 0) {
-      LOGV(ERROR_LEVEL, info_log_, "FloydImpl peer thread to %s failed to "
+      LOGV(ERROR_LEVEL, info_log_, "FloydImpl::InitPeers FloydImpl peer thread to %s failed to "
            " start, ret is %d", pt.first.c_str(), ret);
       return ret;
     }
   }
-  LOGV(INFO_LEVEL, info_log_, "Floyd start %d peer thread", peers_.size());
+  LOGV(INFO_LEVEL, info_log_, "FloydImpl::InitPeers Floyd start %d peer thread", peers_.size());
   return 0;
 }
 
@@ -177,37 +179,37 @@ Status FloydImpl::Init() {
   context_->RecoverInit(raft_meta_);
   context_->members = options_.members;
 
-  // Create Apply threads
-  apply_ = new FloydApply(context_, db_, raft_meta_, raft_log_, this, info_log_);
-  apply_->Start();
 
   // peers and primary refer to each other
   // Create PrimaryThread before Peers
-  primary_ = new FloydPrimary(context_, raft_meta_, options_, info_log_);
+  primary_ = new FloydPrimary(context_, &peers_, raft_meta_, options_, info_log_);
 
   // Start worker thread after Peers, because WorkerHandle will check peers
   worker_ = new FloydWorker(options_.local_port, 1000, this);
   int ret = 0;
   if ((ret = worker_->Start()) != 0) {
-    LOGV(ERROR_LEVEL, info_log_, "FloydImpl worker thread failed to start, ret is %d", ret);
+    LOGV(ERROR_LEVEL, info_log_, "FloydImpl::Init worker thread failed to start, ret is %d", ret);
     return Status::Corruption("failed to start worker, return " + std::to_string(ret));
   }
+  // Apply thread should start at the last
+  apply_ = new FloydApply(context_, db_, raft_meta_, raft_log_, this, info_log_);
 
   InitPeers();
 
   // Set and Start PrimaryThread
   // be careful:
   // primary and every peer threads shared the peer threads
-  primary_->set_peers(peers_);
   if ((ret = primary_->Start()) != 0) {
-    LOGV(ERROR_LEVEL, info_log_, "FloydImpl primary thread failed to start, ret is %d", ret);
+    LOGV(ERROR_LEVEL, info_log_, "FloydImpl::Init FloydImpl primary thread failed to start, ret is %d", ret);
     return Status::Corruption("failed to start primary thread, return " + std::to_string(ret));
   }
   primary_->AddTask(kCheckLeader);
 
+  // we should start the apply thread at the last
+  apply_->Start();
   // test only
   // options_.Dump();
-  LOGV(INFO_LEVEL, info_log_, "Floyd started!\nOptions\n%s", options_.ToString().c_str());
+  LOGV(INFO_LEVEL, info_log_, "FloydImpl::Init Floyd started!\nOptions\n%s", options_.ToString().c_str());
   return Status::OK();
 }
 
@@ -316,6 +318,9 @@ static void BuildLogEntry(const CmdRequest& cmd, uint64_t current_term, Entry* e
     entry->set_optype(Entry_OpType_kUnLock);
     entry->set_key(cmd.lock_request().name());
     entry->set_holder(cmd.lock_request().holder());
+  } else if (cmd.type() == Type::kAddServer) {
+    entry->set_optype(Entry_OpType_kAddServer);
+    entry->set_new_server(cmd.add_server_request().new_server());
   }
 }
 
@@ -630,6 +635,7 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& request,
       }
       break;
     case Type::kAddServer:
+      response->set_code(StatusCode::kOk);
       break;
     default:
       return Status::Corruption("Unknown request type");
@@ -673,10 +679,11 @@ int FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* response
   // as receiver's log, grant vote
   if ((request_vote.last_log_term() < my_last_log_term) ||
       ((request_vote.last_log_term() == my_last_log_term) && (request_vote.last_log_index() < my_last_log_index))) {
-    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: Leader %s:%d last_log_term %lu is smaller than my %s:%d last_log_term term %lu,"
-        " or Leader's last log term equal to my last_log_term, but Leader's last_log_index %lu is smaller than my last_log_index %lu",
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: Leader %s:%d last_log_term %lu is smaller than my(%s:%d) last_log_term term %lu,"
+        " or Leader's last log term equal to my last_log_term, but Leader's last_log_index %lu is smaller than my last_log_index %lu,"
+        "my current_term is %lu",
         request_vote.ip().c_str(), request_vote.port(), request_vote.last_log_term(), options_.local_ip.c_str(), options_.local_port,
-        my_last_log_term, request_vote.last_log_index(), my_last_log_index);
+        my_last_log_term, request_vote.last_log_index(), my_last_log_index,context_->current_term);
     BuildRequestVoteResponse(context_->current_term, granted, response);
     return -1;
   }

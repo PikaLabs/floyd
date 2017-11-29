@@ -39,22 +39,19 @@ enum TaskType {
 
 class FloydPrimary {
  public:
-  FloydPrimary(FloydContext* context, RaftMeta* raft_meta, const Options& options, Logger* info_log);
+  FloydPrimary(FloydContext* context, PeersSet* peers, RaftMeta* raft_meta,
+      const Options& options, Logger* info_log);
   virtual ~FloydPrimary();
 
   int Start();
   int Stop();
   void AddTask(TaskType type, bool is_delay = true);
-  void set_peers(PeersSet peers) {
-    peers_ = peers;
-  }
-
  private:
-  FloydContext* context_;
-  RaftMeta* raft_meta_;
-  PeersSet peers_;
+  FloydContext* const context_;
+  PeersSet* const peers_;
+  RaftMeta* const raft_meta_;
   Options options_;
-  Logger* info_log_;
+  Logger* const info_log_;
 
   std::atomic<uint64_t> reset_elect_leader_time_;
   std::atomic<uint64_t> reset_leader_heartbeat_time_;

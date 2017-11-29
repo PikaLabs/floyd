@@ -33,7 +33,7 @@ CXXFLAGS+=-I../../.. \
 					-I$(PINK_INCLUDE_DIR) \
 					-I$(ROCKSDB_INCLUDE_DIR)
 
-OBJECT = t t1 t2 t3 t4 t5 t6 t7 t8 test_lock test_lock1 test_lock2 add_server
+OBJECT = t t1 t2 t3 t4 t5 t6 t7 t8 test_lock test_lock1 test_lock2 add_server add_server1
 SRC_DIR = ./
 THIRD_PATH = ../../third
 OUTPUT = ./output
@@ -105,6 +105,8 @@ test_lock1: test_lock1.cc
 test_lock2: test_lock2.cc
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
 add_server: add_server.cc
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
+add_server1: add_server1.cc
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INCLUDE_PATH) $(LIB_PATH) $(LIBS)
 $(OBJS): %.o : %.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE_PATH) 

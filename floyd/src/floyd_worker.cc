@@ -71,6 +71,10 @@ int FloydWorkerConn::DealMessage() {
       floyd_->ReplyExecuteDirtyCommand(request_, &response_);
       response_.set_code(StatusCode::kOk);
       break;
+    case Type::kAddServer:
+      response_.set_type(Type::kAddServer);
+      floyd_->DoCommand(request_, &response_);
+      break;
     case Type::kRequestVote:
       response_.set_type(Type::kRequestVote);
       floyd_->ReplyRequestVote(request_, &response_);

@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <climits>
 #include <vector>
+#include <string>
 
 #include "slash/include/env.h"
 #include "slash/include/slash_mutex.h"
@@ -26,9 +27,10 @@
 
 namespace floyd {
 
-Peer::Peer(std::string server, FloydContext* context, FloydPrimary* primary, RaftMeta* raft_meta,
+Peer::Peer(std::string server, PeersSet* peers, FloydContext* context, FloydPrimary* primary, RaftMeta* raft_meta,
     RaftLog* raft_log, ClientPool* pool, FloydApply* apply, const Options& options, Logger* info_log)
   : peer_addr_(server),
+    peers_(peers),
     context_(context),
     primary_(primary),
     raft_meta_(raft_meta),
@@ -46,12 +48,14 @@ Peer::Peer(std::string server, FloydContext* context, FloydPrimary* primary, Raf
 }
 
 int Peer::Start() {
-  bg_thread_.set_thread_name("FloydPeer" + peer_addr_.substr(peer_addr_.find(':')));
+  std::string name = "P" + std::to_string(options_.local_port) + ":" + peer_addr_.substr(peer_addr_.find(':'));
+  bg_thread_.set_thread_name(name);
+  LOGV(INFO_LEVEL, info_log_, "Peer::Start Start a peer thread to %s", peer_addr_.c_str());
   return bg_thread_.StartThread();
 }
 
 Peer::~Peer() {
-  LOGV(INFO_LEVEL, info_log_, "Peer(%s) exit!!!", peer_addr_.c_str());
+  LOGV(INFO_LEVEL, info_log_, "Peer::~Peer peer thread %s exit", peer_addr_.c_str());
 }
 
 int Peer::Stop() {
@@ -66,7 +70,7 @@ bool Peer::CheckAndVote(uint64_t vote_term) {
 }
 
 void Peer::UpdatePeerInfo() {
-  for (auto& pt : peers_) {
+  for (auto& pt : (*peers_)) {
     pt.second->set_next_index(raft_log_->GetLastLogIndex() + 1);
     pt.second->set_match_index(0);
   }
@@ -140,7 +144,7 @@ void Peer::RequestVoteRPC() {
       LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRPC: Candidate %s:%d get vote from node %s at term %d",
           options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), context_->current_term);
       // However, we need check whether this vote is vote for old term
-      // we need igore these type of vote
+      // we need ignore these type of vote
       if (CheckAndVote(res.request_vote_res().term())) {
         context_->BecomeLeader();
         UpdatePeerInfo();
@@ -148,13 +152,21 @@ void Peer::RequestVoteRPC() {
             options_.local_ip.c_str(), options_.local_port, context_->current_term);
         primary_->AddTask(kHeartBeat, false);
       }
+    } else {
+      LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRPC: Candidate %s:%d deny vote from node %s at term %d, "
+          "transfer from candidate to follower",
+          options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), context_->current_term);
+      context_->BecomeFollower(res.request_vote_res().term());
+      raft_meta_->SetCurrentTerm(context_->current_term);
+      raft_meta_->SetVotedForIp(context_->voted_for_ip);
+      raft_meta_->SetVotedForPort(context_->voted_for_port);
     }
   } else if (context_->role == Role::kFollower) {
     LOGV(INFO_LEVEL, info_log_, "Peer::RequestVotePPC: Server %s:%d have transformed to follower when doing RequestVoteRPC, " 
         "The leader is %s:%d, new term is %lu", options_.local_ip.c_str(), options_.local_port, context_->leader_ip.c_str(),
         context_->leader_port, context_->current_term);
   } else if (context_->role == Role::kLeader) {
-    LOGV(INFO_LEVEL, info_log_, "Peer::RequestVotePPC: Server %s:%d is already a leader at term %lu ," 
+    LOGV(INFO_LEVEL, info_log_, "Peer::RequestVotePPC: Server %s:%d is already a leader at term %lu, " 
         "get vote from node %s at term %d", 
         options_.local_ip.c_str(), options_.local_port, context_->current_term, 
         peer_addr_.c_str(), res.request_vote_res().term());
@@ -166,7 +178,7 @@ void Peer::RequestVoteRPC() {
 uint64_t Peer::QuorumMatchIndex() {
   std::vector<uint64_t> values;
   std::map<std::string, Peer*>::iterator iter;
-  for (iter = peers_.begin(); iter != peers_.end(); iter++) {
+  for (iter = peers_->begin(); iter != peers_->end(); iter++) {
     if (iter->first == peer_addr_) {
       values.push_back(match_index_);
       continue;
