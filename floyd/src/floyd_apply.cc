@@ -17,16 +17,18 @@
 #include "floyd/src/floyd.pb.h"
 #include "floyd/src/raft_meta.h"
 #include "floyd/src/raft_log.h"
+#include "floyd/src/floyd_impl.h"
 
 namespace floyd {
 
 FloydApply::FloydApply(FloydContext* context, rocksdb::DB* db, RaftMeta* raft_meta,
-    RaftLog* raft_log, Logger* info_log)
+    RaftLog* raft_log, FloydImpl* impl, Logger* info_log)
   : bg_thread_(1024 * 1024 * 1024),
     context_(context),
     db_(db),
     raft_meta_(raft_meta),
     raft_log_(raft_log),
+    impl_(impl),
     info_log_(info_log) {
 }
 
@@ -34,7 +36,7 @@ FloydApply::~FloydApply() {
 }
 
 int FloydApply::Start() {
-  bg_thread_.set_thread_name("FloydApply");
+  bg_thread_.set_thread_name("A:" + std::to_string(impl_->GetLocalPort()));
   bg_thread_.Schedule(ApplyStateMachineWrapper, this);
   return bg_thread_.StartThread();
 }
@@ -69,9 +71,12 @@ void FloydApply::ApplyStateMachine() {
   if (last_applied >= commit_index) {
     return;
   }
+  // TODO: use batch commit to optimization
   while (last_applied < commit_index) {
     last_applied++;
     raft_log_->GetEntry(last_applied, &log_entry);
+    // TODO: we need change the s type
+    // since the Apply may not operate rocksdb
     rocksdb::Status s = Apply(log_entry);
     if (!s.ok()) {
       LOGV(WARN_LEVEL, info_log_, "FloydApply::ApplyStateMachine: Apply log entry failed, at: %d, error: %s",
@@ -92,6 +97,10 @@ rocksdb::Status FloydApply::Apply(const Entry& entry) {
   rocksdb::Status ret;
   Lock lock;
   std::string val;
+  // be careful:
+  // we need to return the ret carefully
+  // the FloydApply::ApplyStateMachine need use the ret to judge
+  // whether consume this successfully
   switch (entry.optype()) {
     case Entry_OpType_kWrite:
       ret = db_->Put(rocksdb::WriteOptions(), entry.key(), entry.value());
@@ -150,6 +159,13 @@ rocksdb::Status FloydApply::Apply(const Entry& entry) {
         LOGV(WARN_LEVEL, info_log_, "FloydApply::Apply UnLock Error, operate db error, name %s holder %s",
             entry.key().c_str(), entry.holder().c_str());
       }
+      break;
+    case Entry_OpType_kAddServer:
+      context_->members.push_back(entry.new_server());
+      impl_->AddNewPeer();
+      ret = rocksdb::Status::OK();
+      LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply Add new_server %s to cluster",
+          entry.new_server().c_str());
       break;
     default:
       ret = rocksdb::Status::Corruption("Unknown entry type");

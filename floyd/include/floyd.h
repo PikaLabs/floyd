@@ -31,6 +31,9 @@ class Floyd  {
   virtual Status TryLock(const std::string& name, const std::string& holder, uint64_t ttl) = 0;
   virtual Status UnLock(const std::string& name, const std::string& holder) = 0;
 
+  // membership change interface
+  virtual Status AddServer(const std::string& new_server) = 0;
+
   // return true if leader has been elected
   virtual bool GetLeader(std::string* ip_port) = 0;
   virtual bool GetLeader(std::string* ip, int* port) = 0;

@@ -27,7 +27,7 @@ class FloydWorkerConn : public pink::PbConn {
   virtual int DealMessage();
 
  private:
-  FloydImpl* floyd_;
+  FloydImpl* const floyd_;
   CmdRequest request_;
   CmdResponse response_;
 };
@@ -43,7 +43,7 @@ class FloydWorkerConnFactory : public pink::ConnFactory {
   }
 
  private:
-  FloydImpl* floyd_;
+  FloydImpl* const floyd_;
 };
 
 class FloydWorkerHandle : public pink::ServerHandle {
@@ -52,7 +52,7 @@ class FloydWorkerHandle : public pink::ServerHandle {
   using pink::ServerHandle::AccessHandle;
   bool AccessHandle(std::string& ip) const override;
  private:
-  FloydImpl* floyd_;
+  FloydImpl* const floyd_;
 };
 
 class FloydWorker {
@@ -65,7 +65,6 @@ class FloydWorker {
   }
 
   int Start() {
-    thread_->set_thread_name("FloydWorker");
     return thread_->StartThread();
   }
 

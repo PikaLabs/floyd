@@ -10,15 +10,17 @@ message Entry {
     kDelete = 2;
     kTryLock= 4;
     kUnLock = 5;
+    kAddServer = 6;
   }
   required OpType optype = 1;
   // used in key value operator
-  required uint64 term = 2;
-  required string key = 3;
+  optional uint64 term = 2;
+  optional string key = 3;
   optional bytes value = 4;
   // used in lock and unlock 
   optional bytes holder = 5;
   optional uint64 lease_end = 6;
+  optional bytes new_server = 7;
 }
 
 // Raft RPC is the RPC presented in raft paper
@@ -31,6 +33,7 @@ enum Type {
   kDelete = 3;
   kTryLock = 5;
   kUnLock = 6;
+  kAddServer = 11;
 
   // Raft RPC
   kRequestVote = 8;
@@ -74,6 +77,11 @@ message CmdRequest {
   }
   optional LockRequest lock_request = 5;
 
+  message AddServerRequest {
+    required bytes new_server = 1;
+  }
+  optional AddServerRequest add_server_request = 7;
+
   message ServerStatus {
     required int64 term = 1;
     required int64 commit_index = 2;
@@ -113,6 +121,11 @@ message CmdResponse {
     optional bytes value = 1;
   }
   optional KvResponse kv_response = 6;
+
+  message AddServerResponse {
+    optional bytes leader_hint_ip = 1;
+    optional bytes leader_hint_port = 2;
+  }
 
   message ServerStatus {
     required uint64 term = 1;

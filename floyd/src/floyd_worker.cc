@@ -18,6 +18,7 @@ FloydWorker::FloydWorker(int port, int cron_interval, FloydImpl* floyd)
   : conn_factory_(floyd),
     handle_(floyd) {
     thread_ = pink::NewHolyThread(port, &conn_factory_, cron_interval, &handle_);
+    thread_->set_thread_name("W:" + std::to_string(port));
 }
 
 FloydWorkerConn::FloydWorkerConn(int fd, const std::string& ip_port,
@@ -70,6 +71,10 @@ int FloydWorkerConn::DealMessage() {
       response_.set_type(Type::kServerStatus);
       floyd_->ReplyExecuteDirtyCommand(request_, &response_);
       response_.set_code(StatusCode::kOk);
+      break;
+    case Type::kAddServer:
+      response_.set_type(Type::kAddServer);
+      floyd_->DoCommand(request_, &response_);
       break;
     case Type::kRequestVote:
       response_.set_type(Type::kRequestVote);

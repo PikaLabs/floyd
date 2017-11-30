@@ -26,9 +26,9 @@ class FloydApply;
 class Peer;
 typedef std::map<std::string, Peer*> PeersSet;
 
-class Peer  {
+class Peer {
  public:
-  Peer(std::string server, FloydContext* context, FloydPrimary* primary, RaftMeta* raft_meta,
+  Peer(std::string server, PeersSet *peers, FloydContext* context, FloydPrimary* primary, RaftMeta* raft_meta,
       RaftLog* raft_log, ClientPool* pool, FloydApply* apply, const Options& options, Logger* info_log);
   ~Peer();
 
@@ -68,9 +68,6 @@ class Peer  {
     return match_index_;
   }
 
-  void set_peers(const PeersSet &peers) {
-    peers_ = peers;
-  }
   std::string peer_addr() const {
     return peer_addr_;
   }
@@ -82,16 +79,16 @@ class Peer  {
   void UpdatePeerInfo();
 
   std::string peer_addr_;
-  FloydContext* context_;
-  FloydPrimary* primary_;
-  RaftMeta* raft_meta_;
-  RaftLog* raft_log_;
-  ClientPool* pool_;
-  FloydApply* apply_;
+  PeersSet* const peers_;
+  FloydContext* const context_;
+  FloydPrimary* const primary_;
+  RaftMeta* const raft_meta_;
+  RaftLog* const raft_log_;
+  ClientPool* const pool_;
+  FloydApply* const apply_;
   Options options_;
   Logger* info_log_;
 
-  PeersSet peers_;
 
   std::atomic<uint64_t> next_index_;
   std::atomic<uint64_t> match_index_;

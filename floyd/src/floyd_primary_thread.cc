@@ -27,21 +27,22 @@
 
 namespace floyd {
 
-FloydPrimary::FloydPrimary(FloydContext* context, RaftMeta* raft_meta,
+FloydPrimary::FloydPrimary(FloydContext* context, PeersSet* peers, RaftMeta* raft_meta,
     const Options& options, Logger* info_log)
   : context_(context),
+    peers_(peers),
     raft_meta_(raft_meta),
     options_(options),
     info_log_(info_log) {
 }
 
 int FloydPrimary::Start() {
-  bg_thread_.set_thread_name("FloydPrimary");
+  bg_thread_.set_thread_name("R:" + std::to_string(options_.local_port));
   return bg_thread_.StartThread();
 }
 
 FloydPrimary::~FloydPrimary() {
-  LOGV(INFO_LEVEL, info_log_, "FloydPrimary exit!!!");
+  LOGV(INFO_LEVEL, info_log_, "FloydPrimary::~FloydPrimary Primary thread exit");
 }
 
 int FloydPrimary::Stop() {
@@ -78,7 +79,7 @@ void FloydPrimary::AddTask(TaskType type, bool is_delay) {
     default:
       LOGV(WARN_LEVEL, info_log_, "FloydPrimary:: unknown task type %d", type);
       break;
-    }
+  }
 }
 
 void FloydPrimary::LaunchHeartBeatWrapper(void *arg) {
@@ -137,7 +138,7 @@ void FloydPrimary::LaunchNewCommand() {
 // when adding task to peer thread, we can consider that this job have been in the network
 // even it is still in the peer thread's queue
 void FloydPrimary::NoticePeerTask(TaskType type) {
-  for (auto& peer : peers_) {
+  for (auto& peer : (*peers_)) {
     switch (type) {
     case kHeartBeat:
       LOGV(INFO_LEVEL, info_log_, "FloydPrimary::NoticePeerTask server %s:%d Add request Task to queue to %s at term %d",
@@ -150,7 +151,8 @@ void FloydPrimary::NoticePeerTask(TaskType type) {
       peer.second->AddAppendEntriesTask();
       break;
     default:
-      LOGV(WARN_LEVEL, info_log_, "Error TaskType to notice peer");
+      LOGV(WARN_LEVEL, info_log_, "FloydPrimary::NoticePeerTask server %s:%d Error TaskType to notice peer",
+          options_.local_ip.c_str(), options_.local_port);
     }
   }
 }
