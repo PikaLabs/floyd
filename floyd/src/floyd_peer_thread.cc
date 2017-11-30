@@ -329,7 +329,7 @@ void Peer::AppendEntriesRPC() {
         // response
         next_index_ = adjust_index;
         LOGV(INFO_LEVEL, info_log_, "Peer::AppEntriesRPC: peer_addr %s Adjust peer next_index_, Now next_index_ is %lu",
-            peer_addr_.c_str(), next_index_);
+            peer_addr_.c_str(), next_index_.load());
         AddAppendEntriesTask();
       }
     }

@@ -35,7 +35,7 @@ class RaftLog {
 
  private:
   rocksdb::DB* const db_;
-  Logger* info_log_;
+  Logger* const info_log_;
   /*
    * mutex for last_log_index_
    */

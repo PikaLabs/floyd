@@ -58,23 +58,19 @@ uint64_t RaftLog::Append(const std::vector<const Entry *> &entries) {
   slash::MutexLock l(&lli_mutex_);
   rocksdb::WriteBatch wb;
   LOGV(DEBUG_LEVEL, info_log_, "RaftLog::Append: entries.size %lld", entries.size());
+  // try to commit entries in one batch
   for (size_t i = 0; i < entries.size(); i++) {
     std::string buf;
     entries[i]->SerializeToString(&buf);
     last_log_index_++;
     wb.Put(UintToBitStr(last_log_index_), buf);
-    // s = db_->Put(rocksdb::WriteOptions(), UintToBitStr(last_log_index_), buf);
-    // if (!s.ok()) {
-    //   LOGV(ERROR_LEVEL, info_log_, "RaftLog::Append %lu string %s false\n", last_log_index_, UintToBitStr(last_log_index_).c_str());
-    //   return --last_log_index_;
-    // }
   }
   rocksdb::Status s;
   s = db_->Write(rocksdb::WriteOptions(), &wb);
   if (!s.ok()) {
-    LOGV(ERROR_LEVEL, info_log_, "RaftLog::Append %lu false\n", last_log_index_);
     last_log_index_ -= entries.size();
-    return last_log_index_;
+    LOGV(ERROR_LEVEL, info_log_, "RaftLog::Append append entries failed, entries size %u, last_log_index_ is %lu",
+        entries.size(), last_log_index_);
   }
   return last_log_index_;
 }
@@ -89,7 +85,7 @@ int RaftLog::GetEntry(const uint64_t index, Entry *entry) {
   std::string res;
   rocksdb::Status s = db_->Get(rocksdb::ReadOptions(), buf, &res);
   if (s.IsNotFound()) {
-    LOGV(ERROR_LEVEL, info_log_, "RaftLog::GetEntry: GetEntry not found %lld \n", index);
+    LOGV(ERROR_LEVEL, info_log_, "RaftLog::GetEntry: GetEntry not found, index is %lld", index);
     entry = NULL;
     return 1;
   }
@@ -128,7 +124,7 @@ int RaftLog::TruncateSuffix(uint64_t index) {
     rocksdb::Status s = db_->Delete(rocksdb::WriteOptions(), UintToBitStr(last_log_index_));
     if (!s.ok()) {
       LOGV(ERROR_LEVEL, info_log_, "RaftLog::TruncateSuffix Error last_log_index %lu "
-          "truncate from %lu\n", last_log_index_, index);
+          "truncate from %lu", last_log_index_, index);
       return -1;
     }
   }

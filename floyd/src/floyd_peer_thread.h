@@ -87,7 +87,7 @@ class Peer {
   ClientPool* const pool_;
   FloydApply* const apply_;
   Options options_;
-  Logger* info_log_;
+  Logger* const info_log_;
 
 
   std::atomic<uint64_t> next_index_;

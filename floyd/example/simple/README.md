@@ -27,3 +27,5 @@ test_lock1 is the case that two thread preempt to a same lock
 add_server test the base membership change proto, start 3 nodes and writing some data, then start the 4th node and join the group, at last start another node and join the group.
 
 add_server1 is the case that join the group parallel with writing data
+
+read_bench is an benchmark tool to get multi thread reading performance

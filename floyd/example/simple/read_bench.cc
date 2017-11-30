@@ -25,9 +25,9 @@ uint64_t NowMicros() {
 Floyd *f1, *f2, *f3, *f4, *f5;
 std::string keystr[1001000];
 std::string valstr[1001000];
-int val_size = 128;
-int thread_num = 4;
-int item_num = 10000;
+int val_size = 10;
+int thread_num = 32;
+int item_num = 100000;
 
 void *fun(void *arg) {
   int i = 1;
@@ -43,9 +43,10 @@ void *fun(void *arg) {
   } else {
     p = f5;
   }
+  std::string val;
   while (i--) {
     for (int j = 0; j < item_num; j++) {
-      p->Write(keystr[j], valstr[j]);
+      p->Read(keystr[j], &val);
     }
   }
 }
@@ -102,6 +103,9 @@ int main(int argc, char * argv[])
     printf("electing leader... sleep 2s\n");
     sleep(2);
   }
+  for (int i = 0; i < item_num; i++) {
+    f1->Write(keystr[i], valstr[i]);
+  }
 
   pthread_t pid[24];
   st = NowMicros();
@@ -112,7 +116,8 @@ int main(int argc, char * argv[])
     pthread_join(pid[i], NULL);
   }
   ed = NowMicros();
-  printf("write %d datas cost time microsecond(us) %ld, qps %llu\n", item_num * thread_num, ed - st, item_num * thread_num * 1000000LL / (ed - st));
+  printf("read_bench reading %d datas cost time microsecond(us) %ld, qps %llu\n", 
+      item_num * thread_num, ed - st, item_num * thread_num * 1000000LL / (ed - st));
 
   getchar();
   delete f2;

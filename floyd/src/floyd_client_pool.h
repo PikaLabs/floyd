@@ -42,7 +42,7 @@ class ClientPool {
   Status UpHoldCli(Client* client);
 
  private:
-  Logger* info_log_;
+  Logger* const info_log_;
   int timeout_ms_;
   int retry_;
   slash::Mutex mu_;
