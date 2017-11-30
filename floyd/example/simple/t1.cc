@@ -62,6 +62,9 @@ int main(int argc, char * argv[])
   if (argc > 2) {
     val_size = atoi(argv[2]);
   }
+  if (argc > 3) {
+    item_num = atoi(argv[3]);
+  }
 
   printf("multi threads test to get performance thread num %d key size %d item number %d\n", thread_num, val_size, item_num);
 
@@ -113,7 +116,7 @@ int main(int argc, char * argv[])
     pthread_join(pid[i], NULL);
   }
   ed = NowMicros();
-  printf("write 100000 cost time microsecond(us) %ld, qps %llu\n", ed - st, item_num * thread_num * 1000000LL / (ed - st));
+  printf("write %d datas cost time microsecond(us) %ld, qps %llu\n", item_num * thread_num, ed - st, item_num * thread_num * 1000000LL / (ed - st));
 
   getchar();
   delete f2;
