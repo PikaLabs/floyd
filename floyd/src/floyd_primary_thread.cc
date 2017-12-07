@@ -70,7 +70,7 @@ void FloydPrimary::AddTask(TaskType type, bool is_delay) {
         uint64_t timeout = options_.check_leader_us;
         bg_thread_.DelaySchedule(timeout / 1000LL, LaunchCheckLeaderWrapper, this);
       } else {
-        bg_thread_.Schedule(LaunchHeartBeatWrapper, this);
+        bg_thread_.Schedule(LaunchCheckLeaderWrapper, this);
       }
       break;
     case kNewCommand:
