@@ -120,8 +120,12 @@ bool RaftLog::GetLastLogTermAndIndex(uint64_t* last_log_term, uint64_t* last_log
 int RaftLog::TruncateSuffix(uint64_t index) {
   // we need to delete the unnecessary entry, since we don't store
   // last_log_index in rocksdb
+  rocksdb::WriteBatch batch;
   for (; last_log_index_ >= index; last_log_index_--) {
-    rocksdb::Status s = db_->Delete(rocksdb::WriteOptions(), UintToBitStr(last_log_index_));
+    batch.Delete(UintToBitStr(last_log_index_));
+  }
+  if (batch.Count() > 0) {
+    rocksdb::Status s = db_->Write(rocksdb::WriteOptions(), &batch);
     if (!s.ok()) {
       LOGV(ERROR_LEVEL, info_log_, "RaftLog::TruncateSuffix Error last_log_index %lu "
           "truncate from %lu", last_log_index_, index);
