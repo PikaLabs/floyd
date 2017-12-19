@@ -61,35 +61,43 @@ bool FloydImpl::IsSelf(const std::string& ip_port) {
   return (ip_port == slash::IpPortString(options_.local_ip, options_.local_port));
 }
 
-bool FloydImpl::GetLeader(std::string *ip_port) {
-  if (context_->leader_ip.empty() || context_->leader_port == 0) {
-    return false;
+/*
+ * if the leader is expired, then the getLeader, IsLeader will return false
+ */
+bool FloydImpl::IsLeader() {
+  uint64_t now = slash::NowMicros();
+  if (context_->leader_ip == options_.local_ip && context_->leader_port == options_.local_port 
+      && context_->lease_start <= now && now < context_->lease_end) {
+    return true;
   }
-  *ip_port = slash::IpPortString(context_->leader_ip, context_->leader_port);
-  return true;
+  return false;
 }
 
-bool FloydImpl::IsLeader() {
-  if (context_->leader_ip == "" || context_->leader_port == 0) {
-    return false;
-  }
-  if (context_->leader_ip == options_.local_ip && context_->leader_port == options_.local_port) {
+bool FloydImpl::GetLeader(std::string *ip_port) {
+  uint64_t now = slash::NowMicros();
+  if (context_->lease_start <= now && now < context_->lease_end) {
+    *ip_port = slash::IpPortString(options_.local_ip, options_.local_port)
     return true;
   }
   return false;
 }
 
 bool FloydImpl::GetLeader(std::string* ip, int* port) {
-  *ip = context_->leader_ip;
-  *port = context_->leader_port;
-  return (!ip->empty() && *port != 0);
+  uint64_t now = slash::NowMicros();
+  if (context_->lease_start <= now && now < context_->lease_end) {
+    *ip = context_->leader_ip;
+    *port = context_->leader_port;
+    return true;
+  }
+  return false;
 }
 
 bool FloydImpl::HasLeader() {
-  if (context_->leader_ip == "" || context_->leader_port == 0) {
-    return false;
+  if (context_->leader_ip != "" && context_->leader_port != 0
+      && context_->lease_start <= now && now < context_->lease_end) {
+    return true;
   }
-  return true;
+  return false;
 }
 
 bool FloydImpl::GetAllNodes(std::vector<std::string>* nodes) {

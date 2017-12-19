@@ -90,6 +90,9 @@ void Peer::RequestVoteRPCWrapper(void *arg) {
   reinterpret_cast<Peer*>(arg)->RequestVoteRPC();
 }
 
+/*
+ * support lease leader version
+ */
 void Peer::RequestVoteRPC() {
   uint64_t last_log_term;
   uint64_t last_log_index;
@@ -113,7 +116,7 @@ void Peer::RequestVoteRPC() {
   Status result = pool_->SendAndRecv(peer_addr_, req, &res);
 
   if (!result.ok()) {
-    LOGV(DEBUG_LEVEL, info_log_, "Peer::RequestVoteRPC: RequestVote to %s failed %s",
+    LOGV(WARN_LEVEL, info_log_, "Peer::RequestVoteRPC: RequestVote to %s failed %s",
          peer_addr_.c_str(), result.ToString().c_str());
     return;
   }

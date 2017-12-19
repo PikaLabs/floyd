@@ -65,7 +65,12 @@ struct FloydContext {
   std::atomic<uint64_t> last_applied;
   uint64_t last_op_time;
 
+  // used in membership change
   std::vector<std::string> members;
+
+  // used in lease leader
+  uint64_t lease_start;
+  uint64_t lease_end;
 
   // mutex protect commit_index
   // used in floyd_apply thread and floyd_peer thread

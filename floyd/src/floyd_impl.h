@@ -57,11 +57,11 @@ class FloydImpl : public Floyd {
   virtual Status AddServer(const std::string& new_server) override;
 
   // return true if leader has been elected
+  virtual bool IsLeader() override;
   virtual bool GetLeader(std::string* ip_port) override;
   virtual bool GetLeader(std::string* ip, int* port) override;
   virtual bool HasLeader() override;
   virtual bool GetAllNodes(std::vector<std::string>* nodes) override;
-  virtual bool IsLeader() override;
 
   int GetLocalPort() {
     return options_.local_port;

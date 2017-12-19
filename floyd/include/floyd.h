@@ -35,11 +35,11 @@ class Floyd  {
   virtual Status AddServer(const std::string& new_server) = 0;
 
   // return true if leader has been elected
+  virtual bool IsLeader() = 0;
   virtual bool GetLeader(std::string* ip_port) = 0;
   virtual bool GetLeader(std::string* ip, int* port) = 0;
   virtual bool HasLeader() = 0;
   virtual bool GetAllNodes(std::vector<std::string>* nodes) = 0;
-  virtual bool IsLeader() = 0;
 
   // used for debug
   virtual bool GetServerStatus(std::string* msg) = 0;
