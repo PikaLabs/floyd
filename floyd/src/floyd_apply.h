@@ -43,6 +43,8 @@ class FloydApply {
   static void ApplyStateMachineWrapper(void* arg);
   void ApplyStateMachine();
   rocksdb::Status Apply(const Entry& log_entry);
+  rocksdb::Status MembershipChange(const std::string& ip_port, bool add);
+
 
   FloydApply(const FloydApply&);
   void operator=(const FloydApply&);

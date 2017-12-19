@@ -7,7 +7,7 @@
 #define FLOYD_INCLUDE_FLOYD_H_
 
 #include <string>
-#include <vector>
+#include <set>
 
 #include "floyd/include/floyd_options.h"
 #include "slash/include/slash_status.h"
@@ -38,7 +38,7 @@ class Floyd  {
   virtual bool GetLeader(std::string* ip_port) = 0;
   virtual bool GetLeader(std::string* ip, int* port) = 0;
   virtual bool HasLeader() = 0;
-  virtual bool GetAllNodes(std::vector<std::string>* nodes) = 0;
+  virtual bool GetAllNodes(std::set<std::string>* nodes) = 0;
   virtual bool IsLeader() = 0;
 
   // used for debug

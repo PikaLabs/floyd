@@ -66,6 +66,9 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
 const ::google::protobuf::Descriptor* Lock_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   Lock_reflection_ = NULL;
+const ::google::protobuf::Descriptor* Membership_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  Membership_reflection_ = NULL;
 const ::google::protobuf::EnumDescriptor* Type_descriptor_ = NULL;
 const ::google::protobuf::EnumDescriptor* StatusCode_descriptor_ = NULL;
 
@@ -352,6 +355,21 @@ void protobuf_AssignDesc_floyd_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(Lock));
+  Membership_descriptor_ = file->message_type(4);
+  static const int Membership_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Membership, nodes_),
+  };
+  Membership_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      Membership_descriptor_,
+      Membership::default_instance_,
+      Membership_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Membership, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Membership, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(Membership));
   Type_descriptor_ = file->enum_type(0);
   StatusCode_descriptor_ = file->enum_type(1);
 }
@@ -396,6 +414,8 @@ void protobuf_RegisterTypes(const ::std::string&) {
     CmdResponse_ServerStatus_descriptor_, &CmdResponse_ServerStatus::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     Lock_descriptor_, &Lock::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    Membership_descriptor_, &Membership::default_instance());
 }
 
 }  // namespace
@@ -431,6 +451,8 @@ void protobuf_ShutdownFile_floyd_2eproto() {
   delete CmdResponse_ServerStatus_reflection_;
   delete Lock::default_instance_;
   delete Lock_reflection_;
+  delete Membership::default_instance_;
+  delete Membership_reflection_;
 }
 
 void protobuf_AddDesc_floyd_2eproto() {
@@ -488,12 +510,13 @@ void protobuf_AddDesc_floyd_2eproto() {
     "or_ip\030\006 \001(\014\022\026\n\016voted_for_port\030\007 \001(\005\022\025\n\rl"
     "ast_log_term\030\010 \001(\004\022\026\n\016last_log_index\030\t \001"
     "(\004\022\024\n\014last_applied\030\n \001(\004\")\n\004Lock\022\016\n\006hold"
-    "er\030\001 \002(\014\022\021\n\tlease_end\030\002 \002(\004*\216\001\n\004Type\022\t\n\005"
-    "kRead\020\000\022\n\n\006kWrite\020\001\022\013\n\007kDelete\020\003\022\014\n\010kTry"
-    "Lock\020\005\022\013\n\007kUnLock\020\006\022\016\n\nkAddServer\020\013\022\020\n\014k"
-    "RequestVote\020\010\022\022\n\016kAppendEntries\020\t\022\021\n\rkSe"
-    "rverStatus\020\n*=\n\nStatusCode\022\007\n\003kOk\020\000\022\r\n\tk"
-    "NotFound\020\001\022\n\n\006kError\020\002\022\013\n\007kLocked\020\003", 2155);
+    "er\030\001 \002(\014\022\021\n\tlease_end\030\002 \002(\004\"\033\n\nMembershi"
+    "p\022\r\n\005nodes\030\001 \003(\014*\216\001\n\004Type\022\t\n\005kRead\020\000\022\n\n\006"
+    "kWrite\020\001\022\013\n\007kDelete\020\003\022\014\n\010kTryLock\020\005\022\013\n\007k"
+    "UnLock\020\006\022\016\n\nkAddServer\020\013\022\020\n\014kRequestVote"
+    "\020\010\022\022\n\016kAppendEntries\020\t\022\021\n\rkServerStatus\020"
+    "\n*=\n\nStatusCode\022\007\n\003kOk\020\000\022\r\n\tkNotFound\020\001\022"
+    "\n\n\006kError\020\002\022\013\n\007kLocked\020\003", 2184);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "floyd.proto", &protobuf_RegisterTypes);
   Entry::default_instance_ = new Entry();
@@ -511,6 +534,7 @@ void protobuf_AddDesc_floyd_2eproto() {
   CmdResponse_AddServerResponse::default_instance_ = new CmdResponse_AddServerResponse();
   CmdResponse_ServerStatus::default_instance_ = new CmdResponse_ServerStatus();
   Lock::default_instance_ = new Lock();
+  Membership::default_instance_ = new Membership();
   Entry::default_instance_->InitAsDefaultInstance();
   CmdRequest::default_instance_->InitAsDefaultInstance();
   CmdRequest_RequestVote::default_instance_->InitAsDefaultInstance();
@@ -526,6 +550,7 @@ void protobuf_AddDesc_floyd_2eproto() {
   CmdResponse_AddServerResponse::default_instance_->InitAsDefaultInstance();
   CmdResponse_ServerStatus::default_instance_->InitAsDefaultInstance();
   Lock::default_instance_->InitAsDefaultInstance();
+  Membership::default_instance_->InitAsDefaultInstance();
   ::google::protobuf::internal::OnShutdown(&protobuf_ShutdownFile_floyd_2eproto);
 }
 
@@ -5926,6 +5951,207 @@ void Lock::Swap(Lock* other) {
   ::google::protobuf::Metadata metadata;
   metadata.descriptor = Lock_descriptor_;
   metadata.reflection = Lock_reflection_;
+  return metadata;
+}
+
+
+// ===================================================================
+
+#ifndef _MSC_VER
+const int Membership::kNodesFieldNumber;
+#endif  // !_MSC_VER
+
+Membership::Membership()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void Membership::InitAsDefaultInstance() {
+}
+
+Membership::Membership(const Membership& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void Membership::SharedCtor() {
+  _cached_size_ = 0;
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+Membership::~Membership() {
+  SharedDtor();
+}
+
+void Membership::SharedDtor() {
+  if (this != default_instance_) {
+  }
+}
+
+void Membership::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* Membership::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return Membership_descriptor_;
+}
+
+const Membership& Membership::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_floyd_2eproto();
+  return *default_instance_;
+}
+
+Membership* Membership::default_instance_ = NULL;
+
+Membership* Membership::New() const {
+  return new Membership;
+}
+
+void Membership::Clear() {
+  nodes_.Clear();
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool Membership::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // repeated bytes nodes = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_nodes:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->add_nodes()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(10)) goto parse_nodes;
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void Membership::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // repeated bytes nodes = 1;
+  for (int i = 0; i < this->nodes_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      1, this->nodes(i), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* Membership::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // repeated bytes nodes = 1;
+  for (int i = 0; i < this->nodes_size(); i++) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteBytesToArray(1, this->nodes(i), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int Membership::ByteSize() const {
+  int total_size = 0;
+
+  // repeated bytes nodes = 1;
+  total_size += 1 * this->nodes_size();
+  for (int i = 0; i < this->nodes_size(); i++) {
+    total_size += ::google::protobuf::internal::WireFormatLite::BytesSize(
+      this->nodes(i));
+  }
+
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void Membership::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const Membership* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const Membership*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void Membership::MergeFrom(const Membership& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  nodes_.MergeFrom(from.nodes_);
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void Membership::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void Membership::CopyFrom(const Membership& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Membership::IsInitialized() const {
+
+  return true;
+}
+
+void Membership::Swap(Membership* other) {
+  if (other != this) {
+    nodes_.Swap(&other->nodes_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata Membership::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = Membership_descriptor_;
+  metadata.reflection = Membership_reflection_;
   return metadata;
 }
 

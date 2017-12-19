@@ -9,7 +9,7 @@
 #include <pthread.h>
 
 #include <string>
-#include <vector>
+#include <set>
 
 #include "floyd/include/floyd_options.h"
 #include "floyd/src/raft_log.h"
@@ -26,6 +26,7 @@ enum Role {
   kCandidate = 1,
   kLeader = 2,
 };
+
 class RaftMeta;
 /*
  * we use FloydContext to avoid passing the floyd_impl's this point to other thread
@@ -65,7 +66,7 @@ struct FloydContext {
   std::atomic<uint64_t> last_applied;
   uint64_t last_op_time;
 
-  std::vector<std::string> members;
+  std::set<std::string> members;
 
   // mutex protect commit_index
   // used in floyd_apply thread and floyd_peer thread

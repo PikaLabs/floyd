@@ -49,6 +49,7 @@ class CmdResponse_KvResponse;
 class CmdResponse_AddServerResponse;
 class CmdResponse_ServerStatus;
 class Lock;
+class Membership;
 
 enum Entry_OpType {
   Entry_OpType_kRead = 0,
@@ -1993,6 +1994,95 @@ class Lock : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static Lock* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class Membership : public ::google::protobuf::Message {
+ public:
+  Membership();
+  virtual ~Membership();
+
+  Membership(const Membership& from);
+
+  inline Membership& operator=(const Membership& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Membership& default_instance();
+
+  void Swap(Membership* other);
+
+  // implements Message ----------------------------------------------
+
+  Membership* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Membership& from);
+  void MergeFrom(const Membership& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated bytes nodes = 1;
+  inline int nodes_size() const;
+  inline void clear_nodes();
+  static const int kNodesFieldNumber = 1;
+  inline const ::std::string& nodes(int index) const;
+  inline ::std::string* mutable_nodes(int index);
+  inline void set_nodes(int index, const ::std::string& value);
+  inline void set_nodes(int index, const char* value);
+  inline void set_nodes(int index, const void* value, size_t size);
+  inline ::std::string* add_nodes();
+  inline void add_nodes(const ::std::string& value);
+  inline void add_nodes(const char* value);
+  inline void add_nodes(const void* value, size_t size);
+  inline const ::google::protobuf::RepeatedPtrField< ::std::string>& nodes() const;
+  inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_nodes();
+
+  // @@protoc_insertion_point(class_scope:floyd.Membership)
+ private:
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::RepeatedPtrField< ::std::string> nodes_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_floyd_2eproto();
+  friend void protobuf_AssignDesc_floyd_2eproto();
+  friend void protobuf_ShutdownFile_floyd_2eproto();
+
+  void InitAsDefaultInstance();
+  static Membership* default_instance_;
 };
 // ===================================================================
 
@@ -4568,6 +4658,54 @@ inline ::google::protobuf::uint64 Lock::lease_end() const {
 inline void Lock::set_lease_end(::google::protobuf::uint64 value) {
   set_has_lease_end();
   lease_end_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// Membership
+
+// repeated bytes nodes = 1;
+inline int Membership::nodes_size() const {
+  return nodes_.size();
+}
+inline void Membership::clear_nodes() {
+  nodes_.Clear();
+}
+inline const ::std::string& Membership::nodes(int index) const {
+  return nodes_.Get(index);
+}
+inline ::std::string* Membership::mutable_nodes(int index) {
+  return nodes_.Mutable(index);
+}
+inline void Membership::set_nodes(int index, const ::std::string& value) {
+  nodes_.Mutable(index)->assign(value);
+}
+inline void Membership::set_nodes(int index, const char* value) {
+  nodes_.Mutable(index)->assign(value);
+}
+inline void Membership::set_nodes(int index, const void* value, size_t size) {
+  nodes_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Membership::add_nodes() {
+  return nodes_.Add();
+}
+inline void Membership::add_nodes(const ::std::string& value) {
+  nodes_.Add()->assign(value);
+}
+inline void Membership::add_nodes(const char* value) {
+  nodes_.Add()->assign(value);
+}
+inline void Membership::add_nodes(const void* value, size_t size) {
+  nodes_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+Membership::nodes() const {
+  return nodes_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+Membership::mutable_nodes() {
+  return &nodes_;
 }
 
 

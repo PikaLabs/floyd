@@ -161,9 +161,11 @@ rocksdb::Status FloydApply::Apply(const Entry& entry) {
       }
       break;
     case Entry_OpType_kAddServer:
-      context_->members.push_back(entry.new_server());
-      impl_->AddNewPeer();
-      ret = rocksdb::Status::OK();
+      ret = MembershipChange(entry.new_server(), true);
+      if (ret.ok()) {
+        context_->members.insert(entry.new_server());
+        impl_->AddNewPeer();
+      }
       LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply Add new_server %s to cluster",
           entry.new_server().c_str());
       break;
@@ -171,6 +173,44 @@ rocksdb::Status FloydApply::Apply(const Entry& entry) {
       ret = rocksdb::Status::Corruption("Unknown entry type");
   }
   return ret;
+}
+
+rocksdb::Status FloydApply::MembershipChange(const std::string& ip_port,
+    bool add) {
+  std::string value;
+  Membership members;
+  rocksdb::Status ret = db_->Get(rocksdb::ReadOptions(),
+      kMemberConfigKey, &value);
+  if (!ret.ok()) {
+    return ret;
+  }
+
+  if(!members.ParseFromString(value)) {
+    return rocksdb::Status::Corruption("Parse failed");
+  }
+  int count = members.nodes_size();
+  for (int i = 0; i < count; i++) {
+    if (members.nodes(i) == ip_port) {
+      if (add) {
+        return rocksdb::Status::OK();  // Already in
+      }
+      // Remove Server
+      if (i != count - 1) {
+        std::string *nptr = members.mutable_nodes(i);
+        *nptr = members.nodes(count - 1);
+      }
+      members.mutable_nodes()->RemoveLast();
+    }
+  }
+
+  if (add) {
+    members.add_nodes(ip_port);
+  }
+
+  if (!members.SerializeToString(&value)) {
+    return rocksdb::Status::Corruption("Serialize failed");
+  }
+  return db_->Put(rocksdb::WriteOptions(), kMemberConfigKey, value);
 }
 
 } // namespace floyd

@@ -40,7 +40,7 @@ KvServer::~KvServer() {
 
 slash::Status KvServer::Start() {
   // TEST
-  std::vector<std::string> nodes;
+  std::set<std::string> nodes;
   floyd_->GetAllNodes(nodes);
   for (auto& it : nodes) {
     LOG_DEBUG ("nodes: %s", it.c_str());

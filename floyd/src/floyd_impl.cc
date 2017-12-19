@@ -29,205 +29,6 @@
 
 namespace floyd {
 
-FloydImpl::FloydImpl(const Options& options)
-  : db_(NULL),
-    log_and_meta_(NULL),
-    options_(options),
-    info_log_(NULL) {
-}
-
-FloydImpl::~FloydImpl() {
-  // worker will use floyd, delete worker first
-  worker_->Stop();
-  primary_->Stop();
-  apply_->Stop();
-  delete worker_;
-  delete worker_client_pool_;
-  delete primary_;
-  delete apply_;
-  for (auto& pt : peers_) {
-    pt.second->Stop();
-    delete pt.second;
-  }
-  delete context_;
-  delete raft_meta_;
-  delete raft_log_;
-  delete info_log_;
-  delete db_;
-  delete log_and_meta_;
-}
-
-bool FloydImpl::IsSelf(const std::string& ip_port) {
-  return (ip_port == slash::IpPortString(options_.local_ip, options_.local_port));
-}
-
-bool FloydImpl::GetLeader(std::string *ip_port) {
-  if (context_->leader_ip.empty() || context_->leader_port == 0) {
-    return false;
-  }
-  *ip_port = slash::IpPortString(context_->leader_ip, context_->leader_port);
-  return true;
-}
-
-bool FloydImpl::IsLeader() {
-  if (context_->leader_ip == "" || context_->leader_port == 0) {
-    return false;
-  }
-  if (context_->leader_ip == options_.local_ip && context_->leader_port == options_.local_port) {
-    return true;
-  }
-  return false;
-}
-
-bool FloydImpl::GetLeader(std::string* ip, int* port) {
-  *ip = context_->leader_ip;
-  *port = context_->leader_port;
-  return (!ip->empty() && *port != 0);
-}
-
-bool FloydImpl::HasLeader() {
-  if (context_->leader_ip == "" || context_->leader_port == 0) {
-    return false;
-  }
-  return true;
-}
-
-bool FloydImpl::GetAllNodes(std::vector<std::string>* nodes) {
-  *nodes = context_->members;
-  return true;
-}
-
-void FloydImpl::set_log_level(const int log_level) {
-  if (info_log_) {
-    info_log_->set_log_level(log_level);
-  }
-}
-
-int FloydImpl::AddNewPeer() {
-  for (auto iter = context_->members.begin(); iter != context_->members.end(); iter++) {
-    if (!IsSelf(*iter)) {
-      auto peers_iter = peers_.find(*iter);
-      if (peers_iter == peers_.end()) {
-        LOGV(INFO_LEVEL, info_log_, "FloydImpl::AddNewPeer server %s:%d add new peer thread %s",
-            options_.local_ip.c_str(), options_.local_port, (*iter).c_str());
-        Peer* pt = new Peer(*iter, &peers_, context_, primary_, raft_meta_, raft_log_,
-            worker_client_pool_, apply_, options_, info_log_);
-        peers_.insert(std::pair<std::string, Peer*>(*iter, pt));
-        pt->Start();
-      }
-    }
-  }
-  return 0;
-}
-
-int FloydImpl::InitPeers() {
-  // Create peer threads
-  // peers_.clear();
-  for (auto iter = context_->members.begin(); iter != context_->members.end(); iter++) {
-    if (!IsSelf(*iter)) {
-      Peer* pt = new Peer(*iter, &peers_, context_, primary_, raft_meta_, raft_log_,
-          worker_client_pool_, apply_, options_, info_log_);
-      peers_.insert(std::pair<std::string, Peer*>(*iter, pt));
-    }
-  }
-
-  // Start peer thread
-  int ret;
-  for (auto& pt : peers_) {
-    if ((ret = pt.second->Start()) != 0) {
-      LOGV(ERROR_LEVEL, info_log_, "FloydImpl::InitPeers FloydImpl peer thread to %s failed to "
-           " start, ret is %d", pt.first.c_str(), ret);
-      return ret;
-    }
-  }
-  LOGV(INFO_LEVEL, info_log_, "FloydImpl::InitPeers Floyd start %d peer thread", peers_.size());
-  return 0;
-}
-
-Status FloydImpl::Init() {
-  slash::CreatePath(options_.path);
-  if (NewLogger(options_.path + "/LOG", &info_log_) != 0) {
-    return Status::Corruption("Open LOG failed, ", strerror(errno));
-  }
-
-  // TODO(anan) set timeout and retry
-  worker_client_pool_ = new ClientPool(info_log_);
-
-  // Create DB
-  rocksdb::Options options;
-  options.create_if_missing = true;
-  options.write_buffer_size = 1024 * 1024 * 1024;
-  options.max_background_flushes = 8;
-  rocksdb::Status s = rocksdb::DB::Open(options, options_.path + "/db/", &db_);
-  if (!s.ok()) {
-    LOGV(ERROR_LEVEL, info_log_, "Open db failed! path: %s", options_.path.c_str());
-    return Status::Corruption("Open DB failed, " + s.ToString());
-  }
-
-  s = rocksdb::DB::Open(options, options_.path + "/log/", &log_and_meta_);
-  if (!s.ok()) {
-    LOGV(ERROR_LEVEL, info_log_, "Open DB log_and_meta failed! path: %s", options_.path.c_str());
-    return Status::Corruption("Open DB log_and_meta failed, " + s.ToString());
-  }
-
-  // Recover Context
-  raft_log_ = new RaftLog(log_and_meta_, info_log_);
-  raft_meta_ = new RaftMeta(log_and_meta_, info_log_);
-  raft_meta_->Init();
-  context_ = new FloydContext(options_);
-  context_->RecoverInit(raft_meta_);
-  context_->members = options_.members;
-
-
-  // peers and primary refer to each other
-  // Create PrimaryThread before Peers
-  primary_ = new FloydPrimary(context_, &peers_, raft_meta_, options_, info_log_);
-
-  // Start worker thread after Peers, because WorkerHandle will check peers
-  worker_ = new FloydWorker(options_.local_port, 1000, this);
-  int ret = 0;
-  if ((ret = worker_->Start()) != 0) {
-    LOGV(ERROR_LEVEL, info_log_, "FloydImpl::Init worker thread failed to start, ret is %d", ret);
-    return Status::Corruption("failed to start worker, return " + std::to_string(ret));
-  }
-  // Apply thread should start at the last
-  apply_ = new FloydApply(context_, db_, raft_meta_, raft_log_, this, info_log_);
-
-  InitPeers();
-
-  // Set and Start PrimaryThread
-  // be careful:
-  // primary and every peer threads shared the peer threads
-  if ((ret = primary_->Start()) != 0) {
-    LOGV(ERROR_LEVEL, info_log_, "FloydImpl::Init FloydImpl primary thread failed to start, ret is %d", ret);
-    return Status::Corruption("failed to start primary thread, return " + std::to_string(ret));
-  }
-  primary_->AddTask(kCheckLeader);
-
-  // we should start the apply thread at the last
-  apply_->Start();
-  // test only
-  // options_.Dump();
-  LOGV(INFO_LEVEL, info_log_, "FloydImpl::Init Floyd started!\nOptions\n%s", options_.ToString().c_str());
-  return Status::OK();
-}
-
-Status Floyd::Open(const Options& options, Floyd** floyd) {
-  *floyd = NULL;
-  Status s;
-  FloydImpl *impl = new FloydImpl(options);
-  s = impl->Init();
-  if (s.ok()) {
-    *floyd = impl;
-  } else {
-    delete impl;
-  }
-  return s;
-}
-
-Floyd::~Floyd() {
-}
-
 static void BuildReadRequest(const std::string& key, CmdRequest* cmd) {
   cmd->set_type(Type::kRead);
   CmdRequest_KvRequest* kv_request = cmd->mutable_kv_request();
@@ -321,6 +122,239 @@ static void BuildLogEntry(const CmdRequest& cmd, uint64_t current_term, Entry* e
     entry->set_optype(Entry_OpType_kAddServer);
     entry->set_new_server(cmd.add_server_request().new_server());
   }
+}
+
+static void BuildMembership(const std::vector<std::string>& opt_members,
+    Membership* members) {
+  members->Clear();
+  for (const auto& m : opt_members) {
+    members->add_nodes(m);
+  }
+}
+
+FloydImpl::FloydImpl(const Options& options)
+  : db_(NULL),
+    log_and_meta_(NULL),
+    options_(options),
+    info_log_(NULL) {
+}
+
+FloydImpl::~FloydImpl() {
+  // worker will use floyd, delete worker first
+  worker_->Stop();
+  primary_->Stop();
+  apply_->Stop();
+  delete worker_;
+  delete worker_client_pool_;
+  delete primary_;
+  delete apply_;
+  for (auto& pt : peers_) {
+    pt.second->Stop();
+    delete pt.second;
+  }
+  delete context_;
+  delete raft_meta_;
+  delete raft_log_;
+  delete info_log_;
+  delete db_;
+  delete log_and_meta_;
+}
+
+bool FloydImpl::IsSelf(const std::string& ip_port) {
+  return (ip_port == slash::IpPortString(options_.local_ip, options_.local_port));
+}
+
+bool FloydImpl::GetLeader(std::string *ip_port) {
+  if (context_->leader_ip.empty() || context_->leader_port == 0) {
+    return false;
+  }
+  *ip_port = slash::IpPortString(context_->leader_ip, context_->leader_port);
+  return true;
+}
+
+bool FloydImpl::IsLeader() {
+  if (context_->leader_ip == "" || context_->leader_port == 0) {
+    return false;
+  }
+  if (context_->leader_ip == options_.local_ip && context_->leader_port == options_.local_port) {
+    return true;
+  }
+  return false;
+}
+
+bool FloydImpl::GetLeader(std::string* ip, int* port) {
+  *ip = context_->leader_ip;
+  *port = context_->leader_port;
+  return (!ip->empty() && *port != 0);
+}
+
+bool FloydImpl::HasLeader() {
+  if (context_->leader_ip == "" || context_->leader_port == 0) {
+    return false;
+  }
+  return true;
+}
+
+bool FloydImpl::GetAllNodes(std::set<std::string>* nodes) {
+  *nodes = context_->members;
+  return true;
+}
+
+void FloydImpl::set_log_level(const int log_level) {
+  if (info_log_) {
+    info_log_->set_log_level(log_level);
+  }
+}
+
+int FloydImpl::AddNewPeer() {
+  for (auto iter = context_->members.begin(); iter != context_->members.end(); iter++) {
+    if (!IsSelf(*iter)) {
+      auto peers_iter = peers_.find(*iter);
+      if (peers_iter == peers_.end()) {
+        LOGV(INFO_LEVEL, info_log_, "FloydImpl::AddNewPeer server %s:%d add new peer thread %s",
+            options_.local_ip.c_str(), options_.local_port, (*iter).c_str());
+        Peer* pt = new Peer(*iter, &peers_, context_, primary_, raft_meta_, raft_log_,
+            worker_client_pool_, apply_, options_, info_log_);
+        peers_.insert(std::pair<std::string, Peer*>(*iter, pt));
+        pt->Start();
+      }
+    }
+  }
+  return 0;
+}
+
+int FloydImpl::InitPeers() {
+  // Create peer threads
+  // peers_.clear();
+  for (auto iter = context_->members.begin(); iter != context_->members.end(); iter++) {
+    if (!IsSelf(*iter)) {
+      Peer* pt = new Peer(*iter, &peers_, context_, primary_, raft_meta_, raft_log_,
+          worker_client_pool_, apply_, options_, info_log_);
+      peers_.insert(std::pair<std::string, Peer*>(*iter, pt));
+    }
+  }
+
+  // Start peer thread
+  int ret;
+  for (auto& pt : peers_) {
+    if ((ret = pt.second->Start()) != 0) {
+      LOGV(ERROR_LEVEL, info_log_, "FloydImpl::InitPeers FloydImpl peer thread to %s failed to "
+           " start, ret is %d", pt.first.c_str(), ret);
+      return ret;
+    }
+  }
+  LOGV(INFO_LEVEL, info_log_, "FloydImpl::InitPeers Floyd start %d peer thread", peers_.size());
+  return 0;
+}
+
+Status FloydImpl::Init() {
+  slash::CreatePath(options_.path);
+  if (NewLogger(options_.path + "/LOG", &info_log_) != 0) {
+    return Status::Corruption("Open LOG failed, ", strerror(errno));
+  }
+
+  // TODO(anan) set timeout and retry
+  worker_client_pool_ = new ClientPool(info_log_);
+
+  // Create DB
+  rocksdb::Options options;
+  options.create_if_missing = true;
+  options.write_buffer_size = 1024 * 1024 * 1024;
+  options.max_background_flushes = 8;
+  rocksdb::Status s = rocksdb::DB::Open(options, options_.path + "/db/", &db_);
+  if (!s.ok()) {
+    LOGV(ERROR_LEVEL, info_log_, "Open db failed! path: %s", options_.path.c_str());
+    return Status::Corruption("Open DB failed, " + s.ToString());
+  }
+
+  s = rocksdb::DB::Open(options, options_.path + "/log/", &log_and_meta_);
+  if (!s.ok()) {
+    LOGV(ERROR_LEVEL, info_log_, "Open DB log_and_meta failed! path: %s", options_.path.c_str());
+    return Status::Corruption("Open DB log_and_meta failed, " + s.ToString());
+  }
+
+  // Recover Context
+  raft_log_ = new RaftLog(log_and_meta_, info_log_);
+  raft_meta_ = new RaftMeta(log_and_meta_, info_log_);
+  raft_meta_->Init();
+  context_ = new FloydContext(options_);
+  context_->RecoverInit(raft_meta_);
+
+  // Recover Members when exist
+  std::string mval;
+  Membership db_members;
+  s = db_->Get(rocksdb::ReadOptions(), kMemberConfigKey, &mval);
+  if (s.ok()
+      && db_members.ParseFromString(mval)) {
+    // Prefer persistent membership than config
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::Init: Load Membership from db, count: %d", db_members.nodes_size());
+    for (int i = 0; i < db_members.nodes_size(); i++) {
+      context_->members.insert(db_members.nodes(i));
+    }
+  } else {
+    BuildMembership(options_.members, &db_members);
+    if(!db_members.SerializeToString(&mval)) {
+      LOGV(ERROR_LEVEL, info_log_, "Serialize Membership failed!");
+      return Status::Corruption("Serialize Membership failed");
+    }
+    s = db_->Put(rocksdb::WriteOptions(), kMemberConfigKey, mval);
+    if (!s.ok()) {
+      LOGV(ERROR_LEVEL, info_log_, "Record membership in db failed! error: %s", s.ToString().c_str());
+      return Status::Corruption("Record membership in db failed! error: " + s.ToString());
+    }
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::Init: Load Membership from option, count: %d", options_.members.size());
+    for (const auto& m : options_.members) {
+      context_->members.insert(m);
+    }
+  }
+
+  // peers and primary refer to each other
+  // Create PrimaryThread before Peers
+  primary_ = new FloydPrimary(context_, &peers_, raft_meta_, options_, info_log_);
+
+  // Start worker thread after Peers, because WorkerHandle will check peers
+  worker_ = new FloydWorker(options_.local_port, 1000, this);
+  int ret = 0;
+  if ((ret = worker_->Start()) != 0) {
+    LOGV(ERROR_LEVEL, info_log_, "FloydImpl::Init worker thread failed to start, ret is %d", ret);
+    return Status::Corruption("failed to start worker, return " + std::to_string(ret));
+  }
+  // Apply thread should start at the last
+  apply_ = new FloydApply(context_, db_, raft_meta_, raft_log_, this, info_log_);
+
+  InitPeers();
+
+  // Set and Start PrimaryThread
+  // be careful:
+  // primary and every peer threads shared the peer threads
+  if ((ret = primary_->Start()) != 0) {
+    LOGV(ERROR_LEVEL, info_log_, "FloydImpl::Init FloydImpl primary thread failed to start, ret is %d", ret);
+    return Status::Corruption("failed to start primary thread, return " + std::to_string(ret));
+  }
+  primary_->AddTask(kCheckLeader);
+
+  // we should start the apply thread at the last
+  apply_->Start();
+  // test only
+  // options_.Dump();
+  LOGV(INFO_LEVEL, info_log_, "FloydImpl::Init Floyd started!\nOptions\n%s", options_.ToString().c_str());
+  return Status::OK();
+}
+
+Status Floyd::Open(const Options& options, Floyd** floyd) {
+  *floyd = NULL;
+  Status s;
+  FloydImpl *impl = new FloydImpl(options);
+  s = impl->Init();
+  if (s.ok()) {
+    *floyd = impl;
+  } else {
+    delete impl;
+  }
+  return s;
+}
+
+Floyd::~Floyd() {
 }
 
 Status FloydImpl::Write(const std::string& key, const std::string& value) {
@@ -657,7 +691,7 @@ int FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* response
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: my_term=%lu request.term=%lu",
        context_->current_term, request_vote.term());
   /*
-   * If RPC request or response contains term T > currentTerm: set currentTerm = T, convert to follower (§5.1)
+   * If RPC request or response contains term T > currentTerm: set currentTerm = T, convert to follower (5.1)
    */
   if (request_vote.term() > context_->current_term) {
     context_->BecomeFollower(request_vote.term());
@@ -801,11 +835,6 @@ int FloydImpl::ReplyAppendEntries(const CmdRequest& request, CmdResponse* respon
   for (int i = 0; i < append_entries.entries().size(); i++) {
     entries.push_back(&append_entries.entries(i));
   }
-  /*
-   * for (auto& it : request.mutable_append_entries()->entries())) {
-   *   entries.push_back(&it);
-   * }
-   */
   if (append_entries.entries().size() > 0) {
     LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ReplyAppendEntries: Leader %s:%d will append %u entries from "
          " prev_log_index %lu", append_entries.ip().c_str(), append_entries.port(),

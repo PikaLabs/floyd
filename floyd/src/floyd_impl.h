@@ -7,7 +7,7 @@
 #define FLOYD_SRC_FLOYD_IMPL_H_
 
 #include <string>
-#include <vector>
+#include <set>
 #include <utility>
 #include <map>
 
@@ -38,6 +38,8 @@ class CmdResponse_ServerStatus;
 
 typedef std::map<std::string, Peer*> PeersSet;
 
+static const std::string kMemberConfigKey = "#MEMBERCONFIG";
+
 class FloydImpl : public Floyd {
  public:
   explicit FloydImpl(const Options& options);
@@ -60,7 +62,7 @@ class FloydImpl : public Floyd {
   virtual bool GetLeader(std::string* ip_port) override;
   virtual bool GetLeader(std::string* ip, int* port) override;
   virtual bool HasLeader() override;
-  virtual bool GetAllNodes(std::vector<std::string>* nodes) override;
+  virtual bool GetAllNodes(std::set<std::string>* nodes) override;
   virtual bool IsLeader() override;
 
   int GetLocalPort() {
