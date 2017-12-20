@@ -57,6 +57,7 @@ class FloydImpl : public Floyd {
 
   // membership change interface
   virtual Status AddServer(const std::string& new_server) override;
+  virtual Status RemoveServer(const std::string& out_server) override;
 
   // return true if leader has been elected
   virtual bool GetLeader(std::string* ip_port) override;
@@ -72,8 +73,9 @@ class FloydImpl : public Floyd {
   virtual bool GetServerStatus(std::string* msg);
   // log level can be modified
   void set_log_level(const int log_level);
-  // used by add_new_server
-  int AddNewPeer();
+  // used when membership changed
+  void AddNewPeer(const std::string& server);
+  void RemoveOutPeer(const std::string& server);
 
  private:
   // friend class Floyd;

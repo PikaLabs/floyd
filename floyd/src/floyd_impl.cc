@@ -77,8 +77,14 @@ static void BuildUnLockRequest(const std::string& name, const std::string& holde
 
 static void BuildAddServerRequest(const std::string& new_server, CmdRequest* cmd) {
   cmd->set_type(Type::kAddServer);
-  CmdRequest_AddServerRequest* add_server_request = cmd->mutable_add_server_request();
-  add_server_request->set_new_server(new_server);
+  CmdRequest_ChangeServerRequest* add_server_request = cmd->mutable_add_server_request();
+  add_server_request->set_server(new_server);
+}
+
+static void BuildRemoveServerRequest(const std::string& out_server, CmdRequest* cmd) {
+  cmd->set_type(Type::kRemoveServer);
+  CmdRequest_ChangeServerRequest* remove_server_request = cmd->mutable_remove_server_request();
+  remove_server_request->set_server(out_server);
 }
 
 static void BuildRequestVoteResponse(uint64_t term, bool granted,
@@ -120,7 +126,10 @@ static void BuildLogEntry(const CmdRequest& cmd, uint64_t current_term, Entry* e
     entry->set_holder(cmd.lock_request().holder());
   } else if (cmd.type() == Type::kAddServer) {
     entry->set_optype(Entry_OpType_kAddServer);
-    entry->set_new_server(cmd.add_server_request().new_server());
+    entry->set_server(cmd.add_server_request().server());
+  } else if (cmd.type() == Type::kRemoveServer) {
+    entry->set_optype(Entry_OpType_kRemoveServer);
+    entry->set_server(cmd.remove_server_request().server());
   }
 }
 
@@ -206,21 +215,35 @@ void FloydImpl::set_log_level(const int log_level) {
   }
 }
 
-int FloydImpl::AddNewPeer() {
-  for (auto iter = context_->members.begin(); iter != context_->members.end(); iter++) {
-    if (!IsSelf(*iter)) {
-      auto peers_iter = peers_.find(*iter);
-      if (peers_iter == peers_.end()) {
-        LOGV(INFO_LEVEL, info_log_, "FloydImpl::AddNewPeer server %s:%d add new peer thread %s",
-            options_.local_ip.c_str(), options_.local_port, (*iter).c_str());
-        Peer* pt = new Peer(*iter, &peers_, context_, primary_, raft_meta_, raft_log_,
-            worker_client_pool_, apply_, options_, info_log_);
-        peers_.insert(std::pair<std::string, Peer*>(*iter, pt));
-        pt->Start();
-      }
-    }
+void FloydImpl::AddNewPeer(const std::string& server) {
+  if (IsSelf(server)) {
+    return;
   }
-  return 0;
+  // Add Peer
+  auto peers_iter = peers_.find(server);
+  if (peers_iter == peers_.end()) {
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ApplyAddMember server %s:%d add new peer thread %s",
+        options_.local_ip.c_str(), options_.local_port, server.c_str());
+    Peer* pt = new Peer(server, &peers_, context_, primary_, raft_meta_, raft_log_,
+        worker_client_pool_, apply_, options_, info_log_);
+    peers_.insert(std::pair<std::string, Peer*>(server, pt));
+    pt->Start();
+  }
+}
+
+void FloydImpl::RemoveOutPeer(const std::string& server) {
+  if (IsSelf(server)) {
+    return; 
+  }
+  // Stop and remove peer
+  auto peers_iter = peers_.find(server);
+  if (peers_iter != peers_.end()) {
+    LOGV(INFO_LEVEL, info_log_, "FloydImpl::ApplyRemoveMember server %s:%d remove peer thread %s",
+        options_.local_ip.c_str(), options_.local_port, server.c_str());
+    peers_iter->second->Stop();
+    delete peers_iter->second;
+    peers_.erase(peers_iter);
+  }
 }
 
 int FloydImpl::InitPeers() {
@@ -456,6 +479,21 @@ Status FloydImpl::AddServer(const std::string& new_server) {
   return Status::Corruption("AddServer Error");
 }
 
+Status FloydImpl::RemoveServer(const std::string& out_server) {
+  CmdRequest request;
+  BuildRemoveServerRequest(out_server, &request);
+  CmdResponse response;
+  Status s = DoCommand(request, &response);
+  if (!s.ok()) {
+    return s;
+  }
+  if (response.code() == StatusCode::kOk) {
+    return Status::OK();
+  }
+
+  return Status::Corruption("RemoveServer Error");
+}
+
 bool FloydImpl::GetServerStatus(std::string* msg) {
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::GetServerStatus start");
   slash::MutexLock l(&context_->global_mu);
@@ -668,6 +706,9 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& request,
       }
       break;
     case Type::kAddServer:
+      response->set_code(StatusCode::kOk);
+      break;
+    case Type::kRemoveServer:
       response->set_code(StatusCode::kOk);
       break;
     default:

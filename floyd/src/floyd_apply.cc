@@ -161,13 +161,22 @@ rocksdb::Status FloydApply::Apply(const Entry& entry) {
       }
       break;
     case Entry_OpType_kAddServer:
-      ret = MembershipChange(entry.new_server(), true);
+      ret = MembershipChange(entry.server(), true);
       if (ret.ok()) {
-        context_->members.insert(entry.new_server());
-        impl_->AddNewPeer();
+        context_->members.insert(entry.server());
+        impl_->AddNewPeer(entry.server());
       }
-      LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply Add new_server %s to cluster",
-          entry.new_server().c_str());
+      LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply Add server %s to cluster",
+          entry.server().c_str());
+      break;
+    case Entry_OpType_kRemoveServer:
+      ret = MembershipChange(entry.server(), false);
+      if (ret.ok()) {
+        context_->members.erase(entry.server());
+        impl_->RemoveOutPeer(entry.server());
+      }
+      LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply Remove server %s to cluster",
+          entry.server().c_str());
       break;
     default:
       ret = rocksdb::Status::Corruption("Unknown entry type");

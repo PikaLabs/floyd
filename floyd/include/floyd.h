@@ -33,6 +33,7 @@ class Floyd  {
 
   // membership change interface
   virtual Status AddServer(const std::string& new_server) = 0;
+  virtual Status RemoveServer(const std::string& out_server) = 0;
 
   // return true if leader has been elected
   virtual bool GetLeader(std::string* ip_port) = 0;
