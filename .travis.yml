@@ -13,6 +13,3 @@ compiler:
   - gcc
 
 language: cpp
-
-script:
-  - cd pink && ./build.sh
