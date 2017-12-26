@@ -13,3 +13,6 @@ compiler:
   - gcc
 
 language: cpp
+
+script:
+    cd floyd && make
