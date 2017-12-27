@@ -77,14 +77,14 @@ static void BuildUnLockRequest(const std::string& name, const std::string& holde
 
 static void BuildAddServerRequest(const std::string& new_server, CmdRequest* cmd) {
   cmd->set_type(Type::kAddServer);
-  CmdRequest_ChangeServerRequest* add_server_request = cmd->mutable_add_server_request();
-  add_server_request->set_server(new_server);
+  CmdRequest_AddServerRequest* add_server_request = cmd->mutable_add_server_request();
+  add_server_request->set_new_server(new_server);
 }
 
-static void BuildRemoveServerRequest(const std::string& out_server, CmdRequest* cmd) {
+static void BuildRemoveServerRequest(const std::string& old_server, CmdRequest* cmd) {
   cmd->set_type(Type::kRemoveServer);
-  CmdRequest_ChangeServerRequest* remove_server_request = cmd->mutable_remove_server_request();
-  remove_server_request->set_server(out_server);
+  CmdRequest_RemoveServerRequest* remove_server_request = cmd->mutable_remove_server_request();
+  remove_server_request->set_old_server(old_server);
 }
 
 static void BuildRequestVoteResponse(uint64_t term, bool granted,
@@ -126,10 +126,10 @@ static void BuildLogEntry(const CmdRequest& cmd, uint64_t current_term, Entry* e
     entry->set_holder(cmd.lock_request().holder());
   } else if (cmd.type() == Type::kAddServer) {
     entry->set_optype(Entry_OpType_kAddServer);
-    entry->set_server(cmd.add_server_request().server());
+    entry->set_server(cmd.add_server_request().new_server());
   } else if (cmd.type() == Type::kRemoveServer) {
     entry->set_optype(Entry_OpType_kRemoveServer);
-    entry->set_server(cmd.remove_server_request().server());
+    entry->set_server(cmd.remove_server_request().old_server());
   }
 }
 
@@ -479,9 +479,9 @@ Status FloydImpl::AddServer(const std::string& new_server) {
   return Status::Corruption("AddServer Error");
 }
 
-Status FloydImpl::RemoveServer(const std::string& out_server) {
+Status FloydImpl::RemoveServer(const std::string& old_server) {
   CmdRequest request;
-  BuildRemoveServerRequest(out_server, &request);
+  BuildRemoveServerRequest(old_server, &request);
   CmdResponse response;
   Status s = DoCommand(request, &response);
   if (!s.ok()) {

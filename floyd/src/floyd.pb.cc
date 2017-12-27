@@ -39,9 +39,12 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
 const ::google::protobuf::Descriptor* CmdRequest_LockRequest_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   CmdRequest_LockRequest_reflection_ = NULL;
-const ::google::protobuf::Descriptor* CmdRequest_ChangeServerRequest_descriptor_ = NULL;
+const ::google::protobuf::Descriptor* CmdRequest_AddServerRequest_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
-  CmdRequest_ChangeServerRequest_reflection_ = NULL;
+  CmdRequest_AddServerRequest_reflection_ = NULL;
+const ::google::protobuf::Descriptor* CmdRequest_RemoveServerRequest_descriptor_ = NULL;
+const ::google::protobuf::internal::GeneratedMessageReflection*
+  CmdRequest_RemoveServerRequest_reflection_ = NULL;
 const ::google::protobuf::Descriptor* CmdRequest_ServerStatus_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   CmdRequest_ServerStatus_reflection_ = NULL;
@@ -195,22 +198,37 @@ void protobuf_AssignDesc_floyd_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(CmdRequest_LockRequest));
-  CmdRequest_ChangeServerRequest_descriptor_ = CmdRequest_descriptor_->nested_type(4);
-  static const int CmdRequest_ChangeServerRequest_offsets_[1] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdRequest_ChangeServerRequest, server_),
+  CmdRequest_AddServerRequest_descriptor_ = CmdRequest_descriptor_->nested_type(4);
+  static const int CmdRequest_AddServerRequest_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdRequest_AddServerRequest, new_server_),
   };
-  CmdRequest_ChangeServerRequest_reflection_ =
+  CmdRequest_AddServerRequest_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
-      CmdRequest_ChangeServerRequest_descriptor_,
-      CmdRequest_ChangeServerRequest::default_instance_,
-      CmdRequest_ChangeServerRequest_offsets_,
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdRequest_ChangeServerRequest, _has_bits_[0]),
-      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdRequest_ChangeServerRequest, _unknown_fields_),
+      CmdRequest_AddServerRequest_descriptor_,
+      CmdRequest_AddServerRequest::default_instance_,
+      CmdRequest_AddServerRequest_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdRequest_AddServerRequest, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdRequest_AddServerRequest, _unknown_fields_),
       -1,
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
-      sizeof(CmdRequest_ChangeServerRequest));
-  CmdRequest_ServerStatus_descriptor_ = CmdRequest_descriptor_->nested_type(5);
+      sizeof(CmdRequest_AddServerRequest));
+  CmdRequest_RemoveServerRequest_descriptor_ = CmdRequest_descriptor_->nested_type(5);
+  static const int CmdRequest_RemoveServerRequest_offsets_[1] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdRequest_RemoveServerRequest, old_server_),
+  };
+  CmdRequest_RemoveServerRequest_reflection_ =
+    new ::google::protobuf::internal::GeneratedMessageReflection(
+      CmdRequest_RemoveServerRequest_descriptor_,
+      CmdRequest_RemoveServerRequest::default_instance_,
+      CmdRequest_RemoveServerRequest_offsets_,
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdRequest_RemoveServerRequest, _has_bits_[0]),
+      GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdRequest_RemoveServerRequest, _unknown_fields_),
+      -1,
+      ::google::protobuf::DescriptorPool::generated_pool(),
+      ::google::protobuf::MessageFactory::generated_factory(),
+      sizeof(CmdRequest_RemoveServerRequest));
+  CmdRequest_ServerStatus_descriptor_ = CmdRequest_descriptor_->nested_type(6);
   static const int CmdRequest_ServerStatus_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdRequest_ServerStatus, term_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdRequest_ServerStatus, commit_index_),
@@ -379,7 +397,9 @@ void protobuf_RegisterTypes(const ::std::string&) {
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     CmdRequest_LockRequest_descriptor_, &CmdRequest_LockRequest::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
-    CmdRequest_ChangeServerRequest_descriptor_, &CmdRequest_ChangeServerRequest::default_instance());
+    CmdRequest_AddServerRequest_descriptor_, &CmdRequest_AddServerRequest::default_instance());
+  ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
+    CmdRequest_RemoveServerRequest_descriptor_, &CmdRequest_RemoveServerRequest::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
     CmdRequest_ServerStatus_descriptor_, &CmdRequest_ServerStatus::default_instance());
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedMessage(
@@ -413,8 +433,10 @@ void protobuf_ShutdownFile_floyd_2eproto() {
   delete CmdRequest_KvRequest_reflection_;
   delete CmdRequest_LockRequest::default_instance_;
   delete CmdRequest_LockRequest_reflection_;
-  delete CmdRequest_ChangeServerRequest::default_instance_;
-  delete CmdRequest_ChangeServerRequest_reflection_;
+  delete CmdRequest_AddServerRequest::default_instance_;
+  delete CmdRequest_AddServerRequest_reflection_;
+  delete CmdRequest_RemoveServerRequest::default_instance_;
+  delete CmdRequest_RemoveServerRequest_reflection_;
   delete CmdRequest_ServerStatus::default_instance_;
   delete CmdRequest_ServerStatus_reflection_;
   delete CmdResponse::default_instance_;
@@ -446,56 +468,57 @@ void protobuf_AddDesc_floyd_2eproto() {
     "\005 \001(\014\022\021\n\tlease_end\030\006 \001(\004\022\016\n\006server\030\007 \001(\014"
     "\"j\n\006OpType\022\t\n\005kRead\020\000\022\n\n\006kWrite\020\001\022\013\n\007kDe"
     "lete\020\002\022\014\n\010kTryLock\020\004\022\013\n\007kUnLock\020\005\022\016\n\nkAd"
-    "dServer\020\006\022\021\n\rkRemoveServer\020\007\"\236\007\n\nCmdRequ"
+    "dServer\020\006\022\021\n\rkRemoveServer\020\007\"\307\007\n\nCmdRequ"
     "est\022\031\n\004type\030\001 \002(\0162\013.floyd.Type\0223\n\014reques"
     "t_vote\030\002 \001(\0132\035.floyd.CmdRequest.RequestV"
     "ote\0227\n\016append_entries\030\003 \001(\0132\037.floyd.CmdR"
     "equest.AppendEntries\022/\n\nkv_request\030\004 \001(\013"
     "2\033.floyd.CmdRequest.KvRequest\0223\n\014lock_re"
     "quest\030\005 \001(\0132\035.floyd.CmdRequest.LockReque"
-    "st\022A\n\022add_server_request\030\007 \001(\0132%.floyd.C"
-    "mdRequest.ChangeServerRequest\022D\n\025remove_"
-    "server_request\030\010 \001(\0132%.floyd.CmdRequest."
-    "ChangeServerRequest\0225\n\rserver_status\030\006 \001"
-    "(\0132\036.floyd.CmdRequest.ServerStatus\032d\n\013Re"
-    "questVote\022\014\n\004term\030\001 \002(\004\022\n\n\002ip\030\002 \002(\014\022\014\n\004p"
-    "ort\030\003 \002(\005\022\026\n\016last_log_index\030\004 \002(\004\022\025\n\rlas"
-    "t_log_term\030\005 \002(\004\032\234\001\n\rAppendEntries\022\014\n\004te"
-    "rm\030\001 \002(\004\022\n\n\002ip\030\002 \002(\014\022\014\n\004port\030\003 \002(\005\022\026\n\016pr"
-    "ev_log_index\030\004 \002(\004\022\025\n\rprev_log_term\030\005 \002("
-    "\004\022\025\n\rleader_commit\030\006 \002(\004\022\035\n\007entries\030\007 \003("
-    "\0132\014.floyd.Entry\032\'\n\tKvRequest\022\013\n\003key\030\001 \002("
-    "\014\022\r\n\005value\030\002 \001(\014\032>\n\013LockRequest\022\014\n\004name\030"
-    "\001 \002(\014\022\016\n\006holder\030\002 \002(\014\022\021\n\tlease_end\030\003 \001(\004"
-    "\032%\n\023ChangeServerRequest\022\016\n\006server\030\001 \002(\014\032"
-    "L\n\014ServerStatus\022\014\n\004term\030\001 \002(\003\022\024\n\014commit_"
-    "index\030\002 \002(\003\022\n\n\002ip\030\003 \001(\014\022\014\n\004port\030\004 \001(\005\"\320\005"
-    "\n\013CmdResponse\022\031\n\004type\030\001 \002(\0162\013.floyd.Type"
-    "\022\037\n\004code\030\002 \001(\0162\021.floyd.StatusCode\022@\n\020req"
-    "uest_vote_res\030\003 \001(\0132&.floyd.CmdResponse."
-    "RequestVoteResponse\022D\n\022append_entries_re"
-    "s\030\004 \001(\0132(.floyd.CmdResponse.AppendEntrie"
-    "sResponse\022\013\n\003msg\030\005 \001(\014\0222\n\013kv_response\030\006 "
-    "\001(\0132\035.floyd.CmdResponse.KvResponse\0226\n\rse"
-    "rver_status\030\007 \001(\0132\037.floyd.CmdResponse.Se"
-    "rverStatus\0329\n\023RequestVoteResponse\022\014\n\004ter"
-    "m\030\001 \002(\004\022\024\n\014vote_granted\030\002 \002(\010\032N\n\025AppendE"
-    "ntriesResponse\022\014\n\004term\030\001 \002(\004\022\017\n\007success\030"
-    "\002 \002(\010\022\026\n\016last_log_index\030\003 \001(\004\032\033\n\nKvRespo"
-    "nse\022\r\n\005value\030\001 \001(\014\032\333\001\n\014ServerStatus\022\014\n\004t"
-    "erm\030\001 \002(\004\022\024\n\014commit_index\030\002 \002(\004\022\014\n\004role\030"
-    "\003 \002(\014\022\021\n\tleader_ip\030\004 \001(\014\022\023\n\013leader_port\030"
-    "\005 \001(\005\022\024\n\014voted_for_ip\030\006 \001(\014\022\026\n\016voted_for"
-    "_port\030\007 \001(\005\022\025\n\rlast_log_term\030\010 \001(\004\022\026\n\016la"
-    "st_log_index\030\t \001(\004\022\024\n\014last_applied\030\n \001(\004"
-    "\")\n\004Lock\022\016\n\006holder\030\001 \002(\014\022\021\n\tlease_end\030\002 "
-    "\002(\004\"\033\n\nMembership\022\r\n\005nodes\030\001 \003(\014*\241\001\n\004Typ"
-    "e\022\t\n\005kRead\020\000\022\n\n\006kWrite\020\001\022\013\n\007kDelete\020\003\022\014\n"
-    "\010kTryLock\020\005\022\013\n\007kUnLock\020\006\022\016\n\nkAddServer\020\013"
-    "\022\021\n\rkRemoveServer\020\014\022\020\n\014kRequestVote\020\010\022\022\n"
-    "\016kAppendEntries\020\t\022\021\n\rkServerStatus\020\n*=\n\n"
-    "StatusCode\022\007\n\003kOk\020\000\022\r\n\tkNotFound\020\001\022\n\n\006kE"
-    "rror\020\002\022\013\n\007kLocked\020\003", 2219);
+    "st\022>\n\022add_server_request\030\007 \001(\0132\".floyd.C"
+    "mdRequest.AddServerRequest\022D\n\025remove_ser"
+    "ver_request\030\010 \001(\0132%.floyd.CmdRequest.Rem"
+    "oveServerRequest\0225\n\rserver_status\030\006 \001(\0132"
+    "\036.floyd.CmdRequest.ServerStatus\032d\n\013Reque"
+    "stVote\022\014\n\004term\030\001 \002(\004\022\n\n\002ip\030\002 \002(\014\022\014\n\004port"
+    "\030\003 \002(\005\022\026\n\016last_log_index\030\004 \002(\004\022\025\n\rlast_l"
+    "og_term\030\005 \002(\004\032\234\001\n\rAppendEntries\022\014\n\004term\030"
+    "\001 \002(\004\022\n\n\002ip\030\002 \002(\014\022\014\n\004port\030\003 \002(\005\022\026\n\016prev_"
+    "log_index\030\004 \002(\004\022\025\n\rprev_log_term\030\005 \002(\004\022\025"
+    "\n\rleader_commit\030\006 \002(\004\022\035\n\007entries\030\007 \003(\0132\014"
+    ".floyd.Entry\032\'\n\tKvRequest\022\013\n\003key\030\001 \002(\014\022\r"
+    "\n\005value\030\002 \001(\014\032>\n\013LockRequest\022\014\n\004name\030\001 \002"
+    "(\014\022\016\n\006holder\030\002 \002(\014\022\021\n\tlease_end\030\003 \001(\004\032&\n"
+    "\020AddServerRequest\022\022\n\nnew_server\030\001 \002(\014\032)\n"
+    "\023RemoveServerRequest\022\022\n\nold_server\030\001 \002(\014"
+    "\032L\n\014ServerStatus\022\014\n\004term\030\001 \002(\003\022\024\n\014commit"
+    "_index\030\002 \002(\003\022\n\n\002ip\030\003 \001(\014\022\014\n\004port\030\004 \001(\005\"\320"
+    "\005\n\013CmdResponse\022\031\n\004type\030\001 \002(\0162\013.floyd.Typ"
+    "e\022\037\n\004code\030\002 \001(\0162\021.floyd.StatusCode\022@\n\020re"
+    "quest_vote_res\030\003 \001(\0132&.floyd.CmdResponse"
+    ".RequestVoteResponse\022D\n\022append_entries_r"
+    "es\030\004 \001(\0132(.floyd.CmdResponse.AppendEntri"
+    "esResponse\022\013\n\003msg\030\005 \001(\014\0222\n\013kv_response\030\006"
+    " \001(\0132\035.floyd.CmdResponse.KvResponse\0226\n\rs"
+    "erver_status\030\007 \001(\0132\037.floyd.CmdResponse.S"
+    "erverStatus\0329\n\023RequestVoteResponse\022\014\n\004te"
+    "rm\030\001 \002(\004\022\024\n\014vote_granted\030\002 \002(\010\032N\n\025Append"
+    "EntriesResponse\022\014\n\004term\030\001 \002(\004\022\017\n\007success"
+    "\030\002 \002(\010\022\026\n\016last_log_index\030\003 \001(\004\032\033\n\nKvResp"
+    "onse\022\r\n\005value\030\001 \001(\014\032\333\001\n\014ServerStatus\022\014\n\004"
+    "term\030\001 \002(\004\022\024\n\014commit_index\030\002 \002(\004\022\014\n\004role"
+    "\030\003 \002(\014\022\021\n\tleader_ip\030\004 \001(\014\022\023\n\013leader_port"
+    "\030\005 \001(\005\022\024\n\014voted_for_ip\030\006 \001(\014\022\026\n\016voted_fo"
+    "r_port\030\007 \001(\005\022\025\n\rlast_log_term\030\010 \001(\004\022\026\n\016l"
+    "ast_log_index\030\t \001(\004\022\024\n\014last_applied\030\n \001("
+    "\004\")\n\004Lock\022\016\n\006holder\030\001 \002(\014\022\021\n\tlease_end\030\002"
+    " \002(\004\"\033\n\nMembership\022\r\n\005nodes\030\001 \003(\014*\241\001\n\004Ty"
+    "pe\022\t\n\005kRead\020\000\022\n\n\006kWrite\020\001\022\013\n\007kDelete\020\003\022\014"
+    "\n\010kTryLock\020\005\022\013\n\007kUnLock\020\006\022\016\n\nkAddServer\020"
+    "\013\022\021\n\rkRemoveServer\020\014\022\020\n\014kRequestVote\020\010\022\022"
+    "\n\016kAppendEntries\020\t\022\021\n\rkServerStatus\020\n*=\n"
+    "\nStatusCode\022\007\n\003kOk\020\000\022\r\n\tkNotFound\020\001\022\n\n\006k"
+    "Error\020\002\022\013\n\007kLocked\020\003", 2260);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "floyd.proto", &protobuf_RegisterTypes);
   Entry::default_instance_ = new Entry();
@@ -504,7 +527,8 @@ void protobuf_AddDesc_floyd_2eproto() {
   CmdRequest_AppendEntries::default_instance_ = new CmdRequest_AppendEntries();
   CmdRequest_KvRequest::default_instance_ = new CmdRequest_KvRequest();
   CmdRequest_LockRequest::default_instance_ = new CmdRequest_LockRequest();
-  CmdRequest_ChangeServerRequest::default_instance_ = new CmdRequest_ChangeServerRequest();
+  CmdRequest_AddServerRequest::default_instance_ = new CmdRequest_AddServerRequest();
+  CmdRequest_RemoveServerRequest::default_instance_ = new CmdRequest_RemoveServerRequest();
   CmdRequest_ServerStatus::default_instance_ = new CmdRequest_ServerStatus();
   CmdResponse::default_instance_ = new CmdResponse();
   CmdResponse_RequestVoteResponse::default_instance_ = new CmdResponse_RequestVoteResponse();
@@ -519,7 +543,8 @@ void protobuf_AddDesc_floyd_2eproto() {
   CmdRequest_AppendEntries::default_instance_->InitAsDefaultInstance();
   CmdRequest_KvRequest::default_instance_->InitAsDefaultInstance();
   CmdRequest_LockRequest::default_instance_->InitAsDefaultInstance();
-  CmdRequest_ChangeServerRequest::default_instance_->InitAsDefaultInstance();
+  CmdRequest_AddServerRequest::default_instance_->InitAsDefaultInstance();
+  CmdRequest_RemoveServerRequest::default_instance_->InitAsDefaultInstance();
   CmdRequest_ServerStatus::default_instance_->InitAsDefaultInstance();
   CmdResponse::default_instance_->InitAsDefaultInstance();
   CmdResponse_RequestVoteResponse::default_instance_->InitAsDefaultInstance();
@@ -2513,67 +2538,67 @@ void CmdRequest_LockRequest::Swap(CmdRequest_LockRequest* other) {
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
-const int CmdRequest_ChangeServerRequest::kServerFieldNumber;
+const int CmdRequest_AddServerRequest::kNewServerFieldNumber;
 #endif  // !_MSC_VER
 
-CmdRequest_ChangeServerRequest::CmdRequest_ChangeServerRequest()
+CmdRequest_AddServerRequest::CmdRequest_AddServerRequest()
   : ::google::protobuf::Message() {
   SharedCtor();
 }
 
-void CmdRequest_ChangeServerRequest::InitAsDefaultInstance() {
+void CmdRequest_AddServerRequest::InitAsDefaultInstance() {
 }
 
-CmdRequest_ChangeServerRequest::CmdRequest_ChangeServerRequest(const CmdRequest_ChangeServerRequest& from)
+CmdRequest_AddServerRequest::CmdRequest_AddServerRequest(const CmdRequest_AddServerRequest& from)
   : ::google::protobuf::Message() {
   SharedCtor();
   MergeFrom(from);
 }
 
-void CmdRequest_ChangeServerRequest::SharedCtor() {
+void CmdRequest_AddServerRequest::SharedCtor() {
   _cached_size_ = 0;
-  server_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  new_server_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
-CmdRequest_ChangeServerRequest::~CmdRequest_ChangeServerRequest() {
+CmdRequest_AddServerRequest::~CmdRequest_AddServerRequest() {
   SharedDtor();
 }
 
-void CmdRequest_ChangeServerRequest::SharedDtor() {
-  if (server_ != &::google::protobuf::internal::kEmptyString) {
-    delete server_;
+void CmdRequest_AddServerRequest::SharedDtor() {
+  if (new_server_ != &::google::protobuf::internal::kEmptyString) {
+    delete new_server_;
   }
   if (this != default_instance_) {
   }
 }
 
-void CmdRequest_ChangeServerRequest::SetCachedSize(int size) const {
+void CmdRequest_AddServerRequest::SetCachedSize(int size) const {
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ::google::protobuf::Descriptor* CmdRequest_ChangeServerRequest::descriptor() {
+const ::google::protobuf::Descriptor* CmdRequest_AddServerRequest::descriptor() {
   protobuf_AssignDescriptorsOnce();
-  return CmdRequest_ChangeServerRequest_descriptor_;
+  return CmdRequest_AddServerRequest_descriptor_;
 }
 
-const CmdRequest_ChangeServerRequest& CmdRequest_ChangeServerRequest::default_instance() {
+const CmdRequest_AddServerRequest& CmdRequest_AddServerRequest::default_instance() {
   if (default_instance_ == NULL) protobuf_AddDesc_floyd_2eproto();
   return *default_instance_;
 }
 
-CmdRequest_ChangeServerRequest* CmdRequest_ChangeServerRequest::default_instance_ = NULL;
+CmdRequest_AddServerRequest* CmdRequest_AddServerRequest::default_instance_ = NULL;
 
-CmdRequest_ChangeServerRequest* CmdRequest_ChangeServerRequest::New() const {
-  return new CmdRequest_ChangeServerRequest;
+CmdRequest_AddServerRequest* CmdRequest_AddServerRequest::New() const {
+  return new CmdRequest_AddServerRequest;
 }
 
-void CmdRequest_ChangeServerRequest::Clear() {
+void CmdRequest_AddServerRequest::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (has_server()) {
-      if (server_ != &::google::protobuf::internal::kEmptyString) {
-        server_->clear();
+    if (has_new_server()) {
+      if (new_server_ != &::google::protobuf::internal::kEmptyString) {
+        new_server_->clear();
       }
     }
   }
@@ -2581,18 +2606,18 @@ void CmdRequest_ChangeServerRequest::Clear() {
   mutable_unknown_fields()->Clear();
 }
 
-bool CmdRequest_ChangeServerRequest::MergePartialFromCodedStream(
+bool CmdRequest_AddServerRequest::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
 #define DO_(EXPRESSION) if (!(EXPRESSION)) return false
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required bytes server = 1;
+      // required bytes new_server = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-                input, this->mutable_server()));
+                input, this->mutable_new_server()));
         } else {
           goto handle_uninterpreted;
         }
@@ -2616,12 +2641,12 @@ bool CmdRequest_ChangeServerRequest::MergePartialFromCodedStream(
 #undef DO_
 }
 
-void CmdRequest_ChangeServerRequest::SerializeWithCachedSizes(
+void CmdRequest_AddServerRequest::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // required bytes server = 1;
-  if (has_server()) {
+  // required bytes new_server = 1;
+  if (has_new_server()) {
     ::google::protobuf::internal::WireFormatLite::WriteBytes(
-      1, this->server(), output);
+      1, this->new_server(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -2630,13 +2655,13 @@ void CmdRequest_ChangeServerRequest::SerializeWithCachedSizes(
   }
 }
 
-::google::protobuf::uint8* CmdRequest_ChangeServerRequest::SerializeWithCachedSizesToArray(
+::google::protobuf::uint8* CmdRequest_AddServerRequest::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // required bytes server = 1;
-  if (has_server()) {
+  // required bytes new_server = 1;
+  if (has_new_server()) {
     target =
       ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-        1, this->server(), target);
+        1, this->new_server(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -2646,15 +2671,15 @@ void CmdRequest_ChangeServerRequest::SerializeWithCachedSizes(
   return target;
 }
 
-int CmdRequest_ChangeServerRequest::ByteSize() const {
+int CmdRequest_AddServerRequest::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required bytes server = 1;
-    if (has_server()) {
+    // required bytes new_server = 1;
+    if (has_new_server()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::BytesSize(
-          this->server());
+          this->new_server());
     }
 
   }
@@ -2669,10 +2694,10 @@ int CmdRequest_ChangeServerRequest::ByteSize() const {
   return total_size;
 }
 
-void CmdRequest_ChangeServerRequest::MergeFrom(const ::google::protobuf::Message& from) {
+void CmdRequest_AddServerRequest::MergeFrom(const ::google::protobuf::Message& from) {
   GOOGLE_CHECK_NE(&from, this);
-  const CmdRequest_ChangeServerRequest* source =
-    ::google::protobuf::internal::dynamic_cast_if_available<const CmdRequest_ChangeServerRequest*>(
+  const CmdRequest_AddServerRequest* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const CmdRequest_AddServerRequest*>(
       &from);
   if (source == NULL) {
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
@@ -2681,48 +2706,265 @@ void CmdRequest_ChangeServerRequest::MergeFrom(const ::google::protobuf::Message
   }
 }
 
-void CmdRequest_ChangeServerRequest::MergeFrom(const CmdRequest_ChangeServerRequest& from) {
+void CmdRequest_AddServerRequest::MergeFrom(const CmdRequest_AddServerRequest& from) {
   GOOGLE_CHECK_NE(&from, this);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_server()) {
-      set_server(from.server());
+    if (from.has_new_server()) {
+      set_new_server(from.new_server());
     }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
 
-void CmdRequest_ChangeServerRequest::CopyFrom(const ::google::protobuf::Message& from) {
+void CmdRequest_AddServerRequest::CopyFrom(const ::google::protobuf::Message& from) {
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-void CmdRequest_ChangeServerRequest::CopyFrom(const CmdRequest_ChangeServerRequest& from) {
+void CmdRequest_AddServerRequest::CopyFrom(const CmdRequest_AddServerRequest& from) {
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-bool CmdRequest_ChangeServerRequest::IsInitialized() const {
+bool CmdRequest_AddServerRequest::IsInitialized() const {
   if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
 
   return true;
 }
 
-void CmdRequest_ChangeServerRequest::Swap(CmdRequest_ChangeServerRequest* other) {
+void CmdRequest_AddServerRequest::Swap(CmdRequest_AddServerRequest* other) {
   if (other != this) {
-    std::swap(server_, other->server_);
+    std::swap(new_server_, other->new_server_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
   }
 }
 
-::google::protobuf::Metadata CmdRequest_ChangeServerRequest::GetMetadata() const {
+::google::protobuf::Metadata CmdRequest_AddServerRequest::GetMetadata() const {
   protobuf_AssignDescriptorsOnce();
   ::google::protobuf::Metadata metadata;
-  metadata.descriptor = CmdRequest_ChangeServerRequest_descriptor_;
-  metadata.reflection = CmdRequest_ChangeServerRequest_reflection_;
+  metadata.descriptor = CmdRequest_AddServerRequest_descriptor_;
+  metadata.reflection = CmdRequest_AddServerRequest_reflection_;
+  return metadata;
+}
+
+
+// -------------------------------------------------------------------
+
+#ifndef _MSC_VER
+const int CmdRequest_RemoveServerRequest::kOldServerFieldNumber;
+#endif  // !_MSC_VER
+
+CmdRequest_RemoveServerRequest::CmdRequest_RemoveServerRequest()
+  : ::google::protobuf::Message() {
+  SharedCtor();
+}
+
+void CmdRequest_RemoveServerRequest::InitAsDefaultInstance() {
+}
+
+CmdRequest_RemoveServerRequest::CmdRequest_RemoveServerRequest(const CmdRequest_RemoveServerRequest& from)
+  : ::google::protobuf::Message() {
+  SharedCtor();
+  MergeFrom(from);
+}
+
+void CmdRequest_RemoveServerRequest::SharedCtor() {
+  _cached_size_ = 0;
+  old_server_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+}
+
+CmdRequest_RemoveServerRequest::~CmdRequest_RemoveServerRequest() {
+  SharedDtor();
+}
+
+void CmdRequest_RemoveServerRequest::SharedDtor() {
+  if (old_server_ != &::google::protobuf::internal::kEmptyString) {
+    delete old_server_;
+  }
+  if (this != default_instance_) {
+  }
+}
+
+void CmdRequest_RemoveServerRequest::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ::google::protobuf::Descriptor* CmdRequest_RemoveServerRequest::descriptor() {
+  protobuf_AssignDescriptorsOnce();
+  return CmdRequest_RemoveServerRequest_descriptor_;
+}
+
+const CmdRequest_RemoveServerRequest& CmdRequest_RemoveServerRequest::default_instance() {
+  if (default_instance_ == NULL) protobuf_AddDesc_floyd_2eproto();
+  return *default_instance_;
+}
+
+CmdRequest_RemoveServerRequest* CmdRequest_RemoveServerRequest::default_instance_ = NULL;
+
+CmdRequest_RemoveServerRequest* CmdRequest_RemoveServerRequest::New() const {
+  return new CmdRequest_RemoveServerRequest;
+}
+
+void CmdRequest_RemoveServerRequest::Clear() {
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (has_old_server()) {
+      if (old_server_ != &::google::protobuf::internal::kEmptyString) {
+        old_server_->clear();
+      }
+    }
+  }
+  ::memset(_has_bits_, 0, sizeof(_has_bits_));
+  mutable_unknown_fields()->Clear();
+}
+
+bool CmdRequest_RemoveServerRequest::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+  ::google::protobuf::uint32 tag;
+  while ((tag = input->ReadTag()) != 0) {
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // required bytes old_server = 1;
+      case 1: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_old_server()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectAtEnd()) return true;
+        break;
+      }
+
+      default: {
+      handle_uninterpreted:
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          return true;
+        }
+        DO_(::google::protobuf::internal::WireFormat::SkipField(
+              input, tag, mutable_unknown_fields()));
+        break;
+      }
+    }
+  }
+  return true;
+#undef DO_
+}
+
+void CmdRequest_RemoveServerRequest::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // required bytes old_server = 1;
+  if (has_old_server()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      1, this->old_server(), output);
+  }
+
+  if (!unknown_fields().empty()) {
+    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
+        unknown_fields(), output);
+  }
+}
+
+::google::protobuf::uint8* CmdRequest_RemoveServerRequest::SerializeWithCachedSizesToArray(
+    ::google::protobuf::uint8* target) const {
+  // required bytes old_server = 1;
+  if (has_old_server()) {
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+        1, this->old_server(), target);
+  }
+
+  if (!unknown_fields().empty()) {
+    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
+        unknown_fields(), target);
+  }
+  return target;
+}
+
+int CmdRequest_RemoveServerRequest::ByteSize() const {
+  int total_size = 0;
+
+  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    // required bytes old_server = 1;
+    if (has_old_server()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->old_server());
+    }
+
+  }
+  if (!unknown_fields().empty()) {
+    total_size +=
+      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
+        unknown_fields());
+  }
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = total_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void CmdRequest_RemoveServerRequest::MergeFrom(const ::google::protobuf::Message& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  const CmdRequest_RemoveServerRequest* source =
+    ::google::protobuf::internal::dynamic_cast_if_available<const CmdRequest_RemoveServerRequest*>(
+      &from);
+  if (source == NULL) {
+    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+  } else {
+    MergeFrom(*source);
+  }
+}
+
+void CmdRequest_RemoveServerRequest::MergeFrom(const CmdRequest_RemoveServerRequest& from) {
+  GOOGLE_CHECK_NE(&from, this);
+  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+    if (from.has_old_server()) {
+      set_old_server(from.old_server());
+    }
+  }
+  mutable_unknown_fields()->MergeFrom(from.unknown_fields());
+}
+
+void CmdRequest_RemoveServerRequest::CopyFrom(const ::google::protobuf::Message& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+void CmdRequest_RemoveServerRequest::CopyFrom(const CmdRequest_RemoveServerRequest& from) {
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool CmdRequest_RemoveServerRequest::IsInitialized() const {
+  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
+
+  return true;
+}
+
+void CmdRequest_RemoveServerRequest::Swap(CmdRequest_RemoveServerRequest* other) {
+  if (other != this) {
+    std::swap(old_server_, other->old_server_);
+    std::swap(_has_bits_[0], other->_has_bits_[0]);
+    _unknown_fields_.Swap(&other->_unknown_fields_);
+    std::swap(_cached_size_, other->_cached_size_);
+  }
+}
+
+::google::protobuf::Metadata CmdRequest_RemoveServerRequest::GetMetadata() const {
+  protobuf_AssignDescriptorsOnce();
+  ::google::protobuf::Metadata metadata;
+  metadata.descriptor = CmdRequest_RemoveServerRequest_descriptor_;
+  metadata.reflection = CmdRequest_RemoveServerRequest_reflection_;
   return metadata;
 }
 
@@ -3087,8 +3329,8 @@ void CmdRequest::InitAsDefaultInstance() {
   append_entries_ = const_cast< ::floyd::CmdRequest_AppendEntries*>(&::floyd::CmdRequest_AppendEntries::default_instance());
   kv_request_ = const_cast< ::floyd::CmdRequest_KvRequest*>(&::floyd::CmdRequest_KvRequest::default_instance());
   lock_request_ = const_cast< ::floyd::CmdRequest_LockRequest*>(&::floyd::CmdRequest_LockRequest::default_instance());
-  add_server_request_ = const_cast< ::floyd::CmdRequest_ChangeServerRequest*>(&::floyd::CmdRequest_ChangeServerRequest::default_instance());
-  remove_server_request_ = const_cast< ::floyd::CmdRequest_ChangeServerRequest*>(&::floyd::CmdRequest_ChangeServerRequest::default_instance());
+  add_server_request_ = const_cast< ::floyd::CmdRequest_AddServerRequest*>(&::floyd::CmdRequest_AddServerRequest::default_instance());
+  remove_server_request_ = const_cast< ::floyd::CmdRequest_RemoveServerRequest*>(&::floyd::CmdRequest_RemoveServerRequest::default_instance());
   server_status_ = const_cast< ::floyd::CmdRequest_ServerStatus*>(&::floyd::CmdRequest_ServerStatus::default_instance());
 }
 
@@ -3164,10 +3406,10 @@ void CmdRequest::Clear() {
       if (lock_request_ != NULL) lock_request_->::floyd::CmdRequest_LockRequest::Clear();
     }
     if (has_add_server_request()) {
-      if (add_server_request_ != NULL) add_server_request_->::floyd::CmdRequest_ChangeServerRequest::Clear();
+      if (add_server_request_ != NULL) add_server_request_->::floyd::CmdRequest_AddServerRequest::Clear();
     }
     if (has_remove_server_request()) {
-      if (remove_server_request_ != NULL) remove_server_request_->::floyd::CmdRequest_ChangeServerRequest::Clear();
+      if (remove_server_request_ != NULL) remove_server_request_->::floyd::CmdRequest_RemoveServerRequest::Clear();
     }
     if (has_server_status()) {
       if (server_status_ != NULL) server_status_->::floyd::CmdRequest_ServerStatus::Clear();
@@ -3273,7 +3515,7 @@ bool CmdRequest::MergePartialFromCodedStream(
         break;
       }
 
-      // optional .floyd.CmdRequest.ChangeServerRequest add_server_request = 7;
+      // optional .floyd.CmdRequest.AddServerRequest add_server_request = 7;
       case 7: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
@@ -3287,7 +3529,7 @@ bool CmdRequest::MergePartialFromCodedStream(
         break;
       }
 
-      // optional .floyd.CmdRequest.ChangeServerRequest remove_server_request = 8;
+      // optional .floyd.CmdRequest.RemoveServerRequest remove_server_request = 8;
       case 8: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
@@ -3355,13 +3597,13 @@ void CmdRequest::SerializeWithCachedSizes(
       6, this->server_status(), output);
   }
 
-  // optional .floyd.CmdRequest.ChangeServerRequest add_server_request = 7;
+  // optional .floyd.CmdRequest.AddServerRequest add_server_request = 7;
   if (has_add_server_request()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
       7, this->add_server_request(), output);
   }
 
-  // optional .floyd.CmdRequest.ChangeServerRequest remove_server_request = 8;
+  // optional .floyd.CmdRequest.RemoveServerRequest remove_server_request = 8;
   if (has_remove_server_request()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
       8, this->remove_server_request(), output);
@@ -3416,14 +3658,14 @@ void CmdRequest::SerializeWithCachedSizes(
         6, this->server_status(), target);
   }
 
-  // optional .floyd.CmdRequest.ChangeServerRequest add_server_request = 7;
+  // optional .floyd.CmdRequest.AddServerRequest add_server_request = 7;
   if (has_add_server_request()) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
         7, this->add_server_request(), target);
   }
 
-  // optional .floyd.CmdRequest.ChangeServerRequest remove_server_request = 8;
+  // optional .floyd.CmdRequest.RemoveServerRequest remove_server_request = 8;
   if (has_remove_server_request()) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
@@ -3475,14 +3717,14 @@ int CmdRequest::ByteSize() const {
           this->lock_request());
     }
 
-    // optional .floyd.CmdRequest.ChangeServerRequest add_server_request = 7;
+    // optional .floyd.CmdRequest.AddServerRequest add_server_request = 7;
     if (has_add_server_request()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           this->add_server_request());
     }
 
-    // optional .floyd.CmdRequest.ChangeServerRequest remove_server_request = 8;
+    // optional .floyd.CmdRequest.RemoveServerRequest remove_server_request = 8;
     if (has_remove_server_request()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
@@ -3539,10 +3781,10 @@ void CmdRequest::MergeFrom(const CmdRequest& from) {
       mutable_lock_request()->::floyd::CmdRequest_LockRequest::MergeFrom(from.lock_request());
     }
     if (from.has_add_server_request()) {
-      mutable_add_server_request()->::floyd::CmdRequest_ChangeServerRequest::MergeFrom(from.add_server_request());
+      mutable_add_server_request()->::floyd::CmdRequest_AddServerRequest::MergeFrom(from.add_server_request());
     }
     if (from.has_remove_server_request()) {
-      mutable_remove_server_request()->::floyd::CmdRequest_ChangeServerRequest::MergeFrom(from.remove_server_request());
+      mutable_remove_server_request()->::floyd::CmdRequest_RemoveServerRequest::MergeFrom(from.remove_server_request());
     }
     if (from.has_server_status()) {
       mutable_server_status()->::floyd::CmdRequest_ServerStatus::MergeFrom(from.server_status());

@@ -76,6 +76,10 @@ int FloydWorkerConn::DealMessage() {
       response_.set_type(Type::kAddServer);
       floyd_->DoCommand(request_, &response_);
       break;
+    case Type::kRemoveServer:
+      response_.set_type(Type::kRemoveServer);
+      floyd_->DoCommand(request_, &response_);
+      break;
     case Type::kRequestVote:
       response_.set_type(Type::kRequestVote);
       floyd_->ReplyRequestVote(request_, &response_);
@@ -99,13 +103,8 @@ FloydWorkerHandle::FloydWorkerHandle(FloydImpl* f)
   : floyd_(f) {
   }
 
-// Only connection from other node should be accepted
+// Only connection from other members should be accepted
 bool FloydWorkerHandle::AccessHandle(std::string& ip_port) const {
-  // TODO(anan)
-  // if (floyd_->peers_.find(ip_port) == floyd_->peers_.end()) {
-  //  LOGV(WARN_LEVEL, floyd_->info_log_, "WorkerThread deny access from %s", ip_port.c_str());
-  //  return false;
-  // }
   return true;
 }
 

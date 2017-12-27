@@ -79,12 +79,15 @@ message CmdRequest {
   }
   optional LockRequest lock_request = 5;
 
-  message ChangeServerRequest {
-    required bytes server = 1;
+  message AddServerRequest {
+    required bytes new_server = 1;
   }
-  optional ChangeServerRequest add_server_request = 7;
+  optional AddServerRequest add_server_request = 7;
   
-  optional ChangeServerRequest remove_server_request = 8;
+  message RemoveServerRequest {
+    required bytes old_server = 1;
+  }
+  optional RemoveServerRequest remove_server_request = 8;
 
   message ServerStatus {
     required int64 term = 1;

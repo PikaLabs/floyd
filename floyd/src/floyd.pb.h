@@ -40,7 +40,8 @@ class CmdRequest_RequestVote;
 class CmdRequest_AppendEntries;
 class CmdRequest_KvRequest;
 class CmdRequest_LockRequest;
-class CmdRequest_ChangeServerRequest;
+class CmdRequest_AddServerRequest;
+class CmdRequest_RemoveServerRequest;
 class CmdRequest_ServerStatus;
 class CmdResponse;
 class CmdResponse_RequestVoteResponse;
@@ -806,14 +807,14 @@ class CmdRequest_LockRequest : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
-class CmdRequest_ChangeServerRequest : public ::google::protobuf::Message {
+class CmdRequest_AddServerRequest : public ::google::protobuf::Message {
  public:
-  CmdRequest_ChangeServerRequest();
-  virtual ~CmdRequest_ChangeServerRequest();
+  CmdRequest_AddServerRequest();
+  virtual ~CmdRequest_AddServerRequest();
 
-  CmdRequest_ChangeServerRequest(const CmdRequest_ChangeServerRequest& from);
+  CmdRequest_AddServerRequest(const CmdRequest_AddServerRequest& from);
 
-  inline CmdRequest_ChangeServerRequest& operator=(const CmdRequest_ChangeServerRequest& from) {
+  inline CmdRequest_AddServerRequest& operator=(const CmdRequest_AddServerRequest& from) {
     CopyFrom(from);
     return *this;
   }
@@ -827,17 +828,17 @@ class CmdRequest_ChangeServerRequest : public ::google::protobuf::Message {
   }
 
   static const ::google::protobuf::Descriptor* descriptor();
-  static const CmdRequest_ChangeServerRequest& default_instance();
+  static const CmdRequest_AddServerRequest& default_instance();
 
-  void Swap(CmdRequest_ChangeServerRequest* other);
+  void Swap(CmdRequest_AddServerRequest* other);
 
   // implements Message ----------------------------------------------
 
-  CmdRequest_ChangeServerRequest* New() const;
+  CmdRequest_AddServerRequest* New() const;
   void CopyFrom(const ::google::protobuf::Message& from);
   void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const CmdRequest_ChangeServerRequest& from);
-  void MergeFrom(const CmdRequest_ChangeServerRequest& from);
+  void CopyFrom(const CmdRequest_AddServerRequest& from);
+  void MergeFrom(const CmdRequest_AddServerRequest& from);
   void Clear();
   bool IsInitialized() const;
 
@@ -860,26 +861,26 @@ class CmdRequest_ChangeServerRequest : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required bytes server = 1;
-  inline bool has_server() const;
-  inline void clear_server();
-  static const int kServerFieldNumber = 1;
-  inline const ::std::string& server() const;
-  inline void set_server(const ::std::string& value);
-  inline void set_server(const char* value);
-  inline void set_server(const void* value, size_t size);
-  inline ::std::string* mutable_server();
-  inline ::std::string* release_server();
-  inline void set_allocated_server(::std::string* server);
+  // required bytes new_server = 1;
+  inline bool has_new_server() const;
+  inline void clear_new_server();
+  static const int kNewServerFieldNumber = 1;
+  inline const ::std::string& new_server() const;
+  inline void set_new_server(const ::std::string& value);
+  inline void set_new_server(const char* value);
+  inline void set_new_server(const void* value, size_t size);
+  inline ::std::string* mutable_new_server();
+  inline ::std::string* release_new_server();
+  inline void set_allocated_new_server(::std::string* new_server);
 
-  // @@protoc_insertion_point(class_scope:floyd.CmdRequest.ChangeServerRequest)
+  // @@protoc_insertion_point(class_scope:floyd.CmdRequest.AddServerRequest)
  private:
-  inline void set_has_server();
-  inline void clear_has_server();
+  inline void set_has_new_server();
+  inline void clear_has_new_server();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::std::string* server_;
+  ::std::string* new_server_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
@@ -889,7 +890,94 @@ class CmdRequest_ChangeServerRequest : public ::google::protobuf::Message {
   friend void protobuf_ShutdownFile_floyd_2eproto();
 
   void InitAsDefaultInstance();
-  static CmdRequest_ChangeServerRequest* default_instance_;
+  static CmdRequest_AddServerRequest* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class CmdRequest_RemoveServerRequest : public ::google::protobuf::Message {
+ public:
+  CmdRequest_RemoveServerRequest();
+  virtual ~CmdRequest_RemoveServerRequest();
+
+  CmdRequest_RemoveServerRequest(const CmdRequest_RemoveServerRequest& from);
+
+  inline CmdRequest_RemoveServerRequest& operator=(const CmdRequest_RemoveServerRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const CmdRequest_RemoveServerRequest& default_instance();
+
+  void Swap(CmdRequest_RemoveServerRequest* other);
+
+  // implements Message ----------------------------------------------
+
+  CmdRequest_RemoveServerRequest* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const CmdRequest_RemoveServerRequest& from);
+  void MergeFrom(const CmdRequest_RemoveServerRequest& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // required bytes old_server = 1;
+  inline bool has_old_server() const;
+  inline void clear_old_server();
+  static const int kOldServerFieldNumber = 1;
+  inline const ::std::string& old_server() const;
+  inline void set_old_server(const ::std::string& value);
+  inline void set_old_server(const char* value);
+  inline void set_old_server(const void* value, size_t size);
+  inline ::std::string* mutable_old_server();
+  inline ::std::string* release_old_server();
+  inline void set_allocated_old_server(::std::string* old_server);
+
+  // @@protoc_insertion_point(class_scope:floyd.CmdRequest.RemoveServerRequest)
+ private:
+  inline void set_has_old_server();
+  inline void clear_has_old_server();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* old_server_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_floyd_2eproto();
+  friend void protobuf_AssignDesc_floyd_2eproto();
+  friend void protobuf_ShutdownFile_floyd_2eproto();
+
+  void InitAsDefaultInstance();
+  static CmdRequest_RemoveServerRequest* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -1066,7 +1154,8 @@ class CmdRequest : public ::google::protobuf::Message {
   typedef CmdRequest_AppendEntries AppendEntries;
   typedef CmdRequest_KvRequest KvRequest;
   typedef CmdRequest_LockRequest LockRequest;
-  typedef CmdRequest_ChangeServerRequest ChangeServerRequest;
+  typedef CmdRequest_AddServerRequest AddServerRequest;
+  typedef CmdRequest_RemoveServerRequest RemoveServerRequest;
   typedef CmdRequest_ServerStatus ServerStatus;
 
   // accessors -------------------------------------------------------
@@ -1114,23 +1203,23 @@ class CmdRequest : public ::google::protobuf::Message {
   inline ::floyd::CmdRequest_LockRequest* release_lock_request();
   inline void set_allocated_lock_request(::floyd::CmdRequest_LockRequest* lock_request);
 
-  // optional .floyd.CmdRequest.ChangeServerRequest add_server_request = 7;
+  // optional .floyd.CmdRequest.AddServerRequest add_server_request = 7;
   inline bool has_add_server_request() const;
   inline void clear_add_server_request();
   static const int kAddServerRequestFieldNumber = 7;
-  inline const ::floyd::CmdRequest_ChangeServerRequest& add_server_request() const;
-  inline ::floyd::CmdRequest_ChangeServerRequest* mutable_add_server_request();
-  inline ::floyd::CmdRequest_ChangeServerRequest* release_add_server_request();
-  inline void set_allocated_add_server_request(::floyd::CmdRequest_ChangeServerRequest* add_server_request);
+  inline const ::floyd::CmdRequest_AddServerRequest& add_server_request() const;
+  inline ::floyd::CmdRequest_AddServerRequest* mutable_add_server_request();
+  inline ::floyd::CmdRequest_AddServerRequest* release_add_server_request();
+  inline void set_allocated_add_server_request(::floyd::CmdRequest_AddServerRequest* add_server_request);
 
-  // optional .floyd.CmdRequest.ChangeServerRequest remove_server_request = 8;
+  // optional .floyd.CmdRequest.RemoveServerRequest remove_server_request = 8;
   inline bool has_remove_server_request() const;
   inline void clear_remove_server_request();
   static const int kRemoveServerRequestFieldNumber = 8;
-  inline const ::floyd::CmdRequest_ChangeServerRequest& remove_server_request() const;
-  inline ::floyd::CmdRequest_ChangeServerRequest* mutable_remove_server_request();
-  inline ::floyd::CmdRequest_ChangeServerRequest* release_remove_server_request();
-  inline void set_allocated_remove_server_request(::floyd::CmdRequest_ChangeServerRequest* remove_server_request);
+  inline const ::floyd::CmdRequest_RemoveServerRequest& remove_server_request() const;
+  inline ::floyd::CmdRequest_RemoveServerRequest* mutable_remove_server_request();
+  inline ::floyd::CmdRequest_RemoveServerRequest* release_remove_server_request();
+  inline void set_allocated_remove_server_request(::floyd::CmdRequest_RemoveServerRequest* remove_server_request);
 
   // optional .floyd.CmdRequest.ServerStatus server_status = 6;
   inline bool has_server_status() const;
@@ -1166,8 +1255,8 @@ class CmdRequest : public ::google::protobuf::Message {
   ::floyd::CmdRequest_AppendEntries* append_entries_;
   ::floyd::CmdRequest_KvRequest* kv_request_;
   ::floyd::CmdRequest_LockRequest* lock_request_;
-  ::floyd::CmdRequest_ChangeServerRequest* add_server_request_;
-  ::floyd::CmdRequest_ChangeServerRequest* remove_server_request_;
+  ::floyd::CmdRequest_AddServerRequest* add_server_request_;
+  ::floyd::CmdRequest_RemoveServerRequest* remove_server_request_;
   ::floyd::CmdRequest_ServerStatus* server_status_;
   int type_;
 
@@ -3032,75 +3121,149 @@ inline void CmdRequest_LockRequest::set_lease_end(::google::protobuf::uint64 val
 
 // -------------------------------------------------------------------
 
-// CmdRequest_ChangeServerRequest
+// CmdRequest_AddServerRequest
 
-// required bytes server = 1;
-inline bool CmdRequest_ChangeServerRequest::has_server() const {
+// required bytes new_server = 1;
+inline bool CmdRequest_AddServerRequest::has_new_server() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void CmdRequest_ChangeServerRequest::set_has_server() {
+inline void CmdRequest_AddServerRequest::set_has_new_server() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void CmdRequest_ChangeServerRequest::clear_has_server() {
+inline void CmdRequest_AddServerRequest::clear_has_new_server() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void CmdRequest_ChangeServerRequest::clear_server() {
-  if (server_ != &::google::protobuf::internal::kEmptyString) {
-    server_->clear();
+inline void CmdRequest_AddServerRequest::clear_new_server() {
+  if (new_server_ != &::google::protobuf::internal::kEmptyString) {
+    new_server_->clear();
   }
-  clear_has_server();
+  clear_has_new_server();
 }
-inline const ::std::string& CmdRequest_ChangeServerRequest::server() const {
-  return *server_;
+inline const ::std::string& CmdRequest_AddServerRequest::new_server() const {
+  return *new_server_;
 }
-inline void CmdRequest_ChangeServerRequest::set_server(const ::std::string& value) {
-  set_has_server();
-  if (server_ == &::google::protobuf::internal::kEmptyString) {
-    server_ = new ::std::string;
+inline void CmdRequest_AddServerRequest::set_new_server(const ::std::string& value) {
+  set_has_new_server();
+  if (new_server_ == &::google::protobuf::internal::kEmptyString) {
+    new_server_ = new ::std::string;
   }
-  server_->assign(value);
+  new_server_->assign(value);
 }
-inline void CmdRequest_ChangeServerRequest::set_server(const char* value) {
-  set_has_server();
-  if (server_ == &::google::protobuf::internal::kEmptyString) {
-    server_ = new ::std::string;
+inline void CmdRequest_AddServerRequest::set_new_server(const char* value) {
+  set_has_new_server();
+  if (new_server_ == &::google::protobuf::internal::kEmptyString) {
+    new_server_ = new ::std::string;
   }
-  server_->assign(value);
+  new_server_->assign(value);
 }
-inline void CmdRequest_ChangeServerRequest::set_server(const void* value, size_t size) {
-  set_has_server();
-  if (server_ == &::google::protobuf::internal::kEmptyString) {
-    server_ = new ::std::string;
+inline void CmdRequest_AddServerRequest::set_new_server(const void* value, size_t size) {
+  set_has_new_server();
+  if (new_server_ == &::google::protobuf::internal::kEmptyString) {
+    new_server_ = new ::std::string;
   }
-  server_->assign(reinterpret_cast<const char*>(value), size);
+  new_server_->assign(reinterpret_cast<const char*>(value), size);
 }
-inline ::std::string* CmdRequest_ChangeServerRequest::mutable_server() {
-  set_has_server();
-  if (server_ == &::google::protobuf::internal::kEmptyString) {
-    server_ = new ::std::string;
+inline ::std::string* CmdRequest_AddServerRequest::mutable_new_server() {
+  set_has_new_server();
+  if (new_server_ == &::google::protobuf::internal::kEmptyString) {
+    new_server_ = new ::std::string;
   }
-  return server_;
+  return new_server_;
 }
-inline ::std::string* CmdRequest_ChangeServerRequest::release_server() {
-  clear_has_server();
-  if (server_ == &::google::protobuf::internal::kEmptyString) {
+inline ::std::string* CmdRequest_AddServerRequest::release_new_server() {
+  clear_has_new_server();
+  if (new_server_ == &::google::protobuf::internal::kEmptyString) {
     return NULL;
   } else {
-    ::std::string* temp = server_;
-    server_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    ::std::string* temp = new_server_;
+    new_server_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
     return temp;
   }
 }
-inline void CmdRequest_ChangeServerRequest::set_allocated_server(::std::string* server) {
-  if (server_ != &::google::protobuf::internal::kEmptyString) {
-    delete server_;
+inline void CmdRequest_AddServerRequest::set_allocated_new_server(::std::string* new_server) {
+  if (new_server_ != &::google::protobuf::internal::kEmptyString) {
+    delete new_server_;
   }
-  if (server) {
-    set_has_server();
-    server_ = server;
+  if (new_server) {
+    set_has_new_server();
+    new_server_ = new_server;
   } else {
-    clear_has_server();
-    server_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    clear_has_new_server();
+    new_server_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// -------------------------------------------------------------------
+
+// CmdRequest_RemoveServerRequest
+
+// required bytes old_server = 1;
+inline bool CmdRequest_RemoveServerRequest::has_old_server() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void CmdRequest_RemoveServerRequest::set_has_old_server() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void CmdRequest_RemoveServerRequest::clear_has_old_server() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void CmdRequest_RemoveServerRequest::clear_old_server() {
+  if (old_server_ != &::google::protobuf::internal::kEmptyString) {
+    old_server_->clear();
+  }
+  clear_has_old_server();
+}
+inline const ::std::string& CmdRequest_RemoveServerRequest::old_server() const {
+  return *old_server_;
+}
+inline void CmdRequest_RemoveServerRequest::set_old_server(const ::std::string& value) {
+  set_has_old_server();
+  if (old_server_ == &::google::protobuf::internal::kEmptyString) {
+    old_server_ = new ::std::string;
+  }
+  old_server_->assign(value);
+}
+inline void CmdRequest_RemoveServerRequest::set_old_server(const char* value) {
+  set_has_old_server();
+  if (old_server_ == &::google::protobuf::internal::kEmptyString) {
+    old_server_ = new ::std::string;
+  }
+  old_server_->assign(value);
+}
+inline void CmdRequest_RemoveServerRequest::set_old_server(const void* value, size_t size) {
+  set_has_old_server();
+  if (old_server_ == &::google::protobuf::internal::kEmptyString) {
+    old_server_ = new ::std::string;
+  }
+  old_server_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* CmdRequest_RemoveServerRequest::mutable_old_server() {
+  set_has_old_server();
+  if (old_server_ == &::google::protobuf::internal::kEmptyString) {
+    old_server_ = new ::std::string;
+  }
+  return old_server_;
+}
+inline ::std::string* CmdRequest_RemoveServerRequest::release_old_server() {
+  clear_has_old_server();
+  if (old_server_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = old_server_;
+    old_server_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void CmdRequest_RemoveServerRequest::set_allocated_old_server(::std::string* old_server) {
+  if (old_server_ != &::google::protobuf::internal::kEmptyString) {
+    delete old_server_;
+  }
+  if (old_server) {
+    set_has_old_server();
+    old_server_ = old_server;
+  } else {
+    clear_has_old_server();
+    old_server_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
 }
 
@@ -3423,7 +3586,7 @@ inline void CmdRequest::set_allocated_lock_request(::floyd::CmdRequest_LockReque
   }
 }
 
-// optional .floyd.CmdRequest.ChangeServerRequest add_server_request = 7;
+// optional .floyd.CmdRequest.AddServerRequest add_server_request = 7;
 inline bool CmdRequest::has_add_server_request() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
@@ -3434,24 +3597,24 @@ inline void CmdRequest::clear_has_add_server_request() {
   _has_bits_[0] &= ~0x00000020u;
 }
 inline void CmdRequest::clear_add_server_request() {
-  if (add_server_request_ != NULL) add_server_request_->::floyd::CmdRequest_ChangeServerRequest::Clear();
+  if (add_server_request_ != NULL) add_server_request_->::floyd::CmdRequest_AddServerRequest::Clear();
   clear_has_add_server_request();
 }
-inline const ::floyd::CmdRequest_ChangeServerRequest& CmdRequest::add_server_request() const {
+inline const ::floyd::CmdRequest_AddServerRequest& CmdRequest::add_server_request() const {
   return add_server_request_ != NULL ? *add_server_request_ : *default_instance_->add_server_request_;
 }
-inline ::floyd::CmdRequest_ChangeServerRequest* CmdRequest::mutable_add_server_request() {
+inline ::floyd::CmdRequest_AddServerRequest* CmdRequest::mutable_add_server_request() {
   set_has_add_server_request();
-  if (add_server_request_ == NULL) add_server_request_ = new ::floyd::CmdRequest_ChangeServerRequest;
+  if (add_server_request_ == NULL) add_server_request_ = new ::floyd::CmdRequest_AddServerRequest;
   return add_server_request_;
 }
-inline ::floyd::CmdRequest_ChangeServerRequest* CmdRequest::release_add_server_request() {
+inline ::floyd::CmdRequest_AddServerRequest* CmdRequest::release_add_server_request() {
   clear_has_add_server_request();
-  ::floyd::CmdRequest_ChangeServerRequest* temp = add_server_request_;
+  ::floyd::CmdRequest_AddServerRequest* temp = add_server_request_;
   add_server_request_ = NULL;
   return temp;
 }
-inline void CmdRequest::set_allocated_add_server_request(::floyd::CmdRequest_ChangeServerRequest* add_server_request) {
+inline void CmdRequest::set_allocated_add_server_request(::floyd::CmdRequest_AddServerRequest* add_server_request) {
   delete add_server_request_;
   add_server_request_ = add_server_request;
   if (add_server_request) {
@@ -3461,7 +3624,7 @@ inline void CmdRequest::set_allocated_add_server_request(::floyd::CmdRequest_Cha
   }
 }
 
-// optional .floyd.CmdRequest.ChangeServerRequest remove_server_request = 8;
+// optional .floyd.CmdRequest.RemoveServerRequest remove_server_request = 8;
 inline bool CmdRequest::has_remove_server_request() const {
   return (_has_bits_[0] & 0x00000040u) != 0;
 }
@@ -3472,24 +3635,24 @@ inline void CmdRequest::clear_has_remove_server_request() {
   _has_bits_[0] &= ~0x00000040u;
 }
 inline void CmdRequest::clear_remove_server_request() {
-  if (remove_server_request_ != NULL) remove_server_request_->::floyd::CmdRequest_ChangeServerRequest::Clear();
+  if (remove_server_request_ != NULL) remove_server_request_->::floyd::CmdRequest_RemoveServerRequest::Clear();
   clear_has_remove_server_request();
 }
-inline const ::floyd::CmdRequest_ChangeServerRequest& CmdRequest::remove_server_request() const {
+inline const ::floyd::CmdRequest_RemoveServerRequest& CmdRequest::remove_server_request() const {
   return remove_server_request_ != NULL ? *remove_server_request_ : *default_instance_->remove_server_request_;
 }
-inline ::floyd::CmdRequest_ChangeServerRequest* CmdRequest::mutable_remove_server_request() {
+inline ::floyd::CmdRequest_RemoveServerRequest* CmdRequest::mutable_remove_server_request() {
   set_has_remove_server_request();
-  if (remove_server_request_ == NULL) remove_server_request_ = new ::floyd::CmdRequest_ChangeServerRequest;
+  if (remove_server_request_ == NULL) remove_server_request_ = new ::floyd::CmdRequest_RemoveServerRequest;
   return remove_server_request_;
 }
-inline ::floyd::CmdRequest_ChangeServerRequest* CmdRequest::release_remove_server_request() {
+inline ::floyd::CmdRequest_RemoveServerRequest* CmdRequest::release_remove_server_request() {
   clear_has_remove_server_request();
-  ::floyd::CmdRequest_ChangeServerRequest* temp = remove_server_request_;
+  ::floyd::CmdRequest_RemoveServerRequest* temp = remove_server_request_;
   remove_server_request_ = NULL;
   return temp;
 }
-inline void CmdRequest::set_allocated_remove_server_request(::floyd::CmdRequest_ChangeServerRequest* remove_server_request) {
+inline void CmdRequest::set_allocated_remove_server_request(::floyd::CmdRequest_RemoveServerRequest* remove_server_request) {
   delete remove_server_request_;
   remove_server_request_ = remove_server_request;
   if (remove_server_request) {
