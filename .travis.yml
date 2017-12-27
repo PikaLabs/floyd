@@ -15,4 +15,4 @@ compiler:
 language: cpp
 
 script:
-  - cd pink && ./build.sh
+    cd floyd && make

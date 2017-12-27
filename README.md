@@ -1,5 +1,7 @@
 # Floyd [中文](https://github.com/Qihoo360/floyd/blob/master/README_CN.md)
 
+[![Build Status](https://travis-ci.org/Qihoo360/floyd.svg?branch=master)](https://travis-ci.org/Qihoo360/floyd)
+
 Floyd is an C++ library based on Raft consensus protocol. 
 
 * [Raft](https://raft.github.io/) is a consensus algorithm  which is easy to understand;
