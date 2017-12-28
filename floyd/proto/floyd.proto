@@ -13,11 +13,11 @@ message Entry {
     kAddServer = 6;
     kRemoveServer = 7;
   }
-  required OpType optype = 1;
   // used in key value operator
-  optional uint64 term = 2;
-  optional string key = 3;
-  optional bytes value = 4;
+  optional uint64 term = 1;
+  optional string key = 2;
+  optional bytes value = 3;
+  required OpType optype = 4;
   // used in lock and unlock 
   optional bytes holder = 5;
   optional uint64 lease_end = 6;

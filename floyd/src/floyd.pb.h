@@ -208,24 +208,17 @@ class Entry : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .floyd.Entry.OpType optype = 1;
-  inline bool has_optype() const;
-  inline void clear_optype();
-  static const int kOptypeFieldNumber = 1;
-  inline ::floyd::Entry_OpType optype() const;
-  inline void set_optype(::floyd::Entry_OpType value);
-
-  // optional uint64 term = 2;
+  // optional uint64 term = 1;
   inline bool has_term() const;
   inline void clear_term();
-  static const int kTermFieldNumber = 2;
+  static const int kTermFieldNumber = 1;
   inline ::google::protobuf::uint64 term() const;
   inline void set_term(::google::protobuf::uint64 value);
 
-  // optional string key = 3;
+  // optional string key = 2;
   inline bool has_key() const;
   inline void clear_key();
-  static const int kKeyFieldNumber = 3;
+  static const int kKeyFieldNumber = 2;
   inline const ::std::string& key() const;
   inline void set_key(const ::std::string& value);
   inline void set_key(const char* value);
@@ -234,10 +227,10 @@ class Entry : public ::google::protobuf::Message {
   inline ::std::string* release_key();
   inline void set_allocated_key(::std::string* key);
 
-  // optional bytes value = 4;
+  // optional bytes value = 3;
   inline bool has_value() const;
   inline void clear_value();
-  static const int kValueFieldNumber = 4;
+  static const int kValueFieldNumber = 3;
   inline const ::std::string& value() const;
   inline void set_value(const ::std::string& value);
   inline void set_value(const char* value);
@@ -245,6 +238,13 @@ class Entry : public ::google::protobuf::Message {
   inline ::std::string* mutable_value();
   inline ::std::string* release_value();
   inline void set_allocated_value(::std::string* value);
+
+  // required .floyd.Entry.OpType optype = 4;
+  inline bool has_optype() const;
+  inline void clear_optype();
+  static const int kOptypeFieldNumber = 4;
+  inline ::floyd::Entry_OpType optype() const;
+  inline void set_optype(::floyd::Entry_OpType value);
 
   // optional bytes holder = 5;
   inline bool has_holder() const;
@@ -279,14 +279,14 @@ class Entry : public ::google::protobuf::Message {
 
   // @@protoc_insertion_point(class_scope:floyd.Entry)
  private:
-  inline void set_has_optype();
-  inline void clear_has_optype();
   inline void set_has_term();
   inline void clear_has_term();
   inline void set_has_key();
   inline void clear_has_key();
   inline void set_has_value();
   inline void clear_has_value();
+  inline void set_has_optype();
+  inline void clear_has_optype();
   inline void set_has_holder();
   inline void clear_has_holder();
   inline void set_has_lease_end();
@@ -2091,38 +2091,15 @@ class Membership : public ::google::protobuf::Message {
 
 // Entry
 
-// required .floyd.Entry.OpType optype = 1;
-inline bool Entry::has_optype() const {
+// optional uint64 term = 1;
+inline bool Entry::has_term() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void Entry::set_has_optype() {
+inline void Entry::set_has_term() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void Entry::clear_has_optype() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void Entry::clear_optype() {
-  optype_ = 0;
-  clear_has_optype();
-}
-inline ::floyd::Entry_OpType Entry::optype() const {
-  return static_cast< ::floyd::Entry_OpType >(optype_);
-}
-inline void Entry::set_optype(::floyd::Entry_OpType value) {
-  assert(::floyd::Entry_OpType_IsValid(value));
-  set_has_optype();
-  optype_ = value;
-}
-
-// optional uint64 term = 2;
-inline bool Entry::has_term() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void Entry::set_has_term() {
-  _has_bits_[0] |= 0x00000002u;
-}
 inline void Entry::clear_has_term() {
-  _has_bits_[0] &= ~0x00000002u;
+  _has_bits_[0] &= ~0x00000001u;
 }
 inline void Entry::clear_term() {
   term_ = GOOGLE_ULONGLONG(0);
@@ -2136,15 +2113,15 @@ inline void Entry::set_term(::google::protobuf::uint64 value) {
   term_ = value;
 }
 
-// optional string key = 3;
+// optional string key = 2;
 inline bool Entry::has_key() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000002u) != 0;
 }
 inline void Entry::set_has_key() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000002u;
 }
 inline void Entry::clear_has_key() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void Entry::clear_key() {
   if (key_ != &::google::protobuf::internal::kEmptyString) {
@@ -2206,15 +2183,15 @@ inline void Entry::set_allocated_key(::std::string* key) {
   }
 }
 
-// optional bytes value = 4;
+// optional bytes value = 3;
 inline bool Entry::has_value() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
 inline void Entry::set_has_value() {
-  _has_bits_[0] |= 0x00000008u;
+  _has_bits_[0] |= 0x00000004u;
 }
 inline void Entry::clear_has_value() {
-  _has_bits_[0] &= ~0x00000008u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void Entry::clear_value() {
   if (value_ != &::google::protobuf::internal::kEmptyString) {
@@ -2274,6 +2251,29 @@ inline void Entry::set_allocated_value(::std::string* value) {
     clear_has_value();
     value_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
+}
+
+// required .floyd.Entry.OpType optype = 4;
+inline bool Entry::has_optype() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void Entry::set_has_optype() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void Entry::clear_has_optype() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void Entry::clear_optype() {
+  optype_ = 0;
+  clear_has_optype();
+}
+inline ::floyd::Entry_OpType Entry::optype() const {
+  return static_cast< ::floyd::Entry_OpType >(optype_);
+}
+inline void Entry::set_optype(::floyd::Entry_OpType value) {
+  assert(::floyd::Entry_OpType_IsValid(value));
+  set_has_optype();
+  optype_ = value;
 }
 
 // optional bytes holder = 5;

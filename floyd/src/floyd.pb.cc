@@ -83,10 +83,10 @@ void protobuf_AssignDesc_floyd_2eproto() {
   GOOGLE_CHECK(file != NULL);
   Entry_descriptor_ = file->message_type(0);
   static const int Entry_offsets_[7] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Entry, optype_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Entry, term_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Entry, key_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Entry, value_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Entry, optype_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Entry, holder_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Entry, lease_end_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Entry, server_),
@@ -462,9 +462,9 @@ void protobuf_AddDesc_floyd_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\013floyd.proto\022\005floyd\"\365\001\n\005Entry\022#\n\006optype"
-    "\030\001 \002(\0162\023.floyd.Entry.OpType\022\014\n\004term\030\002 \001("
-    "\004\022\013\n\003key\030\003 \001(\t\022\r\n\005value\030\004 \001(\014\022\016\n\006holder\030"
+    "\n\013floyd.proto\022\005floyd\"\365\001\n\005Entry\022\014\n\004term\030\001"
+    " \001(\004\022\013\n\003key\030\002 \001(\t\022\r\n\005value\030\003 \001(\014\022#\n\006opty"
+    "pe\030\004 \002(\0162\023.floyd.Entry.OpType\022\016\n\006holder\030"
     "\005 \001(\014\022\021\n\tlease_end\030\006 \001(\004\022\016\n\006server\030\007 \001(\014"
     "\"j\n\006OpType\022\t\n\005kRead\020\000\022\n\n\006kWrite\020\001\022\013\n\007kDe"
     "lete\020\002\022\014\n\010kTryLock\020\004\022\013\n\007kUnLock\020\005\022\016\n\nkAd"
@@ -635,10 +635,10 @@ const Entry_OpType Entry::OpType_MAX;
 const int Entry::OpType_ARRAYSIZE;
 #endif  // _MSC_VER
 #ifndef _MSC_VER
-const int Entry::kOptypeFieldNumber;
 const int Entry::kTermFieldNumber;
 const int Entry::kKeyFieldNumber;
 const int Entry::kValueFieldNumber;
+const int Entry::kOptypeFieldNumber;
 const int Entry::kHolderFieldNumber;
 const int Entry::kLeaseEndFieldNumber;
 const int Entry::kServerFieldNumber;
@@ -660,10 +660,10 @@ Entry::Entry(const Entry& from)
 
 void Entry::SharedCtor() {
   _cached_size_ = 0;
-  optype_ = 0;
   term_ = GOOGLE_ULONGLONG(0);
   key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   value_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  optype_ = 0;
   holder_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   lease_end_ = GOOGLE_ULONGLONG(0);
   server_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
@@ -714,7 +714,6 @@ Entry* Entry::New() const {
 
 void Entry::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    optype_ = 0;
     term_ = GOOGLE_ULONGLONG(0);
     if (has_key()) {
       if (key_ != &::google::protobuf::internal::kEmptyString) {
@@ -726,6 +725,7 @@ void Entry::Clear() {
         value_->clear();
       }
     }
+    optype_ = 0;
     if (has_holder()) {
       if (holder_ != &::google::protobuf::internal::kEmptyString) {
         holder_->clear();
@@ -748,31 +748,10 @@ bool Entry::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required .floyd.Entry.OpType optype = 1;
+      // optional uint64 term = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          if (::floyd::Entry_OpType_IsValid(value)) {
-            set_optype(static_cast< ::floyd::Entry_OpType >(value));
-          } else {
-            mutable_unknown_fields()->AddVarint(1, value);
-          }
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(16)) goto parse_term;
-        break;
-      }
-
-      // optional uint64 term = 2;
-      case 2: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_term:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
                  input, &term_)));
@@ -780,12 +759,12 @@ bool Entry::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(26)) goto parse_key;
+        if (input->ExpectTag(18)) goto parse_key;
         break;
       }
 
-      // optional string key = 3;
-      case 3: {
+      // optional string key = 2;
+      case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_key:
@@ -797,17 +776,38 @@ bool Entry::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(34)) goto parse_value;
+        if (input->ExpectTag(26)) goto parse_value;
         break;
       }
 
-      // optional bytes value = 4;
-      case 4: {
+      // optional bytes value = 3;
+      case 3: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_value:
           DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
                 input, this->mutable_value()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(32)) goto parse_optype;
+        break;
+      }
+
+      // required .floyd.Entry.OpType optype = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_optype:
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          if (::floyd::Entry_OpType_IsValid(value)) {
+            set_optype(static_cast< ::floyd::Entry_OpType >(value));
+          } else {
+            mutable_unknown_fields()->AddVarint(4, value);
+          }
         } else {
           goto handle_uninterpreted;
         }
@@ -877,30 +877,30 @@ bool Entry::MergePartialFromCodedStream(
 
 void Entry::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // required .floyd.Entry.OpType optype = 1;
-  if (has_optype()) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      1, this->optype(), output);
-  }
-
-  // optional uint64 term = 2;
+  // optional uint64 term = 1;
   if (has_term()) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt64(2, this->term(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(1, this->term(), output);
   }
 
-  // optional string key = 3;
+  // optional string key = 2;
   if (has_key()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8String(
       this->key().data(), this->key().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE);
     ::google::protobuf::internal::WireFormatLite::WriteString(
-      3, this->key(), output);
+      2, this->key(), output);
   }
 
-  // optional bytes value = 4;
+  // optional bytes value = 3;
   if (has_value()) {
     ::google::protobuf::internal::WireFormatLite::WriteBytes(
-      4, this->value(), output);
+      3, this->value(), output);
+  }
+
+  // required .floyd.Entry.OpType optype = 4;
+  if (has_optype()) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      4, this->optype(), output);
   }
 
   // optional bytes holder = 5;
@@ -928,32 +928,32 @@ void Entry::SerializeWithCachedSizes(
 
 ::google::protobuf::uint8* Entry::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // required .floyd.Entry.OpType optype = 1;
-  if (has_optype()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      1, this->optype(), target);
-  }
-
-  // optional uint64 term = 2;
+  // optional uint64 term = 1;
   if (has_term()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(2, this->term(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(1, this->term(), target);
   }
 
-  // optional string key = 3;
+  // optional string key = 2;
   if (has_key()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8String(
       this->key().data(), this->key().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE);
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        3, this->key(), target);
+        2, this->key(), target);
   }
 
-  // optional bytes value = 4;
+  // optional bytes value = 3;
   if (has_value()) {
     target =
       ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-        4, this->value(), target);
+        3, this->value(), target);
+  }
+
+  // required .floyd.Entry.OpType optype = 4;
+  if (has_optype()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
+      4, this->optype(), target);
   }
 
   // optional bytes holder = 5;
@@ -986,31 +986,31 @@ int Entry::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required .floyd.Entry.OpType optype = 1;
-    if (has_optype()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::EnumSize(this->optype());
-    }
-
-    // optional uint64 term = 2;
+    // optional uint64 term = 1;
     if (has_term()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::UInt64Size(
           this->term());
     }
 
-    // optional string key = 3;
+    // optional string key = 2;
     if (has_key()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
           this->key());
     }
 
-    // optional bytes value = 4;
+    // optional bytes value = 3;
     if (has_value()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::BytesSize(
           this->value());
+    }
+
+    // required .floyd.Entry.OpType optype = 4;
+    if (has_optype()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::EnumSize(this->optype());
     }
 
     // optional bytes holder = 5;
@@ -1061,9 +1061,6 @@ void Entry::MergeFrom(const ::google::protobuf::Message& from) {
 void Entry::MergeFrom(const Entry& from) {
   GOOGLE_CHECK_NE(&from, this);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_optype()) {
-      set_optype(from.optype());
-    }
     if (from.has_term()) {
       set_term(from.term());
     }
@@ -1072,6 +1069,9 @@ void Entry::MergeFrom(const Entry& from) {
     }
     if (from.has_value()) {
       set_value(from.value());
+    }
+    if (from.has_optype()) {
+      set_optype(from.optype());
     }
     if (from.has_holder()) {
       set_holder(from.holder());
@@ -1099,17 +1099,17 @@ void Entry::CopyFrom(const Entry& from) {
 }
 
 bool Entry::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
+  if ((_has_bits_[0] & 0x00000008) != 0x00000008) return false;
 
   return true;
 }
 
 void Entry::Swap(Entry* other) {
   if (other != this) {
-    std::swap(optype_, other->optype_);
     std::swap(term_, other->term_);
     std::swap(key_, other->key_);
     std::swap(value_, other->value_);
+    std::swap(optype_, other->optype_);
     std::swap(holder_, other->holder_);
     std::swap(lease_end_, other->lease_end_);
     std::swap(server_, other->server_);
