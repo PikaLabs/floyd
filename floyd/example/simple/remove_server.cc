@@ -15,6 +15,20 @@ uint64_t NowMicros() {
   return static_cast<uint64_t>(tv.tv_sec) * 1000000 + tv.tv_usec;
 }
 
+bool print_members(Floyd* f) {
+  std::set<std::string> nodes;
+  Status s = f->GetAllServers(&nodes);
+  if (!s.ok()) {
+    return false;
+  }
+  printf("Membership: ");
+  for (const std::string& n : nodes) {
+    printf(" %s", n.c_str());
+  }
+  printf("\n");
+  return true;
+}
+
 int main()
 {
   slash::Status s;
@@ -44,9 +58,7 @@ int main()
   std::string msg;
 
   while (1) {
-    if (f1->HasLeader()) {
-      f1->GetServerStatus(&msg);
-      printf("%s\n", msg.c_str());
+    if (print_members(f1)) {
       break;
     }
     printf("electing leader... sleep 2s\n");
@@ -74,9 +86,7 @@ int main()
   printf("Remove out server4 status %s\n", s.ToString().c_str());
 
   while (1) {
-    if (f1->HasLeader()) {
-      f1->GetServerStatus(&msg);
-      printf("%s\n", msg.c_str());
+    if (print_members(f1)) {
       break;
     }
     printf("electing leader after server 4 leave the cluster... sleep 2s\n");
@@ -97,9 +107,7 @@ int main()
   delete f5;
   printf("Remove out server5 status %s\n", s.ToString().c_str());
   while (1) {
-    if (f1->HasLeader()) {
-      f1->GetServerStatus(&msg);
-      printf("%s\n", msg.c_str());
+    if (print_members(f1)) {
       break;
     }
     printf("electing leader after server 5 leave the cluster... sleep 2s\n");

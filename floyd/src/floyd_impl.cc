@@ -87,6 +87,10 @@ static void BuildRemoveServerRequest(const std::string& old_server, CmdRequest* 
   remove_server_request->set_old_server(old_server);
 }
 
+static void BuildGetAllServersRequest(CmdRequest* cmd) {
+  cmd->set_type(Type::kGetAllServers);
+}
+
 static void BuildRequestVoteResponse(uint64_t term, bool granted,
                                      CmdResponse* response) {
   response->set_type(Type::kRequestVote);
@@ -130,6 +134,8 @@ static void BuildLogEntry(const CmdRequest& cmd, uint64_t current_term, Entry* e
   } else if (cmd.type() == Type::kRemoveServer) {
     entry->set_optype(Entry_OpType_kRemoveServer);
     entry->set_server(cmd.remove_server_request().old_server());
+  } else if (cmd.type() == Type::kGetAllServers) {
+    entry->set_optype(Entry_OpType_kGetAllServers);
   }
 }
 
@@ -201,11 +207,6 @@ bool FloydImpl::HasLeader() {
   if (context_->leader_ip == "" || context_->leader_port == 0) {
     return false;
   }
-  return true;
-}
-
-bool FloydImpl::GetAllNodes(std::set<std::string>* nodes) {
-  *nodes = context_->members;
   return true;
 }
 
@@ -494,6 +495,25 @@ Status FloydImpl::RemoveServer(const std::string& old_server) {
   return Status::Corruption("RemoveServer Error");
 }
 
+Status FloydImpl::GetAllServers(std::set<std::string>* nodes) {
+  CmdRequest request;
+  BuildGetAllServersRequest(&request);
+  CmdResponse response;
+  Status s = DoCommand(request, &response);
+  if (!s.ok()) {
+    return s;
+  }
+  if (response.code() == StatusCode::kOk) {
+    nodes->clear();
+    for (int i = 0; i < response.all_servers().nodes_size(); i++) {
+      nodes->insert(response.all_servers().nodes(i));
+    }
+    return Status::OK();
+  }
+  return Status::Corruption("GetALlServers Error");
+}
+
+
 bool FloydImpl::GetServerStatus(std::string* msg) {
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::GetServerStatus start");
   slash::MutexLock l(&context_->global_mu);
@@ -709,6 +729,16 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& request,
       response->set_code(StatusCode::kOk);
       break;
     case Type::kRemoveServer:
+      response->set_code(StatusCode::kOk);
+      break;
+    case Type::kGetAllServers:
+      rs = db_->Get(rocksdb::ReadOptions(), kMemberConfigKey, &value);
+      if (!rs.ok()) {
+        return Status::Corruption(rs.ToString());
+      }
+      if(!response->mutable_all_servers()->ParseFromString(value)) {
+        return Status::Corruption("Parse failed");
+      }
       response->set_code(StatusCode::kOk);
       break;
     default:

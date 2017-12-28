@@ -247,7 +247,7 @@ void protobuf_AssignDesc_floyd_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(CmdRequest_ServerStatus));
   CmdResponse_descriptor_ = file->message_type(2);
-  static const int CmdResponse_offsets_[7] = {
+  static const int CmdResponse_offsets_[8] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdResponse, type_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdResponse, code_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdResponse, request_vote_res_),
@@ -255,6 +255,7 @@ void protobuf_AssignDesc_floyd_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdResponse, msg_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdResponse, kv_response_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdResponse, server_status_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(CmdResponse, all_servers_),
   };
   CmdResponse_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -462,63 +463,65 @@ void protobuf_AddDesc_floyd_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\013floyd.proto\022\005floyd\"\365\001\n\005Entry\022\014\n\004term\030\001"
+    "\n\013floyd.proto\022\005floyd\"\211\002\n\005Entry\022\014\n\004term\030\001"
     " \001(\004\022\013\n\003key\030\002 \001(\t\022\r\n\005value\030\003 \001(\014\022#\n\006opty"
     "pe\030\004 \002(\0162\023.floyd.Entry.OpType\022\016\n\006holder\030"
     "\005 \001(\014\022\021\n\tlease_end\030\006 \001(\004\022\016\n\006server\030\007 \001(\014"
-    "\"j\n\006OpType\022\t\n\005kRead\020\000\022\n\n\006kWrite\020\001\022\013\n\007kDe"
+    "\"~\n\006OpType\022\t\n\005kRead\020\000\022\n\n\006kWrite\020\001\022\013\n\007kDe"
     "lete\020\002\022\014\n\010kTryLock\020\004\022\013\n\007kUnLock\020\005\022\016\n\nkAd"
-    "dServer\020\006\022\021\n\rkRemoveServer\020\007\"\307\007\n\nCmdRequ"
-    "est\022\031\n\004type\030\001 \002(\0162\013.floyd.Type\0223\n\014reques"
-    "t_vote\030\002 \001(\0132\035.floyd.CmdRequest.RequestV"
-    "ote\0227\n\016append_entries\030\003 \001(\0132\037.floyd.CmdR"
-    "equest.AppendEntries\022/\n\nkv_request\030\004 \001(\013"
-    "2\033.floyd.CmdRequest.KvRequest\0223\n\014lock_re"
-    "quest\030\005 \001(\0132\035.floyd.CmdRequest.LockReque"
-    "st\022>\n\022add_server_request\030\007 \001(\0132\".floyd.C"
-    "mdRequest.AddServerRequest\022D\n\025remove_ser"
-    "ver_request\030\010 \001(\0132%.floyd.CmdRequest.Rem"
-    "oveServerRequest\0225\n\rserver_status\030\006 \001(\0132"
-    "\036.floyd.CmdRequest.ServerStatus\032d\n\013Reque"
-    "stVote\022\014\n\004term\030\001 \002(\004\022\n\n\002ip\030\002 \002(\014\022\014\n\004port"
-    "\030\003 \002(\005\022\026\n\016last_log_index\030\004 \002(\004\022\025\n\rlast_l"
-    "og_term\030\005 \002(\004\032\234\001\n\rAppendEntries\022\014\n\004term\030"
-    "\001 \002(\004\022\n\n\002ip\030\002 \002(\014\022\014\n\004port\030\003 \002(\005\022\026\n\016prev_"
-    "log_index\030\004 \002(\004\022\025\n\rprev_log_term\030\005 \002(\004\022\025"
-    "\n\rleader_commit\030\006 \002(\004\022\035\n\007entries\030\007 \003(\0132\014"
-    ".floyd.Entry\032\'\n\tKvRequest\022\013\n\003key\030\001 \002(\014\022\r"
-    "\n\005value\030\002 \001(\014\032>\n\013LockRequest\022\014\n\004name\030\001 \002"
-    "(\014\022\016\n\006holder\030\002 \002(\014\022\021\n\tlease_end\030\003 \001(\004\032&\n"
-    "\020AddServerRequest\022\022\n\nnew_server\030\001 \002(\014\032)\n"
-    "\023RemoveServerRequest\022\022\n\nold_server\030\001 \002(\014"
-    "\032L\n\014ServerStatus\022\014\n\004term\030\001 \002(\003\022\024\n\014commit"
-    "_index\030\002 \002(\003\022\n\n\002ip\030\003 \001(\014\022\014\n\004port\030\004 \001(\005\"\320"
-    "\005\n\013CmdResponse\022\031\n\004type\030\001 \002(\0162\013.floyd.Typ"
-    "e\022\037\n\004code\030\002 \001(\0162\021.floyd.StatusCode\022@\n\020re"
-    "quest_vote_res\030\003 \001(\0132&.floyd.CmdResponse"
-    ".RequestVoteResponse\022D\n\022append_entries_r"
-    "es\030\004 \001(\0132(.floyd.CmdResponse.AppendEntri"
-    "esResponse\022\013\n\003msg\030\005 \001(\014\0222\n\013kv_response\030\006"
-    " \001(\0132\035.floyd.CmdResponse.KvResponse\0226\n\rs"
-    "erver_status\030\007 \001(\0132\037.floyd.CmdResponse.S"
-    "erverStatus\0329\n\023RequestVoteResponse\022\014\n\004te"
-    "rm\030\001 \002(\004\022\024\n\014vote_granted\030\002 \002(\010\032N\n\025Append"
-    "EntriesResponse\022\014\n\004term\030\001 \002(\004\022\017\n\007success"
-    "\030\002 \002(\010\022\026\n\016last_log_index\030\003 \001(\004\032\033\n\nKvResp"
-    "onse\022\r\n\005value\030\001 \001(\014\032\333\001\n\014ServerStatus\022\014\n\004"
-    "term\030\001 \002(\004\022\024\n\014commit_index\030\002 \002(\004\022\014\n\004role"
-    "\030\003 \002(\014\022\021\n\tleader_ip\030\004 \001(\014\022\023\n\013leader_port"
-    "\030\005 \001(\005\022\024\n\014voted_for_ip\030\006 \001(\014\022\026\n\016voted_fo"
-    "r_port\030\007 \001(\005\022\025\n\rlast_log_term\030\010 \001(\004\022\026\n\016l"
-    "ast_log_index\030\t \001(\004\022\024\n\014last_applied\030\n \001("
-    "\004\")\n\004Lock\022\016\n\006holder\030\001 \002(\014\022\021\n\tlease_end\030\002"
-    " \002(\004\"\033\n\nMembership\022\r\n\005nodes\030\001 \003(\014*\241\001\n\004Ty"
-    "pe\022\t\n\005kRead\020\000\022\n\n\006kWrite\020\001\022\013\n\007kDelete\020\003\022\014"
-    "\n\010kTryLock\020\005\022\013\n\007kUnLock\020\006\022\016\n\nkAddServer\020"
-    "\013\022\021\n\rkRemoveServer\020\014\022\020\n\014kRequestVote\020\010\022\022"
+    "dServer\020\006\022\021\n\rkRemoveServer\020\007\022\022\n\016kGetAllS"
+    "ervers\020\010\"\307\007\n\nCmdRequest\022\031\n\004type\030\001 \002(\0162\013."
+    "floyd.Type\0223\n\014request_vote\030\002 \001(\0132\035.floyd"
+    ".CmdRequest.RequestVote\0227\n\016append_entrie"
+    "s\030\003 \001(\0132\037.floyd.CmdRequest.AppendEntries"
+    "\022/\n\nkv_request\030\004 \001(\0132\033.floyd.CmdRequest."
+    "KvRequest\0223\n\014lock_request\030\005 \001(\0132\035.floyd."
+    "CmdRequest.LockRequest\022>\n\022add_server_req"
+    "uest\030\007 \001(\0132\".floyd.CmdRequest.AddServerR"
+    "equest\022D\n\025remove_server_request\030\010 \001(\0132%."
+    "floyd.CmdRequest.RemoveServerRequest\0225\n\r"
+    "server_status\030\006 \001(\0132\036.floyd.CmdRequest.S"
+    "erverStatus\032d\n\013RequestVote\022\014\n\004term\030\001 \002(\004"
+    "\022\n\n\002ip\030\002 \002(\014\022\014\n\004port\030\003 \002(\005\022\026\n\016last_log_i"
+    "ndex\030\004 \002(\004\022\025\n\rlast_log_term\030\005 \002(\004\032\234\001\n\rAp"
+    "pendEntries\022\014\n\004term\030\001 \002(\004\022\n\n\002ip\030\002 \002(\014\022\014\n"
+    "\004port\030\003 \002(\005\022\026\n\016prev_log_index\030\004 \002(\004\022\025\n\rp"
+    "rev_log_term\030\005 \002(\004\022\025\n\rleader_commit\030\006 \002("
+    "\004\022\035\n\007entries\030\007 \003(\0132\014.floyd.Entry\032\'\n\tKvRe"
+    "quest\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 \001(\014\032>\n\013Loc"
+    "kRequest\022\014\n\004name\030\001 \002(\014\022\016\n\006holder\030\002 \002(\014\022\021"
+    "\n\tlease_end\030\003 \001(\004\032&\n\020AddServerRequest\022\022\n"
+    "\nnew_server\030\001 \002(\014\032)\n\023RemoveServerRequest"
+    "\022\022\n\nold_server\030\001 \002(\014\032L\n\014ServerStatus\022\014\n\004"
+    "term\030\001 \002(\003\022\024\n\014commit_index\030\002 \002(\003\022\n\n\002ip\030\003"
+    " \001(\014\022\014\n\004port\030\004 \001(\005\"\370\005\n\013CmdResponse\022\031\n\004ty"
+    "pe\030\001 \002(\0162\013.floyd.Type\022\037\n\004code\030\002 \001(\0162\021.fl"
+    "oyd.StatusCode\022@\n\020request_vote_res\030\003 \001(\013"
+    "2&.floyd.CmdResponse.RequestVoteResponse"
+    "\022D\n\022append_entries_res\030\004 \001(\0132(.floyd.Cmd"
+    "Response.AppendEntriesResponse\022\013\n\003msg\030\005 "
+    "\001(\014\0222\n\013kv_response\030\006 \001(\0132\035.floyd.CmdResp"
+    "onse.KvResponse\0226\n\rserver_status\030\007 \001(\0132\037"
+    ".floyd.CmdResponse.ServerStatus\022&\n\013all_s"
+    "ervers\030\010 \001(\0132\021.floyd.Membership\0329\n\023Reque"
+    "stVoteResponse\022\014\n\004term\030\001 \002(\004\022\024\n\014vote_gra"
+    "nted\030\002 \002(\010\032N\n\025AppendEntriesResponse\022\014\n\004t"
+    "erm\030\001 \002(\004\022\017\n\007success\030\002 \002(\010\022\026\n\016last_log_i"
+    "ndex\030\003 \001(\004\032\033\n\nKvResponse\022\r\n\005value\030\001 \001(\014\032"
+    "\333\001\n\014ServerStatus\022\014\n\004term\030\001 \002(\004\022\024\n\014commit"
+    "_index\030\002 \002(\004\022\014\n\004role\030\003 \002(\014\022\021\n\tleader_ip\030"
+    "\004 \001(\014\022\023\n\013leader_port\030\005 \001(\005\022\024\n\014voted_for_"
+    "ip\030\006 \001(\014\022\026\n\016voted_for_port\030\007 \001(\005\022\025\n\rlast"
+    "_log_term\030\010 \001(\004\022\026\n\016last_log_index\030\t \001(\004\022"
+    "\024\n\014last_applied\030\n \001(\004\")\n\004Lock\022\016\n\006holder\030"
+    "\001 \002(\014\022\021\n\tlease_end\030\002 \002(\004\"\033\n\nMembership\022\r"
+    "\n\005nodes\030\001 \003(\014*\265\001\n\004Type\022\t\n\005kRead\020\000\022\n\n\006kWr"
+    "ite\020\001\022\013\n\007kDelete\020\003\022\014\n\010kTryLock\020\005\022\013\n\007kUnL"
+    "ock\020\006\022\016\n\nkAddServer\020\013\022\021\n\rkRemoveServer\020\014"
+    "\022\022\n\016kGetAllServers\020\r\022\020\n\014kRequestVote\020\010\022\022"
     "\n\016kAppendEntries\020\t\022\021\n\rkServerStatus\020\n*=\n"
     "\nStatusCode\022\007\n\003kOk\020\000\022\r\n\tkNotFound\020\001\022\n\n\006k"
-    "Error\020\002\022\013\n\007kLocked\020\003", 2260);
+    "Error\020\002\022\013\n\007kLocked\020\003", 2340);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "floyd.proto", &protobuf_RegisterTypes);
   Entry::default_instance_ = new Entry();
@@ -578,6 +581,7 @@ bool Type_IsValid(int value) {
     case 10:
     case 11:
     case 12:
+    case 13:
       return true;
     default:
       return false;
@@ -616,6 +620,7 @@ bool Entry_OpType_IsValid(int value) {
     case 5:
     case 6:
     case 7:
+    case 8:
       return true;
     default:
       return false;
@@ -630,6 +635,7 @@ const Entry_OpType Entry::kTryLock;
 const Entry_OpType Entry::kUnLock;
 const Entry_OpType Entry::kAddServer;
 const Entry_OpType Entry::kRemoveServer;
+const Entry_OpType Entry::kGetAllServers;
 const Entry_OpType Entry::OpType_MIN;
 const Entry_OpType Entry::OpType_MAX;
 const int Entry::OpType_ARRAYSIZE;
@@ -5216,6 +5222,7 @@ const int CmdResponse::kAppendEntriesResFieldNumber;
 const int CmdResponse::kMsgFieldNumber;
 const int CmdResponse::kKvResponseFieldNumber;
 const int CmdResponse::kServerStatusFieldNumber;
+const int CmdResponse::kAllServersFieldNumber;
 #endif  // !_MSC_VER
 
 CmdResponse::CmdResponse()
@@ -5228,6 +5235,7 @@ void CmdResponse::InitAsDefaultInstance() {
   append_entries_res_ = const_cast< ::floyd::CmdResponse_AppendEntriesResponse*>(&::floyd::CmdResponse_AppendEntriesResponse::default_instance());
   kv_response_ = const_cast< ::floyd::CmdResponse_KvResponse*>(&::floyd::CmdResponse_KvResponse::default_instance());
   server_status_ = const_cast< ::floyd::CmdResponse_ServerStatus*>(&::floyd::CmdResponse_ServerStatus::default_instance());
+  all_servers_ = const_cast< ::floyd::Membership*>(&::floyd::Membership::default_instance());
 }
 
 CmdResponse::CmdResponse(const CmdResponse& from)
@@ -5245,6 +5253,7 @@ void CmdResponse::SharedCtor() {
   msg_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   kv_response_ = NULL;
   server_status_ = NULL;
+  all_servers_ = NULL;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -5261,6 +5270,7 @@ void CmdResponse::SharedDtor() {
     delete append_entries_res_;
     delete kv_response_;
     delete server_status_;
+    delete all_servers_;
   }
 }
 
@@ -5305,6 +5315,9 @@ void CmdResponse::Clear() {
     }
     if (has_server_status()) {
       if (server_status_ != NULL) server_status_->::floyd::CmdResponse_ServerStatus::Clear();
+    }
+    if (has_all_servers()) {
+      if (all_servers_ != NULL) all_servers_->::floyd::Membership::Clear();
     }
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
@@ -5424,6 +5437,20 @@ bool CmdResponse::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(66)) goto parse_all_servers;
+        break;
+      }
+
+      // optional .floyd.Membership all_servers = 8;
+      case 8: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_all_servers:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_all_servers()));
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -5488,6 +5515,12 @@ void CmdResponse::SerializeWithCachedSizes(
       7, this->server_status(), output);
   }
 
+  // optional .floyd.Membership all_servers = 8;
+  if (has_all_servers()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      8, this->all_servers(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -5541,6 +5574,13 @@ void CmdResponse::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
         7, this->server_status(), target);
+  }
+
+  // optional .floyd.Membership all_servers = 8;
+  if (has_all_servers()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        8, this->all_servers(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -5601,6 +5641,13 @@ int CmdResponse::ByteSize() const {
           this->server_status());
     }
 
+    // optional .floyd.Membership all_servers = 8;
+    if (has_all_servers()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->all_servers());
+    }
+
   }
   if (!unknown_fields().empty()) {
     total_size +=
@@ -5649,6 +5696,9 @@ void CmdResponse::MergeFrom(const CmdResponse& from) {
     if (from.has_server_status()) {
       mutable_server_status()->::floyd::CmdResponse_ServerStatus::MergeFrom(from.server_status());
     }
+    if (from.has_all_servers()) {
+      mutable_all_servers()->::floyd::Membership::MergeFrom(from.all_servers());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -5689,6 +5739,7 @@ void CmdResponse::Swap(CmdResponse* other) {
     std::swap(msg_, other->msg_);
     std::swap(kv_response_, other->kv_response_);
     std::swap(server_status_, other->server_status_);
+    std::swap(all_servers_, other->all_servers_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

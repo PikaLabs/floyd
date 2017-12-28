@@ -178,6 +178,9 @@ rocksdb::Status FloydApply::Apply(const Entry& entry) {
       LOGV(INFO_LEVEL, info_log_, "FloydApply::Apply Remove server %s to cluster",
           entry.server().c_str());
       break;
+    case Entry_OpType_kGetAllServers:
+      ret = rocksdb::Status::OK();
+      break;
     default:
       ret = rocksdb::Status::Corruption("Unknown entry type");
   }

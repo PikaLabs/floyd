@@ -80,6 +80,10 @@ int FloydWorkerConn::DealMessage() {
       response_.set_type(Type::kRemoveServer);
       floyd_->DoCommand(request_, &response_);
       break;
+    case Type::kGetAllServers:
+      response_.set_type(Type::kGetAllServers);
+      floyd_->DoCommand(request_, &response_);
+      break;
     case Type::kRequestVote:
       response_.set_type(Type::kRequestVote);
       floyd_->ReplyRequestVote(request_, &response_);

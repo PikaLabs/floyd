@@ -58,11 +58,12 @@ enum Entry_OpType {
   Entry_OpType_kTryLock = 4,
   Entry_OpType_kUnLock = 5,
   Entry_OpType_kAddServer = 6,
-  Entry_OpType_kRemoveServer = 7
+  Entry_OpType_kRemoveServer = 7,
+  Entry_OpType_kGetAllServers = 8
 };
 bool Entry_OpType_IsValid(int value);
 const Entry_OpType Entry_OpType_OpType_MIN = Entry_OpType_kRead;
-const Entry_OpType Entry_OpType_OpType_MAX = Entry_OpType_kRemoveServer;
+const Entry_OpType Entry_OpType_OpType_MAX = Entry_OpType_kGetAllServers;
 const int Entry_OpType_OpType_ARRAYSIZE = Entry_OpType_OpType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* Entry_OpType_descriptor();
@@ -83,13 +84,14 @@ enum Type {
   kUnLock = 6,
   kAddServer = 11,
   kRemoveServer = 12,
+  kGetAllServers = 13,
   kRequestVote = 8,
   kAppendEntries = 9,
   kServerStatus = 10
 };
 bool Type_IsValid(int value);
 const Type Type_MIN = kRead;
-const Type Type_MAX = kRemoveServer;
+const Type Type_MAX = kGetAllServers;
 const int Type_ARRAYSIZE = Type_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* Type_descriptor();
@@ -185,6 +187,7 @@ class Entry : public ::google::protobuf::Message {
   static const OpType kUnLock = Entry_OpType_kUnLock;
   static const OpType kAddServer = Entry_OpType_kAddServer;
   static const OpType kRemoveServer = Entry_OpType_kRemoveServer;
+  static const OpType kGetAllServers = Entry_OpType_kGetAllServers;
   static inline bool OpType_IsValid(int value) {
     return Entry_OpType_IsValid(value);
   }
@@ -1861,6 +1864,15 @@ class CmdResponse : public ::google::protobuf::Message {
   inline ::floyd::CmdResponse_ServerStatus* release_server_status();
   inline void set_allocated_server_status(::floyd::CmdResponse_ServerStatus* server_status);
 
+  // optional .floyd.Membership all_servers = 8;
+  inline bool has_all_servers() const;
+  inline void clear_all_servers();
+  static const int kAllServersFieldNumber = 8;
+  inline const ::floyd::Membership& all_servers() const;
+  inline ::floyd::Membership* mutable_all_servers();
+  inline ::floyd::Membership* release_all_servers();
+  inline void set_allocated_all_servers(::floyd::Membership* all_servers);
+
   // @@protoc_insertion_point(class_scope:floyd.CmdResponse)
  private:
   inline void set_has_type();
@@ -1877,6 +1889,8 @@ class CmdResponse : public ::google::protobuf::Message {
   inline void clear_has_kv_response();
   inline void set_has_server_status();
   inline void clear_has_server_status();
+  inline void set_has_all_servers();
+  inline void clear_has_all_servers();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -1887,9 +1901,10 @@ class CmdResponse : public ::google::protobuf::Message {
   ::std::string* msg_;
   ::floyd::CmdResponse_KvResponse* kv_response_;
   ::floyd::CmdResponse_ServerStatus* server_status_;
+  ::floyd::Membership* all_servers_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
 
   friend void  protobuf_AddDesc_floyd_2eproto();
   friend void protobuf_AssignDesc_floyd_2eproto();
@@ -4529,6 +4544,44 @@ inline void CmdResponse::set_allocated_server_status(::floyd::CmdResponse_Server
     set_has_server_status();
   } else {
     clear_has_server_status();
+  }
+}
+
+// optional .floyd.Membership all_servers = 8;
+inline bool CmdResponse::has_all_servers() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void CmdResponse::set_has_all_servers() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void CmdResponse::clear_has_all_servers() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void CmdResponse::clear_all_servers() {
+  if (all_servers_ != NULL) all_servers_->::floyd::Membership::Clear();
+  clear_has_all_servers();
+}
+inline const ::floyd::Membership& CmdResponse::all_servers() const {
+  return all_servers_ != NULL ? *all_servers_ : *default_instance_->all_servers_;
+}
+inline ::floyd::Membership* CmdResponse::mutable_all_servers() {
+  set_has_all_servers();
+  if (all_servers_ == NULL) all_servers_ = new ::floyd::Membership;
+  return all_servers_;
+}
+inline ::floyd::Membership* CmdResponse::release_all_servers() {
+  clear_has_all_servers();
+  ::floyd::Membership* temp = all_servers_;
+  all_servers_ = NULL;
+  return temp;
+}
+inline void CmdResponse::set_allocated_all_servers(::floyd::Membership* all_servers) {
+  delete all_servers_;
+  all_servers_ = all_servers;
+  if (all_servers) {
+    set_has_all_servers();
+  } else {
+    clear_has_all_servers();
   }
 }
 

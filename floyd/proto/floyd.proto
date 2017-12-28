@@ -12,6 +12,7 @@ message Entry {
     kUnLock = 5;
     kAddServer = 6;
     kRemoveServer = 7;
+    kGetAllServers = 8;
   }
   // used in key value operator
   optional uint64 term = 1;
@@ -36,6 +37,7 @@ enum Type {
   kUnLock = 6;
   kAddServer = 11;
   kRemoveServer = 12;
+  kGetAllServers = 13;
 
   // Raft RPC
   kRequestVote = 8;
@@ -142,6 +144,8 @@ message CmdResponse {
     optional uint64 last_applied = 10;
   }
   optional ServerStatus server_status = 7;
+
+  optional Membership all_servers = 8;
 }
 
 /*
@@ -162,5 +166,6 @@ message Lock {
 message Membership {
   repeated bytes nodes = 1;
 }
+
 
 

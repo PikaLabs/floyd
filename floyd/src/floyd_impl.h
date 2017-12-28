@@ -58,12 +58,12 @@ class FloydImpl : public Floyd {
   // membership change interface
   virtual Status AddServer(const std::string& new_server) override;
   virtual Status RemoveServer(const std::string& out_server) override;
+  virtual Status GetAllServers(std::set<std::string>* nodes) override;
 
   // return true if leader has been elected
   virtual bool GetLeader(std::string* ip_port) override;
   virtual bool GetLeader(std::string* ip, int* port) override;
   virtual bool HasLeader() override;
-  virtual bool GetAllNodes(std::set<std::string>* nodes) override;
   virtual bool IsLeader() override;
 
   int GetLocalPort() {
