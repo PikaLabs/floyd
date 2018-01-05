@@ -68,9 +68,11 @@ int FloydWorkerConn::DealMessage() {
       floyd_->DoCommand(request_, &response_);
       break;
     case Type::kServerStatus:
+      response_.set_type(Type::kRead);
+      break;
       response_.set_type(Type::kServerStatus);
-      floyd_->ReplyExecuteDirtyCommand(request_, &response_);
-      response_.set_code(StatusCode::kOk);
+      response_.set_code(StatusCode::kError);
+      LOGV(WARN_LEVEL, floyd_->info_log_, "obsolete command kServerStatus");
       break;
     case Type::kAddServer:
       response_.set_type(Type::kAddServer);

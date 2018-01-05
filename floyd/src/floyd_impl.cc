@@ -516,9 +516,11 @@ Status FloydImpl::GetAllServers(std::set<std::string>* nodes) {
 
 bool FloydImpl::GetServerStatus(std::string* msg) {
   LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::GetServerStatus start");
-  slash::MutexLock l(&context_->global_mu);
   CmdResponse_ServerStatus server_status;
+  {
+  slash::MutexLock l(&context_->global_mu);
   DoGetServerStatus(&server_status);
+  }
 
   char str[512];
   snprintf (str, sizeof(str),
@@ -532,32 +534,6 @@ bool FloydImpl::GetServerStatus(std::string* msg) {
 
   msg->clear();
   msg->append(str);
-
-  CmdRequest cmd;
-  cmd.set_type(Type::kServerStatus);
-  CmdResponse response;
-  std::string local_server = slash::IpPortString(options_.local_ip, options_.local_port);
-  for (auto& iter : context_->members) {
-    if (iter != local_server) {
-      Status s = worker_client_pool_->SendAndRecv(iter, cmd, &response);
-      LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::GetServerStatus Send to %s return %s",
-           iter.c_str(), s.ToString().c_str());
-      if (s.ok()) {
-        std::string ip;
-        int port;
-        slash::ParseIpPortString(iter, ip, port);
-        CmdResponse_ServerStatus server_status = response.server_status();
-        snprintf (str, sizeof(str),
-                  "%15s:%-6d%10s%7lu%14s:%-6d%14s:%-6d%10lu%13lu%14lu%13lu\n",
-                  ip.c_str(), port, server_status.role().c_str(), server_status.term(),
-                  server_status.leader_ip().c_str(), server_status.leader_port(),
-                  server_status.voted_for_ip().c_str(), server_status.voted_for_port(),
-                  server_status.last_log_term(), server_status.last_log_index(), server_status.commit_index(),
-                  server_status.last_applied());
-        msg->append(str);
-      }
-    }
-  }
   return true;
 }
 
@@ -579,26 +555,6 @@ Status FloydImpl::DoCommand(const CmdRequest& request, CmdResponse *response) {
   return worker_client_pool_->SendAndRecv(
       slash::IpPortString(leader_ip, leader_port),
       request, response);
-}
-
-Status FloydImpl::ReplyExecuteDirtyCommand(const CmdRequest& cmd,
-                                      CmdResponse *response) {
-  std::string value;
-  rocksdb::Status rs;
-  switch (cmd.type()) {
-  case Type::kServerStatus: {
-    response->set_type(Type::kServerStatus);
-    response->set_code(StatusCode::kOk);
-    CmdResponse_ServerStatus* server_status = response->mutable_server_status();
-    DoGetServerStatus(server_status);
-    LOGV(DEBUG_LEVEL, info_log_, "FloydImpl::ExecuteDirtyCommand GetServerStatus");
-    break;
-  }
-  default: {
-    return Status::Corruption("Unknown cmd type");
-  }
-  }
-  return Status::OK();
 }
 
 bool FloydImpl::DoGetServerStatus(CmdResponse_ServerStatus* res) {
