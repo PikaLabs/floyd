@@ -222,6 +222,7 @@ void Peer::AppendEntriesRPC() {
   uint64_t num_entries = 0;
   uint64_t prev_log_term = 0;
   uint64_t last_log_index = 0;
+  uint64_t current_term = 0;
   CmdRequest req;
   CmdRequest_AppendEntries* append_entries = req.mutable_append_entries();
   {
@@ -246,14 +247,17 @@ void Peer::AppendEntriesRPC() {
       prev_log_term = entry.term();
     }
   }
+  current_term = context_->current_term;
 
   req.set_type(Type::kAppendEntries);
   append_entries->set_ip(options_.local_ip);
   append_entries->set_port(options_.local_port);
-  append_entries->set_term(context_->current_term);
+  append_entries->set_term(current_term);
   append_entries->set_prev_log_index(prev_log_index);
   append_entries->set_prev_log_term(prev_log_term);
   append_entries->set_leader_commit(context_->commit_index);
+  }
+
   Entry *tmp_entry = new Entry();
   for (uint64_t index = next_index_; index <= last_log_index; index++) {
     if (raft_log_->GetEntry(index, tmp_entry) == 0) {
@@ -278,8 +282,7 @@ void Peer::AppendEntriesRPC() {
   // if the AppendEntries don't contain any log item
   if (num_entries == 0) {
     LOGV(INFO_LEVEL, info_log_, "Peer::AppendEntryRpc server %s:%d Send pingpong appendEntries message to %s at term %d",
-        options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), context_->current_term);
-  }
+        options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), current_term);
   }
 
   CmdResponse res;
