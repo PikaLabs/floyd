@@ -703,14 +703,6 @@ Status FloydImpl::ExecuteCommand(const CmdRequest& request,
   return Status::OK();
 }
 
-// Peer ask my vote with it's ip, port, log_term and log_index
-void FloydImpl::GrantVote(uint64_t term, const std::string ip, int port) {
-  // Got my vote
-  context_->voted_for_ip = ip;
-  context_->voted_for_port = port;
-  context_->current_term = term;
-}
-
 int FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* response) {
   slash::MutexLock l(&context_->global_mu);
   bool granted = false;
@@ -761,12 +753,16 @@ int FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* response
       "Become Follower with current_term_(%lu) and new_term(%lu)"
       " commit_index(%lu) last_applied(%lu)", request_vote.ip().c_str(), request_vote.port(),
       context_->current_term, request_vote.last_log_term(), my_last_log_index, context_->last_applied.load());
-  context_->BecomeFollower(request_vote.term());
+
+  // Peer ask my vote with it's ip, port, log_term and log_index
+  // Got my vote
+  context_->BecomeFollower(request_vote.term(),
+                           request_vote.ip(),
+                           request_vote.port();
   raft_meta_->SetCurrentTerm(context_->current_term);
   raft_meta_->SetVotedForIp(context_->voted_for_ip);
   raft_meta_->SetVotedForPort(context_->voted_for_port);
-  // Got my vote
-  GrantVote(request_vote.term(), request_vote.ip(), request_vote.port());
+
   granted = true;
   LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: Grant my vote to %s:%d at term %lu",
       context_->voted_for_ip.c_str(), context_->voted_for_port, context_->current_term);
