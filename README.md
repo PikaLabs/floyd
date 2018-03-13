@@ -27,7 +27,7 @@ In our opion, a single service is much more simple than two services. As a resul
 
 ## Floyd's Features and APIs
 
-* APIs and [usage](https://github.com/Qihoo360/floyd/wiki/API%E4%BB%8B%E7%BB%8D%E4%B8%8E%E4%BD%BF%E7%94%A8)
+* APIs and [usage](https://github.com/PikaLabs/floyd/wiki/API%E4%BB%8B%E7%BB%8D%E4%B8%8E%E4%BD%BF%E7%94%A8)
 
 | type      | API             | Status  |
 | --------- | --------------- | ------- |
@@ -57,8 +57,8 @@ In our opion, a single service is much more simple than two services. As a resul
     - zlib-devel
     - bzip2
     - submodules:
-        - [Pink](https://github.com/Qihoo360/pink)
-        - [Slash](https://github.com/Qihoo360/slash)
+        - [Pink](https://github.com/PikaLabs/pink)
+        - [Slash](https://github.com/PikaLabs/slash)
 
 
 * Get source code and submodules recursively.
@@ -157,7 +157,7 @@ floyd has pass the jepsen test, you can get the test case here
 [jepsen](https://github.com/gaodq/jepsen)
 
 ## Documents
-* [Wikis](https://github.com/Qihoo360/floyd/wiki)
+* [Wikis](https://github.com/PikaLabs/floyd/wiki)
 
 ## Contant us
 
