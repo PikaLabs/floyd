@@ -130,7 +130,7 @@ ifeq ($(LIBNAME),)
 ifeq ($(DEBUG_LEVEL),0)
         LIBNAME=libfloyd
 else
-        LIBNAME=libfloyd
+        LIBNAME=libfloyd_debug
 endif
 endif
 LIBOUTPUT = ./lib

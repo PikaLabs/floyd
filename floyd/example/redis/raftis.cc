@@ -93,6 +93,15 @@ int MyConn::DealMessage() {
         break;
       }
     }
+  } else if (argv_.size() == 1 && argv_[0] == "status") {
+    std::string server_msg;
+    if (f->GetServerStatus(&server_msg)) {
+      wbuf_len_ += snprintf(wbuf_, 1024, "$%lu\r\n%s\r\n",
+                           server_msg.size(), server_msg.c_str());
+
+    } else {
+      wbuf_len_ += snprintf(wbuf_, 1024, "-ERR GetServerStatus\r\n");
+    }
   } else {
     res = "+OK\r\n";
     memcpy(wbuf_ + wbuf_len_, res.data(), res.size());
