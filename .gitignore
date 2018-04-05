@@ -40,3 +40,5 @@ floyd/example/kv/sdk.pb.h
 
 floyd/src/build_version.cc
 floyd/example/redis/deploy.sh
+
+tags

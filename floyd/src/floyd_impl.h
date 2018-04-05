@@ -109,7 +109,6 @@ class FloydImpl : public Floyd {
   Status DoCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
   Status ExecuteCommand(const CmdRequest& cmd, CmdResponse *cmd_res);
   bool DoGetServerStatus(CmdResponse_ServerStatus* res);
-  void GrantVote(uint64_t term, const std::string ip, int port);
 
   /*
    * these two are the response to the request vote and appendentries
