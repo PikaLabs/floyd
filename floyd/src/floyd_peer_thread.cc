@@ -63,9 +63,6 @@ int Peer::Stop() {
 }
 
 bool Peer::CheckAndVote(uint64_t vote_term) {
-  if (context_->current_term != vote_term) {
-    return false;
-  }
   return (++context_->vote_quorum) > (options_.members.size() / 2);
 }
 
@@ -137,6 +134,9 @@ void Peer::RequestVoteRPC() {
     raft_meta_->SetVotedForIp(context_->voted_for_ip);
     raft_meta_->SetVotedForPort(context_->voted_for_port);
     return;
+  } else if (res.request_vote_res().term() < context_->current_term) {
+    // Ingore old term rsp
+    return;
   }
   if (context_->role == Role::kCandidate) {
     // kOk means RequestVote success, opposite vote for me
@@ -152,14 +152,6 @@ void Peer::RequestVoteRPC() {
             options_.local_ip.c_str(), options_.local_port, context_->current_term);
         primary_->AddTask(kHeartBeat, false);
       }
-    } else {
-      LOGV(INFO_LEVEL, info_log_, "Peer::RequestVoteRPC: Candidate %s:%d deny vote from node %s at term %d, "
-          "transfer from candidate to follower",
-          options_.local_ip.c_str(), options_.local_port, peer_addr_.c_str(), context_->current_term);
-      context_->BecomeFollower(res.request_vote_res().term());
-      raft_meta_->SetCurrentTerm(context_->current_term);
-      raft_meta_->SetVotedForIp(context_->voted_for_ip);
-      raft_meta_->SetVotedForPort(context_->voted_for_port);
     }
   } else if (context_->role == Role::kFollower) {
     LOGV(INFO_LEVEL, info_log_, "Peer::RequestVotePPC: Server %s:%d have transformed to follower when doing RequestVoteRPC, " 
