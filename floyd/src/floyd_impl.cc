@@ -744,10 +744,10 @@ int FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* response
     return -1;
   }
 
-  if (!context_->vote_for_ip.empty()) {
+  if (!context_->voted_for_ip.empty() || context_->voted_for_port != 0) {
     LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: I %s:%d have voted for %s:%d in this term %lu",
-        options_.local_ip.c_str(), options_.local_port, vote_for_ip, 
-        vote_for_port, request_vote.term());
+        options_.local_ip.c_str(), options_.local_port, context_->voted_for_ip.c_str(), 
+        context_->voted_for_port, request_vote.term());
     BuildRequestVoteResponse(context_->current_term, granted, response);
     return -1;
   }
