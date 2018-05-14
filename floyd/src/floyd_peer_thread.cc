@@ -130,6 +130,8 @@ void Peer::RequestVoteRPC() {
         " request_vote_res.term()=%lu, current_term=%lu", options_.local_ip.c_str(), options_.local_port,
         peer_addr_.c_str(), res.request_vote_res().term(), context_->current_term);
     context_->BecomeFollower(res.request_vote_res().term());
+    context_->voted_for_ip.clear();
+    context_->voted_for_port = 0;
     raft_meta_->SetCurrentTerm(context_->current_term);
     raft_meta_->SetVotedForIp(context_->voted_for_ip);
     raft_meta_->SetVotedForPort(context_->voted_for_port);
@@ -289,20 +291,28 @@ void Peer::AppendEntriesRPC() {
   }
 
   // here we may get a larger term, and transfer to follower
+  if (res.append_entries_res().term() > context_->current_term) {
+    LOGV(INFO_LEVEL, info_log_, "Peer::AppendEntriesRPC: %s:%d Transfer from Leader to Follower since get A larger term"
+        "from peer %s, local term is %d, peer term is %d", options_.local_ip.c_str(), options_.local_port,
+        peer_addr_.c_str(), context_->current_term, res.append_entries_res().term());
+    context_->BecomeFollower(res.append_entries_res().term());
+    context_->voted_for_ip.clear();
+    context_->voted_for_port = 0;
+    raft_meta_->SetCurrentTerm(context_->current_term);
+    raft_meta_->SetVotedForIp(context_->voted_for_ip);
+    raft_meta_->SetVotedForPort(context_->voted_for_port);
+    return;
+  } else if (res.append_entries_res().term() < context_->current_term) {
+    // Ignore old term msg
+    return;
+  }
+
   // so we need to judge the role here
   if (context_->role == Role::kLeader) {
     /*
      * receiver has higer term than myself, so turn from candidate to follower
      */
-    if (res.append_entries_res().term() > context_->current_term) {
-      LOGV(INFO_LEVEL, info_log_, "Peer::AppendEntriesRPC: %s:%d Transfer from Leader to Follower since get A larger term"
-          "from peer %s, local term is %d, peer term is %d", options_.local_ip.c_str(), options_.local_port,
-          peer_addr_.c_str(), context_->current_term, res.append_entries_res().term());
-      context_->BecomeFollower(res.append_entries_res().term());
-      raft_meta_->SetCurrentTerm(context_->current_term);
-      raft_meta_->SetVotedForIp(context_->voted_for_ip);
-      raft_meta_->SetVotedForPort(context_->voted_for_port);
-    } else if (res.append_entries_res().success() == true) {
+    if (res.append_entries_res().success() == true) {
       if (num_entries > 0) {
         match_index_ = prev_log_index + num_entries;
         // only log entries from the leader's current term are committed
