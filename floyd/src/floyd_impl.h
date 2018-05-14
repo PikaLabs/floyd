@@ -102,8 +102,6 @@ class FloydImpl : public Floyd {
   PeersSet peers_;
   ClientPool* worker_client_pool_;
 
-  std::map<int64_t, std::pair<std::string, int> > vote_for_;
-
   bool IsSelf(const std::string& ip_port);
 
   Status DoCommand(const CmdRequest& cmd, CmdResponse *cmd_res);

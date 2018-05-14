@@ -714,7 +714,11 @@ int FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* response
    */
   if (request_vote.term() > context_->current_term) {
     context_->BecomeFollower(request_vote.term());
+    context_->voted_for_ip.clear();
+    context_->voted_for_port = 0;
     raft_meta_->SetCurrentTerm(context_->current_term);
+    raft_meta_->SetVotedForIp(context_->voted_for_ip);
+    raft_meta_->SetVotedForPort(context_->voted_for_port);
   }
   // if caller's term smaller than my term, then I will notice him
   if (request_vote.term() < context_->current_term) {
@@ -740,15 +744,13 @@ int FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* response
     return -1;
   }
 
-  if (vote_for_.find(request_vote.term()) != vote_for_.end()
-      && vote_for_[request_vote.term()] != std::make_pair(request_vote.ip(), request_vote.port())) {
+  if (!context_->vote_for_ip.empty()) {
     LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: I %s:%d have voted for %s:%d in this term %lu",
-        options_.local_ip.c_str(), options_.local_port, vote_for_[request_vote.term()].first.c_str(), 
-        vote_for_[request_vote.term()].second, request_vote.term());
+        options_.local_ip.c_str(), options_.local_port, vote_for_ip, 
+        vote_for_port, request_vote.term());
     BuildRequestVoteResponse(context_->current_term, granted, response);
     return -1;
   }
-  vote_for_[request_vote.term()] = std::make_pair(request_vote.ip(), request_vote.port());
   LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: Receive Request Vote from %s:%d, "
       "Become Follower with current_term_(%lu) and new_term(%lu)"
       " commit_index(%lu) last_applied(%lu)", request_vote.ip().c_str(), request_vote.port(),
@@ -756,14 +758,12 @@ int FloydImpl::ReplyRequestVote(const CmdRequest& request, CmdResponse* response
 
   // Peer ask my vote with it's ip, port, log_term and log_index
   // Got my vote
-  context_->BecomeFollower(request_vote.term(),
-                           request_vote.ip(),
-                           request_vote.port();
-  raft_meta_->SetCurrentTerm(context_->current_term);
+  granted = true;
+  context_->voted_for_ip = request_vote.ip();
+  context_->voted_for_port = request_vote.port();
   raft_meta_->SetVotedForIp(context_->voted_for_ip);
   raft_meta_->SetVotedForPort(context_->voted_for_port);
 
-  granted = true;
   LOGV(INFO_LEVEL, info_log_, "FloydImpl::ReplyRequestVote: Grant my vote to %s:%d at term %lu",
       context_->voted_for_ip.c_str(), context_->voted_for_port, context_->current_term);
   context_->last_op_time = slash::NowMicros();
@@ -805,6 +805,8 @@ int FloydImpl::ReplyAppendEntries(const CmdRequest& request, CmdResponse* respon
         context_->current_term, context_->role, context_->leader_ip.c_str(), context_->leader_port);
     context_->BecomeFollower(append_entries.term(),
         append_entries.ip(), append_entries.port());
+    context_->voted_for_ip = append_entries.ip();
+    context_->voted_for_port = append_entries.port();
     raft_meta_->SetCurrentTerm(context_->current_term);
     raft_meta_->SetVotedForIp(context_->voted_for_ip);
     raft_meta_->SetVotedForPort(context_->voted_for_port);
