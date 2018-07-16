@@ -314,7 +314,9 @@ void Peer::AppendEntriesRPC() {
       if (num_entries > 0) {
         match_index_ = prev_log_index + num_entries;
         uint64_t new_commit_index = QuorumMatchIndex();
-        if (append_entries->entries(new_commit_index).term() == context_->current_term) {
+        int64_t entries_i = new_commit_index - prev_log_index - 1;
+        if (entries_i >= 0
+            && append_entries->entries(entries_i).term() == context_->current_term) {
           // only log entries from the leader's current term are committed
           // by counting replicas
           if (context_->commit_index < new_commit_index) {
