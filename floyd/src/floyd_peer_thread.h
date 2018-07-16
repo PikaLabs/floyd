@@ -75,7 +75,6 @@ class Peer {
  private:
   bool CheckAndVote(uint64_t vote_term);
   uint64_t QuorumMatchIndex();
-  void AdvanceLeaderCommitIndex();
   void UpdatePeerInfo();
 
   std::string peer_addr_;

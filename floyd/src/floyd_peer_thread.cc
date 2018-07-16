@@ -195,18 +195,6 @@ uint64_t Peer::QuorumMatchIndex() {
   return values.at(values.size() / 2);
 }
 
-// only leader will call AdvanceCommitIndex
-// follower only need set commit as leader's
-void Peer::AdvanceLeaderCommitIndex() {
-  Entry entry;
-  uint64_t new_commit_index = QuorumMatchIndex();
-  if (context_->commit_index < new_commit_index) {
-    context_->commit_index = new_commit_index;
-    raft_meta_->SetCommitIndex(context_->commit_index);
-  }
-  return;
-}
-
 void Peer::AddAppendEntriesTask() {
   /*
    * int timer_queue_size, queue_size;
@@ -325,11 +313,17 @@ void Peer::AppendEntriesRPC() {
     if (res.append_entries_res().success() == true) {
       if (num_entries > 0) {
         match_index_ = prev_log_index + num_entries;
-        // only log entries from the leader's current term are committed
-        // by counting replicas
-        if (append_entries->entries(num_entries - 1).term() == context_->current_term) {
-          AdvanceLeaderCommitIndex();
-          apply_->ScheduleApply();
+        uint64_t new_commit_index = QuorumMatchIndex();
+        int64_t entries_i = new_commit_index - prev_log_index - 1;
+        if (entries_i >= 0
+            && append_entries->entries(entries_i).term() == context_->current_term) {
+          // only log entries from the leader's current term are committed
+          // by counting replicas
+          if (context_->commit_index < new_commit_index) {
+            context_->commit_index = new_commit_index;
+            raft_meta_->SetCommitIndex(context_->commit_index);
+            apply_->ScheduleApply();
+          }
         }
         next_index_ = prev_log_index + num_entries + 1;
       }
