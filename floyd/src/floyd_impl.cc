@@ -150,29 +150,67 @@ static void BuildMembership(const std::vector<std::string>& opt_members,
 FloydImpl::FloydImpl(const Options& options)
   : db_(NULL),
     log_and_meta_(NULL),
+    raft_log_(NULL),
+    raft_meta_(NULL),
     options_(options),
-    info_log_(NULL) {
+    info_log_(NULL),
+    context_(NULL),
+    worker_(NULL),
+    apply_(NULL),
+    primary_(NULL),
+    worker_client_pool_(NULL) {
 }
 
 FloydImpl::~FloydImpl() {
   // worker will use floyd, delete worker first
-  worker_->Stop();
-  primary_->Stop();
-  apply_->Stop();
-  delete worker_;
-  delete worker_client_pool_;
-  delete primary_;
-  delete apply_;
+  if (worker_) {
+    worker_->Stop();
+    delete worker_;
+  }
+
+  if (primary_) {
+    primary_->Stop();
+    delete primary_;
+  }
+  
+  if (apply_) {
+    apply_->Stop();
+    delete apply_;
+  }
+
+  if (worker_client_pool_) {
+    delete worker_client_pool_;
+  }
+  
+  
   for (auto& pt : peers_) {
     pt.second->Stop();
     delete pt.second;
   }
-  delete context_;
-  delete raft_meta_;
-  delete raft_log_;
-  delete info_log_;
-  delete db_;
-  delete log_and_meta_;
+
+  if (context_) {
+    delete context_;
+  }
+
+  if (raft_meta_) {
+    delete raft_meta_;
+  }
+
+  if (raft_log_) {
+    delete raft_log_;
+  }
+  
+  if (info_log_) {
+    delete info_log_;
+  }
+  
+  if (db_) {
+    delete db_;
+  }
+  
+  if (log_and_meta_) {
+    delete log_and_meta_;
+  }
 }
 
 bool FloydImpl::IsSelf(const std::string& ip_port) {
